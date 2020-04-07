@@ -1,0 +1,87 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="SilentEngine">
+      <UniqueIdentifier>{a8d96fda-2d00-4b80-b45b-4bef6f5bf248}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SilentEngine\SApplication">
+      <UniqueIdentifier>{5024d630-ec27-4be1-ab6f-bcc496076e7d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SilentEngine\STimer">
+      <UniqueIdentifier>{06c03a2f-706a-4c99-a07a-9e25c9391738}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SilentEngine\SGameTimer">
+      <UniqueIdentifier>{4e64ae65-f843-4ed1-afa6-17d6ad017812}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SilentEngine\SGeometry">
+      <UniqueIdentifier>{baaead86-85c4-414a-97cc-f95a753cf7ea}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SilentEngine\SError">
+      <UniqueIdentifier>{6c7f4150-7714-46ba-ab36-54f12e4904e0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SilentEngine\SMath">
+      <UniqueIdentifier>{3c2b4270-f1ca-407c-a2ea-42bcc46fb894}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SilentEngine\SUploadBuffer">
+      <UniqueIdentifier>{8700b289-0793-494f-9e64-9e18cfad1599}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\SilentEditor\main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SilentEngine\public\SApplication\SApplication.cpp">
+      <Filter>SilentEngine\SApplication</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SilentEngine\public\STimer\STimer.cpp">
+      <Filter>SilentEngine\STimer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SilentEngine\private\SGameTimer\SGameTimer.cpp">
+      <Filter>SilentEngine\SGameTimer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SilentEngine\private\SGeometry\SGeometry.cpp">
+      <Filter>SilentEngine\SGeometry</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SilentEngine\private\SError\SError.cpp">
+      <Filter>SilentEngine\SError</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SilentEngine\private\SMath\SMath.cpp">
+      <Filter>SilentEngine\SMath</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\src\SilentEngine\public\SApplication\SApplication.h">
+      <Filter>SilentEngine\SApplication</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SilentEngine\public\STimer\STimer.h">
+      <Filter>SilentEngine\STimer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SilentEngine\private\SGameTimer\SGameTimer.h">
+      <Filter>SilentEngine\SGameTimer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SilentEngine\private\SGeometry\SGeometry.h">
+      <Filter>SilentEngine\SGeometry</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SilentEngine\private\SError\SError.h">
+      <Filter>SilentEngine\SError</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SilentEngine\private\SMath\SMath.h">
+      <Filter>SilentEngine\SMath</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SilentEngine\private\SUploadBuffer\SUploadBuffer.h">
+      <Filter>SilentEngine\SUploadBuffer</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
