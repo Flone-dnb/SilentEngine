@@ -271,6 +271,57 @@ bool SApplication::setFOV(float fFOVInGrad)
 	else
 	{
 		this->fFOVInGrad = fFOVInGrad;
+		return false;
+	}
+}
+
+bool SApplication::setNearClipPlane(float fNearClipPlaneValue)
+{
+	if ( (fNearClipPlaneValue < 0.0f) || (bInitCalled == false) )
+	{
+		MessageBox(0, L"An error occurred at SApplication::setNearClipPlane(). Error: the fNearClipPlaneValue value should be"
+			" more than 0 and the init() function should be called first.", L"Error", 0);
+		return true;
+	}
+	else
+	{
+		this->fNearClipPlaneValue = fNearClipPlaneValue;
+
+		if (bInitCalled)
+		{
+			mtxDraw.lock();
+
+			onResize();
+
+			mtxDraw.unlock();
+		}
+
+		return false;
+	}
+}
+
+bool SApplication::setFarClipPlane(float fFarClipPlaneValue)
+{
+	if ( (fFarClipPlaneValue < 0.0f) || (bInitCalled == false) )
+	{
+		MessageBox(0, L"An error occurred at SApplication::setFarClipPlane(). Error: the fFarClipPlaneValue value should be"
+			" more than 0 and the init() function should be called first.", L"Error", 0);
+		return true;
+	}
+	else
+	{
+		this->fFarClipPlaneValue = fFarClipPlaneValue;
+
+		if (bInitCalled)
+		{
+			mtxDraw.lock();
+
+			onResize();
+
+			mtxDraw.unlock();
+		}
+
+		return false;
 	}
 }
 
@@ -533,6 +584,16 @@ bool SApplication::isFullscreen()
 	return bFullscreen;
 }
 
+float SApplication::getNearClipPlaneValue()
+{
+	return fNearClipPlaneValue;
+}
+
+float SApplication::getFarClipPlaneValue()
+{
+	return fFarClipPlaneValue;
+}
+
 bool SApplication::getTimeElapsedFromStart(float* fTimeInSec)
 {
 	if (bRunCalled)
@@ -758,7 +819,8 @@ bool SApplication::onResize()
 
 		// Update aspect ratio and recompute the projection matrix.
 
-		DirectX::XMMATRIX P = DirectX::XMMatrixPerspectiveFovLH(DirectX::XMConvertToRadians(fFOVInGrad), getScreenAspectRatio(), 1.0f, 1000.0f);
+		DirectX::XMMATRIX P = DirectX::XMMatrixPerspectiveFovLH(DirectX::XMConvertToRadians(fFOVInGrad), getScreenAspectRatio(),
+			fNearClipPlaneValue, fFarClipPlaneValue);
 		XMStoreFloat4x4(&vProj, P);
 
 
@@ -869,7 +931,7 @@ void SApplication::draw()
 
 	pCommandList->SetGraphicsRootDescriptorTable(0, pCBVHeap->GetGPUDescriptorHandleForHeapStart());
 
-	pCommandList->DrawIndexedInstanced(pBoxGeometry->mDrawArgs["box"].iIndexCount, 1, 0, 0, 0);
+	pCommandList->DrawIndexedInstanced(pBoxGeometry->mDrawArgs[L"Cube"].iIndexCount, 1, 0, 0, 0);
 
 
 
@@ -1792,7 +1854,7 @@ bool SApplication::createBoxGeometry()
 
 
 	pBoxGeometry = std::make_unique<SMeshGeometry>();
-	pBoxGeometry->sMeshName = "Box Geometry";
+	pBoxGeometry->sMeshName = L"Cube Geometry";
 
 
 
@@ -1837,7 +1899,7 @@ bool SApplication::createBoxGeometry()
 	submesh.iBaseVertexLocation = 0;
 
 
-	pBoxGeometry->mDrawArgs["box"] = submesh;
+	pBoxGeometry->mDrawArgs[L"Cube"] = submesh;
 
 
 	return false;

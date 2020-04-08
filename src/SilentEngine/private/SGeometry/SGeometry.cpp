@@ -24,8 +24,6 @@ Microsoft::WRL::ComPtr<ID3D12Resource> SGeometry::createDefaultBuffer(ID3D12Devi
 {
 	Microsoft::WRL::ComPtr<ID3D12Resource> pDefaultBuffer;
 
-
-
 	// Create the actual default buffer resource.
 
 	HRESULT hresult = pDevice->CreateCommittedResource(
@@ -42,7 +40,6 @@ Microsoft::WRL::ComPtr<ID3D12Resource> SGeometry::createDefaultBuffer(ID3D12Devi
 	}
 
 
-
 	// In order to copy CPU memory data into our default buffer, we need to create an intermediate upload heap.
 
 	hresult = pDevice->CreateCommittedResource(
@@ -57,7 +54,6 @@ Microsoft::WRL::ComPtr<ID3D12Resource> SGeometry::createDefaultBuffer(ID3D12Devi
 		SError::showErrorMessageBox(hresult, L"SGeometry::createDefaultBuffer::ID3D12Device::CreateCommittedResource() (upload heap)");
 		return nullptr;
 	}
-
 
 
 	// Describe the data we want to copy into the default buffer.

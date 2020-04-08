@@ -32,7 +32,7 @@ public:
 
 			// Update angles based on input to orbit camera around box.
 			fTheta += dx;
-			fPhi += dy;
+			fPhi += -dy;
 
 			// Restrict the angle mPhi.
 			fPhi = SMath::clamp(fPhi, 0.1f, SMath::fPi - 0.1f);
@@ -47,7 +47,7 @@ public:
 			fRadius += dx - dy;
 
 			// Restrict the radius.
-			fRadius = SMath::clamp(fRadius, 3.0f, 15.0f);
+			fRadius = SMath::clamp(fRadius, 1.0f, 15.0f);
 		}
 
 		lastMousePosX = iMouseXPos;

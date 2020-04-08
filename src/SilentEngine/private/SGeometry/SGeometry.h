@@ -56,7 +56,7 @@ struct SSubmeshGeometry
 
 struct SMeshGeometry
 {
-	std::string sMeshName;
+	std::wstring sMeshName;
 
 	// System memory copies. Use Blobs because the vertex/index format can be generic.
 	// It is up to the client to cast appropriately.
@@ -79,7 +79,7 @@ struct SMeshGeometry
 
 	// A MeshGeometry may store multiple geometries in one vertex/index buffer.
 	// Use this container to define the Submesh geometries so we can draw the Submeshes individually.
-	std::unordered_map<std::string, SSubmeshGeometry> mDrawArgs;
+	std::unordered_map<std::wstring, SSubmeshGeometry> mDrawArgs;
 
 
 	D3D12_VERTEX_BUFFER_VIEW getVertexBufferView() const;

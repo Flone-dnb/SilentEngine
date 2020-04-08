@@ -208,6 +208,8 @@ public:
 		bool            setFullscreenWithCurrentResolution     (bool bFullScreen);
 		bool            setScreenResolution                    (UINT iWidth, UINT iHeight);
 		bool            setFOV                                 (float fFOVInGrad);
+		bool            setNearClipPlane                       (float fNearClipPlaneValue);
+		bool            setFarClipPlane                        (float fFarClipPlaneValue);
 
 		// Game
 
@@ -234,6 +236,11 @@ public:
 		bool                       getCurrentScreenResolution  (SScreenResolution* pScreenResolution);
 		bool                       getAvailableScreenResolutionsOfCurrentOutputDisplay(std::vector<SScreenResolution>* vResolutions);
 		bool                       isFullscreen                ();
+
+		// Screen
+
+		float                      getNearClipPlaneValue       ();
+		float                      getFarClipPlaneValue        ();
 
 		// Game
 
@@ -395,8 +402,10 @@ private:
 
 
 	// Viewport
-	D3D12_VIEWPORT  ScreenViewport; 
-	D3D12_RECT      ScissorRect;
+	D3D12_VIEWPORT ScreenViewport; 
+	D3D12_RECT     ScissorRect;
+	float          fNearClipPlaneValue      = 1.0f;
+	float          fFarClipPlaneValue       = 1000.0f;
 
 	
 	// Windows stuff.
