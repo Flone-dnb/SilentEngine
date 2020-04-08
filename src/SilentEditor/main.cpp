@@ -92,12 +92,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE prevInstance, PSTR cmdLine, in
 
 	app.setInitMainWindowTitle(L"Silent Editor");
 	app.setCallTick(true);
-	app.setInitEnableVSync(true);
 
 	if (app.init())
 	{
 		return 1;
 	}
+
+	app.setShowFrameStatsInTitle(true);
+	app.setFPSLimit(60.0f);
 
 	return app.run();
 }

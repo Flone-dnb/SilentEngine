@@ -37,11 +37,7 @@ double STimer::getElapsedTimeInMS()
 {
 	if (bRunning)
 	{
-		std::chrono::time_point<std::chrono::steady_clock> endTime;
-
-		endTime = std::chrono::steady_clock::now();
-
-		double dTimeElapsedInMS = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
+		double dTimeElapsedInMS = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now() - startTime).count() / 1000000.0;
 
 		return dTimeElapsedInMS - dTimeInPauseInMS;
 	}

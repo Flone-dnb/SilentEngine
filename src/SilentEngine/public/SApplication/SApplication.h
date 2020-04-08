@@ -214,6 +214,8 @@ public:
 		// Game
 
 		void            setCallTick                            (bool bTickCanBeCalled);
+		void            setFPSLimit                            (float fFPSLimit);
+		void            setShowFrameStatsInTitle               (bool bShow);
 
 
 
@@ -420,6 +422,9 @@ private:
 	// Performance
 	int            iFPS                     = 0;
 	float          fAvrTimeToRenderFrame    = 0.0f;
+	float          fFPSLimit                = 0.0f;
+	float          fDelayBetweenFramesInMS  = 0.0f;
+	bool           bShowFrameStatsInTitle   = false;
 
 
 	SGameTimer     gameTimer;

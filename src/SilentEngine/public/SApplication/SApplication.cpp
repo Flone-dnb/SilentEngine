@@ -13,6 +13,7 @@
 
 // Custom
 #include "SilentEngine/private/SError/SError.h"
+#include "SilentEngine/public/STimer/STimer.h"
 
 
 SApplication* SApplication::pApp = nullptr;
@@ -328,6 +329,25 @@ bool SApplication::setFarClipPlane(float fFarClipPlaneValue)
 void SApplication::setCallTick(bool bTickCanBeCalled)
 {
 	bCallTick = bTickCanBeCalled;
+}
+
+void SApplication::setFPSLimit(float fFPSLimit)
+{
+	if (fFPSLimit <= 0.0f)
+	{
+		this->fFPSLimit = 0.0f;
+		fDelayBetweenFramesInMS = 0.0f;
+	}
+	else
+	{
+		this->fFPSLimit = fFPSLimit;
+		fDelayBetweenFramesInMS = 1000.0 / fFPSLimit;
+	}
+}
+
+void SApplication::setShowFrameStatsInTitle(bool bShow)
+{
+	bShowFrameStatsInTitle = bShow;
 }
 
 SApplication* SApplication::getApp()
@@ -1055,12 +1075,15 @@ void SApplication::calculateFrameStats()
 	{
 		float fAvrTimeToRenderFrame = 1000.0f / iFrameCount;
 
-		std::wstring sFPS = L"FPS: " + std::to_wstring(iFrameCount);
-		std::wstring sAvrTimeToRenderFrame = L"Avr. time to render a frame: " + std::to_wstring(fAvrTimeToRenderFrame);
+		if (bShowFrameStatsInTitle)
+		{
+			std::wstring sFPS = L"FPS: " + std::to_wstring(iFrameCount);
+			std::wstring sAvrTimeToRenderFrame = L"Avr. time to render a frame: " + std::to_wstring(fAvrTimeToRenderFrame);
 
-		std::wstring sWindowTitleText = sMainWindowTitle + L" (" + sFPS + L", " + sAvrTimeToRenderFrame + L")";
+			std::wstring sWindowTitleText = sMainWindowTitle + L" (" + sFPS + L", " + sAvrTimeToRenderFrame + L")";
 
-		SetWindowText(hMainWindow, sWindowTitleText.c_str());
+			SetWindowText(hMainWindow, sWindowTitleText.c_str());
+		}
 
 		iFPS = iFrameCount;
 		this->fAvrTimeToRenderFrame = fAvrTimeToRenderFrame;
@@ -1117,6 +1140,9 @@ bool SApplication::createMainWindow()
 
 	ShowWindow(hMainWindow, SW_SHOW);
 	UpdateWindow(hMainWindow);
+
+
+	SetWindowText(hMainWindow, sMainWindowTitle.c_str());
 
 
 	return false;
@@ -2211,17 +2237,23 @@ int SApplication::run()
 
 		bRunCalled = true;
 
+		STimer frameTimer;
+
 		while(msg.message != WM_QUIT)
 		{
-			// If there are messages then process them.
 			if(PeekMessage( &msg, 0, 0, 0, PM_REMOVE ))
 			{
 				TranslateMessage( &msg );
 				DispatchMessage( &msg );
 			}
-			// Otherwise, do game stuff.
 			else
-			{	
+			{
+				if (fFPSLimit >= 1.0f)
+				{
+					frameTimer.start();
+				}
+
+
 				gameTimer.tick();
 
 				if (bCallTick)
@@ -2233,6 +2265,17 @@ int SApplication::run()
 				draw();
 
 				calculateFrameStats();
+
+
+				if (fFPSLimit >= 1.0f)
+				{
+					float fTimeToRenderFrame = frameTimer.getElapsedTimeInMS();
+
+					if (fDelayBetweenFramesInMS > fTimeToRenderFrame)
+					{
+						Sleep(static_cast<unsigned long>(fDelayBetweenFramesInMS - fTimeToRenderFrame));
+					}
+				}
 			}
 		}
 
