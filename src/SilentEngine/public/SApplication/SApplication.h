@@ -197,6 +197,7 @@ public:
 		bool            setInitDepthStencilBufferFormat		   (DXGI_FORMAT format);
 		bool            setInitFullscreen					   (bool bFullscreen);
 		bool            setInitEnableVSync                     (bool bEnable);
+		void            setInitEnableBackFaceCulling           (bool bEnable);
 
 		// Multisampling
 
@@ -210,6 +211,9 @@ public:
 		bool            setFOV                                 (float fFOVInGrad);
 		bool            setNearClipPlane                       (float fNearClipPlaneValue);
 		bool            setFarClipPlane                        (float fFarClipPlaneValue);
+
+		// Graphics
+		void            setEnableWireframeMode                 (bool bEnable);
 
 		// Game
 
@@ -244,6 +248,9 @@ public:
 		float                      getNearClipPlaneValue       ();
 		float                      getFarClipPlaneValue        ();
 
+		// Graphics
+		bool                       isWireframeModeEnabled      ();
+
 		// Game
 
 		bool                       getTimeElapsedFromStart     (float* fTimeInSec);
@@ -260,7 +267,7 @@ protected:
 
 	// Game
 
-		virtual void onTick() {};
+		virtual void onTick(float fDeltaTime) {};
 
 
 	// Input
@@ -417,6 +424,11 @@ private:
 
 	// VSunc
 	bool           bVSyncEnabled            = false;
+
+
+	// Graphics
+	bool           bUseBackFaceCulling      = true;
+	bool           bUseFillModeWireframe    = false;
 
 
 	// Performance

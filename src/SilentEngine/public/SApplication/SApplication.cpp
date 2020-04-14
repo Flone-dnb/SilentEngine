@@ -122,6 +122,30 @@ bool SApplication::setInitEnableVSync(bool bEnable)
 	}
 }
 
+void SApplication::setInitEnableBackFaceCulling(bool bEnable)
+{
+	bUseBackFaceCulling = bEnable;
+}
+
+void SApplication::setEnableWireframeMode(bool bEnable)
+{
+	bUseFillModeWireframe = bEnable;
+
+	mtxDraw.lock();
+
+	if (bRunCalled)
+	{
+		flushCommandQueue();
+	}
+
+	if (bInitCalled)
+	{
+		createPSO();
+	}
+
+	mtxDraw.unlock();
+}
+
 void SApplication::setMSAAEnabled(bool bEnable)
 {
 	if (MSAA_Enabled != bEnable)
@@ -612,6 +636,11 @@ float SApplication::getNearClipPlaneValue()
 float SApplication::getFarClipPlaneValue()
 {
 	return fFarClipPlaneValue;
+}
+
+bool SApplication::isWireframeModeEnabled()
+{
+	return bUseFillModeWireframe;
 }
 
 bool SApplication::getTimeElapsedFromStart(float* fTimeInSec)
@@ -1948,7 +1977,12 @@ bool SApplication::createPSO()
 		reinterpret_cast<BYTE*>(pPSByteCode->GetBufferPointer()),
 		pPSByteCode->GetBufferSize()
 	};
-	psoDesc.RasterizerState   = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+
+	CD3DX12_RASTERIZER_DESC rastDesc(D3D12_DEFAULT);
+	rastDesc.CullMode = bUseBackFaceCulling ? D3D12_CULL_MODE_BACK : D3D12_CULL_MODE_NONE;
+	rastDesc.FillMode = bUseFillModeWireframe ? D3D12_FILL_MODE_WIREFRAME : D3D12_FILL_MODE_SOLID;
+
+	psoDesc.RasterizerState   = rastDesc;
 	psoDesc.BlendState        = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
 	psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
 	psoDesc.SampleMask        = UINT_MAX;
@@ -2258,7 +2292,7 @@ int SApplication::run()
 
 				if (bCallTick)
 				{
-					onTick();
+					onTick(gameTimer.getDeltaTimeBetweenFramesInSec());
 				}
 
 				updateViewMatrix();

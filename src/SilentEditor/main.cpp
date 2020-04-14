@@ -17,7 +17,7 @@ public:
 		lastMousePosY = 0;
 	}
 
-	void onTick() override
+	void onTick(float fDeltaTime) override
 	{
 		// Called every time before frame is drawn.
 	}
@@ -65,6 +65,11 @@ public:
 	virtual void onMouseUp(SMouseKey mouseKey, int iMouseXPos, int iMouseYPos) override
 	{
 		ReleaseCapture();
+
+		if (mouseKey.getButton() == SMouseButton::SMB_MIDDLE)
+		{
+			setEnableWireframeMode(!isWireframeModeEnabled());
+		}
 	}
 
 	~GameApplication() override
@@ -91,6 +96,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE prevInstance, PSTR cmdLine, in
 	GameApplication app(hInstance);
 
 	app.setInitMainWindowTitle(L"Silent Editor");
+	app.setEnableWireframeMode(true);
 	app.setCallTick(true);
 
 	if (app.init())
