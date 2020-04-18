@@ -109,6 +109,9 @@ Microsoft::WRL::ComPtr<ID3DBlob> SGeometry::compileShader(const std::wstring& sP
 
 
 	UINT iCompileFlags = D3DCOMPILE_OPTIMIZATION_LEVEL3;
+#if defined(DEBUG) || defined(_DEBUG)  
+	iCompileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
+#endif
 
 	HRESULT hresult = S_OK;
 
