@@ -110,10 +110,5 @@ public:
 		const D3D_SHADER_MACRO* defines,
 		const std::string& sShaderEntryPoint,
 		const std::string& sShaderModel);
-
-private:
-
-
-	std::vector<D3D12_INPUT_ELEMENT_DESC>            vInputLayout;
 };
 

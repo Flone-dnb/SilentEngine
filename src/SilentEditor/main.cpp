@@ -96,7 +96,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE prevInstance, PSTR cmdLine, in
 	GameApplication app(hInstance);
 
 	app.setInitMainWindowTitle(L"Silent Editor");
-	app.setEnableWireframeMode(true);
 	app.setCallTick(true);
 
 	if (app.init())
