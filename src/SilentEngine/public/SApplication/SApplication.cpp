@@ -1845,8 +1845,8 @@ bool SApplication::createRootSignature()
 
 bool SApplication::createShadersAndInputLayout()
 {
-	pVSByteCode = SGeometry::compileShader(L"shaders/color.hlsl", nullptr, "VS", "vs_5_0");
-	pPSByteCode = SGeometry::compileShader(L"shaders/color.hlsl", nullptr, "PS", "ps_5_0");
+	pVSByteCode = SGeometry::compileShader(L"shaders/basic.hlsl", nullptr, "VS", "vs_5_0");
+	pPSByteCode = SGeometry::compileShader(L"shaders/basic.hlsl", nullptr, "PS", "ps_5_0");
 
 	if (pVSByteCode == nullptr || pPSByteCode == nullptr)
 	{
@@ -1856,7 +1856,7 @@ bool SApplication::createShadersAndInputLayout()
 	vInputLayout =
 	{
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+		{ "COLOR", 0, DXGI_FORMAT_B8G8R8A8_UNORM, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
 	};
 
 	return false;
@@ -1866,14 +1866,14 @@ bool SApplication::createBoxGeometry()
 {
 	std::array<SVertex, 8> vVertices =
 	{
-		SVertex({ DirectX::XMFLOAT3(-1.0f, -1.0f, -1.0f), DirectX::XMFLOAT4(DirectX::Colors::White) }),
-		SVertex({ DirectX::XMFLOAT3(-1.0f, +1.0f, -1.0f), DirectX::XMFLOAT4(DirectX::Colors::Black) }),
-		SVertex({ DirectX::XMFLOAT3(+1.0f, +1.0f, -1.0f), DirectX::XMFLOAT4(DirectX::Colors::Red) }),
-		SVertex({ DirectX::XMFLOAT3(+1.0f, -1.0f, -1.0f), DirectX::XMFLOAT4(DirectX::Colors::Green) }),
-		SVertex({ DirectX::XMFLOAT3(-1.0f, -1.0f, +1.0f), DirectX::XMFLOAT4(DirectX::Colors::Blue) }),
-		SVertex({ DirectX::XMFLOAT3(-1.0f, +1.0f, +1.0f), DirectX::XMFLOAT4(DirectX::Colors::Yellow) }),
-		SVertex({ DirectX::XMFLOAT3(+1.0f, +1.0f, +1.0f), DirectX::XMFLOAT4(DirectX::Colors::Cyan) }),
-		SVertex({ DirectX::XMFLOAT3(+1.0f, -1.0f, +1.0f), DirectX::XMFLOAT4(DirectX::Colors::Magenta) })
+		SVertex({ DirectX::XMFLOAT3(-1.0f, -1.0f, -1.0f), DirectX::PackedVector::XMCOLOR(DirectX::Colors::White) }),
+		SVertex({ DirectX::XMFLOAT3(-1.0f, +1.0f, -1.0f), DirectX::PackedVector::XMCOLOR(DirectX::Colors::Black) }),
+		SVertex({ DirectX::XMFLOAT3(+1.0f, +1.0f, -1.0f), DirectX::PackedVector::XMCOLOR(DirectX::Colors::Red) }),
+		SVertex({ DirectX::XMFLOAT3(+1.0f, -1.0f, -1.0f), DirectX::PackedVector::XMCOLOR(DirectX::Colors::Green) }),
+		SVertex({ DirectX::XMFLOAT3(-1.0f, -1.0f, +1.0f), DirectX::PackedVector::XMCOLOR(DirectX::Colors::Blue) }),
+		SVertex({ DirectX::XMFLOAT3(-1.0f, +1.0f, +1.0f), DirectX::PackedVector::XMCOLOR(DirectX::Colors::Yellow) }),
+		SVertex({ DirectX::XMFLOAT3(+1.0f, +1.0f, +1.0f), DirectX::PackedVector::XMCOLOR(DirectX::Colors::Cyan) }),
+		SVertex({ DirectX::XMFLOAT3(+1.0f, -1.0f, +1.0f), DirectX::PackedVector::XMCOLOR(DirectX::Colors::Magenta) })
 	};
 
 	std::array<std::uint16_t, 36> vIndices =

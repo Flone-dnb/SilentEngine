@@ -32,7 +32,7 @@
 struct SVertex
 {
 	DirectX::XMFLOAT3 vPos;
-	DirectX::XMFLOAT4 vColor;
+	DirectX::PackedVector::XMCOLOR vColor;
 };
 
 
