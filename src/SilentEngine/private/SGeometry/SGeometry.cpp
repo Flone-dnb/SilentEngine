@@ -103,7 +103,7 @@ Microsoft::WRL::ComPtr<ID3DBlob> SGeometry::compileShader(const std::wstring& sP
 	}
 	else
 	{
-		SError::showErrorMessageBox(L"SGeometry::compileShader::D3DCompileFromFile()", L"File at " + sPathToShader + L" does not exist.");
+		SError::showErrorMessageBox(L"SGeometry::compileShader::D3DCompileFromFile()", L"file at " + sPathToShader + L" does not exist.");
 		return nullptr;
 	}
 
@@ -138,7 +138,7 @@ D3D12_VERTEX_BUFFER_VIEW SMeshGeometry::getVertexBufferView() const
 {
 	D3D12_VERTEX_BUFFER_VIEW vbv;
 	vbv.BufferLocation = pVertexBufferGPU->GetGPUVirtualAddress();
-	vbv.StrideInBytes = iVertexByteStride;
+	vbv.StrideInBytes = iVertexGraphicsObjectSizeInBytes;
 	vbv.SizeInBytes = iVertexBufferSizeInBytes;
 
 	return vbv;

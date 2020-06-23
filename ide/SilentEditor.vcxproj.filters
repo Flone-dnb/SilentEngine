@@ -16,72 +16,213 @@
     <Filter Include="SilentEngine">
       <UniqueIdentifier>{a8d96fda-2d00-4b80-b45b-4bef6f5bf248}</UniqueIdentifier>
     </Filter>
-    <Filter Include="SilentEngine\SApplication">
-      <UniqueIdentifier>{5024d630-ec27-4be1-ab6f-bcc496076e7d}</UniqueIdentifier>
+    <Filter Include="SilentEditor">
+      <UniqueIdentifier>{ea0faad0-5cc1-4b68-ade9-f544a1343557}</UniqueIdentifier>
     </Filter>
-    <Filter Include="SilentEngine\STimer">
-      <UniqueIdentifier>{06c03a2f-706a-4c99-a07a-9e25c9391738}</UniqueIdentifier>
+    <Filter Include="SilentEditor\EditorApplication">
+      <UniqueIdentifier>{997d69d6-73f0-45a2-8595-8f53e1e2e5c8}</UniqueIdentifier>
     </Filter>
-    <Filter Include="SilentEngine\SGameTimer">
-      <UniqueIdentifier>{4e64ae65-f843-4ed1-afa6-17d6ad017812}</UniqueIdentifier>
+    <Filter Include="SilentEngine\Private">
+      <UniqueIdentifier>{86a31200-cdcb-46ae-b795-d70ef3ee8eb3}</UniqueIdentifier>
     </Filter>
-    <Filter Include="SilentEngine\SGeometry">
-      <UniqueIdentifier>{baaead86-85c4-414a-97cc-f95a753cf7ea}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="SilentEngine\SError">
+    <Filter Include="SilentEngine\Private\SError">
       <UniqueIdentifier>{6c7f4150-7714-46ba-ab36-54f12e4904e0}</UniqueIdentifier>
     </Filter>
-    <Filter Include="SilentEngine\SMath">
+    <Filter Include="SilentEngine\Private\SFrameResource">
+      <UniqueIdentifier>{12a94731-5852-4ad4-87b0-e67dd49a5f2a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SilentEngine\Private\SGameTimer">
+      <UniqueIdentifier>{4e64ae65-f843-4ed1-afa6-17d6ad017812}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SilentEngine\Private\SGeometry">
+      <UniqueIdentifier>{baaead86-85c4-414a-97cc-f95a753cf7ea}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SilentEngine\Private\SMath">
       <UniqueIdentifier>{3c2b4270-f1ca-407c-a2ea-42bcc46fb894}</UniqueIdentifier>
     </Filter>
-    <Filter Include="SilentEngine\SUploadBuffer">
+    <Filter Include="SilentEngine\Private\SUploadBuffer">
       <UniqueIdentifier>{8700b289-0793-494f-9e64-9e18cfad1599}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SilentEngine\Public">
+      <UniqueIdentifier>{96733bd8-89d7-447a-bc94-efacbd5e9140}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SilentEngine\Public\SApplication">
+      <UniqueIdentifier>{5024d630-ec27-4be1-ab6f-bcc496076e7d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SilentEngine\Public\SPrimitiveShapeGenerator">
+      <UniqueIdentifier>{a437bd12-52c0-4973-836e-f306e8e0b857}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SilentEngine\Public\STimer">
+      <UniqueIdentifier>{06c03a2f-706a-4c99-a07a-9e25c9391738}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SilentEngine\Public\SVector">
+      <UniqueIdentifier>{886335b1-1e95-4e3e-b7d0-898d4ce78788}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SilentEngine\Public\SMouseKey">
+      <UniqueIdentifier>{ca76268c-9fa4-4e23-b0f4-8cab4c82ddd6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SilentEngine\Public\SKeyboardKey">
+      <UniqueIdentifier>{0a55131d-c05d-42fa-80bf-e2ef7eb7e73d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SilentEngine\Public\SVideoSettings">
+      <UniqueIdentifier>{141656cc-9317-4e81-a432-c4f8752b5039}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SilentEngine\Public\EntityComponentSystem">
+      <UniqueIdentifier>{8ac957ba-684a-42c9-9003-01f7b19895ac}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SilentEngine\Public\EntityComponentSystem\SContainer">
+      <UniqueIdentifier>{468b4590-2785-435e-bcc9-81420c897a3f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SilentEngine\Public\EntityComponentSystem\SComponent">
+      <UniqueIdentifier>{887eac49-167f-4b4e-bb85-9f00810c5fda}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SilentEngine\Public\EntityComponentSystem\SMeshComponent">
+      <UniqueIdentifier>{bde7186e-bfea-472d-8ae5-51ac9bac0d89}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SilentEditor\MyContainer">
+      <UniqueIdentifier>{b5645976-5baf-45d5-b8ca-ea0255559ffc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SilentEngine\Public\SProfiler">
+      <UniqueIdentifier>{74ebdc71-ee8f-425d-84bc-65e9f966a081}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SilentEngine\Public\SLevel">
+      <UniqueIdentifier>{a10de0f6-0d1f-4345-83f6-c832de128288}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SilentEngine\Public\EntityComponentSystem\SRuntimeMeshComponent">
+      <UniqueIdentifier>{cdeaad22-33ed-4ef2-8d03-5a9da614f591}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SilentEngine\Public\EntityComponentSystem\STargetComponent">
+      <UniqueIdentifier>{6cdb74cb-2f2f-4b1d-9dcb-d244d98bfc4d}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\SilentEditor\main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\SilentEngine\public\SApplication\SApplication.cpp">
-      <Filter>SilentEngine\SApplication</Filter>
+      <Filter>SilentEngine\Public\SApplication</Filter>
     </ClCompile>
     <ClCompile Include="..\src\SilentEngine\public\STimer\STimer.cpp">
-      <Filter>SilentEngine\STimer</Filter>
+      <Filter>SilentEngine\Public\STimer</Filter>
     </ClCompile>
     <ClCompile Include="..\src\SilentEngine\private\SGameTimer\SGameTimer.cpp">
-      <Filter>SilentEngine\SGameTimer</Filter>
+      <Filter>SilentEngine\Private\SGameTimer</Filter>
     </ClCompile>
     <ClCompile Include="..\src\SilentEngine\private\SGeometry\SGeometry.cpp">
-      <Filter>SilentEngine\SGeometry</Filter>
+      <Filter>SilentEngine\Private\SGeometry</Filter>
     </ClCompile>
     <ClCompile Include="..\src\SilentEngine\private\SError\SError.cpp">
-      <Filter>SilentEngine\SError</Filter>
+      <Filter>SilentEngine\Private\SError</Filter>
     </ClCompile>
     <ClCompile Include="..\src\SilentEngine\private\SMath\SMath.cpp">
-      <Filter>SilentEngine\SMath</Filter>
+      <Filter>SilentEngine\Private\SMath</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SilentEngine\private\SFrameResource\SFrameResource.cpp">
+      <Filter>SilentEngine\Private\SFrameResource</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SilentEngine\public\SPrimitiveShapeGenerator\SPrimitiveShapeGenerator.cpp">
+      <Filter>SilentEngine\Public\SPrimitiveShapeGenerator</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SilentEngine\public\SVector\SVector.cpp">
+      <Filter>SilentEngine\Public\SVector</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SilentEditor\EditorApplication\EditorApplication.cpp">
+      <Filter>SilentEditor\EditorApplication</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SilentEditor\main.cpp">
+      <Filter>SilentEditor</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SilentEngine\public\SVideoSettings\SVideoSettings.cpp">
+      <Filter>SilentEngine\Public\SVideoSettings</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SilentEngine\Public\EntityComponentSystem\SContainer\SContainer.cpp">
+      <Filter>SilentEngine\Public\EntityComponentSystem\SContainer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SilentEngine\Public\EntityComponentSystem\SComponent\SComponent.cpp">
+      <Filter>SilentEngine\Public\EntityComponentSystem\SComponent</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SilentEngine\Public\EntityComponentSystem\SMeshComponent\SMeshComponent.cpp">
+      <Filter>SilentEngine\Public\EntityComponentSystem\SMeshComponent</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SilentEditor\MyContainer\MyContainer.cpp">
+      <Filter>SilentEditor\MyContainer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SilentEngine\Public\SProfiler\SProfiler.cpp">
+      <Filter>SilentEngine\Public\SProfiler</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SilentEngine\Public\SLevel\SLevel.cpp">
+      <Filter>SilentEngine\Public\SLevel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SilentEngine\Public\EntityComponentSystem\SRuntimeMeshComponent\SRuntimeMeshComponent.cpp">
+      <Filter>SilentEngine\Public\EntityComponentSystem\SRuntimeMeshComponent</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SilentEngine\Public\EntityComponentSystem\STargetComponent\STargetComponent.cpp">
+      <Filter>SilentEngine\Public\EntityComponentSystem\STargetComponent</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\SilentEngine\public\SApplication\SApplication.h">
-      <Filter>SilentEngine\SApplication</Filter>
+      <Filter>SilentEngine\Public\SApplication</Filter>
     </ClInclude>
     <ClInclude Include="..\src\SilentEngine\public\STimer\STimer.h">
-      <Filter>SilentEngine\STimer</Filter>
+      <Filter>SilentEngine\Public\STimer</Filter>
     </ClInclude>
     <ClInclude Include="..\src\SilentEngine\private\SGameTimer\SGameTimer.h">
-      <Filter>SilentEngine\SGameTimer</Filter>
+      <Filter>SilentEngine\Private\SGameTimer</Filter>
     </ClInclude>
     <ClInclude Include="..\src\SilentEngine\private\SGeometry\SGeometry.h">
-      <Filter>SilentEngine\SGeometry</Filter>
+      <Filter>SilentEngine\Private\SGeometry</Filter>
     </ClInclude>
     <ClInclude Include="..\src\SilentEngine\private\SError\SError.h">
-      <Filter>SilentEngine\SError</Filter>
+      <Filter>SilentEngine\Private\SError</Filter>
     </ClInclude>
     <ClInclude Include="..\src\SilentEngine\private\SMath\SMath.h">
-      <Filter>SilentEngine\SMath</Filter>
+      <Filter>SilentEngine\Private\SMath</Filter>
     </ClInclude>
     <ClInclude Include="..\src\SilentEngine\private\SUploadBuffer\SUploadBuffer.h">
-      <Filter>SilentEngine\SUploadBuffer</Filter>
+      <Filter>SilentEngine\Private\SUploadBuffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SilentEngine\private\SFrameResource\SFrameResource.h">
+      <Filter>SilentEngine\Private\SFrameResource</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SilentEngine\public\SPrimitiveShapeGenerator\SPrimitiveShapeGenerator.h">
+      <Filter>SilentEngine\Public\SPrimitiveShapeGenerator</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SilentEngine\public\SVector\SVector.h">
+      <Filter>SilentEngine\Public\SVector</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SilentEngine\public\SMouseKey\SMouseKey.h">
+      <Filter>SilentEngine\Public\SMouseKey</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SilentEngine\public\SKeyboardKey\SKeyboardKey.h">
+      <Filter>SilentEngine\Public\SKeyboardKey</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SilentEditor\EditorApplication\EditorApplication.h">
+      <Filter>SilentEditor\EditorApplication</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SilentEngine\public\SVideoSettings\SVideoSettings.h">
+      <Filter>SilentEngine\Public\SVideoSettings</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SilentEngine\Public\EntityComponentSystem\SContainer\SContainer.h">
+      <Filter>SilentEngine\Public\EntityComponentSystem\SContainer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SilentEngine\Public\EntityComponentSystem\SComponent\SComponent.h">
+      <Filter>SilentEngine\Public\EntityComponentSystem\SComponent</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SilentEngine\Public\EntityComponentSystem\SMeshComponent\SMeshComponent.h">
+      <Filter>SilentEngine\Public\EntityComponentSystem\SMeshComponent</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SilentEditor\MyContainer\MyContainer.h">
+      <Filter>SilentEditor\MyContainer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SilentEngine\Public\SProfiler\SProfiler.h">
+      <Filter>SilentEngine\Public\SProfiler</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SilentEngine\Public\SLevel\SLevel.h">
+      <Filter>SilentEngine\Public\SLevel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SilentEngine\Public\EntityComponentSystem\SRuntimeMeshComponent\SRuntimeMeshComponent.h">
+      <Filter>SilentEngine\Public\EntityComponentSystem\SRuntimeMeshComponent</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SilentEngine\Public\EntityComponentSystem\STargetComponent\STargetComponent.h">
+      <Filter>SilentEngine\Public\EntityComponentSystem\STargetComponent</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

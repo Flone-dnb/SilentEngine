@@ -12,8 +12,31 @@
 STimer::STimer()
 {
 	bRunning = false;
+	bTimeoutEnabled = false;
 
 	dTimeInPauseInMS = 0.0;
+	fTimeInSecToTimeout = 0.0f;
+
+	fTimerAccuracyInSec = 0.1f;
+}
+
+void STimer::setCallbackOnTimeout(std::function<void(void)> function, float fTimeInSecToTimeout, bool bLooping, float fTimerAccuracyInSec)
+{
+	timeoutFunction = function;
+
+	this->fTimeInSecToTimeout = fTimeInSecToTimeout;
+	this->bLooping = bLooping;
+
+	if (fTimerAccuracyInSec > 0.1f)
+	{
+		this->fTimerAccuracyInSec = 0.1f;
+	}
+	else
+	{
+		this->fTimerAccuracyInSec = fTimerAccuracyInSec;
+	}
+
+	bTimeoutEnabled = true;
 }
 
 void STimer::start()
@@ -23,10 +46,20 @@ void STimer::start()
 	startTime = std::chrono::steady_clock::now();
 
 	bRunning = true;
+
+	if (bTimeoutEnabled)
+	{
+		iCurrentCallbackTimerIndex++;
+
+		std::thread tTimeout(&STimer::timerTimeoutFunction, this, iCurrentCallbackTimerIndex);
+		tTimeout.detach();
+	}
 }
 
 void STimer::stop()
 {
+	bTimeoutEnabled = false;
+
 	if (bRunning)
 	{
 		bRunning = false;
@@ -45,6 +78,33 @@ double STimer::getElapsedTimeInMS()
 	{
 		return 0.0f;
 	}
+}
+
+void STimer::timerTimeoutFunction(size_t iCurrentCallbackTimerIndex)
+{
+	do
+	{
+		dTimeInPauseInMS = 0.0;
+
+		startTime = std::chrono::steady_clock::now();
+
+		do
+		{
+			std::this_thread::sleep_for(std::chrono::duration<float>(fTimerAccuracyInSec));
+
+			if (iCurrentCallbackTimerIndex != this->iCurrentCallbackTimerIndex)
+			{
+				// User set the next callback, finish this one.
+				return;
+			}
+		}while ((getElapsedTimeInSec() < fTimeInSecToTimeout) && bRunning);
+
+		if (bRunning)
+		{
+			timeoutFunction();
+		}
+
+	}while(bLooping && bRunning);
 }
 
 void STimer::pause()

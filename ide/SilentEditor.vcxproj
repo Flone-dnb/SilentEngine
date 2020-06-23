@@ -106,6 +106,8 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AssemblyDebug>
+      </AssemblyDebug>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -140,25 +142,54 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AssemblyDebug>false</AssemblyDebug>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\SilentEditor\EditorApplication\EditorApplication.cpp" />
     <ClCompile Include="..\src\SilentEditor\main.cpp" />
+    <ClCompile Include="..\src\SilentEditor\MyContainer\MyContainer.cpp" />
     <ClCompile Include="..\src\SilentEngine\private\SError\SError.cpp" />
+    <ClCompile Include="..\src\SilentEngine\private\SFrameResource\SFrameResource.cpp" />
     <ClCompile Include="..\src\SilentEngine\private\SGameTimer\SGameTimer.cpp" />
     <ClCompile Include="..\src\SilentEngine\private\SGeometry\SGeometry.cpp" />
     <ClCompile Include="..\src\SilentEngine\private\SMath\SMath.cpp" />
+    <ClCompile Include="..\src\SilentEngine\Public\EntityComponentSystem\SComponent\SComponent.cpp" />
+    <ClCompile Include="..\src\SilentEngine\Public\EntityComponentSystem\SContainer\SContainer.cpp" />
+    <ClCompile Include="..\src\SilentEngine\Public\EntityComponentSystem\SMeshComponent\SMeshComponent.cpp" />
+    <ClCompile Include="..\src\SilentEngine\Public\EntityComponentSystem\SRuntimeMeshComponent\SRuntimeMeshComponent.cpp" />
+    <ClCompile Include="..\src\SilentEngine\Public\EntityComponentSystem\STargetComponent\STargetComponent.cpp" />
     <ClCompile Include="..\src\SilentEngine\public\SApplication\SApplication.cpp" />
+    <ClCompile Include="..\src\SilentEngine\Public\SLevel\SLevel.cpp" />
+    <ClCompile Include="..\src\SilentEngine\public\SPrimitiveShapeGenerator\SPrimitiveShapeGenerator.cpp" />
+    <ClCompile Include="..\src\SilentEngine\Public\SProfiler\SProfiler.cpp" />
     <ClCompile Include="..\src\SilentEngine\public\STimer\STimer.cpp" />
+    <ClCompile Include="..\src\SilentEngine\public\SVector\SVector.cpp" />
+    <ClCompile Include="..\src\SilentEngine\public\SVideoSettings\SVideoSettings.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\src\SilentEditor\EditorApplication\EditorApplication.h" />
+    <ClInclude Include="..\src\SilentEditor\MyContainer\MyContainer.h" />
     <ClInclude Include="..\src\SilentEngine\private\SError\SError.h" />
+    <ClInclude Include="..\src\SilentEngine\private\SFrameResource\SFrameResource.h" />
     <ClInclude Include="..\src\SilentEngine\private\SGameTimer\SGameTimer.h" />
     <ClInclude Include="..\src\SilentEngine\private\SGeometry\SGeometry.h" />
     <ClInclude Include="..\src\SilentEngine\private\SMath\SMath.h" />
     <ClInclude Include="..\src\SilentEngine\private\SUploadBuffer\SUploadBuffer.h" />
+    <ClInclude Include="..\src\SilentEngine\Public\EntityComponentSystem\SComponent\SComponent.h" />
+    <ClInclude Include="..\src\SilentEngine\Public\EntityComponentSystem\SContainer\SContainer.h" />
+    <ClInclude Include="..\src\SilentEngine\Public\EntityComponentSystem\SMeshComponent\SMeshComponent.h" />
+    <ClInclude Include="..\src\SilentEngine\Public\EntityComponentSystem\SRuntimeMeshComponent\SRuntimeMeshComponent.h" />
+    <ClInclude Include="..\src\SilentEngine\Public\EntityComponentSystem\STargetComponent\STargetComponent.h" />
     <ClInclude Include="..\src\SilentEngine\public\SApplication\SApplication.h" />
+    <ClInclude Include="..\src\SilentEngine\public\SKeyboardKey\SKeyboardKey.h" />
+    <ClInclude Include="..\src\SilentEngine\Public\SLevel\SLevel.h" />
+    <ClInclude Include="..\src\SilentEngine\public\SMouseKey\SMouseKey.h" />
+    <ClInclude Include="..\src\SilentEngine\public\SPrimitiveShapeGenerator\SPrimitiveShapeGenerator.h" />
+    <ClInclude Include="..\src\SilentEngine\Public\SProfiler\SProfiler.h" />
     <ClInclude Include="..\src\SilentEngine\public\STimer\STimer.h" />
+    <ClInclude Include="..\src\SilentEngine\public\SVector\SVector.h" />
+    <ClInclude Include="..\src\SilentEngine\public\SVideoSettings\SVideoSettings.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

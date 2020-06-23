@@ -10,10 +10,23 @@
 
 // STL
 #include <array>
+#include <thread>
+
+// DirectX
+#if defined(DEBUG) || defined(_DEBUG) 
+#include <dxgidebug.h>
+#include <InitGuid.h>
+#pragma comment(lib, "dxguid.lib")
+#endif
 
 // Custom
-#include "SilentEngine/private/SError/SError.h"
-#include "SilentEngine/public/STimer/STimer.h"
+#include "SilentEngine/Private/SError/SError.h"
+#include "SilentEngine/Public/STimer/STimer.h"
+#include "SilentEngine/Public/SPrimitiveShapeGenerator/SPrimitiveShapeGenerator.h"
+#include "SilentEngine/Public/EntityComponentSystem/SContainer/SContainer.h"
+#include "SilentEngine/Public/EntityComponentSystem/SComponent/SComponent.h"
+#include "SilentEngine/Public/EntityComponentSystem/SMeshComponent/SMeshComponent.h"
+#include "SilentEngine/Public/EntityComponentSystem/SRuntimeMeshComponent/SRuntimeMeshComponent.h"
 
 
 SApplication* SApplication::pApp = nullptr;
@@ -22,20 +35,261 @@ SApplication* SApplication::pApp = nullptr;
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
 
-
-
-bool SApplication::setInitMainWindowTitle(std::wstring sMainWindowTitle)
+bool SApplication::close()
 {
-	if (bInitCalled == false)
+	if (pApp)
 	{
-		this->sMainWindowTitle = sMainWindowTitle;
-		return false;
+		if (pApp->bRunCalled)
+		{
+			DestroyWindow(pApp->getMainWindowHandle());
+			return false;
+		}
+		else
+		{
+			MessageBox(0, L"An error occurred at SApplication::close(). Error: run() should be called first.", L"Error", 0);
+			return true;
+		}
 	}
 	else
 	{
-		MessageBox(0, L"An error occurred at SApplication::setInitMainWindowTitle(). Error: this function should be called before init() call.", L"Error", 0);
+		MessageBox(0, L"An error occurred at SApplication::close(). Error: an application instance is not created (pApp was nullptr).", L"Error", 0);
 		return true;
 	}
+}
+
+SLevel* SApplication::getCurrentLevel() const
+{
+	return pCurrentLevel;
+}
+
+bool SApplication::spawnContainerInLevel(SContainer* pContainer)
+{
+	mtxDraw.lock();
+
+	flushCommandQueue();
+	
+	mtxSpawnDespawn.lock();
+
+	std::vector<SContainer*>* pvRenderableContainers = nullptr;
+	getCurrentLevel()->getRenderableContainers(pvRenderableContainers);
+
+	std::vector<SContainer*>* pvNotRenderableContainers = nullptr;
+	getCurrentLevel()->getNotRenderableContainers(pvNotRenderableContainers);
+
+	bool bHasUniqueName = true;
+
+	for (size_t i = 0; i < pvRenderableContainers->size(); i++)
+	{
+		if (pvRenderableContainers->operator[](i)->getContainerName() == pContainer->getContainerName())
+		{
+			bHasUniqueName = false;
+			break;
+		}
+	}
+
+	for (size_t i = 0; i < pvNotRenderableContainers->size(); i++)
+	{
+		if (pvNotRenderableContainers->operator[](i)->getContainerName() == pContainer->getContainerName())
+		{
+			bHasUniqueName = false;
+			break;
+		}
+	}
+
+	if (bHasUniqueName == false)
+	{
+		mtxSpawnDespawn.unlock();
+		mtxDraw.unlock();
+		return true;
+	}
+
+	// We need 1 CB for each SCT_MESH, SCT_RUNTIME_MESH component.
+	size_t iCBCount = pContainer->getMeshComponentsCount();
+
+	if (iCBCount == 0)
+	{
+		// No renderable components inside.
+		pvNotRenderableContainers->push_back(pContainer);
+	}
+	else
+	{
+		iActualObjectCBCount += iCBCount;
+
+		bool bExpanded = false;
+		size_t iNewObjectsCBIndex = 0;
+
+		for (size_t i = 0; i < vFrameResources.size(); i++)
+		{
+			iNewObjectsCBIndex = vFrameResources[i]->addNewObjectCB(iCBCount, &bExpanded);
+
+			pContainer->createVertexBufferForRuntimeMeshComponents(vFrameResources[i].get());
+		}
+
+
+		pContainer->setStartIndexInCB(iNewObjectsCBIndex);
+
+
+
+		resetCommandList();
+
+		for (size_t i = 0; i < pContainer->vComponents.size(); i++)
+		{
+			pContainer->vComponents[i]->setCBIndexForMeshComponents(&iNewObjectsCBIndex);
+		}
+
+		if (executeCommandList())
+		{
+			mtxSpawnDespawn.unlock();
+			mtxDraw.unlock();
+			return true;
+		}
+
+		if (flushCommandQueue())
+		{
+			mtxSpawnDespawn.unlock();
+			mtxDraw.unlock();
+			return true;
+		}
+
+
+
+		pvRenderableContainers->push_back(pContainer);
+
+
+		if (bExpanded)
+		{
+			// All CBs are cleared (they are new), need to refill them.
+
+			for (size_t i = 0; i < pvRenderableContainers->size(); i++)
+			{
+				for (size_t j = 0; j < pvRenderableContainers->operator[](i)->vComponents.size(); j++)
+				{
+					pvRenderableContainers->operator[](i)->vComponents[j]->setUpdateCBForEveryMeshComponent();
+				}
+			}
+
+			// Recreate cbv heap.
+			createCBVHeap();
+			createConstantBufferViews();
+		}
+	}
+
+	pContainer->setSpawnedInLevel(true);
+
+	mtxSpawnDespawn.unlock();
+	mtxDraw.unlock();
+
+	return false;
+}
+
+void SApplication::despawnContainerFromLevel(SContainer* pContainer)
+{
+	mtxDraw.lock();
+
+	flushCommandQueue();
+
+	mtxSpawnDespawn.lock();
+
+	// We need 1 for each SCT_MESH, SCT_RUNTIME_MESH component.
+	size_t iCBCount = pContainer->getMeshComponentsCount();
+
+	if (iCBCount == 0)
+	{
+		// No renderable components inside.
+		// Just remove from vector.
+
+		std::vector<SContainer*>* pvNotRenderableContainers = nullptr;
+		pCurrentLevel->getNotRenderableContainers(pvNotRenderableContainers);
+		
+		for (size_t i = 0; i < pvNotRenderableContainers->size(); i++)
+		{
+			if (pvNotRenderableContainers->operator[](i) == pContainer)
+			{
+				pvNotRenderableContainers->erase( pvNotRenderableContainers->begin() + i );
+				break;
+			}
+		}
+	}
+	else
+	{
+		iActualObjectCBCount -= iCBCount;
+
+		bool bResized = false;
+
+		for (size_t i = 0; i < vFrameResources.size(); i++)
+		{
+			vFrameResources[i]->removeObjectCB(pContainer->getStartIndexInCB(), iCBCount, &bResized);
+		}
+
+		size_t iMaxVertexBufferIndex = 0;
+		pContainer->getMaxVertexBufferIndexForRuntimeMeshComponents(iMaxVertexBufferIndex);
+
+		size_t iRemovedCount = 0;
+		pContainer->removeVertexBufferForRuntimeMeshComponents(&vFrameResources, iRemovedCount);
+
+		
+		std::vector<SContainer*>* pvRenderableContainers = nullptr;
+		pCurrentLevel->getRenderableContainers(pvRenderableContainers);
+
+		if (iRemovedCount != 0)
+		{
+			for (size_t i = 0; i < pvRenderableContainers->size(); i++)
+			{
+				pvRenderableContainers->operator[](i)->updateVertexBufferIndexForRuntimeMeshComponents(iMaxVertexBufferIndex, iRemovedCount);
+			}
+		}
+
+		for (size_t i = 0; i < pvRenderableContainers->size(); i++)
+		{
+			if (pvRenderableContainers->operator[](i) == pContainer)
+			{
+				pvRenderableContainers->erase( pvRenderableContainers->begin() + i );
+				break;
+			}
+		}
+		
+
+		size_t iStartIndex = pContainer->getStartIndexInCB();
+
+		for (size_t i = 0; i < pvRenderableContainers->size(); i++)
+		{
+			if (pvRenderableContainers->operator[](i)->getStartIndexInCB() >= iStartIndex)
+			{
+				pvRenderableContainers->operator[](i)->setStartIndexInCB(iStartIndex);
+
+				for (size_t j = 0; j < pvRenderableContainers->operator[](i)->vComponents.size(); j++)
+				{
+					pvRenderableContainers->operator[](i)->vComponents[j]->setCBIndexForMeshComponents(&iStartIndex, false);
+				}
+
+				iStartIndex = pvRenderableContainers->operator[](i)->getStartIndexInCB() + pvRenderableContainers->operator[](i)->getMeshComponentsCount();
+			}
+		}
+
+		pContainer->setStartIndexInCB(0);
+
+		if (bResized)
+		{
+			// All CBs are cleared (they are new), need to refill them.
+
+			for (size_t i = 0; i < pvRenderableContainers->size(); i++)
+			{
+				for (size_t j = 0; j < pvRenderableContainers->operator[](i)->vComponents.size(); j++)
+				{
+					pvRenderableContainers->operator[](i)->vComponents[j]->setUpdateCBForEveryMeshComponent();
+				}
+			}
+
+			// Recreate cbv heap.
+			createCBVHeap();
+			createConstantBufferViews();
+		}
+	}
+
+	pContainer->setSpawnedInLevel(false);
+
+	mtxSpawnDespawn.unlock();
+	mtxDraw.unlock();
 }
 
 bool SApplication::setInitPreferredDisplayAdapter(std::wstring sPreferredDisplayAdapter)
@@ -62,34 +316,6 @@ bool SApplication::setInitPreferredOutputAdapter(std::wstring sPreferredOutputAd
 	else
 	{
 		MessageBox(0, L"An error occurred at SApplication::setInitPreferredOutputAdapter(). Error: this function should be called before init() call.", L"Error", 0);
-		return true;
-	}
-}
-
-bool SApplication::setInitBackBufferFormat(DXGI_FORMAT format)
-{
-	if (bInitCalled == false)
-	{
-		BackBufferFormat = format;
-		return false;
-	}
-	else
-	{
-		MessageBox(0, L"An error occurred at SApplication::setInitBackBufferFormat(). Error: this function should be called before init() call.", L"Error", 0);
-		return true;
-	}
-}
-
-bool SApplication::setInitDepthStencilBufferFormat(DXGI_FORMAT format)
-{
-	if (bInitCalled == false)
-	{
-		DepthStencilFormat = format;
-		return false;
-	}
-	else
-	{
-		MessageBox(0, L"An error occurred at SApplication::setInitDepthStencilBufferFormat(). Error: this function should be called before init() call.", L"Error", 0);
 		return true;
 	}
 }
@@ -122,28 +348,21 @@ bool SApplication::setInitEnableVSync(bool bEnable)
 	}
 }
 
-void SApplication::setInitEnableBackFaceCulling(bool bEnable)
+void SApplication::setBackBufferFillColor(SVector vColor)
 {
-	bUseBackFaceCulling = bEnable;
+	backBufferFillColor[0] = vColor.getX();
+	backBufferFillColor[1] = vColor.getY();
+	backBufferFillColor[2] = vColor.getZ();
 }
 
 void SApplication::setEnableWireframeMode(bool bEnable)
 {
 	bUseFillModeWireframe = bEnable;
+}
 
-	mtxDraw.lock();
-
-	if (bRunCalled)
-	{
-		flushCommandQueue();
-	}
-
-	if (bInitCalled)
-	{
-		createPSO();
-	}
-
-	mtxDraw.unlock();
+void SApplication::setEnableBackfaceCulling(bool bEnable)
+{
+	bUseBackFaceCulling = bEnable;
 }
 
 void SApplication::setMSAAEnabled(bool bEnable)
@@ -152,12 +371,15 @@ void SApplication::setMSAAEnabled(bool bEnable)
 	{
 		MSAA_Enabled = bEnable;
 
-		mtxDraw.lock();
+		if (bInitCalled)
+		{
+			mtxDraw.lock();
 
-		createSwapChain();
-		onResize();
+			createPSO();
+			onResize();
 
-		mtxDraw.unlock();
+			mtxDraw.unlock();
+		}
 	}
 }
 
@@ -174,16 +396,11 @@ bool SApplication::setMSAASampleCount(MSAASampleCount eSampleCount)
 				return true;
 			}
 
-			if (MSAA_Enabled)
+			if (MSAA_Enabled && bInitCalled)
 			{
 				mtxDraw.lock();
 
-				if (createSwapChain())
-				{
-					mtxDraw.unlock();
-
-					return true;
-				}
+				createPSO();
 
 				onResize();
 
@@ -197,6 +414,28 @@ bool SApplication::setMSAASampleCount(MSAASampleCount eSampleCount)
 	{
 		return true;
 	}
+}
+
+bool SApplication::isMSAAEnabled() const
+{
+	return MSAA_Enabled;
+}
+
+MSAASampleCount SApplication::getMSAASampleCount() const
+{
+	MSAASampleCount sampleCount;
+
+	switch (MSAA_SampleCount)
+	{
+	case(2):
+		sampleCount = MSAASampleCount::SC_2;
+		break;
+	case(4):
+		sampleCount = MSAASampleCount::SC_4;
+		break;
+	}
+
+	return sampleCount;
 }
 
 bool SApplication::setFullscreenWithCurrentResolution(bool bFullscreen)
@@ -245,14 +484,19 @@ bool SApplication::setFullscreenWithCurrentResolution(bool bFullscreen)
 	}
 }
 
-bool SApplication::setScreenResolution(UINT iWidth, UINT iHeight)
+bool SApplication::setScreenResolution(SScreenResolution screenResolution)
 {
 	if (bInitCalled)
 	{
-		if (iMainWindowWidth != iWidth || iMainWindowHeight != iHeight)
+		if (iMainWindowWidth != screenResolution.iWidth || iMainWindowHeight != screenResolution.iHeight)
 		{
-			iMainWindowWidth  = iWidth;
-			iMainWindowHeight = iHeight;
+			if ((bWindowMaximized || bWindowMinimized) && bFullscreen == false)
+			{
+				restoreWindow();
+			}
+
+			iMainWindowWidth  = screenResolution.iWidth;
+			iMainWindowHeight = screenResolution.iHeight;
 
 			bCustomWindowSize = true;
 
@@ -267,7 +511,10 @@ bool SApplication::setScreenResolution(UINT iWidth, UINT iHeight)
 			desc.Scaling = iScaling;
 			desc.ScanlineOrdering = iScanlineOrder;
 
+			
 			mtxDraw.lock();
+
+			flushCommandQueue();
 
 			pSwapChain->ResizeTarget(&desc);
 
@@ -286,16 +533,29 @@ bool SApplication::setScreenResolution(UINT iWidth, UINT iHeight)
 	}
 }
 
-bool SApplication::setFOV(float fFOVInGrad)
+bool SApplication::setCameraFOV(float fFOVInDeg)
 {
-	if (fFOVInGrad > 150 || fFOVInGrad < 60)
+	if (fFOVInDeg > 200 || fFOVInDeg < 1)
 	{
-		MessageBox(0, L"An error occurred at SApplication::setFOV(). Error: the FOV value should be in the range [60; 150].", L"Error", 0);
+		MessageBox(0, L"An error occurred at SApplication::setFOV(). Error: the FOV value should be in the range [1; 200].", L"Error", 0);
 		return true;
 	}
 	else
 	{
-		this->fFOVInGrad = fFOVInGrad;
+		this->fFOVInDeg = fFOVInDeg;
+
+		if (bInitCalled)
+		{
+			mtxDraw.lock();
+
+			flushCommandQueue();
+
+			// Apply FOV.
+			onResize();
+
+			mtxDraw.unlock();
+		}
+		
 		return false;
 	}
 }
@@ -350,14 +610,99 @@ bool SApplication::setFarClipPlane(float fFarClipPlaneValue)
 	}
 }
 
+void SApplication::setFixedCameraRotationShift(float fHorizontalShift, float fVerticalShift)
+{
+	// Make each pixel correspond to a quarter of a degree.
+	float dx = DirectX::XMConvertToRadians(0.25f * fHorizontalShift);
+	float dy = DirectX::XMConvertToRadians(0.25f * fVerticalShift);
+
+	// Update angles based on input to orbit camera around box.
+	fTheta += dx;
+	fPhi += -dy;
+
+	// Restrict the angle mPhi.
+	fPhi = SMath::clamp(fPhi, 0.1f, SMath::fPi - 0.1f);
+}
+
+void SApplication::setFixedCameraZoom(float fZoom)
+{
+	if (fZoom > 0.0f)
+	{
+		fRadius = fZoom;
+	}
+}
+
+void SApplication::setFixedCameraRotation(float fPhi, float fTheta)
+{
+	this->fPhi = fPhi;
+	this->fTheta = fTheta;
+}
+
 void SApplication::setCallTick(bool bTickCanBeCalled)
 {
 	bCallTick = bTickCanBeCalled;
 }
 
+void SApplication::setShowMouseCursor(bool bShow)
+{
+	if (bShow)
+	{
+		if (bMouseCursorShown == false)
+		{
+			ShowCursor(true);
+			bMouseCursorShown = true;
+		}
+	}
+	else
+	{
+		if (bMouseCursorShown)
+		{
+			ShowCursor(false);
+			bMouseCursorShown = false;
+		}
+	}
+}
+
+bool SApplication::setCursorPos(const SVector& vPos)
+{
+	if (bInitCalled)
+	{
+		if (bMouseCursorShown)
+		{
+			POINT pos;
+			pos.x = vPos.getX();
+			pos.y = vPos.getY();
+
+			if (ClientToScreen(hMainWindow, &pos) == 0)
+			{
+				SError::showErrorMessageBox(L"SApplication::setCursorPos::ClientToScreen()", std::to_wstring(GetLastError()));
+				return true;
+			}
+
+			if (SetCursorPos(pos.x, pos.y) == 0)
+			{
+				SError::showErrorMessageBox(L"SApplication::setCursorPos::SetCursorPos()", std::to_wstring(GetLastError()));
+				return true;
+			}
+
+			return false;
+		}
+		else
+		{
+			SError::showErrorMessageBox(L"SApplication::setCursorPos()", L"the cursor is hidden.");
+			return true;
+		}
+	}
+	else
+	{
+		SError::showErrorMessageBox(L"SApplication::setCursorPos()", L"init() should be called first.");
+		return true;
+	}
+}
+
 void SApplication::setFPSLimit(float fFPSLimit)
 {
-	if (fFPSLimit <= 0.0f)
+	if (fFPSLimit <= 0.1f)
 	{
 		this->fFPSLimit = 0.0f;
 		fDelayBetweenFramesInMS = 0.0f;
@@ -365,13 +710,27 @@ void SApplication::setFPSLimit(float fFPSLimit)
 	else
 	{
 		this->fFPSLimit = fFPSLimit;
-		fDelayBetweenFramesInMS = 1000.0 / fFPSLimit;
+		fDelayBetweenFramesInMS = 1000.0f / fFPSLimit;
 	}
 }
 
-void SApplication::setShowFrameStatsInTitle(bool bShow)
+
+void SApplication::setShowFrameStatsInWindowTitle(bool bShow)
 {
 	bShowFrameStatsInTitle = bShow;
+}
+
+void SApplication::setWindowTitleText(const std::wstring& sTitleText)
+{
+	sMainWindowTitle = sTitleText;
+
+	if (bInitCalled)
+	{
+		if (bShowFrameStatsInTitle == false)
+		{
+			SetWindowText(hMainWindow, sTitleText.c_str());
+		}
+	}
 }
 
 SApplication* SApplication::getApp()
@@ -379,7 +738,71 @@ SApplication* SApplication::getApp()
 	return pApp;
 }
 
-std::vector<std::wstring> SApplication::getSupportedDisplayAdapters()
+bool SApplication::getCursorPos(SVector* vPos)
+{
+	if (bInitCalled)
+	{
+		if (bMouseCursorShown)
+		{
+			POINT pos;
+
+			if (GetCursorPos(&pos) == 0)
+			{
+				SError::showErrorMessageBox(L"SApplication::getCursorPos::GetCursorPos()", std::to_wstring(GetLastError()));
+				return true;
+			}
+
+			if (ScreenToClient(hMainWindow, &pos) == 0)
+			{
+				SError::showErrorMessageBox(L"SApplication::getCursorPos::ScreenToClient()", std::to_wstring(GetLastError()));
+				return true;
+			}
+
+			vPos->setX(pos.x);
+			vPos->setY(pos.y);
+
+			return false;
+		}
+		else
+		{
+			SError::showErrorMessageBox(L"SApplication::getCursorPos()", L"the cursor is hidden.");
+			return true;
+		}
+	}
+	else
+	{
+		SError::showErrorMessageBox(L"SApplication::getCursorPos()", L"init() shound be called first.");
+		return true;
+	}
+}
+
+bool SApplication::getWindowSize(SVector* vSize)
+{
+	if (bInitCalled)
+	{
+		vSize->setX(iMainWindowWidth);
+		vSize->setY(iMainWindowHeight);
+
+		return false;
+	}
+	else
+	{
+		SError::showErrorMessageBox(L"SApplication::getWindowSize()", L"init() should be called first.");
+		return true;
+	}
+}
+
+SVideoSettings* SApplication::getVideoSettings() const
+{
+	return pVideoSettings;
+}
+
+SProfiler* SApplication::getProfiler() const
+{
+	return pProfiler;
+}
+
+std::vector<std::wstring> SApplication::getSupportedDisplayAdapters() const
 {
 	std::vector<std::wstring> vSupportedAdapters;
 
@@ -412,15 +835,15 @@ std::vector<std::wstring> SApplication::getSupportedDisplayAdapters()
 	}
 	else
 	{
-		vSupportedAdapters.push_back(L"Error. DXGIFactory was not created.");
+		vSupportedAdapters.push_back(L"Error. DXGIFactory was not created. Call init() first.");
 	}
 
 	return vSupportedAdapters;
 }
 
-std::wstring SApplication::getCurrentDisplayAdapter()
+std::wstring SApplication::getCurrentDisplayAdapter() const
 {
-	if (pAdapter)
+	if (bInitCalled)
 	{
 		if (bUsingWARPAdapter)
 		{
@@ -438,13 +861,13 @@ std::wstring SApplication::getCurrentDisplayAdapter()
 	}
 	else
 	{
-		return L"Adapter is not created.";
+		return L"init() should be called first.";
 	}
 }
 
-bool SApplication::getVideoMemorySizeInBytesOfCurrentDisplayAdapter(SIZE_T* pSizeInBytes)
+bool SApplication::getVideoMemorySizeInBytesOfCurrentDisplayAdapter(SIZE_T* pSizeInBytes) const
 {
-	if (pAdapter)
+	if (bInitCalled)
 	{
 		DXGI_ADAPTER_DESC desc;
 		pAdapter.Get()->GetDesc(&desc);
@@ -459,9 +882,9 @@ bool SApplication::getVideoMemorySizeInBytesOfCurrentDisplayAdapter(SIZE_T* pSiz
 	}
 }
 
-bool SApplication::getVideoMemoryUsageInBytesOfCurrentDisplayAdapter(UINT64* pSizeInBytes)
+bool SApplication::getVideoMemoryUsageInBytesOfCurrentDisplayAdapter(UINT64* pSizeInBytes) const
 {
-	if (pAdapter)
+	if (bInitCalled)
 	{
 		DXGI_QUERY_VIDEO_MEMORY_INFO videoMemoryInfo;
 		pAdapter->QueryVideoMemoryInfo(0, DXGI_MEMORY_SEGMENT_GROUP_LOCAL, &videoMemoryInfo);
@@ -476,7 +899,7 @@ bool SApplication::getVideoMemoryUsageInBytesOfCurrentDisplayAdapter(UINT64* pSi
 	}
 }
 
-std::vector<std::wstring> SApplication::getOutputDisplaysOfCurrentDisplayAdapter()
+std::vector<std::wstring> SApplication::getOutputDisplaysOfCurrentDisplayAdapter() const
 {
 	std::vector<std::wstring> vOutputAdapters;
 
@@ -509,15 +932,15 @@ std::vector<std::wstring> SApplication::getOutputDisplaysOfCurrentDisplayAdapter
 	}
 	else
 	{
-		vOutputAdapters.push_back(L"Error. DXGIFactory was not created.");
+		vOutputAdapters.push_back(L"Error. DXGIFactory was not created. Call init() first.");
 	}
 
 	return vOutputAdapters;
 }
 
-bool SApplication::getAvailableScreenResolutionsOfCurrentOutputDisplay(std::vector<SScreenResolution>* vResolutions)
+bool SApplication::getAvailableScreenResolutionsOfCurrentOutputDisplay(std::vector<SScreenResolution>* vResolutions) const
 {
-	if (pOutput)
+	if (bInitCalled)
 	{
 		UINT numModes = 0;
 
@@ -563,9 +986,9 @@ bool SApplication::getAvailableScreenResolutionsOfCurrentOutputDisplay(std::vect
 	}
 }
 
-std::wstring SApplication::getCurrentOutputDisplay()
+std::wstring SApplication::getCurrentOutputDisplay() const
 {
-	if (pOutput)
+	if (bInitCalled)
 	{
 		DXGI_OUTPUT_DESC desc;
 		pOutput.Get()->GetDesc(&desc);
@@ -576,27 +999,35 @@ std::wstring SApplication::getCurrentOutputDisplay()
 	}
 	else
 	{
-		return L"Adapter is not created.";
+		return L"init() should be called first.";
 	}
 }
 
-float SApplication::getCurrentRefreshRate()
+float SApplication::getCurrentOutputDisplayRefreshRate() const
 {
-	DXGI_SWAP_CHAIN_FULLSCREEN_DESC desc;
-
-	HRESULT hresult = pSwapChain->GetFullscreenDesc(&desc);
-	if (FAILED(hresult))
+	if (bInitCalled)
 	{
-		SError::showErrorMessageBox(hresult, L"SApplication::getCurrentScreenResolution::IDXGISwapChain1::GetFullscreenDesc()");
-		return 0.0f;
+		DXGI_SWAP_CHAIN_FULLSCREEN_DESC desc;
+
+		HRESULT hresult = pSwapChain->GetFullscreenDesc(&desc);
+		if (FAILED(hresult))
+		{
+			SError::showErrorMessageBox(hresult, L"SApplication::getCurrentScreenResolution::IDXGISwapChain1::GetFullscreenDesc()");
+			return 0.0f;
+		}
+		else
+		{
+			return desc.RefreshRate.Numerator / static_cast<float>(desc.RefreshRate.Denominator);
+		}
 	}
 	else
 	{
-		return desc.RefreshRate.Numerator / static_cast<float>(desc.RefreshRate.Denominator);
+		SError::showErrorMessageBox(L"SApplication::getCurrentOutputDisplayRefreshRate()", L"init() should be called first.");
+		return 0.0f;
 	}
 }
 
-bool SApplication::getCurrentScreenResolution(SScreenResolution* pScreenResolution)
+bool SApplication::getCurrentScreenResolution(SScreenResolution* pScreenResolution) const
 {
 	if (bInitCalled)
 	{
@@ -623,27 +1054,110 @@ bool SApplication::getCurrentScreenResolution(SScreenResolution* pScreenResoluti
 	}
 }
 
-bool SApplication::isFullscreen()
+bool SApplication::isFullscreen() const
 {
 	return bFullscreen;
 }
 
-float SApplication::getNearClipPlaneValue()
+float SApplication::getNearClipPlaneValue() const
 {
 	return fNearClipPlaneValue;
 }
 
-float SApplication::getFarClipPlaneValue()
+float SApplication::getFarClipPlaneValue() const
 {
 	return fFarClipPlaneValue;
 }
 
-bool SApplication::isWireframeModeEnabled()
+void SApplication::getFixedCameraLocalAxisVector(SVector* pvXAxis, SVector* pvYAxis, SVector* pvZAxis) const
+{
+	if (pvXAxis)
+	{
+		pvXAxis->setX(vView._11);
+		pvXAxis->setY(vView._12);
+		pvXAxis->setZ(vView._13);
+	}
+
+	if (pvYAxis)
+	{
+		pvYAxis->setX(vView._21);
+		pvYAxis->setY(vView._22);
+		pvYAxis->setZ(vView._23);
+	}
+
+	if (pvZAxis)
+	{
+		pvZAxis->setX(vView._31);
+		pvZAxis->setY(vView._32);
+		pvZAxis->setZ(vView._33);
+	}
+}
+
+void SApplication::getFixedCameraRotation(float* fPhi, float* fTheta) const
+{
+	*fPhi = this->fPhi;
+	*fTheta = this->fTheta;
+}
+
+float SApplication::getFixedCameraZoom() const
+{
+	return fRadius;
+}
+
+SVector SApplication::getBackBufferFillColor() const
+{
+	return SVector(backBufferFillColor[0], backBufferFillColor[1], backBufferFillColor[2]);
+}
+
+bool SApplication::isWireframeModeEnabled() const
 {
 	return bUseFillModeWireframe;
 }
 
-bool SApplication::getTimeElapsedFromStart(float* fTimeInSec)
+bool SApplication::isBackfaceCullingEnabled() const
+{
+	return bUseBackFaceCulling;
+}
+
+unsigned long long SApplication::getTriangleCountInWorld()
+{
+	if (pCurrentLevel)
+	{
+		unsigned long long iTrisCount = 0;
+
+		mtxSpawnDespawn.lock();
+
+		std::vector<SContainer*>* pvRenderableContainers = nullptr;
+		pCurrentLevel->getRenderableContainers(pvRenderableContainers);
+
+		for (size_t i = 0; i < pvRenderableContainers->size(); i++)
+		{
+			for (size_t j = 0; j < pvRenderableContainers->operator[](i)->vComponents.size(); j++)
+			{
+				if (pvRenderableContainers->operator[](i)->vComponents[j]->componentType == SCT_MESH)
+				{
+					SMeshComponent* pMesh = dynamic_cast<SMeshComponent*>(pvRenderableContainers->operator[](i)->vComponents[j]);
+					iTrisCount += pMesh->getMeshData().getIndicesCount() / 3;
+				}
+				else if (pvRenderableContainers->operator[](i)->vComponents[j]->componentType == SCT_RUNTIME_MESH)
+				{
+					SRuntimeMeshComponent* pRuntimeMesh = dynamic_cast<SRuntimeMeshComponent*>(pvRenderableContainers->operator[](i)->vComponents[j]);
+					iTrisCount += pRuntimeMesh->getMeshData().getIndicesCount() / 3;
+				}
+			}
+		}
+
+		mtxSpawnDespawn.unlock();
+
+		return iTrisCount;
+	}
+	else
+	{
+		return 0;
+	}
+}
+
+bool SApplication::getTimeElapsedFromStart(float* fTimeInSec) const
 {
 	if (bRunCalled)
 	{
@@ -658,7 +1172,7 @@ bool SApplication::getTimeElapsedFromStart(float* fTimeInSec)
 	}
 }
 
-bool SApplication::getFPS(int* iFPS)
+bool SApplication::getFPS(int* iFPS) const
 {
 	if (bRunCalled)
 	{
@@ -672,16 +1186,30 @@ bool SApplication::getFPS(int* iFPS)
 	}
 }
 
-bool SApplication::getAvrTimeToRenderFrame(float* fTimeInMS)
+bool SApplication::getTimeToRenderFrame(float* fTimeInMS) const
 {
 	if (bRunCalled)
 	{
-		*fTimeInMS = fAvrTimeToRenderFrame;
+		*fTimeInMS = fTimeToRenderFrame;
 		return false;
 	}
 	else
 	{
 		MessageBox(0, L"An error occurred at SApplication::getFPS(). Error: run() should be called first.", L"Error", 0);
+		return true;
+	}
+}
+
+bool SApplication::getLastFrameDrawCallCount(unsigned long long* iDrawCallCount) const
+{
+	if (bRunCalled)
+	{
+		*iDrawCallCount = iLastFrameDrawCallCount;
+		return false;
+	}
+	else
+	{
+		SError::showErrorMessageBox(L"SApplication::getLastFrameDrawCallCount()", L"run() should be called first.");
 		return true;
 	}
 }
@@ -723,6 +1251,7 @@ bool SApplication::onResize()
 			pSwapChainBuffer[i].Reset();
 		}
 
+		pMSAARenderTarget.Reset();
 		pDepthStencilBuffer.Reset();
 
 
@@ -773,6 +1302,45 @@ bool SApplication::onResize()
 
 
 
+		// Create the MSAA render target.
+
+		D3D12_RESOURCE_DESC msaaRenderTargetDesc;
+		msaaRenderTargetDesc.Dimension      = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+		msaaRenderTargetDesc.Alignment      = 0;
+		msaaRenderTargetDesc.Width          = iMainWindowWidth;
+		msaaRenderTargetDesc.Height         = iMainWindowHeight;
+		msaaRenderTargetDesc.DepthOrArraySize = 1;
+		msaaRenderTargetDesc.MipLevels      = 1;
+		msaaRenderTargetDesc.Format             = BackBufferFormat;
+		msaaRenderTargetDesc.SampleDesc.Count   = MSAA_Enabled ? MSAA_SampleCount : 1;
+		msaaRenderTargetDesc.SampleDesc.Quality = MSAA_Enabled ? (MSAA_Quality - 1) : 0;
+		msaaRenderTargetDesc.Layout             = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+		msaaRenderTargetDesc.Flags              = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+
+		D3D12_CLEAR_VALUE msaaClear;
+		msaaClear.Format               = BackBufferFormat;
+		msaaClear.Color[0] = backBufferFillColor[0];
+		msaaClear.Color[1] = backBufferFillColor[1];
+		msaaClear.Color[2] = backBufferFillColor[2];
+		msaaClear.Color[3] = backBufferFillColor[3];
+
+		hresult = pDevice->CreateCommittedResource(
+			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+			D3D12_HEAP_FLAG_NONE,
+			&msaaRenderTargetDesc,
+			D3D12_RESOURCE_STATE_COMMON,
+			&msaaClear,
+			IID_PPV_ARGS(pMSAARenderTarget.GetAddressOf()));
+		if (FAILED(hresult))
+		{
+			SError::showErrorMessageBox(hresult, L"SApplication::onResize::ID3D12Device::CreateCommittedResource()");
+			return true;
+		}
+
+		pDevice->CreateRenderTargetView(pMSAARenderTarget.Get(), nullptr, RTVHeapHandle);
+
+
+
 		// Create the depth/stencil buffer and view.
 
 		D3D12_RESOURCE_DESC depthStencilDesc;
@@ -782,7 +1350,7 @@ bool SApplication::onResize()
 		depthStencilDesc.Height             = iMainWindowHeight;
 		depthStencilDesc.DepthOrArraySize   = 1;
 		depthStencilDesc.MipLevels          = 1;
-		depthStencilDesc.Format             = DXGI_FORMAT_R24G8_TYPELESS;
+		depthStencilDesc.Format             = DepthStencilFormat;
 		depthStencilDesc.SampleDesc.Count   = MSAA_Enabled ? MSAA_SampleCount : 1;
 		depthStencilDesc.SampleDesc.Quality = MSAA_Enabled ? (MSAA_Quality - 1) : 0;
 		depthStencilDesc.Layout             = D3D12_TEXTURE_LAYOUT_UNKNOWN;
@@ -814,7 +1382,7 @@ bool SApplication::onResize()
 
 		D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc;
 		dsvDesc.Flags              = D3D12_DSV_FLAG_NONE;
-		dsvDesc.ViewDimension      = D3D12_DSV_DIMENSION_TEXTURE2D;
+		dsvDesc.ViewDimension      = MSAA_Enabled ? D3D12_DSV_DIMENSION_TEXTURE2DMS : D3D12_DSV_DIMENSION_TEXTURE2D;
 		dsvDesc.Format             = DepthStencilFormat;
 		dsvDesc.Texture2D.MipSlice = 0;
 
@@ -868,7 +1436,7 @@ bool SApplication::onResize()
 
 		// Update aspect ratio and recompute the projection matrix.
 
-		DirectX::XMMATRIX P = DirectX::XMMatrixPerspectiveFovLH(DirectX::XMConvertToRadians(fFOVInGrad), getScreenAspectRatio(),
+		DirectX::XMMATRIX P = DirectX::XMMatrixPerspectiveFovLH(DirectX::XMConvertToRadians(fFOVInDeg), getScreenAspectRatio(),
 			fNearClipPlaneValue, fFarClipPlaneValue);
 		XMStoreFloat4x4(&vProj, P);
 
@@ -883,38 +1451,180 @@ bool SApplication::onResize()
 	}
 }
 
-void SApplication::updateViewMatrix()
+void SApplication::update()
+{
+	updateCamera();
+
+	if (iCurrentFrameResourceIndex + 1 == iFrameResourcesCount)
+	{
+		iCurrentFrameResourceIndex = 0;
+	}
+	else
+	{
+		iCurrentFrameResourceIndex++;
+	}
+
+	pCurrentFrameResource = vFrameResources[iCurrentFrameResourceIndex].get();
+
+	// Has the GPU finished processing the commands of the current frame resource?
+	// If not, wait until the GPU has completed commands up to this fence point.
+	if (pCurrentFrameResource->iFence != 0 && pFence->GetCompletedValue() < pCurrentFrameResource->iFence)
+	{
+		HANDLE eventHandle = CreateEventEx(nullptr, FALSE, FALSE, EVENT_ALL_ACCESS);
+		HRESULT hresult = pFence->SetEventOnCompletion(pCurrentFrameResource->iFence, eventHandle);
+		if (FAILED(hresult))
+		{
+			SError::showErrorMessageBox(hresult, L"SApplication::update::SetEventOnCompletion()");
+			return;
+		}
+		WaitForSingleObject(eventHandle, INFINITE);
+		CloseHandle(eventHandle);
+	}
+
+	updateObjectCBs();
+	updateMainPassCB();
+}
+
+void SApplication::updateCamera()
 {
 	// Convert Spherical to Cartesian coordinates.
-	float x = fRadius * sinf(fPhi) * cosf(fTheta);
-	float y = fRadius * sinf(fPhi) * sinf(fTheta);
-	float z = fRadius * cosf(fPhi);
+	vCameraPos.x = fRadius * sinf(fPhi) * cosf(fTheta);
+	vCameraPos.y = fRadius * sinf(fPhi) * sinf(fTheta);
+	vCameraPos.z = fRadius * cosf(fPhi);
 
 	// Build the view matrix.
-	DirectX::XMVECTOR pos    = DirectX::XMVectorSet(x, y, z, 1.0f);
-	DirectX::XMVECTOR target = DirectX::XMVectorZero();
+	DirectX::XMVECTOR pos    = DirectX::XMVectorSet(vCameraPos.x, vCameraPos.y, vCameraPos.z, 1.0f);
+	DirectX::XMVECTOR target = DirectX::XMVectorSet(vCameraTargetPos.x, vCameraTargetPos.y, vCameraTargetPos.z, 1.0f);
 	DirectX::XMVECTOR up     = DirectX::XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
 
 	DirectX::XMMATRIX view = DirectX::XMMatrixLookAtLH(pos, target, up);
 	DirectX::XMStoreFloat4x4(&vView, view);
+}
 
-	DirectX::XMMATRIX world = DirectX::XMLoadFloat4x4(&vWorld);
-	DirectX::XMMATRIX proj  = DirectX::XMLoadFloat4x4(&vProj);
-	DirectX::XMMATRIX worldViewProj = world * view * proj;
+void SApplication::updateObjectCBs()
+{
+	SUploadBuffer<SObjectConstants>* pCurrentCB = pCurrentFrameResource->pObjectsCB.get();
+	
+	mtxSpawnDespawn.lock();
 
-	// Update the constant buffer with the latest worldViewProj matrix.
-	SObjectConstants objConstants;
-	XMStoreFloat4x4(&objConstants.vWorldViewProj, XMMatrixTranspose(worldViewProj));
-	pObjectConstantBuffer->copyDataToElement(0, objConstants);
+	std::vector<SContainer*>* pvRenderableContainers = nullptr;
+	pCurrentLevel->getRenderableContainers(pvRenderableContainers);
+
+	for (size_t i = 0; i < pvRenderableContainers->size(); i++)
+	{
+		for (size_t j = 0; j < pvRenderableContainers->operator[](i)->vComponents.size(); j++)
+		{
+			updateComponentAndChilds(pvRenderableContainers->operator[](i)->vComponents[j], pCurrentCB);
+		}
+	}
+
+	mtxSpawnDespawn.unlock();
+}
+
+void SApplication::updateComponentAndChilds(SComponent* pComponent, SUploadBuffer<SObjectConstants>* pCurrentCB)
+{
+	if (pComponent->componentType == SCT_MESH)
+	{
+		SMeshComponent* pMeshComponent = dynamic_cast<SMeshComponent*>(pComponent);
+
+		if (pMeshComponent->renderData.iUpdateCBInFrameResourceCount > 0)
+		{
+			DirectX::XMMATRIX world = DirectX::XMLoadFloat4x4(&pMeshComponent->renderData.vWorld);
+
+			SObjectConstants objConstants;
+			DirectX::XMStoreFloat4x4(&objConstants.vWorld, DirectX::XMMatrixTranspose(world));
+
+			pCurrentCB->copyDataToElement(pMeshComponent->renderData.iObjCBIndex, objConstants);
+
+			// Next FrameResource need to be updated too.
+			pMeshComponent->renderData.iUpdateCBInFrameResourceCount--;
+		}
+	}
+	else if (pComponent->componentType == SCT_RUNTIME_MESH)
+	{
+		SRuntimeMeshComponent* pRuntimeMeshComponent = dynamic_cast<SRuntimeMeshComponent*>(pComponent);
+
+
+
+		if (pRuntimeMeshComponent->bNoMeshDataOnSpawn == false)
+		{
+			pRuntimeMeshComponent->mtxDrawComponent.lock();
+
+			auto pVertexBuffer = pCurrentFrameResource->vRuntimeMeshVertexBuffers[pRuntimeMeshComponent->iIndexInFrameResourceVertexBuffer].get();
+
+			std::vector<SVertex> vMeshShaderData = pRuntimeMeshComponent->meshData.toShaderVertex();
+
+			for (UINT64 i = 0; i < vMeshShaderData.size(); i++)
+			{
+				pVertexBuffer->copyDataToElement(i, vMeshShaderData[i]);
+			}
+
+			pRuntimeMeshComponent->renderData.pGeometry->pVertexBufferGPU = pVertexBuffer->getResource();
+
+			pRuntimeMeshComponent->mtxDrawComponent.unlock();
+		}
+
+
+
+		if (pRuntimeMeshComponent->renderData.iUpdateCBInFrameResourceCount > 0)
+		{
+			DirectX::XMMATRIX world = DirectX::XMLoadFloat4x4(&pRuntimeMeshComponent->renderData.vWorld);
+
+			SObjectConstants objConstants;
+			DirectX::XMStoreFloat4x4(&objConstants.vWorld, DirectX::XMMatrixTranspose(world));
+
+			pCurrentCB->copyDataToElement(pRuntimeMeshComponent->renderData.iObjCBIndex, objConstants);
+
+			// Next FrameResource need to be updated too.
+			pRuntimeMeshComponent->renderData.iUpdateCBInFrameResourceCount--;
+		}
+	}
+
+	std::vector<SComponent*> vChilds = pComponent->getChildComponents();
+
+	for (size_t i = 0; i < vChilds.size(); i++)
+	{
+		updateComponentAndChilds(pComponent->getChildComponents()[i], pCurrentCB);
+	}
+}
+
+void SApplication::updateMainPassCB()
+{
+	DirectX::XMMATRIX view = DirectX::XMLoadFloat4x4(&vView);
+	DirectX::XMMATRIX proj = DirectX::XMLoadFloat4x4(&vProj);
+
+	DirectX::XMMATRIX viewProj    = DirectX::XMMatrixMultiply(view, proj);
+	DirectX::XMMATRIX invView     = DirectX::XMMatrixInverse(&DirectX::XMMatrixDeterminant(view), view);
+	DirectX::XMMATRIX invProj     = DirectX::XMMatrixInverse(&DirectX::XMMatrixDeterminant(proj), proj);
+	DirectX::XMMATRIX invViewProj = DirectX::XMMatrixInverse(&DirectX::XMMatrixDeterminant(viewProj), viewProj);
+
+	DirectX::XMStoreFloat4x4(&mainRenderPassCB.vView, XMMatrixTranspose(view));
+	DirectX::XMStoreFloat4x4(&mainRenderPassCB.vInvView, XMMatrixTranspose(invView));
+	DirectX::XMStoreFloat4x4(&mainRenderPassCB.vProj, XMMatrixTranspose(proj));
+	DirectX::XMStoreFloat4x4(&mainRenderPassCB.vInvProj, XMMatrixTranspose(invProj));
+	DirectX::XMStoreFloat4x4(&mainRenderPassCB.vViewProj, XMMatrixTranspose(viewProj));
+	DirectX::XMStoreFloat4x4(&mainRenderPassCB.vInvViewProj, XMMatrixTranspose(invViewProj));
+	mainRenderPassCB.vCameraPos = vCameraPos;
+	mainRenderPassCB.vRenderTargetSize = DirectX::XMFLOAT2(static_cast<float>(iMainWindowWidth), static_cast<float>(iMainWindowHeight));
+	mainRenderPassCB.vInvRenderTargetSize = DirectX::XMFLOAT2(1.0f / iMainWindowWidth, 1.0f / iMainWindowHeight);
+	mainRenderPassCB.fNearZ = fNearClipPlaneValue;
+	mainRenderPassCB.fFarZ = fFarClipPlaneValue;
+	mainRenderPassCB.fTotalTime = gameTimer.getTimeElapsedInSec();
+	mainRenderPassCB.fDeltaTime = gameTimer.getDeltaTimeBetweenFramesInSec();
+
+	SUploadBuffer<SRenderPassConstants>* pCurrentPassCB = pCurrentFrameResource->pRenderPassCB.get();
+	pCurrentPassCB->copyDataToElement(0, mainRenderPassCB);
 }
 
 void SApplication::draw()
 {
 	mtxDraw.lock();
 
+	Microsoft::WRL::ComPtr<ID3D12CommandAllocator> pCurrentCommandListAllocator = pCurrentFrameResource->pCommandListAllocator;
+
 	// Should be only called if the GPU is not using it (i.e. command queue is empty).
 
-	HRESULT hresult = pCommandListAllocator->Reset();
+	HRESULT hresult = pCurrentCommandListAllocator->Reset();
 	if (FAILED(hresult))
 	{
 		SError::showErrorMessageBox(hresult, L"SApplication::draw::ID3D12CommandAllocator::Reset()");
@@ -926,7 +1636,23 @@ void SApplication::draw()
 
 	// A command list can be reset after it has been added to the command queue via ExecuteCommandList (was added in init()).
 
-	hresult = pCommandList->Reset(pCommandListAllocator.Get(), pPSO.Get());
+	if (bUseFillModeWireframe && bUseBackFaceCulling == false)
+	{
+		hresult = pCommandList->Reset(pCurrentCommandListAllocator.Get(), pNoBackfaceCullingWireframePSO.Get());
+	}
+	else if (bUseFillModeWireframe)
+	{
+		hresult = pCommandList->Reset(pCurrentCommandListAllocator.Get(), pWireframePSO.Get());
+	}
+	else if (bUseBackFaceCulling == false)
+	{
+		hresult = pCommandList->Reset(pCurrentCommandListAllocator.Get(), pNoBackfaceCullingPSO.Get());
+	}
+	else
+	{
+		hresult = pCommandList->Reset(pCurrentCommandListAllocator.Get(), pPSO.Get());
+	}
+
 	if (FAILED(hresult))
 	{
 		SError::showErrorMessageBox(hresult, L"SApplication::draw::ID3D12GraphicsCommandList::Reset()");
@@ -947,6 +1673,7 @@ void SApplication::draw()
 
 	// Translate back buffer state from present state to render target state.
 
+
 	pCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(getCurrentBackBufferResource(), 
 		D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
 
@@ -955,7 +1682,7 @@ void SApplication::draw()
 	// Clear buffers.
 
 	// nullptr - "ClearRenderTargetView clears the entire resource view".
-	pCommandList->ClearRenderTargetView(getCurrentBackBufferViewHandle(), DirectX::Colors::Black, 0, nullptr);
+	pCommandList->ClearRenderTargetView(getCurrentBackBufferViewHandle(), backBufferFillColor, 0, nullptr);
 	pCommandList->ClearDepthStencilView(getDepthStencilViewHandle(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
 
 
@@ -966,29 +1693,52 @@ void SApplication::draw()
 
 
 
-	// Graphics.
+	// CB.
 
 	ID3D12DescriptorHeap* descriptorHeaps[] = { pCBVHeap.Get() };
 	pCommandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 
 	pCommandList->SetGraphicsRootSignature(pRootSignature.Get());
 
-	pCommandList->IASetVertexBuffers(0, 1, &pBoxGeometry->getVertexBufferView());
-	pCommandList->IASetIndexBuffer(&pBoxGeometry->getIndexBufferView());
 
-	pCommandList->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	int iRenderPassCBVIndex = iRenderPassCBVOffset + iCurrentFrameResourceIndex;
+	auto renderPassCBVHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(pCBVHeap->GetGPUDescriptorHandleForHeapStart());
+	renderPassCBVHandle.Offset(iRenderPassCBVIndex, iCBVSRVUAVDescriptorSize);
 
-	pCommandList->SetGraphicsRootDescriptorTable(0, pCBVHeap->GetGPUDescriptorHandleForHeapStart());
-
-	pCommandList->DrawIndexedInstanced(pBoxGeometry->mDrawArgs[L"Cube"].iIndexCount, 1, 0, 0, 0);
+	pCommandList->SetGraphicsRootDescriptorTable(1, renderPassCBVHandle);
 
 
 
-	// Translate back buffer state from render target state to present state.
+	drawVisibleRenderableContainers();
 
-	pCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(getCurrentBackBufferResource(),
+
+	pCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(getCurrentBackBufferResource(), 
 		D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
 
+	if (MSAA_Enabled)
+	{
+		// Resolve MSAA render target to our swap chain buffer.
+
+		CD3DX12_RESOURCE_BARRIER barriers1[] = {
+			CD3DX12_RESOURCE_BARRIER::Transition(pMSAARenderTarget.Get(), 
+			D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RESOLVE_SOURCE),
+			CD3DX12_RESOURCE_BARRIER::Transition(getCurrentBackBufferResource(true), 
+			D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RESOLVE_DEST)
+		};
+
+		CD3DX12_RESOURCE_BARRIER barriers2[] = {
+			CD3DX12_RESOURCE_BARRIER::Transition(pMSAARenderTarget.Get(), 
+			D3D12_RESOURCE_STATE_RESOLVE_SOURCE, D3D12_RESOURCE_STATE_PRESENT),
+			CD3DX12_RESOURCE_BARRIER::Transition(getCurrentBackBufferResource(true), 
+			D3D12_RESOURCE_STATE_RESOLVE_DEST, D3D12_RESOURCE_STATE_PRESENT)
+		};
+
+		pCommandList->ResourceBarrier(2, barriers1);
+
+		pCommandList->ResolveSubresource(getCurrentBackBufferResource(true), 0, pMSAARenderTarget.Get(), 0, BackBufferFormat);
+
+		pCommandList->ResourceBarrier(2, barriers2);
+	}
 
 
 	// Stop recording commands.
@@ -1053,11 +1803,92 @@ void SApplication::draw()
 		iCurrentBackBuffer++;
 	}
 
+	pCurrentFrameResource->iFence = ++iCurrentFence;
 
-
-	flushCommandQueue();
+	// Add an instruction to the command queue to set a new fence point. 
+	// Because we are on the GPU timeline, the new fence point won't be 
+	// set until the GPU finishes processing all the commands prior to this Signal().
+	pCommandQueue->Signal(pFence.Get(), iCurrentFence);
 
 	mtxDraw.unlock();
+}
+
+void SApplication::drawVisibleRenderableContainers()
+{
+	iLastFrameDrawCallCount = 0;
+
+	UINT iObjCBSizeInBytes = SMath::makeMultipleOf256(sizeof(SObjectConstants));
+
+	mtxSpawnDespawn.lock();
+
+	std::vector<SContainer*>* pvRenderableContainers = nullptr;
+	pCurrentLevel->getRenderableContainers(pvRenderableContainers);
+
+	for (size_t i = 0; i < pvRenderableContainers->size(); i++)
+	{
+		if (pvRenderableContainers->operator[](i)->isVisible() == false)
+		{
+			continue;
+		}
+
+		for (size_t j = 0; j < pvRenderableContainers->operator[](i)->vComponents.size(); j++)
+		{
+			drawComponentAndChilds(pvRenderableContainers->operator[](i)->vComponents[j]);
+		}
+	}
+
+	mtxSpawnDespawn.unlock();
+}
+
+void SApplication::drawComponentAndChilds(SComponent* pComponent)
+{
+	bool bDrawThisComponent = false;
+
+	if (pComponent->componentType == SCT_MESH)
+	{
+		SMeshComponent* pMeshComponent = dynamic_cast<SMeshComponent*>(pComponent);
+
+		if (pMeshComponent->isVisible() && pMeshComponent->getMeshData().getVerticesCount() > 0)
+		{
+			bDrawThisComponent = true;
+		}
+	}
+	else if (pComponent->componentType == SCT_RUNTIME_MESH)
+	{
+		SRuntimeMeshComponent* pRuntimeMeshComponent = dynamic_cast<SRuntimeMeshComponent*>(pComponent);
+
+		if (pRuntimeMeshComponent->isVisible() && pRuntimeMeshComponent->getMeshData().getVerticesCount() > 0)
+		{
+			bDrawThisComponent = true;
+		}
+	}
+
+	if (bDrawThisComponent)
+	{
+		pCommandList->IASetVertexBuffers(0, 1, &pComponent->getRenderData()->pGeometry->getVertexBufferView());
+		pCommandList->IASetIndexBuffer(&pComponent->getRenderData()->pGeometry->getIndexBufferView());
+		pCommandList->IASetPrimitiveTopology(pComponent->getRenderData()->primitiveTopologyType);
+
+		// Offset to the CBV in the descriptor heap for this object and for this frame resource.
+		size_t iObjCount = roundUp(iActualObjectCBCount, OBJECT_CB_RESIZE_MULTIPLE);
+		UINT iCBVIndex = iCurrentFrameResourceIndex * iObjCount + pComponent->getRenderData()->iObjCBIndex;
+		auto cbvHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(pCBVHeap->GetGPUDescriptorHandleForHeapStart());
+		cbvHandle.Offset(iCBVIndex, iCBVSRVUAVDescriptorSize);
+
+		pCommandList->SetGraphicsRootDescriptorTable(0, cbvHandle);
+
+		pCommandList->DrawIndexedInstanced(pComponent->getRenderData()->iIndexCount, 1, pComponent->getRenderData()->iStartIndexLocation,
+			pComponent->getRenderData()->iStartVertexLocation, 0);
+
+		iLastFrameDrawCallCount++;
+	}
+
+	std::vector<SComponent*> vChilds = pComponent->getChildComponents();
+
+	for (size_t i = 0; i < vChilds.size(); i++)
+	{
+		drawComponentAndChilds(vChilds[i]);
+	}
 }
 
 bool SApplication::flushCommandQueue()
@@ -1102,12 +1933,12 @@ void SApplication::calculateFrameStats()
 
 	if ((gameTimer.getTimeElapsedInSec() - fTimeElapsed) >= 1.0f)
 	{
-		float fAvrTimeToRenderFrame = 1000.0f / iFrameCount;
+		float fTimeToRenderFrame = 1000.0f / iFrameCount;
 
 		if (bShowFrameStatsInTitle)
 		{
 			std::wstring sFPS = L"FPS: " + std::to_wstring(iFrameCount);
-			std::wstring sAvrTimeToRenderFrame = L"Avr. time to render a frame: " + std::to_wstring(fAvrTimeToRenderFrame);
+			std::wstring sAvrTimeToRenderFrame = L"Avr. time to render a frame: " + std::to_wstring(fTimeToRenderFrame);
 
 			std::wstring sWindowTitleText = sMainWindowTitle + L" (" + sFPS + L", " + sAvrTimeToRenderFrame + L")";
 
@@ -1115,11 +1946,32 @@ void SApplication::calculateFrameStats()
 		}
 
 		iFPS = iFrameCount;
-		this->fAvrTimeToRenderFrame = fAvrTimeToRenderFrame;
+		this->fTimeToRenderFrame = fTimeToRenderFrame;
 
 		iFrameCount = 0;
 		fTimeElapsed = gameTimer.getTimeElapsedInSec();
 	}
+}
+
+size_t SApplication::roundUp(size_t iNum, size_t iMultiple)
+{
+	if (iMultiple == 0)
+	{
+		return iNum;
+	}
+
+	if (iNum == 0)
+	{
+		return iMultiple;
+	}
+
+	int iRemainder = iNum % iMultiple;
+	if (iRemainder == 0)
+	{
+		return iNum;
+	}
+
+	return iNum + iMultiple - iRemainder;
 }
 
 LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -1167,12 +2019,39 @@ bool SApplication::createMainWindow()
 	}
 
 
-	ShowWindow(hMainWindow, SW_SHOW);
+	ShowWindow(hMainWindow, SW_SHOWMAXIMIZED);
+	bWindowMaximized = true;
 	UpdateWindow(hMainWindow);
 
 
 	SetWindowText(hMainWindow, sMainWindowTitle.c_str());
 
+
+	
+	RAWINPUTDEVICE Rid[2];
+
+	// Mouse
+	Rid[0].usUsagePage = 0x01; 
+	Rid[0].usUsage = 0x02; 
+	Rid[0].dwFlags = 0;
+	Rid[0].hwndTarget = hMainWindow;
+
+	// Keyboard
+	//Rid[1].usUsagePage = 0x01; 
+	//Rid[1].usUsage = 0x06; 
+	//Rid[1].dwFlags = 0;
+	//Rid[1].hwndTarget = hMainWindow;
+
+	if (RegisterRawInputDevices(Rid, 1, sizeof(Rid[0])) == FALSE) 
+	//if (RegisterRawInputDevices(Rid, 2, sizeof(Rid[0])) == FALSE) 
+	{
+		SError::showErrorMessageBox(L"SApplication::createMainWindow::RegisterRawInputDevices()", std::to_wstring(GetLastError()));
+		return true;
+	}
+	else
+	{
+		bRawInputReady = true;
+	}
 
 	return false;
 }
@@ -1208,23 +2087,34 @@ bool SApplication::initD3DSecondStage()
 
 bool SApplication::initD3DFirstStage()
 {
+	DWORD debugFactoryFlags = 0;
+
 #if defined(DEBUG) || defined(_DEBUG) 
+	if (bD3DDebugLayerEnabled)
 	// Enable the D3D12 debug layer.
 	{
 		Microsoft::WRL::ComPtr<ID3D12Debug> debugController;
 		ThrowIfFailed(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController)));
 
 		debugController->EnableDebugLayer();
+
+
+		Microsoft::WRL::ComPtr<IDXGIInfoQueue> dxgiInfoQueue;
+		if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(dxgiInfoQueue.GetAddressOf()))))
+		{
+			debugFactoryFlags = DXGI_CREATE_FACTORY_DEBUG;
+
+			dxgiInfoQueue->SetBreakOnSeverity(DXGI_DEBUG_ALL, DXGI_INFO_QUEUE_MESSAGE_SEVERITY_ERROR, true);
+			dxgiInfoQueue->SetBreakOnSeverity(DXGI_DEBUG_ALL, DXGI_INFO_QUEUE_MESSAGE_SEVERITY_CORRUPTION, true);
+		}
 	}
 #endif
 
 	HRESULT hresult;
 
-
-
 	// Create DXGI Factory
 
-	hresult = CreateDXGIFactory1(IID_PPV_ARGS(&pFactory));
+	hresult = CreateDXGIFactory2(debugFactoryFlags, IID_PPV_ARGS(&pFactory));
 
 	if (FAILED(hresult))
 	{
@@ -1237,7 +2127,7 @@ bool SApplication::initD3DFirstStage()
 
 	// Get supported hardware display adapter.
 
-	if (getFirstSupportedDisplayAdapter(&pAdapter))
+	if (getFirstSupportedDisplayAdapter(*pAdapter.GetAddressOf()))
 	{
 		MessageBox(0, 
 			L"An error occurred at SApplication::initD3DFirstStage::getFirstSupportedDisplayAdapter(). Error: Can't find a supported display adapter.",
@@ -1313,10 +2203,10 @@ bool SApplication::initD3DFirstStage()
 
 
 
-	if (getFirstOutputDisplay(&pOutput))
+	if (getFirstOutputDisplay(*pOutput.GetAddressOf()))
 	{
 		MessageBox(0, 
-			L"An error occurred at SApplication::initDirect3D::getFirstOutputAdapter(). Error: Can't find any output adapter.",
+			L"An error occurred at SApplication::initDirect3D::getFirstOutputAdapter(). Error: Can't find any output adapters for current display adapter.",
 			L"Error",
 			0);
 
@@ -1332,9 +2222,9 @@ bool SApplication::initD3DFirstStage()
 	return false;
 }
 
-bool SApplication::getFirstSupportedDisplayAdapter(IDXGIAdapter3** ppAdapter)
+bool SApplication::getFirstSupportedDisplayAdapter(IDXGIAdapter3*& pAdapter)
 {
-	*ppAdapter = nullptr;
+	pAdapter = nullptr;
 
 	if (sPreferredDisplayAdapter != L"")
 	{
@@ -1359,7 +2249,7 @@ bool SApplication::getFirstSupportedDisplayAdapter(IDXGIAdapter3** ppAdapter)
 
 				if (desc.Description == sPreferredDisplayAdapter)
 				{
-					*ppAdapter = pAdapter1;
+					pAdapter = pAdapter1;
 					return false;
 				}
 			}
@@ -1385,7 +2275,7 @@ bool SApplication::getFirstSupportedDisplayAdapter(IDXGIAdapter3** ppAdapter)
 
 		if (SUCCEEDED(D3D12CreateDevice(pAdapter1, ENGINE_D3D_FEATURE_LEVEL, _uuidof(ID3D12Device), nullptr)))
 		{
-			*ppAdapter = pAdapter1;
+			pAdapter = pAdapter1;
 			return false;
 		}
 
@@ -1396,9 +2286,9 @@ bool SApplication::getFirstSupportedDisplayAdapter(IDXGIAdapter3** ppAdapter)
 	return true;
 }
 
-bool SApplication::getFirstOutputDisplay(IDXGIOutput** ppOutput)
+bool SApplication::getFirstOutputDisplay(IDXGIOutput*& pOutput)
 {
-	*ppOutput = nullptr;
+	pOutput = nullptr;
 
 	if (sPreferredOutputAdapter != L"")
 	{
@@ -1419,7 +2309,7 @@ bool SApplication::getFirstOutputDisplay(IDXGIOutput** ppOutput)
 
 			if (desc.DeviceName == sPreferredDisplayAdapter)
 			{
-				*ppOutput = pOutput1;
+				pOutput = pOutput1;
 
 				return false;
 			}
@@ -1437,11 +2327,10 @@ bool SApplication::getFirstOutputDisplay(IDXGIOutput** ppOutput)
 		{
 			// No more adapters to enumerate.
 			break;
-		} 
+		}
 
 
-
-		*ppOutput = pOutput1;
+		pOutput = pOutput1;
 
 		return false;
 	}
@@ -1470,8 +2359,8 @@ bool SApplication::checkMSAASupport()
 
 	if (msQualityLevels.NumQualityLevels == 0)
 	{
-		MessageBox(0, L"An error occurred at SApplication::checkMSAASupport::CheckFeatureSupport(D3D12_FEATURE_MULTISAMPLE_QUALITY_LEVELS). "
-			"Error: NumQualityLevels == 0.", L"Error", 0);
+		/*MessageBox(0, L"An error occurred at SApplication::checkMSAASupport::CheckFeatureSupport(D3D12_FEATURE_MULTISAMPLE_QUALITY_LEVELS). "
+			"Error: NumQualityLevels == 0.", L"Error", 0);*/
 		return true;
 	}
 
@@ -1550,8 +2439,8 @@ bool SApplication::createSwapChain()
 	desc.Format = BackBufferFormat;
 	desc.Stereo = false;
 
-	desc.SampleDesc.Count   = MSAA_Enabled ? MSAA_SampleCount : 1;
-	desc.SampleDesc.Quality = MSAA_Enabled ? (MSAA_Quality - 1) : 0;
+	desc.SampleDesc.Count   = 1;
+	desc.SampleDesc.Quality = 0;
 
 	desc.BufferUsage        = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 	desc.BufferCount        = iSwapChainBufferCount;
@@ -1623,35 +2512,23 @@ bool SApplication::getScreenParams(bool bApplyResolution)
 				&&
 				(vDisplayModes[i].Height == iMainWindowHeight))
 			{
-				if (bFullscreen && (iMainWindowWidth != vDisplayModes.back().Width) && (iMainWindowHeight != vDisplayModes.back().Height))
+				bSetResolutionToDefault = false;
+
+				iRefreshRateNumerator   = vDisplayModes[i].RefreshRate.Numerator;
+				iRefreshRateDenominator = vDisplayModes[i].RefreshRate.Denominator;
+
+				iScanlineOrder          = vDisplayModes[i].ScanlineOrdering;
+
+				/*if ((iMainWindowWidth != vDisplayModes.back().Width) && (iMainWindowHeight != vDisplayModes.back().Height))
 				{
-					if (vDisplayModes[i].Scaling == DXGI_MODE_SCALING_STRETCHED)
-					{
-						// Found. Good.
-						bSetResolutionToDefault = false;
-
-						iRefreshRateNumerator   = vDisplayModes[i].RefreshRate.Numerator;
-						iRefreshRateDenominator = vDisplayModes[i].RefreshRate.Denominator;
-
-						iScanlineOrder          = vDisplayModes[i].ScanlineOrdering;
-						iScaling                = vDisplayModes[i].Scaling;
-
-						break;
-					}
+					iScaling = DXGI_MODE_SCALING_STRETCHED;
 				}
-				else if (vDisplayModes[i].Scaling == vDisplayModes.back().Scaling)
+				else
 				{
-					// Found. Good.
-					bSetResolutionToDefault = false;
+					iScaling = vDisplayModes[i].Scaling;
+				}*/
 
-					iRefreshRateNumerator   = vDisplayModes[i].RefreshRate.Numerator;
-					iRefreshRateDenominator = vDisplayModes[i].RefreshRate.Denominator;
-
-					iScanlineOrder          = vDisplayModes[i].ScanlineOrdering;
-					iScaling                = vDisplayModes[i].Scaling;
-
-					break;
-				}
+				break;
 			}
 		}
 	}
@@ -1660,48 +2537,62 @@ bool SApplication::getScreenParams(bool bApplyResolution)
 	{
 		// Set default params for this output.
 
-		if (bFullscreen)
+		// Use the last element in the list because it has the highest resolution.
+
+		if (bApplyResolution)
 		{
-			// Use the last element in the list because it has the highest resolution.
-
-			if (bApplyResolution)
-			{
-				iMainWindowWidth        = vDisplayModes.back().Width;
-				iMainWindowHeight       = vDisplayModes.back().Height;
-			}
-
-			iRefreshRateNumerator   = vDisplayModes.back().RefreshRate.Numerator;
-			iRefreshRateDenominator = vDisplayModes.back().RefreshRate.Denominator;
-
-			iScanlineOrder          = vDisplayModes.back().ScanlineOrdering;
-			iScaling                = vDisplayModes.back().Scaling;
+			iMainWindowWidth        = vDisplayModes.back().Width;
+			iMainWindowHeight       = vDisplayModes.back().Height;
 		}
-		else
-		{
-			// Find previous element in the list with the same vDisplayModes.back().ScanlineOrdering && vDisplayModes.back().Scaling.
 
-			for (int i = vDisplayModes.size() - 2; i > 0; i--)
-			{
-				if ((vDisplayModes[i].ScanlineOrdering == vDisplayModes.back().ScanlineOrdering)
-					&&
-					(vDisplayModes[i].Scaling == vDisplayModes.back().Scaling))
-				{
-					if (bApplyResolution)
-					{
-						iMainWindowWidth        = vDisplayModes[i].Width;
-						iMainWindowHeight       = vDisplayModes[i].Height;
-					}
+		iRefreshRateNumerator   = vDisplayModes.back().RefreshRate.Numerator;
+		iRefreshRateDenominator = vDisplayModes.back().RefreshRate.Denominator;
 
-					iRefreshRateNumerator   = vDisplayModes[i].RefreshRate.Numerator;
-					iRefreshRateDenominator = vDisplayModes[i].RefreshRate.Denominator;
+		iScanlineOrder          = vDisplayModes.back().ScanlineOrdering;
+		iScaling                = vDisplayModes.back().Scaling;
 
-					iScanlineOrder          = vDisplayModes[i].ScanlineOrdering;
-					iScaling                = vDisplayModes[i].Scaling;
+		//if (bFullscreen)
+		//{
+		//	// Use the last element in the list because it has the highest resolution.
 
-					break;
-				}
-			}
-		}
+		//	if (bApplyResolution)
+		//	{
+		//		iMainWindowWidth        = vDisplayModes.back().Width;
+		//		iMainWindowHeight       = vDisplayModes.back().Height;
+		//	}
+
+		//	iRefreshRateNumerator   = vDisplayModes.back().RefreshRate.Numerator;
+		//	iRefreshRateDenominator = vDisplayModes.back().RefreshRate.Denominator;
+
+		//	iScanlineOrder          = vDisplayModes.back().ScanlineOrdering;
+		//	iScaling                = vDisplayModes.back().Scaling;
+		//}
+		//else
+		//{
+		//	// Find previous element in the list with the same vDisplayModes.back().ScanlineOrdering && vDisplayModes.back().Scaling.
+
+		//	for (int i = vDisplayModes.size() - 2; i > 0; i--)
+		//	{
+		//		if ((vDisplayModes[i].ScanlineOrdering == vDisplayModes.back().ScanlineOrdering)
+		//			&&
+		//			(vDisplayModes[i].Scaling == vDisplayModes.back().Scaling))
+		//		{
+		//			if (bApplyResolution)
+		//			{
+		//				iMainWindowWidth        = vDisplayModes[i].Width;
+		//				iMainWindowHeight       = vDisplayModes[i].Height;
+		//			}
+
+		//			iRefreshRateNumerator   = vDisplayModes[i].RefreshRate.Numerator;
+		//			iRefreshRateDenominator = vDisplayModes[i].RefreshRate.Denominator;
+
+		//			iScanlineOrder          = vDisplayModes[i].ScanlineOrdering;
+		//			iScaling                = vDisplayModes[i].Scaling;
+
+		//			break;
+		//		}
+		//	}
+		//}
 	}
 
 	
@@ -1714,7 +2605,7 @@ bool SApplication::createRTVAndDSVDescriptorHeaps()
 	// RTV
 
 	D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc;
-	rtvHeapDesc.NumDescriptors = iSwapChainBufferCount;
+	rtvHeapDesc.NumDescriptors = iSwapChainBufferCount + 1; // "+ 1" for MSAA Render Target
 	rtvHeapDesc.Type           = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 	rtvHeapDesc.Flags          = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	rtvHeapDesc.NodeMask       = 0;
@@ -1747,10 +2638,19 @@ bool SApplication::createRTVAndDSVDescriptorHeaps()
 	return false;
 }
 
-bool SApplication::createCBVDescriptorHeap()
+bool SApplication::createCBVHeap()
 {
+	size_t iObjCount = roundUp(iActualObjectCBCount, OBJECT_CB_RESIZE_MULTIPLE);
+
+	// Each frame resource contains N render items, so we need (iFrameResourcesCount * N)
+	// + one per SRenderPassConstants (i.e. per frame resource)
+	UINT iDescriptorCount = (iObjCount + 1) * iFrameResourcesCount;
+
+	// Save an offset to the start of the render pass CBVs.
+	iRenderPassCBVOffset = iObjCount * iFrameResourcesCount;
+
 	D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc;
-	cbvHeapDesc.NumDescriptors = 1;
+	cbvHeapDesc.NumDescriptors = iDescriptorCount;
 	cbvHeapDesc.Type           = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 	cbvHeapDesc.Flags          = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	cbvHeapDesc.NodeMask       = 0;
@@ -1758,60 +2658,99 @@ bool SApplication::createCBVDescriptorHeap()
 	HRESULT hresult = pDevice->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&pCBVHeap));
 	if (FAILED(hresult))
 	{
-		SError::showErrorMessageBox(hresult, L"SApplication::createCBVDescriptorHeap::ID3D12Device::CreateDescriptorHeap() (CBV)");
+		SError::showErrorMessageBox(hresult, L"SApplication::createCBVDescriptorHeap::ID3D12Device::CreateDescriptorHeap()");
 		return true;
 	}
 
 	return false;
 }
 
-void SApplication::createConstantBuffer()
+void SApplication::createConstantBufferViews()
 {
-	// Create 1 constant buffer.
-	pObjectConstantBuffer = std::make_unique<SUploadBuffer<SObjectConstants>>(pDevice.Get(), 1, true);
-
-
 	UINT iObjectConstantBufferSizeInBytes = SMath::makeMultipleOf256(sizeof(SObjectConstants));
 
+	size_t iObjectCount = roundUp(iActualObjectCBCount, OBJECT_CB_RESIZE_MULTIPLE);
 
-	D3D12_GPU_VIRTUAL_ADDRESS constantBufferAddress = pObjectConstantBuffer->getResource()->GetGPUVirtualAddress();
-	// Offset to the ith object constant buffer in the buffer.
-	int iConstantBufferIndex = 0;
-	constantBufferAddress += iConstantBufferIndex * iObjectConstantBufferSizeInBytes;
+	// Need (iFrameResourcesCount * iObjectCount) CBVs.
+	for (int iFrameIndex = 0; iFrameIndex < iFrameResourcesCount; iFrameIndex++)
+	{
+		ID3D12Resource* pObjectsCB = vFrameResources[iFrameIndex]->pObjectsCB->getResource();
 
+		for (int i = 0; i < iObjectCount; i++)
+		{
+			D3D12_GPU_VIRTUAL_ADDRESS currentObjectConstantBufferAddress = pObjectsCB->GetGPUVirtualAddress();
 
-	D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc;
-	cbvDesc.BufferLocation = constantBufferAddress;
-	cbvDesc.SizeInBytes = iObjectConstantBufferSizeInBytes;
+			// Offset to the ith object constant buffer in the buffer.
+			currentObjectConstantBufferAddress += i * iObjectConstantBufferSizeInBytes;
 
+			// Offset to the object CBV in the descriptor heap.
+			int iIndexInHeap = iFrameIndex * iObjectCount + i;
+			auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(pCBVHeap->GetCPUDescriptorHandleForHeapStart());
+			handle.Offset(iIndexInHeap, iCBVSRVUAVDescriptorSize);
 
-	pDevice->CreateConstantBufferView(&cbvDesc, pCBVHeap->GetCPUDescriptorHandleForHeapStart());
+			D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc;
+			cbvDesc.BufferLocation = currentObjectConstantBufferAddress;
+			cbvDesc.SizeInBytes = iObjectConstantBufferSizeInBytes;
+
+			pDevice->CreateConstantBufferView(&cbvDesc, handle);
+		}
+	}
+
+	UINT iRenderPassCBSizeInBytes = SMath::makeMultipleOf256(sizeof(SRenderPassConstants));
+
+	// Need one descriptor for render pass constants per frame resource.
+	for (int iFrameIndex = 0; iFrameIndex < iFrameResourcesCount; iFrameIndex++)
+	{
+		ID3D12Resource* pRenderPassCB = vFrameResources[iFrameIndex]->pRenderPassCB->getResource();
+		D3D12_GPU_VIRTUAL_ADDRESS renderPassCBAddress = pRenderPassCB->GetGPUVirtualAddress();
+
+		// Offset in the descriptor heap.
+		int iIndexInHeap = iRenderPassCBVOffset + iFrameIndex;
+		auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(pCBVHeap->GetCPUDescriptorHandleForHeapStart());
+		handle.Offset(iIndexInHeap, iCBVSRVUAVDescriptorSize);
+
+		D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc;
+		cbvDesc.BufferLocation = renderPassCBAddress;
+		cbvDesc.SizeInBytes = iRenderPassCBSizeInBytes;
+
+		pDevice->CreateConstantBufferView(&cbvDesc, handle);
+	}
+}
+
+void SApplication::createFrameResources()
+{
+	for (int i = 0; i < iFrameResourcesCount; i++)
+	{
+		vFrameResources.push_back(std::make_unique<SFrameResource>(pDevice.Get(), 1, 0));
+	}
 }
 
 bool SApplication::createRootSignature()
 {
 	// The root signature defines the resources the shader programs expect.
 
+	CD3DX12_DESCRIPTOR_RANGE cbvTable0;
+	cbvTable0.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0); // cbPerObject
+
+	CD3DX12_DESCRIPTOR_RANGE cbvTable1;
+	cbvTable1.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1); // cbPerRenderPass
+
 	// Root parameter can be a table, root descriptor or root constants.
-	CD3DX12_ROOT_PARAMETER slotRootParameter[1];
+	CD3DX12_ROOT_PARAMETER slotRootParameter[2];
 
-
-	// Create a single descriptor table of CBVs.
-	CD3DX12_DESCRIPTOR_RANGE cbvTable;
-	cbvTable.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
-	slotRootParameter[0].InitAsDescriptorTable(1, &cbvTable);
-
+	// Create root CBVs.
+	slotRootParameter[0].InitAsDescriptorTable(1, &cbvTable0);
+	slotRootParameter[1].InitAsDescriptorTable(1, &cbvTable1);
 
 	// A root signature is an array of root parameters.
-	CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc(1, slotRootParameter, 0, nullptr, 
+	CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc(2, slotRootParameter, 0, nullptr, 
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
 
-	// Create a root signature with a single slot that points to a descriptor range consisting of a single constant buffer.
 	Microsoft::WRL::ComPtr<ID3DBlob> serializedRootSignature = nullptr;
 	Microsoft::WRL::ComPtr<ID3DBlob> errorBlob = nullptr;
 
-	HRESULT hresult = D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1,
+	HRESULT hresult = D3D12SerializeRootSignature(&rootSigDesc, D3D_ROOT_SIGNATURE_VERSION_1,
 		serializedRootSignature.GetAddressOf(), errorBlob.GetAddressOf());
 
 
@@ -1845,13 +2784,8 @@ bool SApplication::createRootSignature()
 
 bool SApplication::createShadersAndInputLayout()
 {
-	pVSByteCode = SGeometry::compileShader(L"shaders/basic.hlsl", nullptr, "VS", "vs_5_0");
-	pPSByteCode = SGeometry::compileShader(L"shaders/basic.hlsl", nullptr, "PS", "ps_5_0");
-
-	if (pVSByteCode == nullptr || pPSByteCode == nullptr)
-	{
-		return true;
-	}
+	mShaders["basicVS"] = SGeometry::compileShader(L"shaders/basic.hlsl", nullptr, "VS", "vs_5_1");
+	mShaders["basicPS"] = SGeometry::compileShader(L"shaders/basic.hlsl", nullptr, "PS", "ps_5_1");
 
 	vInputLayout =
 	{
@@ -1862,103 +2796,6 @@ bool SApplication::createShadersAndInputLayout()
 	return false;
 }
 
-bool SApplication::createBoxGeometry()
-{
-	std::array<SVertex, 8> vVertices =
-	{
-		SVertex({ DirectX::XMFLOAT3(-1.0f, -1.0f, -1.0f), DirectX::PackedVector::XMCOLOR(DirectX::Colors::White) }),
-		SVertex({ DirectX::XMFLOAT3(-1.0f, +1.0f, -1.0f), DirectX::PackedVector::XMCOLOR(DirectX::Colors::Black) }),
-		SVertex({ DirectX::XMFLOAT3(+1.0f, +1.0f, -1.0f), DirectX::PackedVector::XMCOLOR(DirectX::Colors::Red) }),
-		SVertex({ DirectX::XMFLOAT3(+1.0f, -1.0f, -1.0f), DirectX::PackedVector::XMCOLOR(DirectX::Colors::Green) }),
-		SVertex({ DirectX::XMFLOAT3(-1.0f, -1.0f, +1.0f), DirectX::PackedVector::XMCOLOR(DirectX::Colors::Blue) }),
-		SVertex({ DirectX::XMFLOAT3(-1.0f, +1.0f, +1.0f), DirectX::PackedVector::XMCOLOR(DirectX::Colors::Yellow) }),
-		SVertex({ DirectX::XMFLOAT3(+1.0f, +1.0f, +1.0f), DirectX::PackedVector::XMCOLOR(DirectX::Colors::Cyan) }),
-		SVertex({ DirectX::XMFLOAT3(+1.0f, -1.0f, +1.0f), DirectX::PackedVector::XMCOLOR(DirectX::Colors::Magenta) })
-	};
-
-	std::array<std::uint16_t, 36> vIndices =
-	{
-		// front face
-		0, 1, 2,
-		0, 2, 3,
-
-		// back face
-		4, 6, 5,
-		4, 7, 6,
-
-		// left face
-		4, 5, 1,
-		4, 1, 0,
-
-		// right face
-		3, 2, 6,
-		3, 6, 7,
-
-		// top face
-		1, 5, 6,
-		1, 6, 2,
-
-		// bottom face
-		4, 0, 3,
-		4, 3, 7
-	};
-
-
-	const UINT iVertexBufferSizeInBytes = static_cast<UINT>(vVertices.size() * sizeof(SVertex));
-	const UINT iIndexBufferSizeInBytes  = static_cast<UINT>(vIndices.size() * sizeof(std::uint16_t));
-
-
-	pBoxGeometry = std::make_unique<SMeshGeometry>();
-	pBoxGeometry->sMeshName = L"Cube Geometry";
-
-
-
-	HRESULT hresult = D3DCreateBlob(iVertexBufferSizeInBytes, &pBoxGeometry->pVertexBufferCPU);
-	if (FAILED(hresult))
-	{
-		SError::showErrorMessageBox(hresult, L"SApplication::createBoxGeometry::D3DCreateBlob() (VB)");
-		return true;
-	}
-
-	std::memcpy(pBoxGeometry->pVertexBufferCPU->GetBufferPointer(), vVertices.data(), iVertexBufferSizeInBytes);
-
-
-
-	hresult = D3DCreateBlob(iIndexBufferSizeInBytes, &pBoxGeometry->pIndexBufferCPU);
-	if (FAILED(hresult))
-	{
-		SError::showErrorMessageBox(hresult, L"SApplication::createBoxGeometry::D3DCreateBlob() (IB)");
-		return true;
-	}
-
-	std::memcpy(pBoxGeometry->pIndexBufferCPU->GetBufferPointer(), vIndices.data(), iIndexBufferSizeInBytes);
-
-
-
-	pBoxGeometry->pVertexBufferGPU = SGeometry::createDefaultBuffer(pDevice.Get(), pCommandList.Get(), vVertices.data(),
-		iVertexBufferSizeInBytes, pBoxGeometry->pVertexBufferUploader);
-
-	pBoxGeometry->pIndexBufferGPU = SGeometry::createDefaultBuffer(pDevice.Get(), pCommandList.Get(), vIndices.data(),
-		iIndexBufferSizeInBytes, pBoxGeometry->pIndexBufferUploader);
-
-
-	pBoxGeometry->iVertexByteStride = sizeof(SVertex);
-	pBoxGeometry->iVertexBufferSizeInBytes = iVertexBufferSizeInBytes;
-	pBoxGeometry->iIndexBufferSizeInBytes  = iIndexBufferSizeInBytes;
-	pBoxGeometry->indexFormat = DXGI_FORMAT_R16_UINT;
-	
-
-	SSubmeshGeometry submesh;
-	submesh.iIndexCount = static_cast<UINT>(vIndices.size());
-	submesh.iStartIndexLocation = 0;
-	submesh.iBaseVertexLocation = 0;
-
-
-	pBoxGeometry->mDrawArgs[L"Cube"] = submesh;
-
-
-	return false;
-}
 
 bool SApplication::createPSO()
 {
@@ -1969,18 +2806,19 @@ bool SApplication::createPSO()
 	psoDesc.pRootSignature = pRootSignature.Get();
 	psoDesc.VS =
 	{
-		reinterpret_cast<BYTE*>(pVSByteCode->GetBufferPointer()),
-		pVSByteCode->GetBufferSize()
+		reinterpret_cast<BYTE*>(mShaders["basicVS"]->GetBufferPointer()),
+		mShaders["basicVS"]->GetBufferSize()
 	};
 	psoDesc.PS =
 	{
-		reinterpret_cast<BYTE*>(pPSByteCode->GetBufferPointer()),
-		pPSByteCode->GetBufferSize()
+		reinterpret_cast<BYTE*>(mShaders["basicPS"]->GetBufferPointer()),
+		mShaders["basicPS"]->GetBufferSize()
 	};
 
 	CD3DX12_RASTERIZER_DESC rastDesc(D3D12_DEFAULT);
-	rastDesc.CullMode = bUseBackFaceCulling ? D3D12_CULL_MODE_BACK : D3D12_CULL_MODE_NONE;
-	rastDesc.FillMode = bUseFillModeWireframe ? D3D12_FILL_MODE_WIREFRAME : D3D12_FILL_MODE_SOLID;
+	rastDesc.CullMode = D3D12_CULL_MODE_BACK;
+	rastDesc.FillMode = D3D12_FILL_MODE_SOLID;
+	rastDesc.MultisampleEnable = MSAA_Enabled;
 
 	psoDesc.RasterizerState   = rastDesc;
 	psoDesc.BlendState        = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
@@ -2000,20 +2838,116 @@ bool SApplication::createPSO()
 		return true;
 	}
 
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC wireframePsoDesc = psoDesc;
+	wireframePsoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;
+	hresult = pDevice->CreateGraphicsPipelineState(&wireframePsoDesc, IID_PPV_ARGS(&pWireframePSO));
+	if (FAILED(hresult))
+	{
+		SError::showErrorMessageBox(hresult, L"SApplication::createPSO::ID3D12Device::CreateGraphicsPipelineState()");
+		return true;
+	}
+
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC noBackfacePsoDesc = psoDesc;
+	noBackfacePsoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+	hresult = pDevice->CreateGraphicsPipelineState(&noBackfacePsoDesc, IID_PPV_ARGS(&pNoBackfaceCullingPSO));
+	if (FAILED(hresult))
+	{
+		SError::showErrorMessageBox(hresult, L"SApplication::createPSO::ID3D12Device::CreateGraphicsPipelineState()");
+		return true;
+	}
+
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC noBackfaceWireframePsoDesc = psoDesc;
+	noBackfaceWireframePsoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+	noBackfaceWireframePsoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;
+	hresult = pDevice->CreateGraphicsPipelineState(&noBackfaceWireframePsoDesc, IID_PPV_ARGS(&pNoBackfaceCullingWireframePSO));
+	if (FAILED(hresult))
+	{
+		SError::showErrorMessageBox(hresult, L"SApplication::createPSO::ID3D12Device::CreateGraphicsPipelineState()");
+		return true;
+	}
+
 	return false;
 }
 
-ID3D12Resource* SApplication::getCurrentBackBufferResource() const
+bool SApplication::resetCommandList()
 {
-	return pSwapChainBuffer[iCurrentBackBuffer].Get();
+	// A command list can be reset after it has been added to the command queue via ExecuteCommandList (was added in init()).
+
+	HRESULT hresult;
+
+	Microsoft::WRL::ComPtr<ID3D12CommandAllocator> pCurrentCommandListAllocator = pCurrentFrameResource->pCommandListAllocator;
+
+	if (bUseFillModeWireframe && bUseBackFaceCulling == false)
+	{
+		hresult = pCommandList->Reset(pCurrentCommandListAllocator.Get(), pNoBackfaceCullingWireframePSO.Get());
+	}
+	else if (bUseFillModeWireframe)
+	{
+		hresult = pCommandList->Reset(pCurrentCommandListAllocator.Get(), pWireframePSO.Get());
+	}
+	else if (bUseBackFaceCulling == false)
+	{
+		hresult = pCommandList->Reset(pCurrentCommandListAllocator.Get(), pNoBackfaceCullingPSO.Get());
+	}
+	else
+	{
+		hresult = pCommandList->Reset(pCurrentCommandListAllocator.Get(), pPSO.Get());
+	}
+
+	if (FAILED(hresult))
+	{
+		SError::showErrorMessageBox(hresult, L"SApplication::resetCommandList::ID3D12GraphicsCommandList::Reset()");
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+bool SApplication::executeCommandList()
+{
+	HRESULT hresult = pCommandList->Close();
+	if (FAILED(hresult))
+	{
+		SError::showErrorMessageBox(hresult, L"SApplication::executeCommandList::ID3D12GraphicsCommandList::Close()");
+		return true;
+	}
+
+	ID3D12CommandList* commandLists[] = { pCommandList.Get() };
+
+	pCommandQueue->ExecuteCommandLists(_countof(commandLists), commandLists);
+
+	return false;
+}
+ID3D12Resource* SApplication::getCurrentBackBufferResource(bool bNonMSAAResource) const
+{
+	if (MSAA_Enabled && bNonMSAAResource == false)
+	{
+		return pMSAARenderTarget.Get();
+	}
+	else
+	{
+		return pSwapChainBuffer[iCurrentBackBuffer].Get();
+	}
 }
 
 D3D12_CPU_DESCRIPTOR_HANDLE SApplication::getCurrentBackBufferViewHandle() const
 {
-	return CD3DX12_CPU_DESCRIPTOR_HANDLE(
-		pRTVHeap->GetCPUDescriptorHandleForHeapStart(),
-		iCurrentBackBuffer,
-		iRTVDescriptorSize);
+	if (MSAA_Enabled)
+	{
+		return CD3DX12_CPU_DESCRIPTOR_HANDLE(
+			pRTVHeap->GetCPUDescriptorHandleForHeapStart(),
+			2,
+			iRTVDescriptorSize);
+	}
+	else
+	{
+		return CD3DX12_CPU_DESCRIPTOR_HANDLE(
+			pRTVHeap->GetCPUDescriptorHandleForHeapStart(),
+			iCurrentBackBuffer,
+			iRTVDescriptorSize);
+	}
 }
 
 D3D12_CPU_DESCRIPTOR_HANDLE SApplication::getDepthStencilViewHandle() const
@@ -2025,13 +2959,17 @@ SApplication::SApplication(HINSTANCE hInstance)
 {
 	hApplicationInstance = hInstance;
 	pApp           = this;
+
+	pVideoSettings = new SVideoSettings(this);
+	pProfiler      = new SProfiler(this);
+
+	pCurrentLevel  = new SLevel(this);
 }
 
 SApplication::~SApplication()
 {
 	if(bInitCalled)
 	{
-		// Wait for the GPU because it can still reference resources that we will delete (after destructor).
 		flushCommandQueue();
 
 		if (bFullscreen)
@@ -2040,6 +2978,22 @@ SApplication::~SApplication()
 			pSwapChain->SetFullscreenState(false, NULL);
 		}
 	}
+
+	mtxSpawnDespawn.lock();
+	mtxSpawnDespawn.unlock();
+
+	if (pCurrentLevel)
+	{
+		delete pCurrentLevel;
+	}
+
+	delete pVideoSettings;
+	delete pProfiler;
+}
+
+void SApplication::initDisableD3DDebugLayer()
+{
+	bD3DDebugLayerEnabled = false;
 }
 
 bool SApplication::init()
@@ -2073,13 +3027,6 @@ bool SApplication::init()
 		return true;
 	}
 
-	if (createCBVDescriptorHeap())
-	{
-		return true;
-	}
-
-	createConstantBuffer();
-
 	if (createRootSignature())
 	{
 		return true;
@@ -2090,10 +3037,14 @@ bool SApplication::init()
 		return true;
 	}
 
-	if (createBoxGeometry())
+	createFrameResources();
+
+	if (createCBVHeap())
 	{
 		return true;
 	}
+
+	createConstantBufferViews();
 
 	if (createPSO())
 	{
@@ -2133,18 +3084,25 @@ LRESULT SApplication::msgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		iMainWindowWidth  = LOWORD(lParam);
 		iMainWindowHeight = HIWORD(lParam);
 
+		fWindowCenterX = iMainWindowWidth / 2.0f;
+		fWindowCenterY = iMainWindowHeight / 2.0f;
+
 		if (bInitCalled)
 		{
 			if( wParam == SIZE_MINIMIZED )
 			{
 				bWindowMaximized = false;
 				bWindowMinimized = true;
+
+				onMinimizeEvent();
 			}
 			else if( wParam == SIZE_MAXIMIZED )
 			{
 				bWindowMaximized = true;
 				bWindowMinimized = false;
 				onResize();
+
+				onMaximizeEvent();
 			}
 			else if( wParam == SIZE_RESTORED )
 			{
@@ -2152,11 +3110,15 @@ LRESULT SApplication::msgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 				{
 					bWindowMinimized = false;
 					onResize();
+
+					onRestoreEvent();
 				}
 				else if (bWindowMaximized)
 				{
 					bWindowMaximized = false;
 					onResize();
+
+					onRestoreEvent();
 				}
 				else if(bResizingMoving == false)
 				{
@@ -2174,8 +3136,6 @@ LRESULT SApplication::msgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 		bResizingMoving = true;
 
-		gameTimer.pause();
-
 		return 0;
 	}
 	case WM_EXITSIZEMOVE:
@@ -2185,8 +3145,6 @@ LRESULT SApplication::msgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		bResizingMoving = false;
 
 		onResize();
-
-		gameTimer.unpause();
 
 		return 0;
 	}
@@ -2209,50 +3167,291 @@ LRESULT SApplication::msgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	case WM_RBUTTONDOWN:
 	case WM_XBUTTONDOWN:
 	{
-		onMouseDown(SMouseKey(wParam), GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+		SMouseKey mousekey;
+
+		if (pressedMouseKey.getButton() != SMB_NONE)
+		{
+			mousekey.setOtherKey(wParam, pressedMouseKey);
+		}
+		else
+		{
+			mousekey.determineKey(wParam);
+			pressedMouseKey.setKey(mousekey.getButton());
+		}
+		
+
+		onMouseDown(mousekey, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+
+		std::vector<SContainer*>* pvRenderableContainers = nullptr;
+		pCurrentLevel->getRenderableContainers(pvRenderableContainers);
+
+		for (size_t i = 0; i < pvRenderableContainers->size(); i++)
+		{
+			if (pvRenderableContainers->operator[](i)->isUserInputCallsEnabled())
+			{
+				pvRenderableContainers->operator[](i)->onMouseDown(mousekey, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+			}
+		}
+
+		std::vector<SContainer*>* pvNotRenderableContainers = nullptr;
+		pCurrentLevel->getNotRenderableContainers(pvNotRenderableContainers);
+		for (size_t i = 0; i < pvNotRenderableContainers->size(); i++)
+		{
+			if (pvNotRenderableContainers->operator[](i)->isUserInputCallsEnabled())
+			{
+				pvNotRenderableContainers->operator[](i)->onMouseDown(mousekey, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+			}
+		}
 		return 0;
 	}
 	case WM_LBUTTONUP:
-	{
-		onMouseUp(SMouseKey(SMB_LEFT, wParam), GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
-		return 0;
-	}
 	case WM_MBUTTONUP:
-	{
-		onMouseUp(SMouseKey(SMB_MIDDLE, wParam), GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
-		return 0;
-	}
 	case WM_RBUTTONUP:
-	{
-		onMouseUp(SMouseKey(SMB_RIGHT, wParam), GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
-		return 0;
-	}
 	case WM_XBUTTONUP:
 	{
-		onMouseUp(SMouseKey(wParam), GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+		SMouseKey keyDownLeft(wParam);
+		
+		if (keyDownLeft.getButton() != pressedMouseKey.getButton())
+		{
+			onMouseUp(pressedMouseKey, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+
+			std::vector<SContainer*>* pvRenderableContainers = nullptr;
+			pCurrentLevel->getRenderableContainers(pvRenderableContainers);
+
+			for (size_t i = 0; i < pvRenderableContainers->size(); i++)
+			{
+				if (pvRenderableContainers->operator[](i)->isUserInputCallsEnabled())
+				{
+					pvRenderableContainers->operator[](i)->onMouseUp(pressedMouseKey, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+				}
+			}
+
+			std::vector<SContainer*>* pvNotRenderableContainers = nullptr;
+			pCurrentLevel->getNotRenderableContainers(pvNotRenderableContainers);
+			for (size_t i = 0; i < pvNotRenderableContainers->size(); i++)
+			{
+				if (pvNotRenderableContainers->operator[](i)->isUserInputCallsEnabled())
+				{
+					pvNotRenderableContainers->operator[](i)->onMouseUp(pressedMouseKey, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+				}
+			}
+
+			pressedMouseKey.setKey(SMB_NONE);
+		}
+		else
+		{
+			onMouseUp(keyDownLeft, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+
+			std::vector<SContainer*>* pvRenderableContainers = nullptr;
+			pCurrentLevel->getRenderableContainers(pvRenderableContainers);
+
+			for (size_t i = 0; i < pvRenderableContainers->size(); i++)
+			{
+				if (pvRenderableContainers->operator[](i)->isUserInputCallsEnabled())
+				{
+					pvRenderableContainers->operator[](i)->onMouseUp(keyDownLeft, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+				}
+			}
+
+			std::vector<SContainer*>* pvNotRenderableContainers = nullptr;
+			pCurrentLevel->getNotRenderableContainers(pvNotRenderableContainers);
+			for (size_t i = 0; i < pvNotRenderableContainers->size(); i++)
+			{
+				if (pvNotRenderableContainers->operator[](i)->isUserInputCallsEnabled())
+				{
+					pvNotRenderableContainers->operator[](i)->onMouseUp(keyDownLeft, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+				}
+			}
+		}
+		
 		return 0;
 	}
 	case WM_MOUSEMOVE:
 	{
-		onMouseMove(SMouseKey(wParam), GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
-		return 0;
-	}
-	case WM_KEYDOWN:
-	{
-
-		return 0;
-	}
-	case WM_KEYUP:
-	{
-		if(wParam == VK_ESCAPE)
+		if (bMouseCursorShown == false)
 		{
-			PostQuitMessage(0);
+			POINT pos;
+			pos.x = fWindowCenterX;
+			pos.y = fWindowCenterY;
+
+			ClientToScreen(hMainWindow, &pos);
+
+			SetCursorPos(pos.x, pos.y);
 		}
 
 		return 0;
 	}
+	case WM_INPUT:
+	{
+		UINT dataSize;
+
+		GetRawInputData(reinterpret_cast<HRAWINPUT>(lParam), RID_INPUT, NULL, &dataSize, sizeof(RAWINPUTHEADER));
+
+		if (dataSize > 0)
+		{
+			LPBYTE lpb = new BYTE[dataSize];
+
+			if (GetRawInputData(reinterpret_cast<HRAWINPUT>(lParam), RID_INPUT, lpb, &dataSize, sizeof(RAWINPUTHEADER)) != dataSize)
+			{
+				SError::showErrorMessageBox(L"SApplication::msgProc::GetRawInputData()", L"GetRawInputData() does not return correct size.");
+				return 0;
+			}
+
+			RAWINPUT* raw = reinterpret_cast<RAWINPUT*>(lpb);
+
+
+
+			// If you want to uncomment this then uncomment the keyboard stuff in createMainWindow().
+
+			//if (raw->header.dwType == RIM_TYPEKEYBOARD) 
+			//{
+			//	hResult = StringCchPrintf(szTempOutput, STRSAFE_MAX_CCH, TEXT(" Kbd: make=%04x Flags:%04x Reserved:%04x ExtraInformation:%08x, msg=%04x VK=%04x \n"), 
+			//		raw->data.keyboard.MakeCode, 
+			//		raw->data.keyboard.Flags, 
+			//		raw->data.keyboard.Reserved, 
+			//		raw->data.keyboard.ExtraInformation, 
+			//		raw->data.keyboard.Message, 
+			//		raw->data.keyboard.VKey);
+			//	if (FAILED(hResult))
+			//	{
+			//		// TODO: write error handler
+			//	}
+			//	OutputDebugString(szTempOutput);
+			//}
+			//else 
+			
+			if (raw->header.dwType == RIM_TYPEMOUSE) 
+			{
+				onMouseMove(raw->data.mouse.lLastX, raw->data.mouse.lLastY);
+
+				std::vector<SContainer*>* pvRenderableContainers = nullptr;
+				pCurrentLevel->getRenderableContainers(pvRenderableContainers);
+
+				for (size_t i = 0; i < pvRenderableContainers->size(); i++)
+				{
+					if (pvRenderableContainers->operator[](i)->isUserInputCallsEnabled())
+					{
+						pvRenderableContainers->operator[](i)->onMouseMove(raw->data.mouse.lLastX, raw->data.mouse.lLastY);
+					}
+				}
+
+				std::vector<SContainer*>* pvNotRenderableContainers = nullptr;
+				pCurrentLevel->getNotRenderableContainers(pvNotRenderableContainers);
+				for (size_t i = 0; i < pvNotRenderableContainers->size(); i++)
+				{
+					if (pvNotRenderableContainers->operator[](i)->isUserInputCallsEnabled())
+					{
+						pvNotRenderableContainers->operator[](i)->onMouseMove(raw->data.mouse.lLastX, raw->data.mouse.lLastY);
+					}
+				}
+			} 
+
+
+			delete[] lpb;
+		}
+
+		// Don't return, because we need to call DefWindowProc to cleanup.
+	}
+	case WM_MOUSEWHEEL:
+	{
+		int zDelta = GET_WHEEL_DELTA_WPARAM(wParam);
+
+		bool bUp = false;
+
+		if (zDelta > 0)
+		{
+			bUp = true;
+		}
+
+		onMouseWheelMove(bUp, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+
+		std::vector<SContainer*>* pvRenderableContainers = nullptr;
+		pCurrentLevel->getRenderableContainers(pvRenderableContainers);
+
+		for (size_t i = 0; i < pvRenderableContainers->size(); i++)
+		{
+			if (pvRenderableContainers->operator[](i)->isUserInputCallsEnabled())
+			{
+				pvRenderableContainers->operator[](i)->onMouseWheelMove(bUp, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+			}
+		}
+
+		std::vector<SContainer*>* pvNotRenderableContainers = nullptr;
+		pCurrentLevel->getNotRenderableContainers(pvNotRenderableContainers);
+		for (size_t i = 0; i < pvNotRenderableContainers->size(); i++)
+		{
+			if (pvNotRenderableContainers->operator[](i)->isUserInputCallsEnabled())
+			{
+				pvNotRenderableContainers->operator[](i)->onMouseWheelMove(bUp, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+			}
+		}
+		return 0;
+	}
+	case WM_KEYDOWN:
+	case WM_SYSKEYDOWN:
+	{
+		SKeyboardKey key(wParam, lParam);
+		if (key.getButton() != SKB_NONE)
+		{
+			onKeyboardButtonDown(key);
+
+			std::vector<SContainer*>* pvRenderableContainers = nullptr;
+			pCurrentLevel->getRenderableContainers(pvRenderableContainers);
+
+			for (size_t i = 0; i < pvRenderableContainers->size(); i++)
+			{
+				if (pvRenderableContainers->operator[](i)->isUserInputCallsEnabled())
+				{
+					pvRenderableContainers->operator[](i)->onKeyboardButtonDown(key);
+				}
+			}
+
+			std::vector<SContainer*>* pvNotRenderableContainers = nullptr;
+			pCurrentLevel->getNotRenderableContainers(pvNotRenderableContainers);
+			for (size_t i = 0; i < pvNotRenderableContainers->size(); i++)
+			{
+				if (pvNotRenderableContainers->operator[](i)->isUserInputCallsEnabled())
+				{
+					pvNotRenderableContainers->operator[](i)->onKeyboardButtonDown(key);
+				}
+			}
+		}
+		return 0;
+	}
+	case WM_KEYUP:
+	case WM_SYSKEYUP:
+	{
+		SKeyboardKey key(wParam, lParam);
+		if (key.getButton() != SKB_NONE)
+		{
+			onKeyboardButtonUp(key);
+
+			std::vector<SContainer*>* pvRenderableContainers = nullptr;
+			pCurrentLevel->getRenderableContainers(pvRenderableContainers);
+
+			for (size_t i = 0; i < pvRenderableContainers->size(); i++)
+			{
+				if (pvRenderableContainers->operator[](i)->isUserInputCallsEnabled())
+				{
+					pvRenderableContainers->operator[](i)->onKeyboardButtonUp(key);
+				}
+			}
+
+			std::vector<SContainer*>* pvNotRenderableContainers = nullptr;
+			pCurrentLevel->getNotRenderableContainers(pvNotRenderableContainers);
+			for (size_t i = 0; i < pvNotRenderableContainers->size(); i++)
+			{
+				if (pvNotRenderableContainers->operator[](i)->isUserInputCallsEnabled())
+				{
+					pvNotRenderableContainers->operator[](i)->onKeyboardButtonUp(key);
+				}
+			}
+		}
+		return 0;
+	}
 	case WM_DESTROY:
 	{
+		onCloseEvent();
 		PostQuitMessage(0);
 		return 0;
 	}
@@ -2272,6 +3471,13 @@ int SApplication::run()
 		bRunCalled = true;
 
 		STimer frameTimer;
+		frameTimer.start();
+		gameTimer.tick();
+
+		update(); // so pCurrentFrameResource will be assigned before onTick()
+		draw();
+
+		onRun();
 
 		while(msg.message != WM_QUIT)
 		{
@@ -2282,12 +3488,6 @@ int SApplication::run()
 			}
 			else
 			{
-				if (fFPSLimit >= 1.0f)
-				{
-					frameTimer.start();
-				}
-
-
 				gameTimer.tick();
 
 				if (bCallTick)
@@ -2295,7 +3495,29 @@ int SApplication::run()
 					onTick(gameTimer.getDeltaTimeBetweenFramesInSec());
 				}
 
-				updateViewMatrix();
+				std::vector<SContainer*>* pvRenderableContainers = nullptr;
+				pCurrentLevel->getRenderableContainers(pvRenderableContainers);
+
+				std::vector<SContainer*>* pvNotRenderableContainers = nullptr;
+				pCurrentLevel->getNotRenderableContainers(pvNotRenderableContainers);
+
+				for (size_t i = 0; i < pvRenderableContainers->size(); i++)
+				{
+					if (pvRenderableContainers->operator[](i)->getCallTick())
+					{
+						pvRenderableContainers->operator[](i)->onTick(gameTimer.getDeltaTimeBetweenFramesInSec());
+					}
+				}
+				for (size_t i = 0; i < pvNotRenderableContainers->size(); i++)
+				{
+					if (pvNotRenderableContainers->operator[](i)->getCallTick())
+					{
+						pvNotRenderableContainers->operator[](i)->onTick(gameTimer.getDeltaTimeBetweenFramesInSec());
+					}
+				}
+
+
+				update();
 				draw();
 
 				calculateFrameStats();
@@ -2303,12 +3525,14 @@ int SApplication::run()
 
 				if (fFPSLimit >= 1.0f)
 				{
-					float fTimeToRenderFrame = frameTimer.getElapsedTimeInMS();
+ 					float fTimeToRenderFrame = frameTimer.getElapsedTimeInMS();
 
 					if (fDelayBetweenFramesInMS > fTimeToRenderFrame)
 					{
 						Sleep(static_cast<unsigned long>(fDelayBetweenFramesInMS - fTimeToRenderFrame));
 					}
+
+					frameTimer.start();
 				}
 			}
 		}
@@ -2319,5 +3543,118 @@ int SApplication::run()
 	{
 		MessageBox(0, L"An error occurred at SApplication::run(). Error: init() should be called first.", L"Error", 0);
 		return 1;
+	}
+}
+
+bool SApplication::minimizeWindow()
+{
+	if (pApp)
+	{
+		if (pApp->bRunCalled)
+		{
+			PostMessage(pApp->hMainWindow, WM_SYSCOMMAND, SC_MINIMIZE, 0);
+			return false;
+		}
+		else
+		{
+			MessageBox(0, L"An error occurred at SApplication::minimizeWindow(). Error: run() should be called first.", L"Error", 0);
+			return true;
+		}
+	}
+	else
+	{
+		MessageBox(0, L"An error occurred at SApplication::minimizeWindow(). Error: an application instance is not created (pApp was nullptr).", L"Error", 0);
+		return true;
+	}
+}
+
+bool SApplication::maximizeWindow()
+{
+	if (pApp)
+	{
+		if (pApp->bRunCalled)
+		{
+			PostMessage(pApp->hMainWindow, WM_SYSCOMMAND, SC_MAXIMIZE, 0);
+			return false;
+		}
+		else
+		{
+			MessageBox(0, L"An error occurred at SApplication::maximizeWindow(). Error: run() should be called first.", L"Error", 0);
+			return true;
+		}
+	}
+	else
+	{
+		MessageBox(0, L"An error occurred at SApplication::maximizeWindow(). Error: an application instance is not created (pApp was nullptr).", L"Error", 0);
+		return true;
+	}
+}
+
+bool SApplication::restoreWindow()
+{
+	if (pApp)
+	{
+		if (pApp->bRunCalled)
+		{
+			//PostMessage(pApp->hMainWindow, WM_SYSCOMMAND, SC_RESTORE, 0);
+			ShowWindow(pApp->hMainWindow, SW_RESTORE);
+			return false;
+		}
+		else
+		{
+			MessageBox(0, L"An error occurred at SApplication::restoreWindow(). Error: run() should be called first.", L"Error", 0);
+			return true;
+		}
+	}
+	else
+	{
+		MessageBox(0, L"An error occurred at SApplication::restoreWindow(). Error: an application instance is not created (pApp was nullptr).", L"Error", 0);
+		return true;
+	}
+}
+
+bool SApplication::hideWindow()
+{
+	if (pApp)
+	{
+		if (pApp->bRunCalled)
+		{
+			pApp->onHideEvent();
+			ShowWindow(pApp->hMainWindow, SW_HIDE);
+			return false;
+		}
+		else
+		{
+			MessageBox(0, L"An error occurred at SApplication::hideWindow(). Error: run() should be called first.", L"Error", 0);
+			return true;
+		}
+	}
+	else
+	{
+		MessageBox(0, L"An error occurred at SApplication::hideWindow(). Error: an application instance is not created (pApp was nullptr).", L"Error", 0);
+		return true;
+	}
+}
+
+bool SApplication::showWindow()
+{
+	if (pApp)
+	{
+		if (pApp->bRunCalled)
+		{
+			pApp->onShowEvent();
+			ShowWindow(pApp->hMainWindow, SW_SHOW);
+			return false;
+		}
+		else
+		{
+			MessageBox(0, L"An error occurred at SApplication::showWindow(). Error: run() should be called first.", L"Error", 0);
+			return true;
+		}
+	}
+	else
+	{
+		MessageBox(0, L"An error occurred at SApplication::showWindow(). Error: an application instance is not created (pApp was nullptr).", L"Error", 0);
+		return true;
 	}
 }

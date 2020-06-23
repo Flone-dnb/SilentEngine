@@ -10,11 +10,11 @@
 // DirectX
 #include <wrl.h> // smart pointers
 #include "d3d12.h"
-#include "SilentEngine/private/d3dx12.h"
+#include "SilentEngine/Private/d3dx12.h"
 
 // Custom
-#include "SilentEngine/private/SMath/SMath.h"
-#include "SilentEngine/private/SError/SError.h"
+#include "SilentEngine/Private/SMath/SMath.h"
+#include "SilentEngine/Private/SError/SError.h"
 
 
 template<typename T>
@@ -22,7 +22,7 @@ class SUploadBuffer
 {
 public:
 
-	SUploadBuffer(ID3D12Device* pDevice, UINT iElementCount, bool bIsConstantBuffer)
+	SUploadBuffer(ID3D12Device* pDevice, UINT64 iElementCount, bool bIsConstantBuffer)
 	{
 		this->bIsConstantBuffer = bIsConstantBuffer;
 
@@ -69,13 +69,17 @@ public:
 		pMappedData = nullptr;
 	}
 
+	UINT getElementCount() const
+	{
+		return iElementCount;
+	}
 
 	ID3D12Resource* getResource() const
 	{
 		return pUploadBuffer.Get();
 	}
 
-	void copyDataToElement(int iElementIndex, const T& data)
+	void copyDataToElement(UINT64 iElementIndex, const T& data)
 	{
 		std::memcpy(&pMappedData[iElementIndex * iElementSizeInBytes], &data, sizeof(T));
 	}
@@ -89,7 +93,8 @@ private:
 	unsigned char* pMappedData;
 
 
-	UINT iElementSizeInBytes;
+	UINT64 iElementSizeInBytes;
+	UINT64 iElementCount;
 
 
 	bool bIsConstantBuffer;

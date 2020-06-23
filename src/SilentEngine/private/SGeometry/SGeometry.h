@@ -11,7 +11,6 @@
 // STL
 #include <vector>
 #include <string>
-#include <unordered_map>
 
 // DirectX
 #include <wrl.h> // smart pointers
@@ -19,45 +18,22 @@
 #include <DirectXPackedVector.h>
 #include <DirectXCollision.h>
 #include <d3d12.h>
-#include "SilentEngine/private/d3dx12.h"
+#include "SilentEngine/Private/d3dx12.h"
 #include <DirectXColors.h>
 
 // Custom
-#include "SilentEngine/private/SMath/SMath.h"
+#include "SilentEngine/Private/SMath/SMath.h"
+
 
 #pragma comment(lib, "D3D12.lib")
 
 
+#define SFRAME_RES_COUNT 3
+#define OBJECT_CB_RESIZE_MULTIPLE 10
 
-struct SVertex
-{
-	DirectX::XMFLOAT3 vPos;
-	DirectX::PackedVector::XMCOLOR vColor;
-};
-
-
-struct SObjectConstants
-{
-	DirectX::XMFLOAT4X4 vWorldViewProj = SMath::getIdentityMatrix4x4();
-};
-
-
-// Defines a subrange of geometry in a SMeshGeometry. This is for when multiple
-// geometries are stored in one vertex and index buffer. It provides the offsets
-// and data needed to draw a subset of geometry stores in the vertex and index buffers.
-struct SSubmeshGeometry
-{
-	UINT iIndexCount = 0;
-	UINT iStartIndexLocation = 0;
-	INT  iBaseVertexLocation = 0; 
-
-	DirectX::BoundingBox bounds;
-};
 
 struct SMeshGeometry
 {
-	std::wstring sMeshName;
-
 	// System memory copies. Use Blobs because the vertex/index format can be generic.
 	// It is up to the client to cast appropriately.
 	Microsoft::WRL::ComPtr<ID3DBlob> pVertexBufferCPU = nullptr;
@@ -71,15 +47,12 @@ struct SMeshGeometry
 
 
 	// Data about the buffers.
-	UINT iVertexByteStride = 0;
-	UINT iVertexBufferSizeInBytes = 0;
-	UINT iIndexBufferSizeInBytes = 0;
+	size_t iVertexGraphicsObjectSizeInBytes = 0;
+	size_t iVertexBufferSizeInBytes = 0;
+	size_t iIndexBufferSizeInBytes = 0;
 	DXGI_FORMAT indexFormat = DXGI_FORMAT_R16_UINT;
 
-
-	// A MeshGeometry may store multiple geometries in one vertex/index buffer.
-	// Use this container to define the Submesh geometries so we can draw the Submeshes individually.
-	std::unordered_map<std::wstring, SSubmeshGeometry> mDrawArgs;
+	DirectX::BoundingBox bounds;
 
 
 	D3D12_VERTEX_BUFFER_VIEW getVertexBufferView() const;
@@ -90,6 +63,26 @@ struct SMeshGeometry
 	void freeUploaders();
 };
 
+struct SRenderItem
+{
+	// World matrix of the shape that describes the object's local space
+	// relative to the world space, which defines the position, orientation,
+	// and scale of the object in the world.
+	DirectX::XMFLOAT4X4 vWorld = SMath::getIdentityMatrix4x4();
+
+	int iUpdateCBInFrameResourceCount = SFRAME_RES_COUNT;
+
+	size_t iObjCBIndex = 0;
+
+	SMeshGeometry* pGeometry = nullptr;
+
+	D3D12_PRIMITIVE_TOPOLOGY primitiveTopologyType = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+
+	// DrawIndexedInstanced parameters.
+	UINT iIndexCount = 0;
+	UINT iStartIndexLocation = 0;
+	int iStartVertexLocation = 0;
+};
 
 class SGeometry
 {
