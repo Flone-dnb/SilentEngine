@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../../doc.css">
+    <title>SVector - Silent Engine Documentation</title>
+</head>
+<body>
+    <div class="nav_panel">
+        <a class="cpp_link_title" href="../../classes/index.html"> Classes </a>
+		<br>
+		<a class="cpp_link_title" href="../../structs/index.html"> Structs </a>
+		<br>
+		<a class="cpp_link_title" href="../../enums/index.html"> Enums </a>
+    </div>
+    
+	<div class="cpp_doc">
+		<h3 class="cpp_object"> SVector </h3>
+		<code class="cpp_codeobject"> class SVector </code>
+		<br>
+		<br>
+		<div class="cpp_codeobject_desc"> The class is used to store 3-4 values, which can represent a vector or a point in space. </div>
+		<br>
+		<br>
+		<details open class="cpp_details">
+			<br>
+			<summary class="cpp_summary"> Public: </summary>
+			<div class="cpp_func_container">
+				<code class="cpp_function"> <code class="cpp_func_name"><a class="cpp_link" href="SVector_func_1.html">SVector</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> <code class="cpp_func_name"><a class="cpp_link" href="SVector_func_2.html">SVector</a></code>(float fX, float fY, float fZ); </code>
+				<br>
+				<code class="cpp_function"> <code class="cpp_func_name"><a class="cpp_link" href="SVector_func_3.html">SVector</a></code>(float fX, float fY, float fZ, float fW); </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="setX_func_1.html">setX</a></code>(float fX); </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="setY_func_1.html">setY</a></code>(float fY); </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="setZ_func_1.html">setZ</a></code>(float fZ); </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="setW_func_1.html">setW</a></code>(float fW); </code>
+				<br>
+				<code class="cpp_function"> float <code class="cpp_func_name"><a class="cpp_link" href="getX_func_1.html">getX</a></code>() const; </code>
+				<br>
+				<code class="cpp_function"> float <code class="cpp_func_name"><a class="cpp_link" href="getY_func_1.html">getY</a></code>() const; </code>
+				<br>
+				<code class="cpp_function"> float <code class="cpp_func_name"><a class="cpp_link" href="getZ_func_1.html">getZ</a></code>() const; </code>
+				<br>
+				<code class="cpp_function"> float <code class="cpp_func_name"><a class="cpp_link" href="getW_func_1.html">getW</a></code>() const; </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="normalizeVector_func_1.html">normalizeVector</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> float <code class="cpp_func_name"><a class="cpp_link" href="length_func_1.html">length</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> float <code class="cpp_func_name"><a class="cpp_link" href="dotProduct_func_1.html">dotProduct</a></code>(const SVector&amp; b); </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="crossProduct_func_1.html">crossProduct</a></code>(const SVector&amp; b); </code>
+				<br>
+				<code class="cpp_function"> float <code class="cpp_func_name"><a class="cpp_link" href="angleBetweenVectorsInRad_func_1.html">angleBetweenVectorsInRad</a></code>(const SVector&amp; b, bool bVectorsNormalized = false); </code>
+				<br>
+				<code class="cpp_function"> float <code class="cpp_func_name"><a class="cpp_link" href="angleBetweenVectorsInDeg_func_1.html">angleBetweenVectorsInDeg</a></code>(const SVector&amp; b, bool bVectorsNormalized = false); </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="rotateAroundAxis_func_1.html">rotateAroundAxis</a></code>(const SVector&amp; axis, float fAngleInGrad); </code>
+				<br>
+			</div>
+		</details>
+		<br>
+		<details class="cpp_details">
+			<br>
+			<summary class="cpp_summary"> Private: </summary>
+			<div class="cpp_func_container">
+				<code class="cpp_function"> DirectX::XMFLOAT3 <code class="cpp_func_name"><a class="cpp_link" href="vVector_var_0.html">vVector</a></code>; </code>
+				<br><code class="cpp_function"> float <code class="cpp_func_name"><a class="cpp_link" href="fW_var_1.html">fW</a></code>; </code>
+				<br></div>
+		</details>
+		
+	</div>
+</body>
+</html>

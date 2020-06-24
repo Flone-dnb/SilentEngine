@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../../doc.css">
+    <title>SContainer - Silent Engine Documentation</title>
+</head>
+<body>
+    <div class="nav_panel">
+        <a class="cpp_link_title" href="../../classes/index.html"> Classes </a>
+		<br>
+		<a class="cpp_link_title" href="../../structs/index.html"> Structs </a>
+		<br>
+		<a class="cpp_link_title" href="../../enums/index.html"> Enums </a>
+    </div>
+    
+	<div class="cpp_doc">
+		<h3 class="cpp_object"> SContainer </h3>
+		<code class="cpp_codeobject"> class SContainer </code>
+		<br>
+		<br>
+		<div class="cpp_codeobject_desc"> The class represents an Entity (in Entity Component System) which can hold components.The container is considered as a root component of all components inside the container. </div>
+		<br>
+		<br>
+		<details open class="cpp_details">
+			<br>
+			<summary class="cpp_summary"> Public: </summary>
+			<div class="cpp_func_container">
+				<code class="cpp_function"> <code class="cpp_func_name"><a class="cpp_link" href="SContainer_func_1.html">SContainer</a></code>(const std::string&amp; sContainerName); </code>
+				<br>
+				<code class="cpp_function"> virtual <code class="cpp_func_name"><a class="cpp_link" href="~SContainer_func_1.html">~SContainer</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="setLocation_func_1.html">setLocation</a></code>(const <a class="cpp_link_ref" href="../SVector/index.html">SVector</a>&amp; vNewLocation, bool bLocationInWorldCoordinateSystem = true); </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="setRotation_func_1.html">setRotation</a></code>(const <a class="cpp_link_ref" href="../SVector/index.html">SVector</a>&amp; vNewRotation); </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="setScale_func_1.html">setScale</a></code>(const <a class="cpp_link_ref" href="../SVector/index.html">SVector</a>&amp; vNewScale); </code>
+				<br>
+				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="addComponentToContainer_func_1.html">addComponentToContainer</a></code>(<a class="cpp_link_ref" href="../SComponent/index.html">SComponent</a>* pComponent); </code>
+				<br>
+				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="removeComponentFromContainer_func_1.html">removeComponentFromContainer</a></code>(<a class="cpp_link_ref" href="../SComponent/index.html">SComponent</a>* pComponent); </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="setEnableUserInputCalls_func_1.html">setEnableUserInputCalls</a></code>(bool bEnableUserInputCalls); </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="setCallTick_func_1.html">setCallTick</a></code>(bool bCallTick); </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="setVisibility_func_1.html">setVisibility</a></code>(bool bVisible); </code>
+				<br>
+				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="setContainerName_func_1.html">setContainerName</a></code>(const std::string&amp; sContainerName); </code>
+				<br>
+				<code class="cpp_function"> bool  <code class="cpp_func_name"><a class="cpp_link" href="isUserInputCallsEnabled_func_1.html">isUserInputCallsEnabled</a></code>() const; </code>
+				<br>
+				<code class="cpp_function"> bool  <code class="cpp_func_name"><a class="cpp_link" href="isVisible_func_1.html">isVisible</a></code>() const; </code>
+				<br>
+				<code class="cpp_function"> bool  <code class="cpp_func_name"><a class="cpp_link" href="getCallTick_func_1.html">getCallTick</a></code>() const; </code>
+				<br>
+				<code class="cpp_function"> std::string <code class="cpp_func_name"><a class="cpp_link" href="getContainerName_func_1.html">getContainerName</a></code>() const; </code>
+				<br>
+				<code class="cpp_function"> <a class="cpp_link_ref" href="../SVector/index.html">SVector</a>  <code class="cpp_func_name"><a class="cpp_link" href="getLocation_func_1.html">getLocation</a></code>() const; </code>
+				<br>
+				<code class="cpp_function"> <a class="cpp_link_ref" href="../SVector/index.html">SVector</a>  <code class="cpp_func_name"><a class="cpp_link" href="getRotation_func_1.html">getRotation</a></code>() const; </code>
+				<br>
+				<code class="cpp_function"> <a class="cpp_link_ref" href="../SVector/index.html">SVector</a>  <code class="cpp_func_name"><a class="cpp_link" href="getScale_func_1.html">getScale</a></code>() const; </code>
+				<br>
+				<code class="cpp_function"> void  <code class="cpp_func_name"><a class="cpp_link" href="getLocalAxis_func_1.html">getLocalAxis</a></code>(<a class="cpp_link_ref" href="../SVector/index.html">SVector</a>* pvXAxisVector, <a class="cpp_link_ref" href="../SVector/index.html">SVector</a>* pvYAxisVector, <a class="cpp_link_ref" href="../SVector/index.html">SVector</a>* pvZAxisVector) const; </code>
+				<br>
+				<code class="cpp_function"> <a class="cpp_link_ref" href="../SComponent/index.html">SComponent</a>* <code class="cpp_func_name"><a class="cpp_link" href="getComponentByName_func_1.html">getComponentByName</a></code>(const std::string&amp; sComponentName) const; </code>
+				<br>
+				<code class="cpp_function"> std::vector&lt;<a class="cpp_link_ref" href="../SComponent/index.html">SComponent</a>*&gt; <code class="cpp_func_name"><a class="cpp_link" href="getComponents_func_1.html">getComponents</a></code>() const; </code>
+				<br>
+				<code class="cpp_function"> bool  <code class="cpp_func_name"><a class="cpp_link" href="isEditorObject_func_1.html">isEditorObject</a></code>() const; </code>
+				<br>
+			</div>
+		</details>
+		<br>
+		<details open class="cpp_details">
+			<br>
+			<summary class="cpp_summary"> Protected: </summary>
+			<div class="cpp_func_container">
+				<code class="cpp_function"> virtual void <code class="cpp_func_name"><a class="cpp_link" href="onTick_func_1.html">onTick</a></code>(float fDeltaTime); </code>
+				<br>
+				<code class="cpp_function"> virtual void <code class="cpp_func_name"><a class="cpp_link" href="onMouseDown_func_1.html">onMouseDown</a></code>(<a class="cpp_link_ref" href="../SMouseKey/index.html">SMouseKey</a> mouseKey, int iMouseXPos, int iMouseYPos); </code>
+				<br>
+				<code class="cpp_function"> virtual void <code class="cpp_func_name"><a class="cpp_link" href="onMouseUp_func_1.html">onMouseUp</a></code>(<a class="cpp_link_ref" href="../SMouseKey/index.html">SMouseKey</a> mouseKey, int iMouseXPos, int iMouseYPos); </code>
+				<br>
+				<code class="cpp_function"> virtual void <code class="cpp_func_name"><a class="cpp_link" href="onMouseMove_func_1.html">onMouseMove</a></code>(int iMouseXMove, int iMouseYMove); </code>
+				<br>
+				<code class="cpp_function"> virtual void <code class="cpp_func_name"><a class="cpp_link" href="onMouseWheelMove_func_1.html">onMouseWheelMove</a></code>(bool bUp, int iMouseXPos, int iMouseYPos); </code>
+				<br>
+				<code class="cpp_function"> virtual void <code class="cpp_func_name"><a class="cpp_link" href="onKeyboardButtonDown_func_1.html">onKeyboardButtonDown</a></code>(<a class="cpp_link_ref" href="../SKeyboardKey/index.html">SKeyboardKey</a> keyboardKey); </code>
+				<br>
+				<code class="cpp_function"> virtual void <code class="cpp_func_name"><a class="cpp_link" href="onKeyboardButtonUp_func_1.html">onKeyboardButtonUp</a></code>(<a class="cpp_link_ref" href="../SKeyboardKey/index.html">SKeyboardKey</a> keyboardKey); </code>
+				<br>
+			</div>
+		</details>
+		<br>
+		<details class="cpp_details">
+			<br>
+			<summary class="cpp_summary"> Private: </summary>
+			<div class="cpp_func_container">
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="setSpawnedInLevel_func_1.html">setSpawnedInLevel</a></code>(bool bSpawned); </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="setStartIndexInCB_func_1.html">setStartIndexInCB</a></code>(size_t iStartIndex); </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="createVertexBufferForRuntimeMeshComponents_func_1.html">createVertexBufferForRuntimeMeshComponents</a></code>(SFrameResource* pFrameResource); </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="removeVertexBufferForRuntimeMeshComponents_func_1.html">removeVertexBufferForRuntimeMeshComponents</a></code>(std::vector&lt;std::unique_ptr&lt;SFrameResource&gt;&gt;* vFrameResources, size_t&amp; iRemovedCount); </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="getMaxVertexBufferIndexForRuntimeMeshComponents_func_1.html">getMaxVertexBufferIndexForRuntimeMeshComponents</a></code>(size_t&amp; iMaxIndex); </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="updateVertexBufferIndexForRuntimeMeshComponents_func_1.html">updateVertexBufferIndexForRuntimeMeshComponents</a></code>(size_t iIfIndexMoreThatThisValue, size_t iMinusValue); </code>
+				<br>
+				<code class="cpp_function"> size_t <code class="cpp_func_name"><a class="cpp_link" href="getMeshComponentsCount_func_1.html">getMeshComponentsCount</a></code>() const; </code>
+				<br>
+				<code class="cpp_function"> size_t <code class="cpp_func_name"><a class="cpp_link" href="getStartIndexInCB_func_1.html">getStartIndexInCB</a></code>() const; </code>
+				<br>
+			</div>
+		</details>
+		
+	</div>
+</body>
+</html>

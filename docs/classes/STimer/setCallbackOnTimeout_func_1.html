@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../../doc.css">
+    <title>setCallbackOnTimeout - Silent Engine Documentation</title>
+</head>
+<body>
+    <div class="nav_panel">
+        <a class="cpp_link_title" href="../../classes/index.html"> Classes </a>
+		<br>
+		<a class="cpp_link_title" href="../../structs/index.html"> Structs </a>
+		<br>
+		<a class="cpp_link_title" href="../../enums/index.html"> Enums </a>
+    </div>
+    
+	<div class="cpp_doc">
+		<h3 class="cpp_object"> setCallbackOnTimeout </h3>
+		<div class="cpp_codeobject_desc"> sets the callback function, which will be called after the fTimeInSecToTimeout expired from the time when the start() was called. </div>
+		<br>
+		<code class="cpp_func_line_code"> void setCallbackOnTimeout<br>(<br>&nbsp;&nbsp;&nbsp;std::function&lt;void(void)&gt; function,<br>&nbsp;&nbsp;&nbsp;float fTimeInSecToTimeout,<br>&nbsp;&nbsp;&nbsp;bool bLooping,<br>&nbsp;&nbsp;&nbsp;float fTimerAccuracyInSec<br>); </code>
+		<br>
+		<br>
+		<div class="cpp_func_param">function</div>
+		<br>
+		<div class="cpp_func_param_desc">the function which will be called after the fTimeInSecToTimeout has expired since start() call.</div>
+		<br>
+		<div class="cpp_func_param">fTimeInSecToTimeout</div>
+		<br>
+		<div class="cpp_func_param_desc">time in seconds after which callback function will be called.</div>
+		<br>
+		<div class="cpp_func_param">bLooping</div>
+		<br>
+		<div class="cpp_func_param_desc">if true then after the callback function was called timer will repeat itself from the beginning, and after another fTimeInSecToTimeout will again call callback function an so on and on until the stop() will not be called.</div>
+		<br>
+		<div class="cpp_func_param">fTimerAccuracyInSec</div>
+		<br>
+		<div class="cpp_func_param_desc">determines the time after which the timer checks whether it has exceeded fTimeInSecToTimeout or not. This value cannot be higher than 0.1f.</div>
+		<br>
+	----------------------------------------------
+	<br>
+	<br>
+	<div class="cpp_func_param"> Remarks </div>
+	<br>
+	<div class="cpp_func_param_desc"> setting the fTimeInSecToTimeout to a, for example, 0.75f while the fTimerAccuracyInSec = 0.1f will result in the timer calling callback function after the 0.8f not the 0.75f. An example of std::function pointing to a member function of a class - &quot;std::function&lt;void(void)&gt; f = std::bind(&amp;Foo::func, this);&quot;. </div>
+	<br>
+	
+</div>
+</body>
+</html>

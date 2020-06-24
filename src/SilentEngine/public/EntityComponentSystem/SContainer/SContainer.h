@@ -65,8 +65,8 @@ public:
 
 	//@@Function
 	/*
-	* desc: returns the time in seconds elapsed since the SApplication::run() was called.
-	* param "fTimeInSec": pointer to your float value which will be used to set the time value.
+	* desc: adds component to container.
+	* param "pComponent": component to add.
 	* return: false if successful, true otherwise.
 	* remarks: don't delete added (addComponentToContainer()) components in destructor, they will be deleted when
 	parent's destructor will be called (after your SContainer's destructor). Moreover, it's recommended to mark your SContainer's destructor
@@ -75,8 +75,8 @@ public:
 	bool addComponentToContainer      (SComponent* pComponent);
 	//@@Function
 	/*
-	* desc: returns the time in seconds elapsed since the SApplication::run() was called.
-	* param "fTimeInSec": pointer to your float value which will be used to set the time value.
+	* desc: removes component from container.
+	* param "pComponent": component to add.
 	* return: false if successful, true otherwise.
 	* remarks: don't use removeComponentFromContainer() in destructor, don't worry, the components will be deleted.
 	Moreover, it's recommended to mark your SContainer's destructor as virtual and override.

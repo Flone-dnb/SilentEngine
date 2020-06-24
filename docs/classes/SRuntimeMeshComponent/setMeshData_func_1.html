@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../../doc.css">
+    <title>setMeshData - Silent Engine Documentation</title>
+</head>
+<body>
+    <div class="nav_panel">
+        <a class="cpp_link_title" href="../../classes/index.html"> Classes </a>
+		<br>
+		<a class="cpp_link_title" href="../../structs/index.html"> Structs </a>
+		<br>
+		<a class="cpp_link_title" href="../../enums/index.html"> Enums </a>
+    </div>
+    
+	<div class="cpp_doc">
+		<h3 class="cpp_object"> setMeshData </h3>
+		<div class="cpp_codeobject_desc"> used to set the 3D-geometry that will be drawn ones the container containing this component is spawned and visible. </div>
+		<br>
+		<code class="cpp_func_line_code"> void setMeshData<br>(<br>&nbsp;&nbsp;&nbsp;const <a class="cpp_link_ref" href="../../structs/SMeshData/index.html">SMeshData</a>&amp; meshData,<br>&nbsp;&nbsp;&nbsp;bool bAddedVerticesOrUpdatedIndicesCount,<br>&nbsp;&nbsp;&nbsp;bool bUpdateBoundingBox = false<br>); </code>
+		<br>
+		<br>
+		<div class="cpp_func_param">meshData</div>
+		<br>
+		<div class="cpp_func_param_desc">3D-geometry data.</div>
+		<br>
+		<div class="cpp_func_param">bAddedVerticesOrUpdatedIndicesCount</div>
+		<br>
+		<div class="cpp_func_param_desc">this should be set to false if the new mesh data contains the SAME AMOUNT of indices and vertices as the previous one. So if the new mesh data contains the same amount of vertices but they have different positions in space then of course this value should be false. So if you have a SRuntimeMeshComponent with a box 3D-data and you want to only change the color or the size of this box then this value should be false. Setting this value to true all the time will almost fully nullify all optimizations that SRuntimeMeshComponent has.</div>
+		<br>
+		<div class="cpp_func_param">bUpdateBoundingBox</div>
+		<br>
+		<div class="cpp_func_param_desc">TODO.</div>
+		<br>
+	----------------------------------------------
+	<br>
+	<br>
+	<div class="cpp_func_param"> Remarks </div>
+	<br>
+	<div class="cpp_func_param_desc"> this function is thread-safe (you can call it from any thread). </div>
+	<br>
+	
+</div>
+</body>
+</html>

@@ -21,7 +21,9 @@ Used to hold two values: width and height.
 */
 struct SScreenResolution
 {
+	//@@Variable
 	unsigned int iWidth;
+	//@@Variable
 	unsigned int iHeight;
 };
 

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../../doc.css">
+    <title>SVideoSettings - Silent Engine Documentation</title>
+</head>
+<body>
+    <div class="nav_panel">
+        <a class="cpp_link_title" href="../../classes/index.html"> Classes </a>
+		<br>
+		<a class="cpp_link_title" href="../../structs/index.html"> Structs </a>
+		<br>
+		<a class="cpp_link_title" href="../../enums/index.html"> Enums </a>
+    </div>
+    
+	<div class="cpp_doc">
+		<h3 class="cpp_object"> SVideoSettings </h3>
+		<code class="cpp_codeobject"> class SVideoSettings </code>
+		<br>
+		<br>
+		<div class="cpp_codeobject_desc"> The class is used to set and get video settings of a SApplication instance.All &quot;...init...()&quot; functions should be called before calling the SApplication::init(). </div>
+		<br>
+		<br>
+		<details open class="cpp_details">
+			<br>
+			<summary class="cpp_summary"> Public: </summary>
+			<div class="cpp_func_container">
+				<code class="cpp_function"> <code class="cpp_func_name"><a class="cpp_link" href="SVideoSettings_func_1.html">SVideoSettings</a></code>(<a class="cpp_link_ref" href="../SApplication/index.html">SApplication</a>* pApp); </code>
+				<br>
+				<code class="cpp_function"> bool  <code class="cpp_func_name"><a class="cpp_link" href="setInitPreferredDisplayAdapter_func_1.html">setInitPreferredDisplayAdapter</a></code>(std::wstring sPreferredDisplayAdapter); </code>
+				<br>
+				<code class="cpp_function"> bool  <code class="cpp_func_name"><a class="cpp_link" href="setInitPreferredOutputAdapter_func_1.html">setInitPreferredOutputAdapter</a></code>(std::wstring sPreferredOutputAdapter); </code>
+				<br>
+				<code class="cpp_function"> bool  <code class="cpp_func_name"><a class="cpp_link" href="setInitFullscreen_func_1.html">setInitFullscreen</a></code>(bool bFullscreen); </code>
+				<br>
+				<code class="cpp_function"> bool  <code class="cpp_func_name"><a class="cpp_link" href="setInitEnableVSync_func_1.html">setInitEnableVSync</a></code>(bool bEnable); </code>
+				<br>
+				<code class="cpp_function"> void  <code class="cpp_func_name"><a class="cpp_link" href="setFPSLimit_func_1.html">setFPSLimit</a></code>(float fFPSLimit); </code>
+				<br>
+				<code class="cpp_function"> void  <code class="cpp_func_name"><a class="cpp_link" href="setMSAAEnabled_func_1.html">setMSAAEnabled</a></code>(bool bEnable); </code>
+				<br>
+				<code class="cpp_function"> bool  <code class="cpp_func_name"><a class="cpp_link" href="setMSAASampleCount_func_1.html">setMSAASampleCount</a></code>(<a class="cpp_link_ref" href="../../enums/MSAASampleCount/index.html">MSAASampleCount</a> sampleCount); </code>
+				<br>
+				<code class="cpp_function"> bool  <code class="cpp_func_name"><a class="cpp_link" href="isMSAAEnabled_func_1.html">isMSAAEnabled</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> <a class="cpp_link_ref" href="../../enums/MSAASampleCount/index.html">MSAASampleCount</a> <code class="cpp_func_name"><a class="cpp_link" href="getMSAASampleCount_func_1.html">getMSAASampleCount</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> bool  <code class="cpp_func_name"><a class="cpp_link" href="setScreenResolution_func_1.html">setScreenResolution</a></code>(<a class="cpp_link_ref" href="../../structs/SScreenResolution/index.html">SScreenResolution</a> screenResolution); </code>
+				<br>
+				<code class="cpp_function"> bool  <code class="cpp_func_name"><a class="cpp_link" href="setFullscreenWithCurrentResolution_func_1.html">setFullscreenWithCurrentResolution</a></code>(bool bFullscreen); </code>
+				<br>
+				<code class="cpp_function"> bool  <code class="cpp_func_name"><a class="cpp_link" href="getCurrentScreenResolution_func_1.html">getCurrentScreenResolution</a></code>(<a class="cpp_link_ref" href="../../structs/SScreenResolution/index.html">SScreenResolution</a>* pScreenResolution); </code>
+				<br>
+				<code class="cpp_function"> bool  <code class="cpp_func_name"><a class="cpp_link" href="isFullscreen_func_1.html">isFullscreen</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> float  <code class="cpp_func_name"><a class="cpp_link" href="getScreenAspectRatio_func_1.html">getScreenAspectRatio</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> void  <code class="cpp_func_name"><a class="cpp_link" href="setBackBufferFillColor_func_1.html">setBackBufferFillColor</a></code>(<a class="cpp_link_ref" href="../SVector/index.html">SVector</a> vColor); </code>
+				<br>
+				<code class="cpp_function"> void  <code class="cpp_func_name"><a class="cpp_link" href="setEnableWireframeMode_func_1.html">setEnableWireframeMode</a></code>(bool bEnable); </code>
+				<br>
+				<code class="cpp_function"> void  <code class="cpp_func_name"><a class="cpp_link" href="setEnableBackfaceCulling_func_1.html">setEnableBackfaceCulling</a></code>(bool bEnable); </code>
+				<br>
+				<code class="cpp_function"> <a class="cpp_link_ref" href="../SVector/index.html">SVector</a> <code class="cpp_func_name"><a class="cpp_link" href="getBackBufferFillColor_func_1.html">getBackBufferFillColor</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> bool  <code class="cpp_func_name"><a class="cpp_link" href="isWireframeModeEnabled_func_1.html">isWireframeModeEnabled</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> bool  <code class="cpp_func_name"><a class="cpp_link" href="isBackfaceCullingEnabled_func_1.html">isBackfaceCullingEnabled</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> std::vector&lt;std::wstring&gt; <code class="cpp_func_name"><a class="cpp_link" href="getSupportedDisplayAdapters_func_1.html">getSupportedDisplayAdapters</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> std::wstring    <code class="cpp_func_name"><a class="cpp_link" href="getCurrentDisplayAdapter_func_1.html">getCurrentDisplayAdapter</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> bool      <code class="cpp_func_name"><a class="cpp_link" href="getVideoMemorySizeInBytesOfCurrentDisplayAdapter_func_1.html">getVideoMemorySizeInBytesOfCurrentDisplayAdapter</a></code>(unsigned long long* pSizeInBytes); </code>
+				<br>
+				<code class="cpp_function"> std::vector&lt;std::wstring&gt; <code class="cpp_func_name"><a class="cpp_link" href="getOutputDisplaysOfCurrentDisplayAdapter_func_1.html">getOutputDisplaysOfCurrentDisplayAdapter</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> std::wstring    <code class="cpp_func_name"><a class="cpp_link" href="getCurrentOutputDisplay_func_1.html">getCurrentOutputDisplay</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> float      <code class="cpp_func_name"><a class="cpp_link" href="getCurrentOutputDisplayRefreshRate_func_1.html">getCurrentOutputDisplayRefreshRate</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> bool      <code class="cpp_func_name"><a class="cpp_link" href="getAvailableScreenResolutionsOfCurrentOutputDisplay_func_1.html">getAvailableScreenResolutionsOfCurrentOutputDisplay</a></code>(std::vector&lt;<a class="cpp_link_ref" href="../../structs/SScreenResolution/index.html">SScreenResolution</a>&gt;* vResolutions); </code>
+				<br>
+				<code class="cpp_function"> bool  <code class="cpp_func_name"><a class="cpp_link" href="setCameraNearClipPlane_func_1.html">setCameraNearClipPlane</a></code>(float fNearClipPlaneValue); </code>
+				<br>
+				<code class="cpp_function"> bool  <code class="cpp_func_name"><a class="cpp_link" href="setCameraFarClipPlane_func_1.html">setCameraFarClipPlane</a></code>(float fFarClipPlaneValue); </code>
+				<br>
+				<code class="cpp_function"> float  <code class="cpp_func_name"><a class="cpp_link" href="getCameraNearClipPlaneValue_func_1.html">getCameraNearClipPlaneValue</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> float  <code class="cpp_func_name"><a class="cpp_link" href="getCameraFarClipPlaneValue_func_1.html">getCameraFarClipPlaneValue</a></code>(); </code>
+				<br>
+			</div>
+		</details>
+		<br>
+		<details class="cpp_details">
+			<br>
+			<summary class="cpp_summary"> Private: </summary>
+			<div class="cpp_func_container">
+				<code class="cpp_function"> <a class="cpp_link_ref" href="../SApplication/index.html">SApplication</a>* <code class="cpp_func_name"><a class="cpp_link" href="pApp_var_0.html">pApp</a></code>; </code>
+				<br></div>
+		</details>
+		
+	</div>
+</body>
+</html>

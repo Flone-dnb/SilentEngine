@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../../doc.css">
+    <title>SProfiler - Silent Engine Documentation</title>
+</head>
+<body>
+    <div class="nav_panel">
+        <a class="cpp_link_title" href="../../classes/index.html"> Classes </a>
+		<br>
+		<a class="cpp_link_title" href="../../structs/index.html"> Structs </a>
+		<br>
+		<a class="cpp_link_title" href="../../enums/index.html"> Enums </a>
+    </div>
+    
+	<div class="cpp_doc">
+		<h3 class="cpp_object"> SProfiler </h3>
+		<code class="cpp_codeobject"> class SProfiler </code>
+		<br>
+		<br>
+		<div class="cpp_codeobject_desc"> The class is used for dynamic analysis, for example, for measuring draw call amount, FPS, or video memory used by the app. </div>
+		<br>
+		<br>
+		<details open class="cpp_details">
+			<br>
+			<summary class="cpp_summary"> Public: </summary>
+			<div class="cpp_func_container">
+				<code class="cpp_function"> <code class="cpp_func_name"><a class="cpp_link" href="SProfiler_func_1.html">SProfiler</a></code>(<a class="cpp_link_ref" href="../SApplication/index.html">SApplication</a>* pApp); </code>
+				<br>
+				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="getTimeElapsedFromStart_func_1.html">getTimeElapsedFromStart</a></code>(float* fTimeInSec) const; </code>
+				<br>
+				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="getFPS_func_1.html">getFPS</a></code>(int* iFPS)     const; </code>
+				<br>
+				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="getTimeToRenderFrame_func_1.html">getTimeToRenderFrame</a></code>(float* fTimeInMS) const; </code>
+				<br>
+				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="getLastFrameDrawCallCount_func_1.html">getLastFrameDrawCallCount</a></code>(unsigned long long* iDrawCallCount) const; </code>
+				<br>
+				<code class="cpp_function"> unsigned long long <code class="cpp_func_name"><a class="cpp_link" href="getTriangleCountInWorld_func_1.html">getTriangleCountInWorld</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="getVideoMemoryUsageInBytesOfCurrentDisplayAdapter_func_1.html">getVideoMemoryUsageInBytesOfCurrentDisplayAdapter</a></code>(unsigned long long* pSizeInBytes); </code>
+				<br>
+			</div>
+		</details>
+		<br>
+		<details class="cpp_details">
+			<br>
+			<summary class="cpp_summary"> Private: </summary>
+			<div class="cpp_func_container">
+				<code class="cpp_function"> <a class="cpp_link_ref" href="../SApplication/index.html">SApplication</a>* <code class="cpp_func_name"><a class="cpp_link" href="pApp_var_0.html">pApp</a></code>; </code>
+				<br></div>
+		</details>
+		
+	</div>
+</body>
+</html>

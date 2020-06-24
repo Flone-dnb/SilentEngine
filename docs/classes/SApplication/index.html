@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../../doc.css">
+    <title>SApplication - Silent Engine Documentation</title>
+</head>
+<body>
+    <div class="nav_panel">
+        <a class="cpp_link_title" href="../../classes/index.html"> Classes </a>
+		<br>
+		<a class="cpp_link_title" href="../../structs/index.html"> Structs </a>
+		<br>
+		<a class="cpp_link_title" href="../../enums/index.html"> Enums </a>
+    </div>
+    
+	<div class="cpp_doc">
+		<h3 class="cpp_object"> SApplication </h3>
+		<code class="cpp_codeobject"> class SApplication </code>
+		<br>
+		<br>
+		<div class="cpp_codeobject_desc"> The class represents an application instance. It holds all main entities. </div>
+		<br>
+		<br>
+		<details open class="cpp_details">
+			<br>
+			<summary class="cpp_summary"> Public: </summary>
+			<div class="cpp_func_container">
+				<code class="cpp_function"> <code class="cpp_func_name"><a class="cpp_link" href="SApplication_func_1.html">SApplication</a></code>(HINSTANCE hInstance); </code>
+				<br>
+				<code class="cpp_function"> void   <code class="cpp_func_name"><a class="cpp_link" href="initDisableD3DDebugLayer_func_1.html">initDisableD3DDebugLayer</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> bool   <code class="cpp_func_name"><a class="cpp_link" href="init_func_1.html">init</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> int    <code class="cpp_func_name"><a class="cpp_link" href="run_func_1.html">run</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> static bool  <code class="cpp_func_name"><a class="cpp_link" href="minimizeWindow_func_1.html">minimizeWindow</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> static bool  <code class="cpp_func_name"><a class="cpp_link" href="maximizeWindow_func_1.html">maximizeWindow</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> static bool  <code class="cpp_func_name"><a class="cpp_link" href="restoreWindow_func_1.html">restoreWindow</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> static bool  <code class="cpp_func_name"><a class="cpp_link" href="hideWindow_func_1.html">hideWindow</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> static bool  <code class="cpp_func_name"><a class="cpp_link" href="showWindow_func_1.html">showWindow</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> static bool  <code class="cpp_func_name"><a class="cpp_link" href="close_func_1.html">close</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> <a class="cpp_link_ref" href="../SLevel/index.html">SLevel</a>*   <code class="cpp_func_name"><a class="cpp_link" href="getCurrentLevel_func_1.html">getCurrentLevel</a></code>() const; </code>
+				<br>
+				<code class="cpp_function"> bool   <code class="cpp_func_name"><a class="cpp_link" href="setCameraFOV_func_1.html">setCameraFOV</a></code>(float fFOVInDeg); </code>
+				<br>
+				<code class="cpp_function"> void   <code class="cpp_func_name"><a class="cpp_link" href="setFixedCameraZoom_func_1.html">setFixedCameraZoom</a></code>(float fZoom); </code>
+				<br>
+				<code class="cpp_function"> void   <code class="cpp_func_name"><a class="cpp_link" href="setFixedCameraRotation_func_1.html">setFixedCameraRotation</a></code>(float fPhi, float fTheta); </code>
+				<br>
+				<code class="cpp_function"> void   <code class="cpp_func_name"><a class="cpp_link" href="setFixedCameraRotationShift_func_1.html">setFixedCameraRotationShift</a></code>(float fHorizontalShift, float fVerticalShift); </code>
+				<br>
+				<code class="cpp_function"> void   <code class="cpp_func_name"><a class="cpp_link" href="setCallTick_func_1.html">setCallTick</a></code>(bool bTickCanBeCalled); </code>
+				<br>
+				<code class="cpp_function"> void   <code class="cpp_func_name"><a class="cpp_link" href="setShowMouseCursor_func_1.html">setShowMouseCursor</a></code>(bool bShow); </code>
+				<br>
+				<code class="cpp_function"> bool   <code class="cpp_func_name"><a class="cpp_link" href="setCursorPos_func_1.html">setCursorPos</a></code>(const <a class="cpp_link_ref" href="../SVector/index.html">SVector</a>&amp; vPos); </code>
+				<br>
+				<code class="cpp_function"> void   <code class="cpp_func_name"><a class="cpp_link" href="setShowFrameStatsInWindowTitle_func_1.html">setShowFrameStatsInWindowTitle</a></code>(bool bShow); </code>
+				<br>
+				<code class="cpp_function"> void   <code class="cpp_func_name"><a class="cpp_link" href="setWindowTitleText_func_1.html">setWindowTitleText</a></code>(const std::wstring&amp; sTitleText); </code>
+				<br>
+				<code class="cpp_function"> void     <code class="cpp_func_name"><a class="cpp_link" href="getFixedCameraLocalAxisVector_func_1.html">getFixedCameraLocalAxisVector</a></code>(<a class="cpp_link_ref" href="../SVector/index.html">SVector</a>* pvXAxis, <a class="cpp_link_ref" href="../SVector/index.html">SVector</a>* pvYAxis, <a class="cpp_link_ref" href="../SVector/index.html">SVector</a>* pvZAxis) const; </code>
+				<br>
+				<code class="cpp_function"> void     <code class="cpp_func_name"><a class="cpp_link" href="getFixedCameraRotation_func_1.html">getFixedCameraRotation</a></code>(float* fPhi, float* fTheta) const; </code>
+				<br>
+				<code class="cpp_function"> float     <code class="cpp_func_name"><a class="cpp_link" href="getFixedCameraZoom_func_1.html">getFixedCameraZoom</a></code>() const; </code>
+				<br>
+				<code class="cpp_function"> static SApplication* <code class="cpp_func_name"><a class="cpp_link" href="getApp_func_1.html">getApp</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> bool     <code class="cpp_func_name"><a class="cpp_link" href="getCursorPos_func_1.html">getCursorPos</a></code>(<a class="cpp_link_ref" href="../SVector/index.html">SVector</a>* vPos); </code>
+				<br>
+				<code class="cpp_function"> bool     <code class="cpp_func_name"><a class="cpp_link" href="getWindowSize_func_1.html">getWindowSize</a></code>(<a class="cpp_link_ref" href="../SVector/index.html">SVector</a>* vSize); </code>
+				<br>
+				<code class="cpp_function"> HWND     <code class="cpp_func_name"><a class="cpp_link" href="getMainWindowHandle_func_1.html">getMainWindowHandle</a></code>() const; </code>
+				<br>
+				<code class="cpp_function"> <a class="cpp_link_ref" href="../SVideoSettings/index.html">SVideoSettings</a>*  <code class="cpp_func_name"><a class="cpp_link" href="getVideoSettings_func_1.html">getVideoSettings</a></code>() const; </code>
+				<br>
+				<code class="cpp_function"> <a class="cpp_link_ref" href="../SProfiler/index.html">SProfiler</a>*    <code class="cpp_func_name"><a class="cpp_link" href="getProfiler_func_1.html">getProfiler</a></code>() const; </code>
+				<br>
+			</div>
+		</details>
+		<br>
+		<details open class="cpp_details">
+			<br>
+			<summary class="cpp_summary"> Protected: </summary>
+			<div class="cpp_func_container">
+				<code class="cpp_function"> virtual void <code class="cpp_func_name"><a class="cpp_link" href="onRun_func_1.html">onRun</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> virtual void <code class="cpp_func_name"><a class="cpp_link" href="onTick_func_1.html">onTick</a></code>(float fDeltaTime); </code>
+				<br>
+				<code class="cpp_function"> virtual void <code class="cpp_func_name"><a class="cpp_link" href="onMouseDown_func_1.html">onMouseDown</a></code>(<a class="cpp_link_ref" href="../SMouseKey/index.html">SMouseKey</a> mouseKey, int iMouseXPos, int iMouseYPos); </code>
+				<br>
+				<code class="cpp_function"> virtual void <code class="cpp_func_name"><a class="cpp_link" href="onMouseUp_func_1.html">onMouseUp</a></code>(<a class="cpp_link_ref" href="../SMouseKey/index.html">SMouseKey</a> mouseKey, int iMouseXPos, int iMouseYPos); </code>
+				<br>
+				<code class="cpp_function"> virtual void <code class="cpp_func_name"><a class="cpp_link" href="onMouseMove_func_1.html">onMouseMove</a></code>(int iMouseXMove, int iMouseYMove); </code>
+				<br>
+				<code class="cpp_function"> virtual void <code class="cpp_func_name"><a class="cpp_link" href="onMouseWheelMove_func_1.html">onMouseWheelMove</a></code>(bool bUp, int iMouseXPos, int iMouseYPos); </code>
+				<br>
+				<code class="cpp_function"> virtual void <code class="cpp_func_name"><a class="cpp_link" href="onKeyboardButtonDown_func_1.html">onKeyboardButtonDown</a></code>(<a class="cpp_link_ref" href="../SKeyboardKey/index.html">SKeyboardKey</a> keyboardKey); </code>
+				<br>
+				<code class="cpp_function"> virtual void <code class="cpp_func_name"><a class="cpp_link" href="onKeyboardButtonUp_func_1.html">onKeyboardButtonUp</a></code>(<a class="cpp_link_ref" href="../SKeyboardKey/index.html">SKeyboardKey</a> keyboardKey); </code>
+				<br>
+				<code class="cpp_function"> virtual void <code class="cpp_func_name"><a class="cpp_link" href="onCloseEvent_func_1.html">onCloseEvent</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> virtual void <code class="cpp_func_name"><a class="cpp_link" href="onMinimizeEvent_func_1.html">onMinimizeEvent</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> virtual void <code class="cpp_func_name"><a class="cpp_link" href="onMaximizeEvent_func_1.html">onMaximizeEvent</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> virtual void <code class="cpp_func_name"><a class="cpp_link" href="onRestoreEvent_func_1.html">onRestoreEvent</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> virtual void <code class="cpp_func_name"><a class="cpp_link" href="onHideEvent_func_1.html">onHideEvent</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> virtual void <code class="cpp_func_name"><a class="cpp_link" href="onShowEvent_func_1.html">onShowEvent</a></code>(); </code>
+				<br>
+			</div>
+		</details>
+		<br>
+		<details class="cpp_details">
+			<br>
+			<summary class="cpp_summary"> Private: </summary>
+			<div class="cpp_func_container">
+				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="createMainWindow_func_1.html">createMainWindow</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="initD3DFirstStage_func_1.html">initD3DFirstStage</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="initD3DSecondStage_func_1.html">initD3DSecondStage</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="getFirstSupportedDisplayAdapter_func_1.html">getFirstSupportedDisplayAdapter</a></code>(IDXGIAdapter3*&amp; pAdapter); </code>
+				<br>
+				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="getFirstOutputDisplay_func_1.html">getFirstOutputDisplay</a></code>(IDXGIOutput*&amp; pOutput); </code>
+				<br>
+				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="checkMSAASupport_func_1.html">checkMSAASupport</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="createCommandObjects_func_1.html">createCommandObjects</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="createSwapChain_func_1.html">createSwapChain</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="getScreenParams_func_1.html">getScreenParams</a></code>(bool bApplyResolution); </code>
+				<br>
+				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="createRTVAndDSVDescriptorHeaps_func_1.html">createRTVAndDSVDescriptorHeaps</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="createCBVHeap_func_1.html">createCBVHeap</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="createConstantBufferViews_func_1.html">createConstantBufferViews</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="createFrameResources_func_1.html">createFrameResources</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="createRootSignature_func_1.html">createRootSignature</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="createShadersAndInputLayout_func_1.html">createShadersAndInputLayout</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="createPSO_func_1.html">createPSO</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="resetCommandList_func_1.html">resetCommandList</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="executeCommandList_func_1.html">executeCommandList</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="onResize_func_1.html">onResize</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="update_func_1.html">update</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="updateCamera_func_1.html">updateCamera</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="updateObjectCBs_func_1.html">updateObjectCBs</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="updateComponentAndChilds_func_1.html">updateComponentAndChilds</a></code>(<a class="cpp_link_ref" href="../SComponent/index.html">SComponent</a>* pComponent, SUploadBuffer&lt;SObjectConstants&gt;* pCurrentCB); </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="updateMainPassCB_func_1.html">updateMainPassCB</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="draw_func_1.html">draw</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="drawVisibleRenderableContainers_func_1.html">drawVisibleRenderableContainers</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="drawComponentAndChilds_func_1.html">drawComponentAndChilds</a></code>(<a class="cpp_link_ref" href="../SComponent/index.html">SComponent</a>* pComponent); </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="setFPSLimit_func_1.html">setFPSLimit</a></code>(float fFPSLimit); </code>
+				<br>
+				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="getTimeElapsedFromStart_func_1.html">getTimeElapsedFromStart</a></code>(float* fTimeInSec) const; </code>
+				<br>
+				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="getFPS_func_1.html">getFPS</a></code>(int* iFPS) const; </code>
+				<br>
+				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="getTimeToRenderFrame_func_1.html">getTimeToRenderFrame</a></code>(float* fTimeInMS) const; </code>
+				<br>
+				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="getLastFrameDrawCallCount_func_1.html">getLastFrameDrawCallCount</a></code>(unsigned long long* iDrawCallCount) const; </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="setMSAAEnabled_func_1.html">setMSAAEnabled</a></code>(bool bEnable); </code>
+				<br>
+				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="setMSAASampleCount_func_1.html">setMSAASampleCount</a></code>(<a class="cpp_link_ref" href="../../enums/MSAASampleCount/index.html">MSAASampleCount</a> eSampleCount); </code>
+				<br>
+				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="isMSAAEnabled_func_1.html">isMSAAEnabled</a></code>() const; </code>
+				<br>
+				<code class="cpp_function"> <a class="cpp_link_ref" href="../../enums/MSAASampleCount/index.html">MSAASampleCount</a> <code class="cpp_func_name"><a class="cpp_link" href="getMSAASampleCount_func_1.html">getMSAASampleCount</a></code>() const; </code>
+				<br>
+				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="setFullscreenWithCurrentResolution_func_1.html">setFullscreenWithCurrentResolution</a></code>(bool bFullScreen); </code>
+				<br>
+				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="setScreenResolution_func_1.html">setScreenResolution</a></code>(<a class="cpp_link_ref" href="../../structs/SScreenResolution/index.html">SScreenResolution</a> screenResolution); </code>
+				<br>
+				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="getCurrentScreenResolution_func_1.html">getCurrentScreenResolution</a></code>(<a class="cpp_link_ref" href="../../structs/SScreenResolution/index.html">SScreenResolution</a>* pScreenResolution) const; </code>
+				<br>
+				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="isFullscreen_func_1.html">isFullscreen</a></code>() const; </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="setBackBufferFillColor_func_1.html">setBackBufferFillColor</a></code>(<a class="cpp_link_ref" href="../SVector/index.html">SVector</a> vColor); </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="setEnableWireframeMode_func_1.html">setEnableWireframeMode</a></code>(bool bEnable); </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="setEnableBackfaceCulling_func_1.html">setEnableBackfaceCulling</a></code>(bool bEnable); </code>
+				<br>
+				<code class="cpp_function"> <a class="cpp_link_ref" href="../SVector/index.html">SVector</a> <code class="cpp_func_name"><a class="cpp_link" href="getBackBufferFillColor_func_1.html">getBackBufferFillColor</a></code>() const; </code>
+				<br>
+				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="isWireframeModeEnabled_func_1.html">isWireframeModeEnabled</a></code>() const; </code>
+				<br>
+				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="isBackfaceCullingEnabled_func_1.html">isBackfaceCullingEnabled</a></code>() const; </code>
+				<br>
+				<code class="cpp_function"> unsigned long long <code class="cpp_func_name"><a class="cpp_link" href="getTriangleCountInWorld_func_1.html">getTriangleCountInWorld</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> std::vector&lt;std::wstring&gt; <code class="cpp_func_name"><a class="cpp_link" href="getSupportedDisplayAdapters_func_1.html">getSupportedDisplayAdapters</a></code>() const; </code>
+				<br>
+				<code class="cpp_function"> std::wstring    <code class="cpp_func_name"><a class="cpp_link" href="getCurrentDisplayAdapter_func_1.html">getCurrentDisplayAdapter</a></code>() const; </code>
+				<br>
+				<code class="cpp_function"> bool      <code class="cpp_func_name"><a class="cpp_link" href="getVideoMemorySizeInBytesOfCurrentDisplayAdapter_func_1.html">getVideoMemorySizeInBytesOfCurrentDisplayAdapter</a></code>(SIZE_T* pSizeInBytes) const; </code>
+				<br>
+				<code class="cpp_function"> bool      <code class="cpp_func_name"><a class="cpp_link" href="getVideoMemoryUsageInBytesOfCurrentDisplayAdapter_func_1.html">getVideoMemoryUsageInBytesOfCurrentDisplayAdapter</a></code>(UINT64* pSizeInBytes) const; </code>
+				<br>
+				<code class="cpp_function"> std::vector&lt;std::wstring&gt; <code class="cpp_func_name"><a class="cpp_link" href="getOutputDisplaysOfCurrentDisplayAdapter_func_1.html">getOutputDisplaysOfCurrentDisplayAdapter</a></code>() const; </code>
+				<br>
+				<code class="cpp_function"> std::wstring    <code class="cpp_func_name"><a class="cpp_link" href="getCurrentOutputDisplay_func_1.html">getCurrentOutputDisplay</a></code>() const; </code>
+				<br>
+				<code class="cpp_function"> float      <code class="cpp_func_name"><a class="cpp_link" href="getCurrentOutputDisplayRefreshRate_func_1.html">getCurrentOutputDisplayRefreshRate</a></code>() const; </code>
+				<br>
+				<code class="cpp_function"> bool      <code class="cpp_func_name"><a class="cpp_link" href="getAvailableScreenResolutionsOfCurrentOutputDisplay_func_1.html">getAvailableScreenResolutionsOfCurrentOutputDisplay</a></code>(std::vector&lt;<a class="cpp_link_ref" href="../../structs/SScreenResolution/index.html">SScreenResolution</a>&gt;* vResolutions) const; </code>
+				<br>
+				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="setInitPreferredDisplayAdapter_func_1.html">setInitPreferredDisplayAdapter</a></code>(std::wstring sPreferredDisplayAdapter); </code>
+				<br>
+				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="setInitPreferredOutputAdapter_func_1.html">setInitPreferredOutputAdapter</a></code>(std::wstring sPreferredOutputAdapter); </code>
+				<br>
+				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="setInitFullscreen_func_1.html">setInitFullscreen</a></code>(bool bFullscreen); </code>
+				<br>
+				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="setInitEnableVSync_func_1.html">setInitEnableVSync</a></code>(bool bEnable); </code>
+				<br>
+				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="setNearClipPlane_func_1.html">setNearClipPlane</a></code>(float fNearClipPlaneValue); </code>
+				<br>
+				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="setFarClipPlane_func_1.html">setFarClipPlane</a></code>(float fFarClipPlaneValue); </code>
+				<br>
+				<code class="cpp_function"> float <code class="cpp_func_name"><a class="cpp_link" href="getNearClipPlaneValue_func_1.html">getNearClipPlaneValue</a></code>() const; </code>
+				<br>
+				<code class="cpp_function"> float <code class="cpp_func_name"><a class="cpp_link" href="getFarClipPlaneValue_func_1.html">getFarClipPlaneValue</a></code>() const; </code>
+				<br>
+				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="spawnContainerInLevel_func_1.html">spawnContainerInLevel</a></code>(<a class="cpp_link_ref" href="../SContainer/index.html">SContainer</a>* pContainer); </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="despawnContainerFromLevel_func_1.html">despawnContainerFromLevel</a></code>(<a class="cpp_link_ref" href="../SContainer/index.html">SContainer</a>* pContainer); </code>
+				<br>
+				<code class="cpp_function"> float <code class="cpp_func_name"><a class="cpp_link" href="getScreenAspectRatio_func_1.html">getScreenAspectRatio</a></code>() const; </code>
+				<br>
+				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="flushCommandQueue_func_1.html">flushCommandQueue</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="calculateFrameStats_func_1.html">calculateFrameStats</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> size_t <code class="cpp_func_name"><a class="cpp_link" href="roundUp_func_1.html">roundUp</a></code>(size_t iNum, size_t iMultiple); </code>
+				<br>
+				<code class="cpp_function"> ID3D12Resource*    <code class="cpp_func_name"><a class="cpp_link" href="getCurrentBackBufferResource_func_1.html">getCurrentBackBufferResource</a></code>(bool bNonMSAAResource = false) const; </code>
+				<br>
+				<code class="cpp_function"> D3D12_CPU_DESCRIPTOR_HANDLE <code class="cpp_func_name"><a class="cpp_link" href="getCurrentBackBufferViewHandle_func_1.html">getCurrentBackBufferViewHandle</a></code>() const; </code>
+				<br>
+				<code class="cpp_function"> D3D12_CPU_DESCRIPTOR_HANDLE <code class="cpp_func_name"><a class="cpp_link" href="getDepthStencilViewHandle_func_1.html">getDepthStencilViewHandle</a></code>() const; </code>
+				<br>
+			</div>
+		</details>
+		
+	</div>
+</body>
+</html>

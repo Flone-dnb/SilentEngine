@@ -46,8 +46,7 @@ struct SMeshVertex
 	* desc: the constructor which initializes the mesh vertex with
 	the given position and zeros all other components of the structure, except for the color, the default color is white.
 	*/
-	SMeshVertex(
-		const SVector& vPosition)
+	SMeshVertex(const SVector& vPosition)
 	{
 		this->vPosition = {vPosition.getX(), vPosition.getY(), vPosition.getZ()};
 		this->vNormal   = {0.0f, 0.0f, 0.0f};
@@ -312,6 +311,10 @@ private:
 };
 
 
+//@@Class
+/*
+The class is used to generate a primitive 3D-geometry.
+*/
 class SPrimitiveShapeGenerator
 {
 public:

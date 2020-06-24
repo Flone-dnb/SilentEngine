@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../../doc.css">
+    <title>SKeyboardButton - Silent Engine Documentation</title>
+</head>
+<body>
+    <div class="nav_panel">
+        <a class="cpp_link_title" href="../../classes/index.html"> Classes </a>
+		<br>
+		<a class="cpp_link_title" href="../../structs/index.html"> Structs </a>
+		<br>
+		<a class="cpp_link_title" href="../../enums/index.html"> Enums </a>
+    </div>
+    
+	<div class="cpp_doc">
+		<h3 class="cpp_object"> SKeyboardButton </h3>
+		<code class="cpp_codeobject">
+			enum SKeyboardButton
+			<br>
+			<br>
+			<code class="cpp_func_line_code"> {<br>&nbsp;&nbsp;&nbsp;
+	SKB_NONE  = 0,<br>&nbsp;&nbsp;&nbsp;
+	SKB_ESC   = 3,<br>&nbsp;&nbsp;&nbsp;
+	SKB_TAB   = 4,<br>&nbsp;&nbsp;&nbsp;
+	SKB_BACKSPACE = 5,<br>&nbsp;&nbsp;&nbsp;
+	SKB_ENTER     = 6,<br>&nbsp;&nbsp;&nbsp;
+	SKB_CAPSLOCK  = 7,<br>&nbsp;&nbsp;&nbsp;
+	SKB_SPACEBAR  = 8,<br>&nbsp;&nbsp;&nbsp;
+	SKB_PAGEUP    = 9,<br>&nbsp;&nbsp;&nbsp;
+	SKB_PAGEDOWN  = 10,<br>&nbsp;&nbsp;&nbsp;
+	SKB_END       = 11,<br>&nbsp;&nbsp;&nbsp;
+	SKB_HOME      = 12,<br>&nbsp;&nbsp;&nbsp;
+	SKB_LEFT      = 13,<br>&nbsp;&nbsp;&nbsp;
+	SKB_UP        = 14,<br>&nbsp;&nbsp;&nbsp;
+	SKB_RIGHT     = 15,<br>&nbsp;&nbsp;&nbsp;
+	SKB_DOWN      = 16,<br>&nbsp;&nbsp;&nbsp;
+	SKB_PRINTSCREEN = 17,<br>&nbsp;&nbsp;&nbsp;
+	SKB_INSERT    = 18,<br>&nbsp;&nbsp;&nbsp;
+	SKB_DELETE    = 19,<br>&nbsp;&nbsp;&nbsp;
+	SKB_0 = 20,<br>&nbsp;&nbsp;&nbsp;
+	SKB_1 = 21,<br>&nbsp;&nbsp;&nbsp;
+	SKB_2 = 22,<br>&nbsp;&nbsp;&nbsp;
+	SKB_3 = 23,<br>&nbsp;&nbsp;&nbsp;
+	SKB_4 = 24,<br>&nbsp;&nbsp;&nbsp;
+	SKB_5 = 25,<br>&nbsp;&nbsp;&nbsp;
+	SKB_6 = 26,<br>&nbsp;&nbsp;&nbsp;
+	SKB_7 = 27,<br>&nbsp;&nbsp;&nbsp;
+	SKB_8 = 28,<br>&nbsp;&nbsp;&nbsp;
+	SKB_9 = 29,<br>&nbsp;&nbsp;&nbsp;
+	SKB_A = 30,<br>&nbsp;&nbsp;&nbsp;
+	SKB_B = 31,<br>&nbsp;&nbsp;&nbsp;
+	SKB_C = 32,<br>&nbsp;&nbsp;&nbsp;
+	SKB_D = 33,<br>&nbsp;&nbsp;&nbsp;
+	SKB_E = 34,<br>&nbsp;&nbsp;&nbsp;
+	SKB_F = 35,<br>&nbsp;&nbsp;&nbsp;
+	SKB_G = 36,<br>&nbsp;&nbsp;&nbsp;
+	SKB_H = 37,<br>&nbsp;&nbsp;&nbsp;
+	SKB_I = 38,<br>&nbsp;&nbsp;&nbsp;
+	SKB_J = 39,<br>&nbsp;&nbsp;&nbsp;
+	SKB_K = 40,<br>&nbsp;&nbsp;&nbsp;
+	SKB_L = 41,<br>&nbsp;&nbsp;&nbsp;
+	SKB_M = 42,<br>&nbsp;&nbsp;&nbsp;
+	SKB_N = 43,<br>&nbsp;&nbsp;&nbsp;
+	SKB_O = 44,<br>&nbsp;&nbsp;&nbsp;
+	SKB_P = 45,<br>&nbsp;&nbsp;&nbsp;
+	SKB_Q = 46,<br>&nbsp;&nbsp;&nbsp;
+	SKB_R = 47,<br>&nbsp;&nbsp;&nbsp;
+	SKB_S = 48,<br>&nbsp;&nbsp;&nbsp;
+	SKB_T = 49,<br>&nbsp;&nbsp;&nbsp;
+	SKB_U = 50,<br>&nbsp;&nbsp;&nbsp;
+	SKB_V = 51,<br>&nbsp;&nbsp;&nbsp;
+	SKB_W = 52,<br>&nbsp;&nbsp;&nbsp;
+	SKB_X = 53,<br>&nbsp;&nbsp;&nbsp;
+	SKB_Y = 54,<br>&nbsp;&nbsp;&nbsp;
+	SKB_Z = 55,<br>&nbsp;&nbsp;&nbsp;
+	SKB_NUM0 = 56,<br>&nbsp;&nbsp;&nbsp;
+	SKB_NUM1 = 57,<br>&nbsp;&nbsp;&nbsp;
+	SKB_NUM2 = 58,<br>&nbsp;&nbsp;&nbsp;
+	SKB_NUM3 = 59,<br>&nbsp;&nbsp;&nbsp;
+	SKB_NUM4 = 60,<br>&nbsp;&nbsp;&nbsp;
+	SKB_NUM5 = 61,<br>&nbsp;&nbsp;&nbsp;
+	SKB_NUM6 = 62,<br>&nbsp;&nbsp;&nbsp;
+	SKB_NUM7 = 63,<br>&nbsp;&nbsp;&nbsp;
+	SKB_NUM8 = 64,<br>&nbsp;&nbsp;&nbsp;
+	SKB_NUM9 = 65,<br>&nbsp;&nbsp;&nbsp;
+	SKB_F1 = 66,<br>&nbsp;&nbsp;&nbsp;
+	SKB_F2 = 67,<br>&nbsp;&nbsp;&nbsp;
+	SKB_F3 = 68,<br>&nbsp;&nbsp;&nbsp;
+	SKB_F4 = 69,<br>&nbsp;&nbsp;&nbsp;
+	SKB_F5 = 70,<br>&nbsp;&nbsp;&nbsp;
+	SKB_F6 = 71,<br>&nbsp;&nbsp;&nbsp;
+	SKB_F7 = 72,<br>&nbsp;&nbsp;&nbsp;
+	SKB_F8 = 73,<br>&nbsp;&nbsp;&nbsp;
+	SKB_F9 = 74,<br>&nbsp;&nbsp;&nbsp;
+	SKB_F10 = 75,<br>&nbsp;&nbsp;&nbsp;
+	SKB_F11 = 76,<br>&nbsp;&nbsp;&nbsp;
+	SKB_F12 = 77,<br>&nbsp;&nbsp;&nbsp;
+	SKB_LSHIFT = 78,<br>&nbsp;&nbsp;&nbsp;
+	SKB_RSHIFT = 79,<br>&nbsp;&nbsp;&nbsp;
+	SKB_LCTRL = 80,<br>&nbsp;&nbsp;&nbsp;
+	SKB_RCTRL = 81,<br>&nbsp;&nbsp;&nbsp;
+	SKB_LALT  = 82,<br>&nbsp;&nbsp;&nbsp;
+	SKB_RALT  = 83
+<br>}; </code>
+			<br>
+		</div>
+</body>
+</html>

@@ -34,6 +34,7 @@ public:
 		/*
 		* desc: used to spawn container in level.
 		* param "pContainer": the pointer to a container that you want to spawn.
+		* return: false if successful, true otherwise.
 		* remarks: this function is thread-safe (you can call it from any thread).
 		*/
 		bool spawnContainerInLevel          (SContainer* pContainer);

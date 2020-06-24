@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../../doc.css">
+    <title>SMeshComponent - Silent Engine Documentation</title>
+</head>
+<body>
+    <div class="nav_panel">
+        <a class="cpp_link_title" href="../../classes/index.html"> Classes </a>
+		<br>
+		<a class="cpp_link_title" href="../../structs/index.html"> Structs </a>
+		<br>
+		<a class="cpp_link_title" href="../../enums/index.html"> Enums </a>
+    </div>
+    
+	<div class="cpp_doc">
+		<h3 class="cpp_object"> SMeshComponent </h3>
+		<code class="cpp_codeobject"> class SMeshComponent : public SComponent </code>
+		<br>
+		<br>
+		<div class="cpp_codeobject_desc"> This class represents the component that has some mesh data (3D-geometry) inside of it. </div>
+		<br>
+		<br>
+		<details open class="cpp_details">
+			<br>
+			<summary class="cpp_summary"> Public: </summary>
+			<div class="cpp_func_container">
+				<code class="cpp_function"> <code class="cpp_func_name"><a class="cpp_link" href="SMeshComponent_func_1.html">SMeshComponent</a></code>(std::string sComponentName); </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="setVisibility_func_1.html">setVisibility</a></code>(bool bVisible); </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="setMeshData_func_1.html">setMeshData</a></code>(const <a class="cpp_link_ref" href="../../structs/SMeshData/index.html">SMeshData</a>&amp; meshData, bool bAddedVerticesOrUpdatedIndicesCount, bool bUpdateBoundingBox = false); </code>
+				<br>
+				<code class="cpp_function"> <a class="cpp_link_ref" href="../../structs/SMeshData/index.html">SMeshData</a> <code class="cpp_func_name"><a class="cpp_link" href="getMeshData_func_1.html">getMeshData</a></code>() const; </code>
+				<br>
+				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="isVisible_func_1.html">isVisible</a></code>() const; </code>
+				<br>
+			</div>
+		</details>
+		<br>
+		<details class="cpp_details">
+			<br>
+			<summary class="cpp_summary"> Private: </summary>
+			<div class="cpp_func_container">
+				<code class="cpp_function"> virtual SRenderItem* <code class="cpp_func_name"><a class="cpp_link" href="getRenderData_func_1.html">getRenderData</a></code>() override; </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="createGeometryBuffers_func_1.html">createGeometryBuffers</a></code>(bool bAddedVerticesOrUpdatedIndicesCount); </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="updateWorldMatrix_func_1.html">updateWorldMatrix</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="updateMyAndChildsLocationRotationScale_func_1.html">updateMyAndChildsLocationRotationScale</a></code>(); </code>
+				<br>
+			</div>
+		</details>
+		
+	</div>
+</body>
+</html>

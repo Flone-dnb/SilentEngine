@@ -101,7 +101,7 @@ public:
 		/*
 		* desc: starts all essential engine systems, the main window will now process window messages, render new frames and etc.
 		* return: WPARAM value of the last window message.
-		* remarks: should be called after SApplication::run().
+		* remarks: should be called after SApplication::init().
 		*/
 		int             run                                    ();
 		//@@Function
@@ -866,6 +866,7 @@ private:
 		/*
 		* desc: used to spawn container in level.
 		* param "pContainer": the pointer to a container that you want to spawn.
+		* return: false if successful, true otherwise.
 		* remarks: this function is thread-safe (you can call it from any thread).
 		*/
 		bool spawnContainerInLevel                (SContainer* pContainer);
