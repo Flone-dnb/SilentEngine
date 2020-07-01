@@ -107,6 +107,13 @@ body
     color: #e7e7e7;
 }
 
+.cpp_codeobject_path
+{
+    font-family: "Consolas";
+    font-size: 13px;
+    color: #d0d0d0;
+}
+
 .cpp_func_container
 {
     padding: 1%;
