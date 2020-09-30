@@ -11,7 +11,7 @@
 #include <string>
 
 // Custom
-#include "SilentEngine/Public/EntityComponentSystem/SComponent/SComponent.h"
+#include "SilentEngine/Private/EntityComponentSystem/SComponent/SComponent.h"
 #include "SilentEngine/Public/SPrimitiveShapeGenerator/SPrimitiveShapeGenerator.h"
 
 

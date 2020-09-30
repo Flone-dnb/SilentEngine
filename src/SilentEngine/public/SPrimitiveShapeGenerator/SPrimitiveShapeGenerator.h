@@ -18,6 +18,7 @@
 
 // Custom
 #include "SilentEngine/Public/SVector/SVector.h"
+#include "SilentEngine/Private/SMaterial/SMaterial.h"
 
 //@@Struct
 /*
@@ -29,8 +30,8 @@ struct SVertex
 	/* position of the vertex */
 	DirectX::XMFLOAT3 vPos;
 	//@@Variable
-	/* color of the vertex */
-	DirectX::PackedVector::XMCOLOR vColor;
+	/* normal of the vertex */
+	DirectX::XMFLOAT3 vNormal;
 };
 
 //@@Struct
@@ -40,7 +41,14 @@ The struct represents mesh vertex.
 struct SMeshVertex
 {
 	//@@Function
-	SMeshVertex() {};
+	SMeshVertex()
+	{
+		this->vPosition = { 0.0f, 0.0f, 0.0f };
+		this->vNormal = { 0.0f, 0.0f, 0.0f };
+		this->vTangent = { 0.0f, 0.0f, 0.0f };
+		this->vUV = { 0.0f, 0.0f };
+		this->vColor = DirectX::PackedVector::XMCOLOR(1.0f, 1.0f, 1.0f, 1.0f);
+	};
 	//@@Function
 	/*
 	* desc: the constructor which initializes the mesh vertex with
@@ -264,7 +272,7 @@ struct SMeshData
 		{
 			SVertex vertex;
 			vertex.vPos = vVertices[i].vPosition;
-			vertex.vColor = vVertices[i].vColor;
+			vertex.vNormal = vVertices[i].vNormal;
 
 			vShaderVertices.push_back(vertex);
 		}
@@ -272,15 +280,20 @@ struct SMeshData
 		return vShaderVertices;
 	}
 
-	//@@Function
-	/*
-	* desc: sets the color for all vertices of the mesh data.
-	*/
-	void setColor(const SVector& vColorRGBA)
+	void setMeshMaterial(const SMaterial& meshMaterial)
 	{
-		for (size_t i = 0; i < vVertices.size(); i++)
+		this->meshMaterial = meshMaterial;
+	}
+
+	SMaterial* getMeshMaterial()
+	{
+		if (meshMaterial.iMatCBIndex == 0)
 		{
-			vVertices[i].vColor = DirectX::PackedVector::XMCOLOR(vColorRGBA.getX(), vColorRGBA.getY(), vColorRGBA.getZ(), vColorRGBA.getW());
+			return nullptr;
+		}
+		else
+		{
+			return &meshMaterial;
 		}
 	}
 
@@ -294,6 +307,10 @@ struct SMeshData
 	}
 
 private:
+
+	friend class SApplication;
+
+	SMaterial meshMaterial;
 
 	//@@Variable
 	/* the vector that contains all vertices of the mesh data. */
@@ -329,11 +346,6 @@ public:
 	* desc: returns sphere mesh data.
 	*/
 	static SMeshData createSphere             (float fRadius, std::uint32_t iSliceCount, std::uint32_t iStackCount);
-	//@@Function
-	/*
-	* desc: returns grid mesh data.
-	*/
-	static SMeshData createGrid               (float fGridWidth, float fGridDepth, std::uint32_t iRowCount, std::uint32_t iColumnCount);
 	//@@Function
 	/*
 	* desc: returns cylinder mesh data.

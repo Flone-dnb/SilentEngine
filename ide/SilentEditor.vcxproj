@@ -23,7 +23,7 @@
     <ProjectGuid>{2ACF33FE-CE55-4B81-8799-EF16C19B9A0B}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>SilentEditor</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -42,13 +42,13 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -149,15 +149,20 @@
     <ClCompile Include="..\src\SilentEditor\EditorApplication\EditorApplication.cpp" />
     <ClCompile Include="..\src\SilentEditor\main.cpp" />
     <ClCompile Include="..\src\SilentEditor\MyContainer\MyContainer.cpp" />
+    <ClCompile Include="..\src\SilentEngine\Private\EntityComponentSystem\SComponent\SComponent.cpp" />
+    <ClCompile Include="..\src\SilentEngine\Private\EntityComponentSystem\SLightComponent\SLightComponent.cpp" />
     <ClCompile Include="..\src\SilentEngine\private\SError\SError.cpp" />
     <ClCompile Include="..\src\SilentEngine\private\SFrameResource\SFrameResource.cpp" />
     <ClCompile Include="..\src\SilentEngine\private\SGameTimer\SGameTimer.cpp" />
     <ClCompile Include="..\src\SilentEngine\private\SGeometry\SGeometry.cpp" />
+    <ClCompile Include="..\src\SilentEngine\Private\SMaterial\SMaterial.cpp" />
     <ClCompile Include="..\src\SilentEngine\private\SMath\SMath.cpp" />
-    <ClCompile Include="..\src\SilentEngine\Public\EntityComponentSystem\SComponent\SComponent.cpp" />
     <ClCompile Include="..\src\SilentEngine\Public\EntityComponentSystem\SContainer\SContainer.cpp" />
+    <ClCompile Include="..\src\SilentEngine\Public\EntityComponentSystem\SDirectionalLightComponent\SDirectionalLightComponent.cpp" />
     <ClCompile Include="..\src\SilentEngine\Public\EntityComponentSystem\SMeshComponent\SMeshComponent.cpp" />
+    <ClCompile Include="..\src\SilentEngine\Public\EntityComponentSystem\SPointLightComponent\SPointLightComponent.cpp" />
     <ClCompile Include="..\src\SilentEngine\Public\EntityComponentSystem\SRuntimeMeshComponent\SRuntimeMeshComponent.cpp" />
+    <ClCompile Include="..\src\SilentEngine\Public\EntityComponentSystem\SSpotLightComponent\SSpotLightComponent.cpp" />
     <ClCompile Include="..\src\SilentEngine\Public\EntityComponentSystem\STargetComponent\STargetComponent.cpp" />
     <ClCompile Include="..\src\SilentEngine\public\SApplication\SApplication.cpp" />
     <ClCompile Include="..\src\SilentEngine\Public\SLevel\SLevel.cpp" />
@@ -170,16 +175,21 @@
   <ItemGroup>
     <ClInclude Include="..\src\SilentEditor\EditorApplication\EditorApplication.h" />
     <ClInclude Include="..\src\SilentEditor\MyContainer\MyContainer.h" />
+    <ClInclude Include="..\src\SilentEngine\Private\EntityComponentSystem\SComponent\SComponent.h" />
+    <ClInclude Include="..\src\SilentEngine\Private\EntityComponentSystem\SLightComponent\SLightComponent.h" />
     <ClInclude Include="..\src\SilentEngine\private\SError\SError.h" />
     <ClInclude Include="..\src\SilentEngine\private\SFrameResource\SFrameResource.h" />
     <ClInclude Include="..\src\SilentEngine\private\SGameTimer\SGameTimer.h" />
     <ClInclude Include="..\src\SilentEngine\private\SGeometry\SGeometry.h" />
+    <ClInclude Include="..\src\SilentEngine\Private\SMaterial\SMaterial.h" />
     <ClInclude Include="..\src\SilentEngine\private\SMath\SMath.h" />
     <ClInclude Include="..\src\SilentEngine\private\SUploadBuffer\SUploadBuffer.h" />
-    <ClInclude Include="..\src\SilentEngine\Public\EntityComponentSystem\SComponent\SComponent.h" />
     <ClInclude Include="..\src\SilentEngine\Public\EntityComponentSystem\SContainer\SContainer.h" />
+    <ClInclude Include="..\src\SilentEngine\Public\EntityComponentSystem\SDirectionalLightComponent\SDirectionalLightComponent.h" />
     <ClInclude Include="..\src\SilentEngine\Public\EntityComponentSystem\SMeshComponent\SMeshComponent.h" />
+    <ClInclude Include="..\src\SilentEngine\Public\EntityComponentSystem\SPointLightComponent\SPointLightComponent.h" />
     <ClInclude Include="..\src\SilentEngine\Public\EntityComponentSystem\SRuntimeMeshComponent\SRuntimeMeshComponent.h" />
+    <ClInclude Include="..\src\SilentEngine\Public\EntityComponentSystem\SSpotLightComponent\SSpotLightComponent.h" />
     <ClInclude Include="..\src\SilentEngine\Public\EntityComponentSystem\STargetComponent\STargetComponent.h" />
     <ClInclude Include="..\src\SilentEngine\public\SApplication\SApplication.h" />
     <ClInclude Include="..\src\SilentEngine\public\SKeyboardKey\SKeyboardKey.h" />

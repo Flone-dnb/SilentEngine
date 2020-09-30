@@ -10,6 +10,9 @@
 // STL
 #include <vector>
 
+// Custom
+#include "SilentEngine/Public/SVector/SVector.h"
+
 class SApplication;
 class SContainer;
 
@@ -35,7 +38,9 @@ public:
 		* desc: used to spawn container in level.
 		* param "pContainer": the pointer to a container that you want to spawn.
 		* return: false if successful, true otherwise.
-		* remarks: this function is thread-safe (you can call it from any thread).
+		* remarks: this function is thread-safe.
+		It's recommended to use this function in loading moments of your application (ex. loading screen)
+		as this function may drop the framerate a little.
 		*/
 		bool spawnContainerInLevel          (SContainer* pContainer);
 		
@@ -43,9 +48,18 @@ public:
 		/*
 		* desc: used to despawn container in level.
 		* param "pContainer": the pointer to a container that you want to despawn.
-		* remarks: this function is thread-safe (you can call it from any thread).
+		* remarks: this function is thread-safe.
+		It's recommended to use this function in loading moments of your application (ex. loading screen)
+		as this function may drop the framerate a little.
 		*/
 		void despawnContainerFromLevel      (SContainer* pContainer);
+
+		//@@Function
+		/*
+		* desc: used to set the ambient light intensity.
+		* param "vRBG": rgb color vector.
+		*/
+		void setAmbientLight                (SVector vRGB);
 
 
 	// Get functions
@@ -68,12 +82,27 @@ public:
 		*/
 		void getNotRenderableContainers (std::vector<SContainer*>*& pvNotRenderableContainers);
 
+		//@@Function
+		/*
+		* desc: used to retrieve the ambient light intensity.
+		* return: rgb color vector.
+		*/
+		SVector getAmbientLight() const;
+
 
 private:
+
+	friend class SApplication;
 
 	//@@Variable
 	/* pointer to the SApplication that owns the level. */
 	SApplication* pApp;
+
+
+	//@@Variable
+	/* ambient light on the level. */
+	SVector vAmbientLight;
+
 
 
 	// Containers.
@@ -84,5 +113,7 @@ private:
 	//@@Variable
 	/* non-renderable containers (containers that don't have components with geometry in it, for example, STargetComponent). */
 	std::vector<SContainer*> vNotRenderableContainers;
+
+	std::vector<class SLightComponent*> vSpawnedLightComponents;
 };
 

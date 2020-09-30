@@ -86,6 +86,28 @@ void SRuntimeMeshComponent::setMeshData(const SMeshData& meshData, bool bAddedVe
 	}
 }
 
+bool SRuntimeMeshComponent::setMeshMaterial(const SMaterial& meshMaterial)
+{
+	if (meshMaterial.bRegistered)
+	{
+		meshData.setMeshMaterial(meshMaterial);
+
+		return false;
+	}
+	else
+	{
+		SError::showErrorMessageBox(L"SRuntimeMeshComponent::setMeshMaterial", L"The given material is not registered. Register the material "
+			"using the SApplication::registerMaterial() function before using it.");
+
+		return true;
+	}
+}
+
+SMaterial* SRuntimeMeshComponent::getMeshMaterial()
+{
+	return meshData.getMeshMaterial();
+}
+
 SMeshData SRuntimeMeshComponent::getMeshData() const
 {
 	return meshData;

@@ -13,9 +13,10 @@
 #include <memory>
 
 // Custom
-#include "SilentEngine/Public/EntityComponentSystem/SComponent/SComponent.h"
+#include "SilentEngine/Private/EntityComponentSystem/SComponent/SComponent.h"
 #include "SilentEngine/Private/SGeometry/SGeometry.h"
 #include "SilentEngine/Public/SPrimitiveShapeGenerator/SPrimitiveShapeGenerator.h"
+#include "SilentEngine/Private/SMaterial/SMaterial.h"
 
 //@@Class
 /*
@@ -58,6 +59,20 @@ public:
 	* remarks: this function is thread-safe (you can call it from any thread).
 	*/
 	void setMeshData           (const SMeshData& meshData, bool bAddedVerticesOrUpdatedIndicesCount, bool bUpdateBoundingBox = false);
+
+	//@@Function
+	/*
+	* desc: used to set the material of the mesh.
+	* return: false if successful, true if the material is not registered using SApplication::registerMaterial() function.
+	*/
+	bool setMeshMaterial       (const SMaterial& meshMaterial);
+
+	//@@Function
+	/*
+	* desc: used to retrieve the mesh material.
+	* return: valid pointer if the material was assigned before, nullptr otherwise.
+	*/
+	SMaterial* getMeshMaterial ();
 
 	//@@Function
 	/*
@@ -125,8 +140,6 @@ private:
 
 	// ------------------------------------------
 
-	SMeshData   meshData;
-	SRenderItem renderData;
 	DirectX::BoundingBox bounds;
 
 	std::mutex  mtxDrawComponent;

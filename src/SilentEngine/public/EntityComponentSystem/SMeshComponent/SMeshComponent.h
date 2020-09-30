@@ -11,7 +11,7 @@
 #include <string>
 
 // Custom
-#include "SilentEngine/Public/EntityComponentSystem/SComponent/SComponent.h"
+#include "SilentEngine/Private/EntityComponentSystem/SComponent/SComponent.h"
 #include "SilentEngine/Public/SPrimitiveShapeGenerator/SPrimitiveShapeGenerator.h"
 
 //@@Class
@@ -57,6 +57,20 @@ public:
 
 	//@@Function
 	/*
+	* desc: used to set the material of the mesh.
+	* return: false if successful, true if the material is not registered using SApplication::registerMaterial() function.
+	*/
+	bool setMeshMaterial       (const SMaterial& meshMaterial);
+
+	//@@Function
+	/*
+	* desc: used to retrieve the material of the mesh.
+	* return: valid pointer if the material was assigned before, nullptr otherwise.
+	*/
+	SMaterial* getMeshMaterial ();
+
+	//@@Function
+	/*
 	* desc: used to retrieve the mesh data.
 	*/
 	SMeshData getMeshData      () const;
@@ -69,15 +83,15 @@ public:
 
 private:
 
+	friend class SApplication;
+	friend class SComponent;
+	friend class SContainer;
+
 	//@@Function
 	/*
 	* desc: returns the SRenderItem data.
 	*/
 	virtual SRenderItem* getRenderData() override;
-
-	friend class SApplication;
-	friend class SComponent;
-	friend class SContainer;
 
 	//@@Function
 	/*
@@ -96,9 +110,9 @@ private:
 	*/
 	void updateMyAndChildsLocationRotationScale();
 
-	// ------------------------------------------
 
-	SMeshData   meshData;
+	// ------------------------------------------------------------------------------------
+
 	DirectX::BoundingBox bounds;
 
 	bool        bVisible;

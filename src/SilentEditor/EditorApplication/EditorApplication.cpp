@@ -7,7 +7,6 @@
 
 #include "EditorApplication.h"
 
-
 EditorApplication::EditorApplication(HINSTANCE hInstance) : SApplication(hInstance)
 {
 }

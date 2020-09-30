@@ -38,7 +38,8 @@ public:
 
 	//@@Function
 	/*
-	* remarks: it's recommended to mark your SContainer's destructor as virtual and override.
+	* remarks: spawned container will be despawned, all components will be deleted.
+	It's recommended to mark your SContainer's destructor as virtual and override.
 	*/
 	virtual ~SContainer();
 
@@ -239,6 +240,12 @@ private:
 	friend class SApplication;
 	friend class SComponent;
 	friend class SRuntimeMeshComponent;
+
+	//@@Function
+	/*
+	* desc: true if any of the child components are using a material with the given name.
+	*/
+	bool doesAnyChildComponentsUsingThisMaterial(const std::string& sMaterialName);
 
 	//@@Function
 	/*

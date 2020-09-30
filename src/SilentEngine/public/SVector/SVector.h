@@ -116,6 +116,12 @@ public:
 	*/
 	void  rotateAroundAxis          (const SVector& axis, float fAngleInGrad);
 
+	//@@Function
+	/*
+	* desc: converts the spherical coordinate system coordinates to the cartesian coordinate system coordinates.
+	*/
+	static SVector sphericalToCartesianCoords (float fRadius, float fTheta, float fPhi);
+
 
 	SVector operator+(const SVector& b);
 	SVector operator-(const SVector& b);

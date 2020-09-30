@@ -24,30 +24,38 @@ SFrameResource::SFrameResource(ID3D12Device* pDevice, UINT iRenderPassCBCount, U
 	}
 	else
 	{
-		createBuffers(iRenderPassCBCount, iObjectCBCount);
+		createRenderObjectBuffers(iRenderPassCBCount, iObjectCBCount);
+		createMaterialBuffer(iCBResizeMultiple);
 		this->iRenderPassCBCount = iRenderPassCBCount;
 	}
 }
 
-void SFrameResource::createBuffers(UINT iRenderPassCBCount, UINT iObjectCBCount)
+void SFrameResource::createRenderObjectBuffers(UINT iRenderPassCBCount, UINT iObjectCBCount)
 {
-	iObjectCBCount = roundUp(iObjectCBCount, iObjectCBResizeMultiple);
+	iObjectCBCount = roundUp(iObjectCBCount, iCBResizeMultiple);
 
 	pRenderPassCB = std::make_unique<SUploadBuffer<SRenderPassConstants>>  (pDevice, iRenderPassCBCount, true);
 	pObjectsCB    = std::make_unique<SUploadBuffer<SObjectConstants>>      (pDevice, iObjectCBCount, true);
 }
 
+void SFrameResource::createMaterialBuffer(UINT iMaterialCBCount)
+{
+	iMaterialCBCount = roundUp(iMaterialCBCount, iCBResizeMultiple);
+
+	pMaterialCB = std::make_unique<SUploadBuffer<SMaterialConstants>> (pDevice, iMaterialCBCount, true);
+}
+
 size_t SFrameResource::addNewObjectCB(size_t iNewCBCount, bool* pbCBWasExpanded)
 {
-	size_t iCeiling = roundUp(iObjectsCBActualElementCount, iObjectCBResizeMultiple);
+	size_t iCeiling = roundUp(iObjectsCBActualElementCount, iCBResizeMultiple);
 
 	if (iObjectsCBActualElementCount + iNewCBCount > iCeiling)
 	{
 		// Need to expand.
 
-		createBuffers(iRenderPassCBCount, iObjectsCBActualElementCount + iNewCBCount);
+		createRenderObjectBuffers(iRenderPassCBCount, iObjectsCBActualElementCount + iNewCBCount); // recreating new buffers.
 
-		*pbCBWasExpanded = true;
+		*pbCBWasExpanded = true; // all objects will again copy their data to frame resources.
 	}
 	else
 	{
@@ -61,18 +69,18 @@ size_t SFrameResource::addNewObjectCB(size_t iNewCBCount, bool* pbCBWasExpanded)
 
 void SFrameResource::removeObjectCB(size_t iCBStartIndex, size_t iCBCount, bool* pbCBWasResized)
 {
-	size_t iCeiling = roundUp(iObjectsCBActualElementCount, iObjectCBResizeMultiple);
+	size_t iCeiling = roundUp(iObjectsCBActualElementCount, iCBResizeMultiple);
 
-	iCeiling -= iObjectCBResizeMultiple;
+	iCeiling -= iCBResizeMultiple;
 
-	if (iObjectsCBActualElementCount > iObjectCBResizeMultiple)
+	if (iObjectsCBActualElementCount > iCBResizeMultiple)
 	{
 		if (iObjectsCBActualElementCount - iCBCount <= iCeiling)
 		{
 			// Resize.
-			*pbCBWasResized = true;
-
-			createBuffers(iRenderPassCBCount, iObjectsCBActualElementCount - iCBCount);
+			*pbCBWasResized = true; // all objects will again copy their data to frame resources.
+			
+			createRenderObjectBuffers(iRenderPassCBCount, iObjectsCBActualElementCount - iCBCount); // recreating new buffers.
 		}
 		else
 		{
@@ -85,6 +93,56 @@ void SFrameResource::removeObjectCB(size_t iCBStartIndex, size_t iCBCount, bool*
 	}
 
 	iObjectsCBActualElementCount -= iCBCount;
+}
+
+size_t SFrameResource::addNewMaterialCB(bool* pbCBWasExpanded)
+{
+	size_t iCeiling = roundUp(iMaterialCBActualElementCount, iCBResizeMultiple);
+
+	if (iMaterialCBActualElementCount + 1 > iCeiling)
+	{
+		// Need to expand.
+
+		createMaterialBuffer(iMaterialCBActualElementCount + 1); // recreating new buffers.
+
+		*pbCBWasExpanded = true; // all materials will again copy their data to frame resources.
+	}
+	else
+	{
+		*pbCBWasExpanded = false;
+	}
+
+	iMaterialCBActualElementCount++;
+
+	return iMaterialCBActualElementCount - 1;
+}
+
+void SFrameResource::removeMaterialCB(size_t iCBIndex, bool * pbCBWasResized)
+{
+	size_t iCeiling = roundUp(iMaterialCBActualElementCount, iCBResizeMultiple);
+
+	iCeiling -= iCBResizeMultiple;
+
+	if (iMaterialCBActualElementCount > iCBResizeMultiple)
+	{
+		if (iMaterialCBActualElementCount - 1 <= iCeiling)
+		{
+			// Resize.
+			*pbCBWasResized = true; // all objects will again copy their data to frame resources.
+
+			createMaterialBuffer(iMaterialCBActualElementCount - 1); // recreating new buffers.
+		}
+		else
+		{
+			*pbCBWasResized = false;
+		}
+	}
+	else
+	{
+		*pbCBWasResized = false;
+	}
+
+	iMaterialCBActualElementCount--;
 }
 
 size_t SFrameResource::addRuntimeMeshVertexBuffer(size_t iVertexCount)

@@ -16,6 +16,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE prevInstance, PSTR cmdLine, in
 
 	EditorApplication app(hInstance);
 
+	//app.initCompileShadersInRelease();
+
 	app.setWindowTitleText(L"Silent Editor");
 
 	if (app.init())
@@ -23,7 +25,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE prevInstance, PSTR cmdLine, in
 		return 1;
 	}
 
-	app.setCallTick(true);
 	app.setShowFrameStatsInWindowTitle(true);
 	app.getVideoSettings()->setFPSLimit(120.0f);
 

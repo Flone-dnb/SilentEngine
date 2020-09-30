@@ -91,7 +91,7 @@ Microsoft::WRL::ComPtr<ID3D12Resource> SGeometry::createDefaultBuffer(ID3D12Devi
 Microsoft::WRL::ComPtr<ID3DBlob> SGeometry::compileShader(const std::wstring& sPathToShader, 
 	const D3D_SHADER_MACRO* defines, 
 	const std::string& sShaderEntryPoint, 
-	const std::string& sShaderModel)
+	const std::string& sShaderModel, bool bCompileShadersInRelease)
 {
 	// Check if the file exist.
 
@@ -109,8 +109,11 @@ Microsoft::WRL::ComPtr<ID3DBlob> SGeometry::compileShader(const std::wstring& sP
 
 
 	UINT iCompileFlags = D3DCOMPILE_OPTIMIZATION_LEVEL3;
-#if defined(DEBUG) || defined(_DEBUG)  
-	iCompileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
+#if defined(DEBUG) || defined(_DEBUG) 
+	if (bCompileShadersInRelease == false)
+	{
+		iCompileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
+	}
 #endif
 
 	HRESULT hresult = S_OK;

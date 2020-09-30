@@ -66,6 +66,28 @@ void SMeshComponent::setMeshData(const SMeshData& meshData, bool bAddedVerticesO
 	}
 }
 
+bool SMeshComponent::setMeshMaterial(const SMaterial& meshMaterial)
+{
+	if (meshMaterial.bRegistered)
+	{
+		meshData.setMeshMaterial(meshMaterial);
+
+		return false;
+	}
+	else
+	{
+		SError::showErrorMessageBox(L"SMeshComponent::setMeshMaterial", L"The given material is not registered. Register the material "
+			"using the SApplication::registerMaterial() function before using it.");
+
+		return true;
+	}
+}
+
+SMaterial* SMeshComponent::getMeshMaterial()
+{
+	return meshData.getMeshMaterial();
+}
+
 SMeshData SMeshComponent::getMeshData() const
 {
     return meshData;

@@ -9,7 +9,7 @@
 
 // Custom
 #include "SilentEngine/Public/SApplication/SApplication.h"
-#include "SilentEngine/Public/EntityComponentSystem/SComponent/SComponent.h"
+#include "SilentEngine/Private/EntityComponentSystem/SComponent/SComponent.h"
 #include "SilentEngine/Public/EntityComponentSystem/SMeshComponent/SMeshComponent.h"
 
 SContainer::SContainer(const std::string& sContainerName)
@@ -156,7 +156,7 @@ bool SContainer::addComponentToContainer(SComponent* pComponent)
 	vComponents.push_back(pComponent);
 	pComponent->setContainer(this);
 
-	pComponent->setLocation(SVector(0.0f, 0.0f, 0.0f));
+	pComponent->setLocalLocation(SVector(0.0f, 0.0f, 0.0f));
 
 	return false;
 }
@@ -301,6 +301,31 @@ bool SContainer::isEditorObject() const
 	return bIsEditorObject;
 }
 
+
+bool SContainer::doesAnyChildComponentsUsingThisMaterial(const std::string& sMaterialName)
+{
+	bool bUsing = false;
+
+	for (size_t i = 0; i < vComponents.size(); i++)
+	{
+		if (vComponents[i]->meshData.getMeshMaterial()->getMaterialName() == sMaterialName)
+		{
+			bUsing = true;
+			break;
+		}
+		else
+		{
+			bUsing = vComponents[i]->doesAnyChildComponentsUsingThisMaterial(sMaterialName);
+
+			if (bUsing)
+			{
+				break;
+			}
+		}
+	}
+
+    return bUsing;
+}
 
 void SContainer::setSpawnedInLevel(bool bSpawned)
 {

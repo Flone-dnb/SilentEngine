@@ -10,7 +10,7 @@
 // Custom
 #include "SilentEngine/Public/SApplication/SApplication.h"
 #include "SilentEngine/Public/EntityComponentSystem/SContainer/SContainer.h"
-#include "SilentEngine/Public/EntityComponentSystem/SComponent/SComponent.h"
+#include "SilentEngine/Private/EntityComponentSystem/SComponent/SComponent.h"
 #include "SilentEngine/Public/EntityComponentSystem/SMeshComponent/SMeshComponent.h"
 
 SLevel::SLevel(SApplication* pApp)
@@ -39,6 +39,11 @@ void SLevel::despawnContainerFromLevel(SContainer* pContainer)
 	pApp->despawnContainerFromLevel(pContainer);
 }
 
+void SLevel::setAmbientLight(SVector vRGB)
+{
+	vAmbientLight = vRGB;
+}
+
 void SLevel::getRenderableContainers(std::vector<SContainer*>*& pvRenderableContainers)
 {
 	pvRenderableContainers = &vRenderableContainers;
@@ -47,4 +52,9 @@ void SLevel::getRenderableContainers(std::vector<SContainer*>*& pvRenderableCont
 void SLevel::getNotRenderableContainers(std::vector<SContainer*>*& pvNotRenderableContainers)
 {
 	pvNotRenderableContainers = &vNotRenderableContainers;
+}
+
+SVector SLevel::getAmbientLight() const
+{
+	return vAmbientLight;
 }

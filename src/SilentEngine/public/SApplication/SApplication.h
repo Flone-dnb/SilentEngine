@@ -34,6 +34,7 @@
 #include "SilentEngine/Public/SVideoSettings/SVideoSettings.h"
 #include "SilentEngine/Public/SProfiler/SProfiler.h"
 #include "SilentEngine/Public/SLevel/SLevel.h"
+#include "SilentEngine/Private/SMaterial/SMaterial.h"
 
 // Other
 #include <Windows.h>
@@ -87,8 +88,17 @@ public:
 		As you might guess, the D3D debug layer comes with some overhead which can slow things down
 		and even completely destroy your game's performance. You can disable the D3D debug
 		layer for better performance in debug builds.
+		* remarks: should be called before SApplication::init().
 		*/
 		void            initDisableD3DDebugLayer               ();
+		//@@Function
+		/*
+		* desc: forces the shaders to be compiled in release mode (better performance, no debug info)
+		even if the current build configuration is debug mode. All shaders will be always compiled in
+		release mode if the current build configuration is release mode.
+		* remarks: should be called before SApplication::init().
+		*/
+		void            initCompileShadersInRelease            ();
 		//@@Function
 		/*
 		* desc: initializes all essential engine systems, creates the main window, starts Direct 3D rendering.
@@ -148,6 +158,41 @@ public:
 		static bool     close                                  ();
 
 	
+	// Materials
+
+		//@@Function
+		/*
+		* desc: registers the given material in the application so it can be used in the component, such as SMeshComponent.
+		* return: false if successful, true otherwise.
+		* remarks: any material should be registered first and only then used.
+		You can reuse already registered materials on any number of components you want.
+		It's recommended to use this function in loading moments of your application (ex. loading screen)
+		as this function may drop the framerate a little.
+		*/
+		bool            registerMaterial					   (SMaterial& material);
+		//@@Function
+		/*
+		* desc: returns a registered material.
+		* return: valid pointer if successful, nullptr otherwise.
+		*/
+		SMaterial*      getRegisteredMaterial                  (const std::string& sMaterialName);
+		//@@Function
+		/*
+		* desc: returns all registered materials.
+		* return: valid pointer if successful, nullptr otherwise.
+		*/
+		std::vector<SMaterial>* getRegisteredMaterials         ();
+		//@@Function
+		/*
+		* desc: unregisters a material with the given name, make sure that no object is using this material.
+		* return: false if successful, true otherwise.
+		* remarks: you cannot unregister the Default Engine Material.
+		It's recommended to use this function in loading moments of your application (ex. loading screen)
+		as this function may drop the framerate a little.
+		*/
+		bool            unregisterMaterial                     (const std::string& sMaterialName);
+
+
 	// Level
 
 		//@@Function
@@ -297,6 +342,14 @@ public:
 		* return: a pointer to the profiler.
 		*/
 		SProfiler*             getProfiler                     () const;
+
+	// Other
+
+		//@@Function
+		/*
+		* desc: used to show a usual Windows message box.
+		*/
+		void                   showMessageBox                   (const std::wstring& sMessageBoxTitle, const std::wstring& sMessageText) const;
 
 
 protected:
@@ -519,10 +572,17 @@ private:
 		bool resetCommandList                ();
 		//@@Function
 		/*
+		* desc: creates the default material, all objects without a material will have default material.
+		*/
+		bool createDefaultMaterial            ();
+		//@@Function
+		/*
 		* desc: executes the commands from list.
 		* return: false if successful, true otherwise.
 		*/
 		bool executeCommandList              ();
+
+		void updateMaterialInFrameResource(SMaterial* pMaterial, SUploadBuffer<SMaterialConstants>* pMaterialCB);
 
 
 	// Window
@@ -556,7 +616,8 @@ private:
 		/*
 		* desc: updates the objects' constant buffers.
 		*/
-		void updateComponentAndChilds        (SComponent* pComponent, SUploadBuffer<SObjectConstants>* pCurrentCB);
+		void updateComponentAndChilds        (SComponent* pComponent, SUploadBuffer<SObjectConstants>* pCurrentObjectCB,
+																	  SUploadBuffer<SMaterialConstants>* pCurrentMaterialCB);
 		//@@Function
 		/*
 		* desc: updates the main pass constant buffer.
@@ -992,6 +1053,11 @@ private:
 	SRenderPassConstants mainRenderPassCB;
 	size_t iRenderPassCBVOffset = 0;
 	size_t iActualObjectCBCount = 0;
+
+
+	// Materials.
+	std::vector<SMaterial> vRegisteredMaterials;
+	std::string sDefaultEngineMaterialName = "Default Engine Material";
 	
 
 	// Camera.
@@ -1075,12 +1141,14 @@ private:
 	float          fFPSLimit                = 0.0f;
 	double         fDelayBetweenFramesInMS  = 0.0f;
 	bool           bShowFrameStatsInTitle   = false;
+	bool           bCompileShadersInRelease = false;
 
 
 	SGameTimer     gameTimer;
 
 	
 	std::mutex     mtxSpawnDespawn;
+	std::mutex     mtxMaterial;
 	std::mutex     mtxDraw;
 
 
@@ -1098,6 +1166,7 @@ private:
 
 	bool           bInitCalled              = false;
 	bool           bRunCalled               = false;
+	bool           bExitCalled              = false;
 
 	bool           bCallTick                = false;
 

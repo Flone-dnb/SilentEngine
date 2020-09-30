@@ -21,25 +21,25 @@ SMeshData SPrimitiveShapeGenerator::createBox(float fWidth, float fHeight, float
 	float fHalfHeight = 0.5f * fHeight;
 	float fHalfDepth  = 0.5f * fDepth;
 
-	vVertices[0]  = SMeshVertex(-fHalfWidth, -fHalfDepth, -fHalfHeight, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f);
-	vVertices[1]  = SMeshVertex(-fHalfWidth, fHalfDepth,  -fHalfHeight, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f);
+	vVertices[0]  = SMeshVertex(-fHalfWidth, -fHalfDepth, -fHalfHeight, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+	vVertices[1]  = SMeshVertex(-fHalfWidth, fHalfDepth,  -fHalfHeight, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f);
 	vVertices[2]  = SMeshVertex(fHalfWidth,  fHalfDepth,  -fHalfHeight, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f);
 	vVertices[3]  = SMeshVertex(fHalfWidth,  -fHalfDepth, -fHalfHeight, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f);
 
-	vVertices[4]  = SMeshVertex(-fHalfWidth, -fHalfDepth, fHalfHeight, 0.0f, 1.0f, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f, 1.0f);
-	vVertices[5]  = SMeshVertex(fHalfWidth,  -fHalfDepth, fHalfHeight, 0.0f, 1.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f);
-	vVertices[6]  = SMeshVertex(fHalfWidth,  fHalfDepth,  fHalfHeight, 0.0f, 1.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f);
-	vVertices[7]  = SMeshVertex(-fHalfWidth, fHalfDepth,  fHalfHeight, 0.0f, 1.0f, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f);
+	vVertices[4]  = SMeshVertex(-fHalfWidth, -fHalfDepth, fHalfHeight, 0.0f, 0.0f, 1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 1.0f);
+	vVertices[5]  = SMeshVertex(fHalfWidth,  -fHalfDepth, fHalfHeight, 0.0f, 0.0f, 1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+	vVertices[6]  = SMeshVertex(fHalfWidth,  fHalfDepth,  fHalfHeight, 0.0f, 0.0f, 1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f);
+	vVertices[7]  = SMeshVertex(-fHalfWidth, fHalfDepth,  fHalfHeight, 0.0f, 0.0f, 1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f);
 
-	vVertices[8]  = SMeshVertex(-fHalfWidth, fHalfDepth, -fHalfHeight, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f);
-	vVertices[9]  = SMeshVertex(-fHalfWidth, fHalfDepth, fHalfHeight,  0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f);
-	vVertices[10] = SMeshVertex(fHalfWidth,  fHalfDepth, fHalfHeight,  0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f);
-	vVertices[11] = SMeshVertex(fHalfWidth,  fHalfDepth, -fHalfHeight, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f);
+	vVertices[8]  = SMeshVertex(-fHalfWidth, fHalfDepth, -fHalfHeight, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+	vVertices[9]  = SMeshVertex(-fHalfWidth, fHalfDepth, fHalfHeight,  0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f);
+	vVertices[10] = SMeshVertex(fHalfWidth,  fHalfDepth, fHalfHeight,  0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f);
+	vVertices[11] = SMeshVertex(fHalfWidth,  fHalfDepth, -fHalfHeight, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f);
 
-	vVertices[12] = SMeshVertex(-fHalfWidth, -fHalfDepth, -fHalfHeight, 0.0f, 0.0f, -1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 1.0f);
-	vVertices[13] = SMeshVertex(fHalfWidth,  -fHalfDepth, -fHalfHeight, 0.0f, 0.0f, -1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f);
-	vVertices[14] = SMeshVertex(fHalfWidth,  -fHalfDepth, fHalfHeight,  0.0f, 0.0f, -1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f);
-	vVertices[15] = SMeshVertex(-fHalfWidth, -fHalfDepth, fHalfHeight,  0.0f, 0.0f, -1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f);
+	vVertices[12] = SMeshVertex(-fHalfWidth, -fHalfDepth, -fHalfHeight, 0.0f, -1.0f, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f, 1.0f);
+	vVertices[13] = SMeshVertex(fHalfWidth,  -fHalfDepth, -fHalfHeight, 0.0f, -1.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+	vVertices[14] = SMeshVertex(fHalfWidth,  -fHalfDepth, fHalfHeight,  0.0f, -1.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f);
+	vVertices[15] = SMeshVertex(-fHalfWidth, -fHalfDepth, fHalfHeight,  0.0f, -1.0f, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f);
 
 	vVertices[16] = SMeshVertex(-fHalfWidth, -fHalfDepth, fHalfHeight,  -1.0f, 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f);
 	vVertices[17] = SMeshVertex(-fHalfWidth, fHalfDepth,  fHalfHeight,  -1.0f, 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f);
@@ -174,77 +174,6 @@ SMeshData SPrimitiveShapeGenerator::createSphere(float fRadius, std::uint32_t iS
 		meshData.addIndex(iStartIndex + i + 1);
 		meshData.addIndex(iStartIndex + i);
 	}
-
-	return meshData;
-}
-
-SMeshData SPrimitiveShapeGenerator::createGrid(float fGridWidth, float fGridDepth, std::uint32_t iRowCount, std::uint32_t iColumnCount)
-{
-	SMeshData meshData;
-
-	std::uint32_t iVertexCount = iRowCount * iColumnCount;
-	std::uint32_t iFaceCount   = (iRowCount - 1) * (iColumnCount - 1) * 2;
-
-
-	// Create the vertices.
-
-	float fHalfWidth = 0.5f * fGridWidth;
-	float fHalfDepth = 0.5f * fGridDepth;
-
-	float fXStep = fGridWidth / (fGridDepth - 1);
-	float fYStep = fGridDepth / (iRowCount  - 1);
-
-	float fUStep = 1.0f / (fGridDepth - 1);
-	float fVStep = 1.0f / (iRowCount  - 1);
-
-	std::vector<SMeshVertex> vVertices(iVertexCount);
-
-	for(std::uint32_t i = 0; i < iRowCount; i++)
-	{
-		float y = fHalfDepth - i * fYStep;
-		for(std::uint32_t j = 0; j < iColumnCount; j++)
-		{
-			float x = -fHalfWidth + j * fXStep;
-
-			vVertices[i * iColumnCount + j].vPosition = DirectX::XMFLOAT3(x, y, 0.0f);
-			vVertices[i * iColumnCount + j].vNormal   = DirectX::XMFLOAT3(0.0f, 0.0f, 1.0f);
-			vVertices[i * iColumnCount + j].vTangent  = DirectX::XMFLOAT3(1.0f, 0.0f, 0.0f);
-
-			// Stretch texture over grid.
-			vVertices[i * iColumnCount + j].vUV.x = j * fUStep;
-			vVertices[i * iColumnCount + j].vUV.y = i * fVStep;
-		}
-	}
-
-	meshData.setVertices(vVertices);
-
-
-	// Create the indices.
-
-	std::vector<std::uint32_t> vIndices32(iFaceCount * 3); // 3 indices per face
-
-	
-	// Iterate over each quad and compute indices.
-
-	std::uint32_t k = 0;
-
-	for(std::uint32_t i = 0; i < iRowCount - 1; i++)
-	{
-		for(std::uint32_t j = 0; j < iColumnCount - 1; j++)
-		{
-			vIndices32[k]     = i * iColumnCount + j;
-			vIndices32[k + 1] = (i + 1) * iColumnCount + j;
-			vIndices32[k + 2] = i * iColumnCount + j + 1;
-
-			vIndices32[k + 3] = (i + 1) *iColumnCount + j;
-			vIndices32[k + 4] = (i + 1) * iColumnCount + j + 1;
-			vIndices32[k + 5] = i * iColumnCount + j + 1;
-
-			k += 6; // next quad
-		}
-	}
-
-	meshData.setIndices(vIndices32);
 
 	return meshData;
 }

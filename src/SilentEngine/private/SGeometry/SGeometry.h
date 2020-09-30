@@ -29,7 +29,7 @@
 
 
 #define SFRAME_RES_COUNT 3
-#define OBJECT_CB_RESIZE_MULTIPLE 10
+#define OBJECT_CB_RESIZE_MULTIPLE 20
 
 
 struct SMeshGeometry
@@ -102,6 +102,7 @@ public:
 		const std::wstring& sPathToShader,
 		const D3D_SHADER_MACRO* defines,
 		const std::string& sShaderEntryPoint,
-		const std::string& sShaderModel);
+		const std::string& sShaderModel,
+		bool bCompileShadersInRelease);
 };
 

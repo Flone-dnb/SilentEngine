@@ -15,12 +15,14 @@
 // Custom
 #include "SilentEngine/Public/SVector/SVector.h"
 #include "SilentEngine/Private/SGeometry/SGeometry.h"
+#include "SilentEngine/Public/SPrimitiveShapeGenerator/SPrimitiveShapeGenerator.h"
 
 enum SComponentType
 {
 	SCT_NONE = 0,
 	SCT_MESH = 1,
-	SCT_RUNTIME_MESH = 2
+	SCT_RUNTIME_MESH = 2,
+	SCT_LIGHT = 3
 };
 
 class SContainer;
@@ -67,19 +69,19 @@ public:
 	is a child component, and the parent is a container if this component is not a child component.
 	* remarks: the local location/rotation/scale of any child components will be preserved.
 	*/
-	virtual void setLocation (const SVector& location);
+	virtual void setLocalLocation (const SVector& location);
 	//@@Function
 	/*
 	* desc: sets the rotation.
 	* remarks: the local location/rotation/scale of any child components will be preserved.
 	*/
-	virtual void setRotation (const SVector& rotation);
+	virtual void setLocalRotation (const SVector& rotation);
 	//@@Function
 	/*
 	* desc: sets the scale.
 	* remarks: the local location/rotation/scale of any child components will be preserved.
 	*/
-	virtual void setScale    (const SVector& scale);
+	virtual void setLocalScale    (const SVector& scale);
 
 	//@@Function
 	/*
@@ -158,6 +160,11 @@ protected:
 	*/
 	size_t      getMeshComponentsCount         () const;
 
+	size_t      getLightComponentsCount        () const;
+
+	void        addLightComponentsToVector     (std::vector<class SLightComponent*>& vLights);
+	void        removeLightComponentsFromVector(std::vector<class SLightComponent*>& vLights);
+
 	//@@Function
 	/*
 	* desc: true if the component is spawned in the level, false otherwise.
@@ -214,6 +221,12 @@ protected:
 
 	//@@Function
 	/*
+	* desc: true if any of the child components are using a material with the given name.
+	*/
+	bool doesAnyChildComponentsUsingThisMaterial(const std::string& sMaterialName);
+
+	//@@Function
+	/*
 	* desc: returns the world matrix (that includes parents).
 	*/
 	DirectX::XMMATRIX XM_CALLCONV getWorldMatrix();
@@ -244,6 +257,7 @@ protected:
 
 
 	SRenderItem renderData; // will be null for components that doesn't have mesh data
+	SMeshData   meshData; // will be null for components that doesn't have mesh data
 
 
 	std::string sComponentName;

@@ -73,9 +73,6 @@
     <Filter Include="SilentEngine\Public\EntityComponentSystem\SContainer">
       <UniqueIdentifier>{468b4590-2785-435e-bcc9-81420c897a3f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="SilentEngine\Public\EntityComponentSystem\SComponent">
-      <UniqueIdentifier>{887eac49-167f-4b4e-bb85-9f00810c5fda}</UniqueIdentifier>
-    </Filter>
     <Filter Include="SilentEngine\Public\EntityComponentSystem\SMeshComponent">
       <UniqueIdentifier>{bde7186e-bfea-472d-8ae5-51ac9bac0d89}</UniqueIdentifier>
     </Filter>
@@ -93,6 +90,27 @@
     </Filter>
     <Filter Include="SilentEngine\Public\EntityComponentSystem\STargetComponent">
       <UniqueIdentifier>{6cdb74cb-2f2f-4b1d-9dcb-d244d98bfc4d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SilentEngine\Private\SMaterial">
+      <UniqueIdentifier>{d95e930e-d9b8-4057-acaa-f28ee7f2ac72}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SilentEngine\Private\EntityComponentSystem">
+      <UniqueIdentifier>{95531138-3c6b-4f44-95c7-0c892d9d9b3d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SilentEngine\Private\EntityComponentSystem\SComponent">
+      <UniqueIdentifier>{aab5233b-1477-41ac-8b07-57bdfb1e75c4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SilentEngine\Private\EntityComponentSystem\SLightComponent">
+      <UniqueIdentifier>{81faa491-b58a-4aab-8d23-8e93ac6ba3d6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SilentEngine\Public\EntityComponentSystem\SPointLightComponent">
+      <UniqueIdentifier>{a2c426c7-b88b-4704-801b-b5617fabe9e8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SilentEngine\Public\EntityComponentSystem\SSpotLightComponent">
+      <UniqueIdentifier>{cd6a543e-eabd-4df3-9add-c5d3448dde18}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SilentEngine\Public\EntityComponentSystem\SDirectionalLightComponent">
+      <UniqueIdentifier>{b8302868-83f4-4041-ad57-7baf3902e0e9}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -135,9 +153,6 @@
     <ClCompile Include="..\src\SilentEngine\Public\EntityComponentSystem\SContainer\SContainer.cpp">
       <Filter>SilentEngine\Public\EntityComponentSystem\SContainer</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\SilentEngine\Public\EntityComponentSystem\SComponent\SComponent.cpp">
-      <Filter>SilentEngine\Public\EntityComponentSystem\SComponent</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\SilentEngine\Public\EntityComponentSystem\SMeshComponent\SMeshComponent.cpp">
       <Filter>SilentEngine\Public\EntityComponentSystem\SMeshComponent</Filter>
     </ClCompile>
@@ -155,6 +170,24 @@
     </ClCompile>
     <ClCompile Include="..\src\SilentEngine\Public\EntityComponentSystem\STargetComponent\STargetComponent.cpp">
       <Filter>SilentEngine\Public\EntityComponentSystem\STargetComponent</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SilentEngine\Private\SMaterial\SMaterial.cpp">
+      <Filter>SilentEngine\Private\SMaterial</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SilentEngine\Private\EntityComponentSystem\SComponent\SComponent.cpp">
+      <Filter>SilentEngine\Private\EntityComponentSystem\SComponent</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SilentEngine\Private\EntityComponentSystem\SLightComponent\SLightComponent.cpp">
+      <Filter>SilentEngine\Private\EntityComponentSystem\SLightComponent</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SilentEngine\Public\EntityComponentSystem\SPointLightComponent\SPointLightComponent.cpp">
+      <Filter>SilentEngine\Public\EntityComponentSystem\SPointLightComponent</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SilentEngine\Public\EntityComponentSystem\SSpotLightComponent\SSpotLightComponent.cpp">
+      <Filter>SilentEngine\Public\EntityComponentSystem\SSpotLightComponent</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SilentEngine\Public\EntityComponentSystem\SDirectionalLightComponent\SDirectionalLightComponent.cpp">
+      <Filter>SilentEngine\Public\EntityComponentSystem\SDirectionalLightComponent</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -203,9 +236,6 @@
     <ClInclude Include="..\src\SilentEngine\Public\EntityComponentSystem\SContainer\SContainer.h">
       <Filter>SilentEngine\Public\EntityComponentSystem\SContainer</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\SilentEngine\Public\EntityComponentSystem\SComponent\SComponent.h">
-      <Filter>SilentEngine\Public\EntityComponentSystem\SComponent</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\SilentEngine\Public\EntityComponentSystem\SMeshComponent\SMeshComponent.h">
       <Filter>SilentEngine\Public\EntityComponentSystem\SMeshComponent</Filter>
     </ClInclude>
@@ -223,6 +253,24 @@
     </ClInclude>
     <ClInclude Include="..\src\SilentEngine\Public\EntityComponentSystem\STargetComponent\STargetComponent.h">
       <Filter>SilentEngine\Public\EntityComponentSystem\STargetComponent</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SilentEngine\Private\SMaterial\SMaterial.h">
+      <Filter>SilentEngine\Private\SMaterial</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SilentEngine\Private\EntityComponentSystem\SComponent\SComponent.h">
+      <Filter>SilentEngine\Private\EntityComponentSystem\SComponent</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SilentEngine\Private\EntityComponentSystem\SLightComponent\SLightComponent.h">
+      <Filter>SilentEngine\Private\EntityComponentSystem\SLightComponent</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SilentEngine\Public\EntityComponentSystem\SPointLightComponent\SPointLightComponent.h">
+      <Filter>SilentEngine\Public\EntityComponentSystem\SPointLightComponent</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SilentEngine\Public\EntityComponentSystem\SSpotLightComponent\SSpotLightComponent.h">
+      <Filter>SilentEngine\Public\EntityComponentSystem\SSpotLightComponent</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SilentEngine\Public\EntityComponentSystem\SDirectionalLightComponent\SDirectionalLightComponent.h">
+      <Filter>SilentEngine\Public\EntityComponentSystem\SDirectionalLightComponent</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

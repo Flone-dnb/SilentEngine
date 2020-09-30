@@ -153,6 +153,16 @@ void SVector::rotateAroundAxis(const SVector& axis, float fAngleInGrad)
 	DirectX::XMStoreFloat3(&vVector, result);
 }
 
+SVector SVector::sphericalToCartesianCoords(float fRadius, float fTheta, float fPhi)
+{
+	SVector out;
+	out.setX(fRadius * sinf(fPhi) * cosf(fTheta));
+	out.setY(fRadius * sinf(fPhi) * sinf(fTheta));
+	out.setZ(fRadius * cosf(fPhi));
+
+	return out;
+}
+
 SVector SVector::operator+(const SVector& b)
 {
 	return SVector(vVector.x + b.getX(), vVector.y + b.getY(), vVector.z + b.getZ());

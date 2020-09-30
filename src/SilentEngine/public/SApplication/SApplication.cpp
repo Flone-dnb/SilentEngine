@@ -1,4 +1,5 @@
 // ******************************************************************
+// ******************************************************************
 // This file is part of the Silent Engine.
 // Copyright Aleksandr "Flone" Tretyakov (github.com/Flone-dnb).
 // Licensed under the ZLib license.
@@ -24,7 +25,7 @@
 #include "SilentEngine/Public/STimer/STimer.h"
 #include "SilentEngine/Public/SPrimitiveShapeGenerator/SPrimitiveShapeGenerator.h"
 #include "SilentEngine/Public/EntityComponentSystem/SContainer/SContainer.h"
-#include "SilentEngine/Public/EntityComponentSystem/SComponent/SComponent.h"
+#include "SilentEngine/Private/EntityComponentSystem/SComponent/SComponent.h"
 #include "SilentEngine/Public/EntityComponentSystem/SMeshComponent/SMeshComponent.h"
 #include "SilentEngine/Public/EntityComponentSystem/SRuntimeMeshComponent/SRuntimeMeshComponent.h"
 
@@ -57,6 +58,221 @@ bool SApplication::close()
 	}
 }
 
+bool SApplication::registerMaterial(SMaterial& material)
+{
+	if (material.getMaterialName() == "")
+	{
+		return true;
+	}
+
+	bool bHasUniqueName = true;
+
+	mtxMaterial.lock();
+	mtxSpawnDespawn.lock();
+
+	for (size_t i = 0; i < vRegisteredMaterials.size(); i++)
+	{
+		if (vRegisteredMaterials[i].getMaterialName() == material.getMaterialName())
+		{
+			bHasUniqueName = false;
+			break;
+		}
+	}
+
+
+	if (bHasUniqueName)
+	{
+		bool bExpanded = false;
+		int iNewMaterialCBIndex = -1;
+
+		for (size_t i = 0; i < vFrameResources.size(); i++)
+		{
+			iNewMaterialCBIndex = vFrameResources[i]->addNewMaterialCB(&bExpanded);
+		}
+
+		material.iMatCBIndex = iNewMaterialCBIndex;
+		material.bRegistered = true;
+		material.iUpdateCBInFrameResourceCount = SFRAME_RES_COUNT;
+
+		vRegisteredMaterials.push_back(material);
+
+		material.pRegisteredOriginal = &vRegisteredMaterials.back();
+
+		if (bExpanded)
+		{
+			mtxDraw.lock();
+
+			flushCommandQueue();
+
+			for (size_t i = 0; i < vRegisteredMaterials.size(); i++)
+			{
+				vRegisteredMaterials[i].iUpdateCBInFrameResourceCount = SFRAME_RES_COUNT;
+			}
+
+			// Recreate cbv heap.
+			createCBVHeap();
+			createConstantBufferViews();
+
+			mtxDraw.unlock();
+		}
+
+		mtxSpawnDespawn.unlock();
+		mtxMaterial.unlock();
+		return false;
+	}
+	else
+	{
+		mtxMaterial.unlock();
+		return true;
+	}
+}
+
+SMaterial* SApplication::getRegisteredMaterial(const std::string& sMaterialName)
+{
+	SMaterial* pMaterial = nullptr;
+
+	mtxMaterial.lock();
+
+	for (size_t i = 0; i < vRegisteredMaterials.size(); i++)
+	{
+		if (vRegisteredMaterials[i].getMaterialName() == sMaterialName)
+		{
+			pMaterial = &vRegisteredMaterials[i];
+			break;
+		}
+	}
+
+	mtxMaterial.unlock();
+
+	return pMaterial;
+}
+
+std::vector<SMaterial>* SApplication::getRegisteredMaterials()
+{
+	return &vRegisteredMaterials;
+}
+
+bool SApplication::unregisterMaterial(const std::string& sMaterialName)
+{
+	if (getCurrentLevel() == nullptr)
+	{
+		return true;
+	}
+
+
+	if (sMaterialName == sDefaultEngineMaterialName)
+	{
+		return true;
+	}
+
+
+	// Is this material registered?
+
+	bool bRegistered = false;
+
+	mtxMaterial.lock();
+
+	for (size_t i = 0; i < vRegisteredMaterials.size(); i++)
+	{
+		if (vRegisteredMaterials[i].getMaterialName() == sMaterialName)
+		{
+			bRegistered = true;
+			break;
+		}
+	}
+
+	mtxMaterial.unlock();
+
+	if (bRegistered == false)
+	{
+		return true;
+	}
+
+
+
+	// See if any object is using this material.
+
+	std::vector<SContainer*>* pvRenderableContainers = nullptr;
+	getCurrentLevel()->getRenderableContainers(pvRenderableContainers);
+
+	std::vector<SContainer*>* pvNotRenderableContainers = nullptr;
+	getCurrentLevel()->getNotRenderableContainers(pvNotRenderableContainers);
+
+	bool bSomeObjectIsUsingThisMaterial = false;
+
+	for (size_t i = 0; i < pvRenderableContainers->size(); i++)
+	{
+		if (pvRenderableContainers->operator[](i)->doesAnyChildComponentsUsingThisMaterial(sMaterialName))
+		{
+			bSomeObjectIsUsingThisMaterial = true;
+			break;
+		}
+	}
+
+	if (bSomeObjectIsUsingThisMaterial == false)
+	{
+		for (size_t i = 0; i < pvNotRenderableContainers->size(); i++)
+		{
+			if (pvNotRenderableContainers->operator[](i)->doesAnyChildComponentsUsingThisMaterial(sMaterialName))
+			{
+				bSomeObjectIsUsingThisMaterial = true;
+				break;
+			}
+		}
+	}
+
+	if (bSomeObjectIsUsingThisMaterial)
+	{
+		return true;
+	}
+	else
+	{
+		mtxMaterial.lock();
+		mtxSpawnDespawn.lock();
+
+		bool bResized = false;
+
+		for (size_t i = 0; i < vRegisteredMaterials.size(); i++)
+		{
+			if (vRegisteredMaterials[i].getMaterialName() == sMaterialName)
+			{
+				for (size_t i = 0; i < vFrameResources.size(); i++)
+				{
+					vFrameResources[i]->removeMaterialCB(vRegisteredMaterials[i].iMatCBIndex, &bResized);
+				}
+
+				vRegisteredMaterials[i].bRegistered = false;
+
+				vRegisteredMaterials.erase(vRegisteredMaterials.begin() + i);
+				break;
+			}
+		}
+
+		if (bResized)
+		{
+			mtxDraw.lock();
+
+			flushCommandQueue();
+
+			for (size_t i = 0; i < vRegisteredMaterials.size(); i++)
+			{
+				vRegisteredMaterials[i].iUpdateCBInFrameResourceCount = SFRAME_RES_COUNT;
+			}
+
+			// Recreate cbv heap.
+			createCBVHeap();
+			createConstantBufferViews();
+
+			mtxDraw.unlock();
+		}
+
+		mtxSpawnDespawn.unlock();
+		mtxMaterial.unlock();
+
+		return false;
+	}
+}
+
 SLevel* SApplication::getCurrentLevel() const
 {
 	return pCurrentLevel;
@@ -64,10 +280,6 @@ SLevel* SApplication::getCurrentLevel() const
 
 bool SApplication::spawnContainerInLevel(SContainer* pContainer)
 {
-	mtxDraw.lock();
-
-	flushCommandQueue();
-	
 	mtxSpawnDespawn.lock();
 
 	std::vector<SContainer*>* pvRenderableContainers = nullptr;
@@ -87,24 +299,56 @@ bool SApplication::spawnContainerInLevel(SContainer* pContainer)
 		}
 	}
 
-	for (size_t i = 0; i < pvNotRenderableContainers->size(); i++)
+	if (bHasUniqueName)
 	{
-		if (pvNotRenderableContainers->operator[](i)->getContainerName() == pContainer->getContainerName())
+		for (size_t i = 0; i < pvNotRenderableContainers->size(); i++)
 		{
-			bHasUniqueName = false;
-			break;
+			if (pvNotRenderableContainers->operator[](i)->getContainerName() == pContainer->getContainerName())
+			{
+				bHasUniqueName = false;
+				break;
+			}
 		}
 	}
+	
 
 	if (bHasUniqueName == false)
 	{
 		mtxSpawnDespawn.unlock();
-		mtxDraw.unlock();
 		return true;
 	}
 
+
+
+	// Check light count.
+	size_t iLightComponents = 0;
+
+	for (size_t i = 0; i < pContainer->vComponents.size(); i++)
+	{
+		iLightComponents += pContainer->vComponents[i]->getLightComponentsCount();
+	}
+
+	if (getCurrentLevel()->vSpawnedLightComponents.size() + iLightComponents > MAX_LIGHTS)
+	{
+		SError::showErrorMessageBox(L"SApplication::spawnContainerInLevel()", L"exceeded MAX_LIGHTS (this container was not spawned)");
+		mtxSpawnDespawn.unlock();
+		return true;
+	}
+
+	// Add lights.
+	for (size_t i = 0; i < pContainer->vComponents.size(); i++)
+	{
+		pContainer->vComponents[i]->addLightComponentsToVector(getCurrentLevel()->vSpawnedLightComponents);
+	}
+
+
+
 	// We need 1 CB for each SCT_MESH, SCT_RUNTIME_MESH component.
 	size_t iCBCount = pContainer->getMeshComponentsCount();
+
+	mtxDraw.lock();
+
+	flushCommandQueue();
 
 	if (iCBCount == 0)
 	{
@@ -168,6 +412,7 @@ bool SApplication::spawnContainerInLevel(SContainer* pContainer)
 				}
 			}
 
+
 			// Recreate cbv heap.
 			createCBVHeap();
 			createConstantBufferViews();
@@ -184,14 +429,20 @@ bool SApplication::spawnContainerInLevel(SContainer* pContainer)
 
 void SApplication::despawnContainerFromLevel(SContainer* pContainer)
 {
-	mtxDraw.lock();
-
-	flushCommandQueue();
-
 	mtxSpawnDespawn.lock();
+
+	// Remove lights.
+	for (size_t i = 0; i < pContainer->vComponents.size(); i++)
+	{
+		pContainer->vComponents[i]->removeLightComponentsFromVector(getCurrentLevel()->vSpawnedLightComponents);
+	}
 
 	// We need 1 for each SCT_MESH, SCT_RUNTIME_MESH component.
 	size_t iCBCount = pContainer->getMeshComponentsCount();
+
+	mtxDraw.lock();
+
+	flushCommandQueue();
 
 	if (iCBCount == 0)
 	{
@@ -800,6 +1051,11 @@ SVideoSettings* SApplication::getVideoSettings() const
 SProfiler* SApplication::getProfiler() const
 {
 	return pProfiler;
+}
+
+void SApplication::showMessageBox(const std::wstring& sMessageBoxTitle, const std::wstring & sMessageText) const
+{
+	MessageBox(0, sMessageText.c_str(), sMessageBoxTitle.c_str(), 0);
 }
 
 std::vector<std::wstring> SApplication::getSupportedDisplayAdapters() const
@@ -1503,8 +1759,9 @@ void SApplication::updateCamera()
 
 void SApplication::updateObjectCBs()
 {
-	SUploadBuffer<SObjectConstants>* pCurrentCB = pCurrentFrameResource->pObjectsCB.get();
-	
+	SUploadBuffer<SObjectConstants>* pCurrentObjectCB  = pCurrentFrameResource->pObjectsCB.get();
+	SUploadBuffer<SMaterialConstants>* pCurrentMaterialCB = pCurrentFrameResource->pMaterialCB.get();
+
 	mtxSpawnDespawn.lock();
 
 	std::vector<SContainer*>* pvRenderableContainers = nullptr;
@@ -1514,14 +1771,15 @@ void SApplication::updateObjectCBs()
 	{
 		for (size_t j = 0; j < pvRenderableContainers->operator[](i)->vComponents.size(); j++)
 		{
-			updateComponentAndChilds(pvRenderableContainers->operator[](i)->vComponents[j], pCurrentCB);
+			updateComponentAndChilds(pvRenderableContainers->operator[](i)->vComponents[j], pCurrentObjectCB, pCurrentMaterialCB);
 		}
 	}
 
 	mtxSpawnDespawn.unlock();
 }
 
-void SApplication::updateComponentAndChilds(SComponent* pComponent, SUploadBuffer<SObjectConstants>* pCurrentCB)
+void SApplication::updateComponentAndChilds(SComponent* pComponent, SUploadBuffer<SObjectConstants>* pCurrentObjectCB,
+	SUploadBuffer<SMaterialConstants>* pCurrentMaterialCB)
 {
 	if (pComponent->componentType == SCT_MESH)
 	{
@@ -1534,7 +1792,7 @@ void SApplication::updateComponentAndChilds(SComponent* pComponent, SUploadBuffe
 			SObjectConstants objConstants;
 			DirectX::XMStoreFloat4x4(&objConstants.vWorld, DirectX::XMMatrixTranspose(world));
 
-			pCurrentCB->copyDataToElement(pMeshComponent->renderData.iObjCBIndex, objConstants);
+			pCurrentObjectCB->copyDataToElement(pMeshComponent->renderData.iObjCBIndex, objConstants);
 
 			// Next FrameResource need to be updated too.
 			pMeshComponent->renderData.iUpdateCBInFrameResourceCount--;
@@ -1573,18 +1831,50 @@ void SApplication::updateComponentAndChilds(SComponent* pComponent, SUploadBuffe
 			SObjectConstants objConstants;
 			DirectX::XMStoreFloat4x4(&objConstants.vWorld, DirectX::XMMatrixTranspose(world));
 
-			pCurrentCB->copyDataToElement(pRuntimeMeshComponent->renderData.iObjCBIndex, objConstants);
+			pCurrentObjectCB->copyDataToElement(pRuntimeMeshComponent->renderData.iObjCBIndex, objConstants);
 
 			// Next FrameResource need to be updated too.
 			pRuntimeMeshComponent->renderData.iUpdateCBInFrameResourceCount--;
 		}
 	}
 
+
+	if (pComponent->componentType == SCT_MESH || pComponent->componentType == SCT_RUNTIME_MESH)
+	{
+		mtxMaterial.lock();
+
+		SMaterial* pMaterial = &pComponent->meshData.meshMaterial;
+
+		if(pMaterial->iMatCBIndex == 0)
+		{
+			pMaterial = &vRegisteredMaterials[0];
+		}
+
+		if (pMaterial->iUpdateCBInFrameResourceCount > 0)
+		{
+			if (pMaterial->bLastFrameResourceIndexValid)
+			{
+				if (pMaterial->iFrameResourceIndexLastUpdated != iCurrentFrameResourceIndex)
+				{
+					updateMaterialInFrameResource(pMaterial, pCurrentMaterialCB);
+				}
+				// else: Already updated for this frame resource. Don't do that again.
+			}
+			else
+			{
+				updateMaterialInFrameResource(pMaterial, pCurrentMaterialCB);
+			}
+		}
+
+		mtxMaterial.unlock();
+	}
+
+
 	std::vector<SComponent*> vChilds = pComponent->getChildComponents();
 
 	for (size_t i = 0; i < vChilds.size(); i++)
 	{
-		updateComponentAndChilds(pComponent->getChildComponents()[i], pCurrentCB);
+		updateComponentAndChilds(pComponent->getChildComponents()[i], pCurrentObjectCB, pCurrentMaterialCB);
 	}
 }
 
@@ -1611,6 +1901,59 @@ void SApplication::updateMainPassCB()
 	mainRenderPassCB.fFarZ = fFarClipPlaneValue;
 	mainRenderPassCB.fTotalTime = gameTimer.getTimeElapsedInSec();
 	mainRenderPassCB.fDeltaTime = gameTimer.getDeltaTimeBetweenFramesInSec();
+	mainRenderPassCB.iDirectionalLightCount = 0;
+	mainRenderPassCB.iPointLightCount = 0;
+	mainRenderPassCB.iSpotLightCount = 0;
+
+	SLevel* pLevel = getCurrentLevel();
+
+	if (pLevel)
+	{
+		SVector vAmbientLight = pLevel->getAmbientLight();
+		mainRenderPassCB.vAmbientLightRGBA = { vAmbientLight.getX(), vAmbientLight.getY(), vAmbientLight.getZ(), 1.0f };
+
+		mtxSpawnDespawn.lock();
+
+		size_t iCurrentIndex = 0;
+		size_t iTypeIndex = 0;
+		std::vector<SLightComponentType> vTypes = { SLCT_DIRECTIONAL, SLCT_POINT, SLCT_SPOT };
+
+		for (size_t k = 0; k < vTypes.size(); k++)
+		{
+			for (size_t i = 0; i < pLevel->vSpawnedLightComponents.size(); i++)
+			{
+				if (pLevel->vSpawnedLightComponents[i]->isVisible())
+				{
+					if (pLevel->vSpawnedLightComponents[i]->lightType == vTypes[iTypeIndex])
+					{
+						SVector vWorldPos = pLevel->vSpawnedLightComponents[i]->getLocationInWorld();
+						pLevel->vSpawnedLightComponents[i]->lightProps.vPosition = { vWorldPos.getX(), vWorldPos.getY(), vWorldPos.getZ() };
+
+						mainRenderPassCB.lights[iCurrentIndex] = pLevel->vSpawnedLightComponents[i]->lightProps;
+						iCurrentIndex++;
+
+						if (vTypes[iTypeIndex] == SLCT_DIRECTIONAL)
+						{
+							mainRenderPassCB.iDirectionalLightCount++;
+						}
+						else if (vTypes[iTypeIndex] == SLCT_POINT)
+						{
+							mainRenderPassCB.iPointLightCount++;
+						}
+						else
+						{
+							mainRenderPassCB.iSpotLightCount++;
+						}
+					}
+				}
+			}
+
+			iTypeIndex++;
+		}
+
+		mtxSpawnDespawn.unlock();
+	}
+
 
 	SUploadBuffer<SRenderPassConstants>* pCurrentPassCB = pCurrentFrameResource->pRenderPassCB.get();
 	pCurrentPassCB->copyDataToElement(0, mainRenderPassCB);
@@ -1705,7 +2048,7 @@ void SApplication::draw()
 	auto renderPassCBVHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(pCBVHeap->GetGPUDescriptorHandleForHeapStart());
 	renderPassCBVHandle.Offset(iRenderPassCBVIndex, iCBVSRVUAVDescriptorSize);
 
-	pCommandList->SetGraphicsRootDescriptorTable(1, renderPassCBVHandle);
+	pCommandList->SetGraphicsRootDescriptorTable(2, renderPassCBVHandle);
 
 
 
@@ -1803,11 +2146,11 @@ void SApplication::draw()
 		iCurrentBackBuffer++;
 	}
 
-	pCurrentFrameResource->iFence = ++iCurrentFence;
+	iCurrentFence++;
+	pCurrentFrameResource->iFence = iCurrentFence;
 
-	// Add an instruction to the command queue to set a new fence point. 
-	// Because we are on the GPU timeline, the new fence point won't be 
-	// set until the GPU finishes processing all the commands prior to this Signal().
+	// Add an instruction to the command queue to set a new fence point.
+	// This fence point won't be set until the GPU finishes processing all the commands prior to this Signal().
 	pCommandQueue->Signal(pFence.Get(), iCurrentFence);
 
 	mtxDraw.unlock();
@@ -1816,8 +2159,6 @@ void SApplication::draw()
 void SApplication::drawVisibleRenderableContainers()
 {
 	iLastFrameDrawCallCount = 0;
-
-	UINT iObjCBSizeInBytes = SMath::makeMultipleOf256(sizeof(SObjectConstants));
 
 	mtxSpawnDespawn.lock();
 
@@ -1865,18 +2206,38 @@ void SApplication::drawComponentAndChilds(SComponent* pComponent)
 
 	if (bDrawThisComponent)
 	{
-		pCommandList->IASetVertexBuffers(0, 1, &pComponent->getRenderData()->pGeometry->getVertexBufferView());
-		pCommandList->IASetIndexBuffer(&pComponent->getRenderData()->pGeometry->getIndexBufferView());
-		pCommandList->IASetPrimitiveTopology(pComponent->getRenderData()->primitiveTopologyType);
+		pCommandList->IASetVertexBuffers     (0, 1, &pComponent->getRenderData()->pGeometry->getVertexBufferView());
+		pCommandList->IASetIndexBuffer       (&pComponent->getRenderData()->pGeometry->getIndexBufferView());
+		pCommandList->IASetPrimitiveTopology (pComponent->getRenderData()->primitiveTopologyType);
 
-		// Offset to the CBV in the descriptor heap for this object and for this frame resource.
+		
 		size_t iObjCount = roundUp(iActualObjectCBCount, OBJECT_CB_RESIZE_MULTIPLE);
-		UINT iCBVIndex = iCurrentFrameResourceIndex * iObjCount + pComponent->getRenderData()->iObjCBIndex;
+		size_t iMaterialCount = roundUp(vRegisteredMaterials.size(), OBJECT_CB_RESIZE_MULTIPLE);
+
+		// Object descriptor table.
+		UINT iCBVIndex = iCurrentFrameResourceIndex * (iObjCount + iMaterialCount) + pComponent->getRenderData()->iObjCBIndex;
 		auto cbvHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(pCBVHeap->GetGPUDescriptorHandleForHeapStart());
 		cbvHandle.Offset(iCBVIndex, iCBVSRVUAVDescriptorSize);
 
 		pCommandList->SetGraphicsRootDescriptorTable(0, cbvHandle);
 
+
+		// Material descriptor table.
+		size_t iMatCBIndex = 0;
+
+		if (pComponent->meshData.getMeshMaterial())
+		{
+			iMatCBIndex = pComponent->meshData.getMeshMaterial()->iMatCBIndex;
+		}
+
+		iCBVIndex = iObjCount + iCurrentFrameResourceIndex * (iObjCount + iMaterialCount) + iMatCBIndex;
+		cbvHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(pCBVHeap->GetGPUDescriptorHandleForHeapStart());
+		cbvHandle.Offset(iCBVIndex, iCBVSRVUAVDescriptorSize);
+
+		pCommandList->SetGraphicsRootDescriptorTable(1, cbvHandle);
+
+
+		// Draw.
 		pCommandList->DrawIndexedInstanced(pComponent->getRenderData()->iIndexCount, 1, pComponent->getRenderData()->iStartIndexLocation,
 			pComponent->getRenderData()->iStartVertexLocation, 0);
 
@@ -1902,7 +2263,6 @@ bool SApplication::flushCommandQueue()
 		return true;
 	}
 
-
 	// Wait until the GPU has completed commands up to this fence point.
 	if (pFence->GetCompletedValue() < iCurrentFence)
 	{
@@ -1918,6 +2278,7 @@ bool SApplication::flushCommandQueue()
 
 		// Wait until event is fired.
 		WaitForSingleObject(hEvent, INFINITE);
+		
 		CloseHandle(hEvent);
 	}
 
@@ -2640,10 +3001,11 @@ bool SApplication::createRTVAndDSVDescriptorHeaps()
 
 bool SApplication::createCBVHeap()
 {
-	size_t iObjCount = roundUp(iActualObjectCBCount, OBJECT_CB_RESIZE_MULTIPLE);
+	size_t iObjCount = roundUp(iActualObjectCBCount, OBJECT_CB_RESIZE_MULTIPLE); // for SObjectConstants
+	iObjCount += roundUp(vRegisteredMaterials.size(), OBJECT_CB_RESIZE_MULTIPLE); // for SMaterialConstants
 
-	// Each frame resource contains N render items, so we need (iFrameResourcesCount * N)
-	// + one per SRenderPassConstants (i.e. per frame resource)
+	// Each frame resource contains N objects, so we need (iFrameResourcesCount * N)
+	// + 1 for SRenderPassConstants per frame resource.
 	UINT iDescriptorCount = (iObjCount + 1) * iFrameResourcesCount;
 
 	// Save an offset to the start of the render pass CBVs.
@@ -2669,7 +3031,8 @@ void SApplication::createConstantBufferViews()
 {
 	UINT iObjectConstantBufferSizeInBytes = SMath::makeMultipleOf256(sizeof(SObjectConstants));
 
-	size_t iObjectCount = roundUp(iActualObjectCBCount, OBJECT_CB_RESIZE_MULTIPLE);
+	size_t iObjectCount   = roundUp(iActualObjectCBCount, OBJECT_CB_RESIZE_MULTIPLE);
+	size_t iMaterialCount = roundUp(vRegisteredMaterials.size(), OBJECT_CB_RESIZE_MULTIPLE);
 
 	// Need (iFrameResourcesCount * iObjectCount) CBVs.
 	for (int iFrameIndex = 0; iFrameIndex < iFrameResourcesCount; iFrameIndex++)
@@ -2684,7 +3047,7 @@ void SApplication::createConstantBufferViews()
 			currentObjectConstantBufferAddress += i * iObjectConstantBufferSizeInBytes;
 
 			// Offset to the object CBV in the descriptor heap.
-			int iIndexInHeap = iFrameIndex * iObjectCount + i;
+			int iIndexInHeap = iFrameIndex * (iObjectCount + iMaterialCount) + i;
 			auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(pCBVHeap->GetCPUDescriptorHandleForHeapStart());
 			handle.Offset(iIndexInHeap, iCBVSRVUAVDescriptorSize);
 
@@ -2695,6 +3058,37 @@ void SApplication::createConstantBufferViews()
 			pDevice->CreateConstantBufferView(&cbvDesc, handle);
 		}
 	}
+
+
+
+	UINT iMaterialCBSizeInBytes = SMath::makeMultipleOf256(sizeof(SMaterialConstants));
+
+	// Need (iFrameResourcesCount * iMaterialCount) CBVs.
+	for (int iFrameIndex = 0; iFrameIndex < iFrameResourcesCount; iFrameIndex++)
+	{
+		ID3D12Resource* pMaterialCB = vFrameResources[iFrameIndex]->pMaterialCB->getResource();
+
+		for (int i = 0; i < iMaterialCount; i++)
+		{
+			D3D12_GPU_VIRTUAL_ADDRESS currentMaterialConstantBufferAddress = pMaterialCB->GetGPUVirtualAddress();
+
+			// Offset to the ith material constant buffer in the buffer.
+			currentMaterialConstantBufferAddress += i * iMaterialCBSizeInBytes;
+
+			// Offset to the material CBV in the descriptor heap.
+			int iIndexInHeap = iObjectCount + iFrameIndex * (iObjectCount + iMaterialCount) + i;
+			auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(pCBVHeap->GetCPUDescriptorHandleForHeapStart());
+			handle.Offset(iIndexInHeap, iCBVSRVUAVDescriptorSize);
+
+			D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc;
+			cbvDesc.BufferLocation = currentMaterialConstantBufferAddress;
+			cbvDesc.SizeInBytes = iMaterialCBSizeInBytes;
+
+			pDevice->CreateConstantBufferView(&cbvDesc, handle);
+		}
+	}
+
+
 
 	UINT iRenderPassCBSizeInBytes = SMath::makeMultipleOf256(sizeof(SRenderPassConstants));
 
@@ -2730,20 +3124,24 @@ bool SApplication::createRootSignature()
 	// The root signature defines the resources the shader programs expect.
 
 	CD3DX12_DESCRIPTOR_RANGE cbvTable0;
-	cbvTable0.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0); // cbPerObject
+	cbvTable0.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0); // cbObject
 
 	CD3DX12_DESCRIPTOR_RANGE cbvTable1;
-	cbvTable1.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1); // cbPerRenderPass
+	cbvTable1.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1); // cbMaterial
+
+	CD3DX12_DESCRIPTOR_RANGE cbvTable2;
+	cbvTable2.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 2); // cbRenderPass
 
 	// Root parameter can be a table, root descriptor or root constants.
-	CD3DX12_ROOT_PARAMETER slotRootParameter[2];
+	CD3DX12_ROOT_PARAMETER slotRootParameter[3];
 
 	// Create root CBVs.
 	slotRootParameter[0].InitAsDescriptorTable(1, &cbvTable0);
 	slotRootParameter[1].InitAsDescriptorTable(1, &cbvTable1);
+	slotRootParameter[2].InitAsDescriptorTable(1, &cbvTable2);
 
 	// A root signature is an array of root parameters.
-	CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc(2, slotRootParameter, 0, nullptr, 
+	CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc(3, slotRootParameter, 0, nullptr, 
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
 
@@ -2784,13 +3182,13 @@ bool SApplication::createRootSignature()
 
 bool SApplication::createShadersAndInputLayout()
 {
-	mShaders["basicVS"] = SGeometry::compileShader(L"shaders/basic.hlsl", nullptr, "VS", "vs_5_1");
-	mShaders["basicPS"] = SGeometry::compileShader(L"shaders/basic.hlsl", nullptr, "PS", "ps_5_1");
+	mShaders["basicVS"] = SGeometry::compileShader(L"shaders/basic.hlsl", nullptr, "VS", "vs_5_1", bCompileShadersInRelease);
+	mShaders["basicPS"] = SGeometry::compileShader(L"shaders/basic.hlsl", nullptr, "PS", "ps_5_1", bCompileShadersInRelease);
 
 	vInputLayout =
 	{
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "COLOR", 0, DXGI_FORMAT_B8G8R8A8_UNORM, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
 	};
 
 	return false;
@@ -2905,6 +3303,28 @@ bool SApplication::resetCommandList()
 	}
 }
 
+bool SApplication::createDefaultMaterial()
+{
+	SMaterial defaultMaterial;
+
+	SMaterialProperties matProps;
+	matProps.setDiffuseColor(SVector(1.0f, 0.0f, 0.0f, 1.0f));
+	matProps.setSpecularColor(SVector(1.0f, 1.0f, 1.0f));
+	matProps.setRoughness(0.0f);
+
+	defaultMaterial.setMaterialName(sDefaultEngineMaterialName);
+	defaultMaterial.setMaterialProperties(matProps);
+
+	if (registerMaterial(defaultMaterial))
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
 bool SApplication::executeCommandList()
 {
 	HRESULT hresult = pCommandList->Close();
@@ -2920,6 +3340,36 @@ bool SApplication::executeCommandList()
 
 	return false;
 }
+void SApplication::updateMaterialInFrameResource(SMaterial * pMaterial, SUploadBuffer<SMaterialConstants>* pMaterialCB)
+{
+	DirectX::XMMATRIX mMatTransform = DirectX::XMLoadFloat4x4(&pMaterial->mMatTransform);
+
+	SMaterialConstants matConstants;
+	SMaterialProperties matProps = pMaterial->getMaterialProperties();
+	SVector vDiffuse = matProps.getDiffuseColor();
+	SVector vFresnel = matProps.getSpecularColor();
+	matConstants.vDiffuseAlbedo = { vDiffuse.getX(), vDiffuse.getY(), vDiffuse.getZ(), vDiffuse.getW() };
+	matConstants.vFresnelR0 = { vFresnel.getX(), vFresnel.getY(), vFresnel.getZ() };
+	matConstants.fRoughness = matProps.getRoughness();
+	matConstants.mMatTransform = SMath::getIdentityMatrix4x4();
+
+	pMaterialCB->copyDataToElement(pMaterial->iMatCBIndex, matConstants);
+
+	// Next FrameResource need to be updated too.
+	pMaterial->iUpdateCBInFrameResourceCount--;
+
+	pMaterial->iFrameResourceIndexLastUpdated = iCurrentFrameResourceIndex;
+
+	if (pMaterial->iUpdateCBInFrameResourceCount == 0)
+	{
+		pMaterial->bLastFrameResourceIndexValid = false;
+	}
+	else
+	{
+		pMaterial->bLastFrameResourceIndexValid = true;
+	}
+}
+
 ID3D12Resource* SApplication::getCurrentBackBufferResource(bool bNonMSAAResource) const
 {
 	if (MSAA_Enabled && bNonMSAAResource == false)
@@ -2964,6 +3414,12 @@ SApplication::SApplication(HINSTANCE hInstance)
 	pProfiler      = new SProfiler(this);
 
 	pCurrentLevel  = new SLevel(this);
+
+#if defined(DEBUG) || defined(_DEBUG)
+	bCompileShadersInRelease = false;
+#elif
+	bCompileShadersInRelease = true;
+#endif
 }
 
 SApplication::~SApplication()
@@ -2994,6 +3450,11 @@ SApplication::~SApplication()
 void SApplication::initDisableD3DDebugLayer()
 {
 	bD3DDebugLayerEnabled = false;
+}
+
+void SApplication::initCompileShadersInRelease()
+{
+	bCompileShadersInRelease = true;
 }
 
 bool SApplication::init()
@@ -3051,6 +3512,11 @@ bool SApplication::init()
 		return true;
 	}
 
+	if (createDefaultMaterial())
+	{
+		return true;
+	}
+
 	// Execute init commands.
 
 	hresult = pCommandList->Close();
@@ -3064,6 +3530,7 @@ bool SApplication::init()
 	pCommandQueue->ExecuteCommandLists(_countof(vCommandListsToExecute), vCommandListsToExecute);
 
 	
+
 	// Wait for all command to finish.
 
 	if (flushCommandQueue())
@@ -3452,6 +3919,12 @@ LRESULT SApplication::msgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	case WM_DESTROY:
 	{
 		onCloseEvent();
+
+		if (bInitCalled)
+		{
+			flushCommandQueue();
+		}
+		
 		PostQuitMessage(0);
 		return 0;
 	}

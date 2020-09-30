@@ -10,6 +10,7 @@
 #include "SilentEngine/Public/EntityComponentSystem/SContainer/SContainer.h"
 #include "SilentEngine/Public/EntityComponentSystem/SMeshComponent/SMeshComponent.h"
 #include "SilentEngine/Public/EntityComponentSystem/SRuntimeMeshComponent/SRuntimeMeshComponent.h"
+#include "SilentEngine/Private/EntityComponentSystem/SLightComponent/SLightComponent.h" // remove this line
 #include "SilentEngine/Private/SError/SError.h"
 
 SComponent::SComponent()
@@ -115,7 +116,7 @@ bool SComponent::removeChildComponent(SComponent* pComponent)
 	}
 }
 
-void SComponent::setLocation(const SVector& location)
+void SComponent::setLocalLocation(const SVector& location)
 {
 	if (!pContainer)
 	{
@@ -145,7 +146,7 @@ void SComponent::setLocation(const SVector& location)
 	updateMyAndChildsLocationRotationScale();
 }
 
-void SComponent::setRotation(const SVector& rotation)
+void SComponent::setLocalRotation(const SVector& rotation)
 {
 	if (!pContainer)
 	{
@@ -153,33 +154,7 @@ void SComponent::setRotation(const SVector& rotation)
 		return;
 	}
 
-	if (rotation.getX() >= 360.0f)
-	{
-		vRotation.setX( 360.0f - rotation.getX() );
-	}
-	else
-	{
-		vRotation.setX( rotation.getX() );
-	}
-
-	if (rotation.getY() >= 360.0f)
-	{
-		vRotation.setY( 360.0f - rotation.getY() );
-	}
-	else
-	{
-		vRotation.setY( rotation.getY() );
-	}
-
-	if (rotation.getZ() >= 360.0f)
-	{
-		vRotation.setZ( 360.0f - rotation.getZ() );
-	}
-	else
-	{
-		vRotation.setZ( rotation.getZ() );
-	}
-
+	vRotation = rotation;
 
 	// Rotate Axis.
 
@@ -203,7 +178,7 @@ void SComponent::setRotation(const SVector& rotation)
 	updateMyAndChildsLocationRotationScale();
 }
 
-void SComponent::setScale(const SVector& scale)
+void SComponent::setLocalScale(const SVector& scale)
 {
 	if (!pContainer)
 	{
@@ -293,6 +268,31 @@ void SComponent::updateVertexBufferIndexForRuntimeMeshComponents(size_t iIfIndex
 	}
 }
 
+bool SComponent::doesAnyChildComponentsUsingThisMaterial(const std::string& sMaterialName)
+{
+	bool bUsing = false;
+
+	for (size_t i = 0; i < vChildComponents.size(); i++)
+	{
+		if (vChildComponents[i]->meshData.getMeshMaterial()->getMaterialName() == sMaterialName)
+		{
+			bUsing = true;
+			break;
+		}
+		else
+		{
+			bUsing = vChildComponents[i]->doesAnyChildComponentsUsingThisMaterial(sMaterialName);
+
+			if (bUsing)
+			{
+				break;
+			}
+		}
+	}
+
+    return bUsing;
+}
+
 DirectX::XMMATRIX XM_CALLCONV SComponent::getWorldMatrix()
 {
 	DirectX::XMMATRIX parentWorld = DirectX::XMMatrixIdentity();
@@ -341,6 +341,61 @@ size_t SComponent::getMeshComponentsCount() const
 	}
 
 	return iCount;
+}
+
+size_t SComponent::getLightComponentsCount() const
+{
+	size_t iCount = 0;
+
+	if (componentType == SCT_LIGHT)
+	{
+		iCount++;
+	}
+
+	for (size_t i = 0; i < vChildComponents.size(); i++)
+	{
+		iCount += vChildComponents[i]->getLightComponentsCount();
+	}
+
+	return iCount;
+}
+
+void SComponent::addLightComponentsToVector(std::vector<SLightComponent*>& vLights)
+{
+	if (componentType == SCT_LIGHT)
+	{
+		SLightComponent* pThisComponent = dynamic_cast<SLightComponent*>(this);
+		SVector vWorldPos = getLocationInWorld();
+
+		pThisComponent->lightProps.vPosition = { vWorldPos.getX(), vWorldPos.getY(), vWorldPos.getZ() };
+
+		vLights.push_back(pThisComponent);
+	}
+
+	for (size_t i = 0; i < vChildComponents.size(); i++)
+	{
+		vChildComponents[i]->addLightComponentsToVector(vLights);
+	}
+}
+
+void SComponent::removeLightComponentsFromVector(std::vector<class SLightComponent*>& vLights)
+{
+	if (componentType == SCT_LIGHT)
+	{
+		for (size_t i = 0; i < vLights.size(); i++)
+		{
+			if (vLights[i] == this)
+			{
+				vLights.erase(vLights.begin() + i);
+				break;
+			}
+		}
+	}
+
+	for (size_t i = 0; i < vChildComponents.size(); i++)
+	{
+		vChildComponents[i]->removeLightComponentsFromVector(vLights);
+	}
 }
 
 std::string SComponent::getComponentName() const
