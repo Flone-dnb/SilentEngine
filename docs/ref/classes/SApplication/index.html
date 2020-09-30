@@ -33,6 +33,8 @@
 				<br>
 				<code class="cpp_function"> void   <code class="cpp_func_name"><a class="cpp_link" href="initDisableD3DDebugLayer_func_1.html">initDisableD3DDebugLayer</a></code>(); </code>
 				<br>
+				<code class="cpp_function"> void   <code class="cpp_func_name"><a class="cpp_link" href="initCompileShadersInRelease_func_1.html">initCompileShadersInRelease</a></code>(); </code>
+				<br>
 				<code class="cpp_function"> bool   <code class="cpp_func_name"><a class="cpp_link" href="init_func_1.html">init</a></code>(); </code>
 				<br>
 				<code class="cpp_function"> int    <code class="cpp_func_name"><a class="cpp_link" href="run_func_1.html">run</a></code>(); </code>
@@ -48,6 +50,14 @@
 				<code class="cpp_function"> static bool  <code class="cpp_func_name"><a class="cpp_link" href="showWindow_func_1.html">showWindow</a></code>(); </code>
 				<br>
 				<code class="cpp_function"> static bool  <code class="cpp_func_name"><a class="cpp_link" href="close_func_1.html">close</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> bool   <code class="cpp_func_name"><a class="cpp_link" href="registerMaterial_func_1.html">registerMaterial</a></code>(SMaterial&amp; material); </code>
+				<br>
+				<code class="cpp_function"> SMaterial*  <code class="cpp_func_name"><a class="cpp_link" href="getRegisteredMaterial_func_1.html">getRegisteredMaterial</a></code>(const std::string&amp; sMaterialName); </code>
+				<br>
+				<code class="cpp_function"> std::vector&lt;SMaterial&gt;* <code class="cpp_func_name"><a class="cpp_link" href="getRegisteredMaterials_func_1.html">getRegisteredMaterials</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> bool   <code class="cpp_func_name"><a class="cpp_link" href="unregisterMaterial_func_1.html">unregisterMaterial</a></code>(const std::string&amp; sMaterialName); </code>
 				<br>
 				<code class="cpp_function"> <a class="cpp_link_ref" href="../SLevel/index.html">SLevel</a>*   <code class="cpp_func_name"><a class="cpp_link" href="getCurrentLevel_func_1.html">getCurrentLevel</a></code>() const; </code>
 				<br>
@@ -86,6 +96,8 @@
 				<code class="cpp_function"> <a class="cpp_link_ref" href="../SVideoSettings/index.html">SVideoSettings</a>*  <code class="cpp_func_name"><a class="cpp_link" href="getVideoSettings_func_1.html">getVideoSettings</a></code>() const; </code>
 				<br>
 				<code class="cpp_function"> <a class="cpp_link_ref" href="../SProfiler/index.html">SProfiler</a>*    <code class="cpp_func_name"><a class="cpp_link" href="getProfiler_func_1.html">getProfiler</a></code>() const; </code>
+				<br>
+				<code class="cpp_function"> void     <code class="cpp_func_name"><a class="cpp_link" href="showMessageBox_func_1.html">showMessageBox</a></code>(const std::wstring&amp; sMessageBoxTitle, const std::wstring&amp; sMessageText) const; </code>
 				<br>
 			</div>
 		</details>
@@ -163,6 +175,8 @@
 				<br>
 				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="resetCommandList_func_1.html">resetCommandList</a></code>(); </code>
 				<br>
+				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="createDefaultMaterial_func_1.html">createDefaultMaterial</a></code>(); </code>
+				<br>
 				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="executeCommandList_func_1.html">executeCommandList</a></code>(); </code>
 				<br>
 				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="onResize_func_1.html">onResize</a></code>(); </code>
@@ -173,7 +187,7 @@
 				<br>
 				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="updateObjectCBs_func_1.html">updateObjectCBs</a></code>(); </code>
 				<br>
-				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="updateComponentAndChilds_func_1.html">updateComponentAndChilds</a></code>(<a class="cpp_link_ref" href="../SComponent/index.html">SComponent</a>* pComponent, SUploadBuffer&lt;SObjectConstants&gt;* pCurrentCB); </code>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="updateComponentAndChilds_func_1.html">updateComponentAndChilds</a></code>(SComponent* pComponent, SUploadBuffer&lt;SObjectConstants&gt;* pCurrentObjectCB,  SUploadBuffer&lt;SMaterialConstants&gt;* pCurrentMaterialCB); </code>
 				<br>
 				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="updateMainPassCB_func_1.html">updateMainPassCB</a></code>(); </code>
 				<br>
@@ -181,7 +195,7 @@
 				<br>
 				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="drawVisibleRenderableContainers_func_1.html">drawVisibleRenderableContainers</a></code>(); </code>
 				<br>
-				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="drawComponentAndChilds_func_1.html">drawComponentAndChilds</a></code>(<a class="cpp_link_ref" href="../SComponent/index.html">SComponent</a>* pComponent); </code>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="drawComponentAndChilds_func_1.html">drawComponentAndChilds</a></code>(SComponent* pComponent); </code>
 				<br>
 				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="setFPSLimit_func_1.html">setFPSLimit</a></code>(float fFPSLimit); </code>
 				<br>
