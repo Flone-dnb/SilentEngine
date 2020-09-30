@@ -11,9 +11,14 @@
 // Custom
 #include "SilentEngine/Private/EntityComponentSystem/SLightComponent/SLightComponent.h"
 
+//@@Class
+/*
+The class represents a directional light source.
+*/
 class SDirectionalLightComponent : public SLightComponent
 {
 public:
+	//@@Function
 	SDirectionalLightComponent(std::string sComponentName);
 
 	SDirectionalLightComponent() = delete;

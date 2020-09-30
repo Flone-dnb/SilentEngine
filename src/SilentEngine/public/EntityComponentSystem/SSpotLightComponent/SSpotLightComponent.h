@@ -10,10 +10,14 @@
 // Custom
 #include "SilentEngine/Private/EntityComponentSystem/SLightComponent/SLightComponent.h"
 
+//@@Class
+/*
+The class represents a spot light source.
+*/
 class SSpotLightComponent : public SLightComponent
 {
 public:
-
+	//@@Function
 	SSpotLightComponent(std::string sComponentName);
 
 	SSpotLightComponent() = delete;

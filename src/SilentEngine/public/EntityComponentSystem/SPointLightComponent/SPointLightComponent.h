@@ -11,6 +11,10 @@
 // Custom
 #include "SilentEngine/Private/EntityComponentSystem/SLightComponent/SLightComponent.h"
 
+//@@Class
+/*
+The class represents a point light source.
+*/
 class SPointLightComponent : public SLightComponent
 {
 public:
