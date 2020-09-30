@@ -145,9 +145,9 @@ float SVector::angleBetweenVectorsInDeg(const SVector& b, bool bVectorsNormalize
 	return DirectX::XMConvertToDegrees(res.x);
 }
 
-void SVector::rotateAroundAxis(const SVector& axis, float fAngleInGrad)
+void SVector::rotateAroundAxis(const SVector& axis, float fAngleInDeg)
 {
-	DirectX::XMMATRIX rotate = DirectX::XMMatrixRotationAxis(DirectX::XMVectorSet(axis.getX(), axis.getY(), axis.getZ(), 0.0f), DirectX::XMConvertToRadians(fAngleInGrad));
+	DirectX::XMMATRIX rotate = DirectX::XMMatrixRotationAxis(DirectX::XMVectorSet(axis.getX(), axis.getY(), axis.getZ(), 0.0f), DirectX::XMConvertToRadians(fAngleInDeg));
 	DirectX::XMVECTOR result = DirectX::XMVector3Transform(DirectX::XMLoadFloat3(&vVector), rotate);
 
 	DirectX::XMStoreFloat3(&vVector, result);

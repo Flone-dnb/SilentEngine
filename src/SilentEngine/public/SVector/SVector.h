@@ -114,7 +114,7 @@ public:
 	/*
 	* desc: rotates the vector around the given axis.
 	*/
-	void  rotateAroundAxis          (const SVector& axis, float fAngleInGrad);
+	void  rotateAroundAxis          (const SVector& axis, float fAngleInDeg);
 
 	//@@Function
 	/*
