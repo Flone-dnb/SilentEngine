@@ -280,11 +280,19 @@ struct SMeshData
 		return vShaderVertices;
 	}
 
+	//@@Function
+	/*
+	* desc: sets the material that this mesh will use.
+	*/
 	void setMeshMaterial(const SMaterial& meshMaterial)
 	{
 		this->meshMaterial = meshMaterial;
 	}
 
+	//@@Function
+	/*
+	* desc: returns the material that this mesh is using (if the setMeshMaterial() was called before), otherwise nullptr (default engine material).
+	*/
 	SMaterial* getMeshMaterial()
 	{
 		if (meshMaterial.iMatCBIndex == 0)
@@ -341,6 +349,11 @@ public:
 	* desc: returns box mesh data.
 	*/
 	static SMeshData createBox                (float fWidth, float fHeight, float fDepth);
+	//@@Function
+	/*
+	* desc: returns plane mesh data.
+	*/
+	static SMeshData createPlane             (float fWidth, float fDepth, std::uint32_t iWidthVertexCount, std::uint32_t iDepthVertexCount);
 	//@@Function
 	/*
 	* desc: returns sphere mesh data.

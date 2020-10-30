@@ -81,6 +81,61 @@ SMeshData SPrimitiveShapeGenerator::createBox(float fWidth, float fHeight, float
 	return meshData;
 }
 
+SMeshData SPrimitiveShapeGenerator::createPlane(float fWidth, float fDepth, std::uint32_t iWidthVertexCount, std::uint32_t iDepthVertexCount)
+{
+	SMeshData meshData;
+
+	std::uint32_t iVertexCount = iWidthVertexCount * iDepthVertexCount;
+	
+	// Create the vertices.
+
+	float fHalfWidth = 0.5f * fWidth;
+	float fHalfDepth = 0.5f * fDepth;
+
+	float fXPolygonStep = fWidth / (iWidthVertexCount - 1);
+	float fYPolygonStep = fDepth / (iDepthVertexCount - 1);
+
+	float fDeltaUStep = 1.0f / (iWidthVertexCount - 1);
+	float fDeltaVStep = 1.0f / (iDepthVertexCount - 1);
+
+	for (std::uint32_t i = 0; i < iDepthVertexCount; i++)
+	{
+		float fY = fHalfDepth - i * fYPolygonStep;
+
+		for (std::uint32_t j = 0; j < iWidthVertexCount; j++)
+		{
+			float fX = -fHalfWidth + j * fXPolygonStep;
+
+			SMeshVertex vertex;
+			vertex.vPosition = DirectX::XMFLOAT3(fX, fY, 0.0f);
+			vertex.vNormal   = DirectX::XMFLOAT3(0.0f, 0.0f, 1.0f);
+			vertex.vTangent  = DirectX::XMFLOAT3(1.0f, 0.0f, 0.0f);
+			vertex.vUV       = DirectX::XMFLOAT2(j * fDeltaUStep, i * fDeltaVStep);
+
+			meshData.addVertex(vertex);
+		}
+	}
+
+
+	// Create the indices.
+
+	for (std::uint32_t i = 0; i < iDepthVertexCount - 1; i++)
+	{
+		for (std::uint32_t j = 0; j < iWidthVertexCount - 1; j++)
+		{
+			meshData.addIndex(i * iWidthVertexCount + j);
+			meshData.addIndex((i + 1) * iWidthVertexCount + j);
+			meshData.addIndex(i * iWidthVertexCount + j + 1);
+
+			meshData.addIndex((i + 1) * iWidthVertexCount + j);
+			meshData.addIndex((i + 1) * iWidthVertexCount + j + 1);
+			meshData.addIndex(i * iWidthVertexCount + j + 1);
+		}
+	}
+
+	return meshData;
+}
+
 SMeshData SPrimitiveShapeGenerator::createSphere(float fRadius, std::uint32_t iSliceCount, std::uint32_t iStackCount)
 {
 	SMeshData meshData;
