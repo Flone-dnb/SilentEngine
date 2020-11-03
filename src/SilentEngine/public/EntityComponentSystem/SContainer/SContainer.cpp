@@ -301,32 +301,6 @@ bool SContainer::isEditorObject() const
 	return bIsEditorObject;
 }
 
-
-bool SContainer::doesAnyChildComponentsUsingThisMaterial(const std::string& sMaterialName)
-{
-	bool bUsing = false;
-
-	for (size_t i = 0; i < vComponents.size(); i++)
-	{
-		if (vComponents[i]->meshData.getMeshMaterial()->getMaterialName() == sMaterialName)
-		{
-			bUsing = true;
-			break;
-		}
-		else
-		{
-			bUsing = vComponents[i]->doesAnyChildComponentsUsingThisMaterial(sMaterialName);
-
-			if (bUsing)
-			{
-				break;
-			}
-		}
-	}
-
-    return bUsing;
-}
-
 void SContainer::setSpawnedInLevel(bool bSpawned)
 {
 	bSpawnedInLevel = bSpawned;

@@ -23,6 +23,11 @@ public:
 	SVector();
 	//@@Function
 	/*
+	* desc: the constructor which initializes the vector with the 2 given values U and V, all other components are initialized as 1.0f.
+	*/
+	SVector(float fU, float fV);
+	//@@Function
+	/*
 	* desc: the constructor which initializes the vector with the given values, 4th component of the vector is initialized as zero.
 	*/
 	SVector(float fX, float fY, float fZ);

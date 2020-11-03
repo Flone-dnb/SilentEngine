@@ -162,14 +162,16 @@ public:
 
 		//@@Function
 		/*
-		* desc: registers the given material in the application so it can be used in the component, such as SMeshComponent.
-		* return: false if successful, true otherwise.
+		* desc: registers a new material in the application so it can be used in the component, such as SMeshComponent.
+		* param "sMaterialName": unique name if the new material.
+		* param "bErrorOccurred": will be true if an error occurred and the returned pointer is nullptr.
+		* return: valid pointer if successful, nullptr otherwise.
 		* remarks: any material should be registered first and only then used.
 		You can reuse already registered materials on any number of components you want.
 		It's recommended to use this function in loading moments of your application (ex. loading screen)
 		as this function may drop the framerate a little.
 		*/
-		bool            registerMaterial					   (SMaterial& material);
+		SMaterial*       registerMaterial				       (const std::string& sMaterialName, bool& bErrorOccurred);
 		//@@Function
 		/*
 		* desc: returns a registered material.
@@ -181,16 +183,62 @@ public:
 		* desc: returns all registered materials.
 		* return: valid pointer if successful, nullptr otherwise.
 		*/
-		std::vector<SMaterial>* getRegisteredMaterials         ();
+		std::vector<SMaterial*>* getRegisteredMaterials         ();
 		//@@Function
 		/*
 		* desc: unregisters a material with the given name, make sure that no object is using this material.
 		* return: false if successful, true otherwise.
-		* remarks: you cannot unregister the Default Engine Material.
+		* remarks: make sure that this material is not used in any component !!! (by using SComponent::unbindMaterial()).
+		This function will not unload the textures that this material is using.
+		You cannot unregister the Default Engine Material.
+		It's recommended to use this function in loading moments of your application (ex. loading screen)
+		as this function may drop the framerate a little.
+		All registered material will be unregistered in the SApplication's destructor function.
+		*/
+		bool            unregisterMaterial                     (const std::string& sMaterialName);
+
+
+	// Textures
+
+		//@@Function
+		/*
+		* desc: loads the given texture from the disk to the GPU memory so it can be used in the materials.
+		* param "sTextureName": unique name of the texture, cannot be empty.
+		* param "sPathToTexture": path to the texture file (only .dds texture format).
+		* param "bErrorOccurred": will be true if an error occurred and the returned handle is invalid, false otherwise.
+		* remarks: note that you will need to unload the loaded textures, it's not gonna happen automatically,
+		but all loaded textures will be unloaded in the SApplication's destructor function.
+		You can reuse already loaded textures on any number of materials you want.
+		This struct (STextureHandle) is just a handle to the actual texture so you can make copies of it.
 		It's recommended to use this function in loading moments of your application (ex. loading screen)
 		as this function may drop the framerate a little.
 		*/
-		bool            unregisterMaterial                     (const std::string& sMaterialName);
+		STextureHandle  loadTextureFromDiskToGPU               (std::string sTextureName, std::wstring sPathToTextureFile, bool& bErrorOccurred);
+		//@@Function
+		/*
+		* desc: returns a loaded texture.
+		* param "sTextureName": the name of the loaded texture.
+		* param "bNotFound": will be true if there is no loaded texture with this name.
+		* return: valid handle if successful.
+		*/
+		STextureHandle  getLoadedTexture                       (const std::string& sTextureName, bool& bNotFound);
+		//@@Function
+		/*
+		* desc: returns all loaded in the GPU memory textures.
+		*/
+		std::vector<STextureHandle> getLoadedTextures          ();
+		//@@Function
+		/*
+		* desc: unloads the given texture from the GPU memory.
+		* return: false if successful, true otherwise.
+		* remarks: if any spawned object uses this texture then the crash will appear,
+		first, make sure that no spawned object is using the material with this texture:
+		by using SMaterial::unbindTexture() or SComponent::unbindMaterial().
+		If you want to clear all textures and material, the right way is to
+		unbindMaterial() on all components, then use unloadTexture() and then
+		unregisterMaterial().
+		*/
+		bool            unloadTextureFromGPU                   (STextureHandle& textureHandle);
 
 
 	// Level
@@ -529,15 +577,15 @@ private:
 		bool createRTVAndDSVDescriptorHeaps  ();
 		//@@Function
 		/*
-		* desc: creates CBV descriptor heap.
+		* desc: creates CBV/SRV/UAV descriptor heap.
 		* return: false if successful, true otherwise.
 		*/
-		bool createCBVHeap                   ();
+		bool createCBVSRVHeap                ();
 		//@@Function
 		/*
-		* desc: creates CBVs.
+		* desc: creates CBVs/SRVs/UAVs.
 		*/
-		void createConstantBufferViews       ();
+		void createViews                     ();
 		//@@Function
 		/*
 		* desc: creates frame resources.
@@ -897,7 +945,7 @@ private:
 		* desc: used to set the camera's near clip plane.
 		* param "fNearClipPlaneValue": near clip plane value.
 		* return: false if successful, true otherwise.
-		* remarks: should be called after calling the SApplication::init().
+		* remarks: should be called after calling the SApplication::init(). Change with caution, may cause z-fighting.
 		*/
 		bool setNearClipPlane                     (float fNearClipPlaneValue);
 		//@@Function
@@ -905,7 +953,7 @@ private:
 		* desc: used to set the camera's far clip plane.
 		* param "fFarClipPlaneValue": far clip plane value.
 		* return: false if successful, true otherwise.
-		* remarks: should be called after calling the SApplication::init().
+		* remarks: should be called after calling the SApplication::init(). Change with caution, may cause z-fighting.
 		*/
 		bool setFarClipPlane                      (float fFarClipPlaneValue);
 
@@ -966,6 +1014,8 @@ private:
 		*/
 		size_t roundUp                        (size_t iNum, size_t iMultiple);
 
+		std::array<const CD3DX12_STATIC_SAMPLER_DESC, 3> getStaticSamples();
+
 
 	// Buffers and views.
 
@@ -988,12 +1038,17 @@ private:
 		D3D12_CPU_DESCRIPTOR_HANDLE getDepthStencilViewHandle      () const;
 
 
+		void showDeviceRemovedReason();
+
+
 
 	// -----------------------------------------------------------------
 
 	friend class SMeshComponent;
 	friend class SRuntimeMeshComponent;
+	friend class SMaterial;
 	friend class SLevel;
+	friend class SError;
 
 
 	static SApplication* pApp;
@@ -1032,7 +1087,7 @@ private:
 	// Descriptor heaps and descriptor sizes
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> pRTVHeap;
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> pDSVHeap;
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> pCBVHeap;
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> pCBVSRVHeap;
 	UINT iRTVDescriptorSize                 = 0;
 	UINT iDSVDescriptorSize                 = 0;
 	UINT iCBVSRVUAVDescriptorSize           = 0;
@@ -1055,9 +1110,11 @@ private:
 	size_t iActualObjectCBCount = 0;
 
 
-	// Materials.
-	std::vector<SMaterial> vRegisteredMaterials;
+	// Materials / Textures.
+	std::vector<SMaterial*> vRegisteredMaterials;
 	std::string sDefaultEngineMaterialName = "Default Engine Material";
+	std::vector<STextureInternal*> vLoadedTextures;
+	TEX_FILTER_MODE textureFilterIndex = TFM_ANISOTROPIC;
 	
 
 	// Camera.
@@ -1107,8 +1164,8 @@ private:
 	// Viewport
 	D3D12_VIEWPORT ScreenViewport; 
 	D3D12_RECT     ScissorRect;
-	float          fNearClipPlaneValue      = 1.0f;
-	float          fFarClipPlaneValue       = 1000.0f;
+	float          fNearClipPlaneValue      = 0.4f; // change with caution, may cause z-fighting
+	float          fFarClipPlaneValue       = 1000.0f; // change with caution, may cause z-fighting
 	float          fTheta                   = 1.5f * DirectX::XM_PI;
 	float          fPhi                     = DirectX::XM_PIDIV4;
 	float          fRadius                  = 6.0f;
@@ -1149,6 +1206,8 @@ private:
 	
 	std::mutex     mtxSpawnDespawn;
 	std::mutex     mtxMaterial;
+	std::mutex     mtxUpdateMat;
+	std::mutex     mtxTexture;
 	std::mutex     mtxDraw;
 
 

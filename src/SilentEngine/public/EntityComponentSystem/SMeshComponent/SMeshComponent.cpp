@@ -39,7 +39,11 @@ void SMeshComponent::setVisibility(bool bVisible)
 
 void SMeshComponent::setMeshData(const SMeshData& meshData, bool bAddedVerticesOrUpdatedIndicesCount, bool bUpdateBoundingBox)
 {
+	SMaterial* pOldMat = this->meshData.pMeshMaterial;
 	this->meshData = meshData;
+	this->meshData.pMeshMaterial = pOldMat;
+
+	mtxComponentProps.lock();
 
 	if (bAddedVerticesOrUpdatedIndicesCount)
 	{
@@ -64,13 +68,24 @@ void SMeshComponent::setMeshData(const SMeshData& meshData, bool bAddedVerticesO
 	{
 		createGeometryBuffers(bAddedVerticesOrUpdatedIndicesCount);
 	}
+
+	mtxComponentProps.unlock();
 }
 
-bool SMeshComponent::setMeshMaterial(const SMaterial& meshMaterial)
+void SMeshComponent::unbindMaterial()
 {
-	if (meshMaterial.bRegistered)
+	mtxComponentProps.lock();
+
+	meshData.setMeshMaterial(nullptr);
+
+	mtxComponentProps.unlock();
+}
+
+bool SMeshComponent::setMeshMaterial(SMaterial* pMaterial)
+{
+	if (pMaterial->bRegistered)
 	{
-		meshData.setMeshMaterial(meshMaterial);
+		meshData.setMeshMaterial(pMaterial);
 
 		return false;
 	}
@@ -86,6 +101,50 @@ bool SMeshComponent::setMeshMaterial(const SMaterial& meshMaterial)
 SMaterial* SMeshComponent::getMeshMaterial()
 {
 	return meshData.getMeshMaterial();
+}
+
+bool SMeshComponent::setMeshTextureUVOffset(const SVector& vMeshTexUVOffset)
+{
+	mtxComponentProps.lock();
+
+	bool bResult = renderData.setTextureUVOffset(vMeshTexUVOffset);
+
+	mtxComponentProps.unlock();
+
+	return bResult;
+}
+
+void SMeshComponent::setTextureUVScale(const SVector& vTextureUVScale)
+{
+	mtxComponentProps.lock();
+
+	renderData.setTextureUVScale(vTextureUVScale);
+
+	mtxComponentProps.unlock();
+}
+
+void SMeshComponent::setTextureUVRotation(float fRotation)
+{
+	mtxComponentProps.lock();
+
+	renderData.setTextureUVRotation(fRotation);
+
+	mtxComponentProps.unlock();
+}
+
+SVector SMeshComponent::getTextureUVOffset() const
+{
+	return renderData.getTextureUVOffset();
+}
+
+SVector SMeshComponent::getTextureUVScale() const
+{
+	return renderData.getTextureUVScale();
+}
+
+float SMeshComponent::getTextureUVRotation() const
+{
+	return renderData.getTextureUVRotation();
 }
 
 SMeshData SMeshComponent::getMeshData() const
@@ -192,6 +251,10 @@ void SMeshComponent::updateMyAndChildsLocationRotationScale()
 
 void SMeshComponent::updateWorldMatrix()
 {
+	mtxComponentProps.lock();
+
 	XMStoreFloat4x4(&renderData.vWorld, getWorldMatrix());
+
+	mtxComponentProps.unlock();
 }
 

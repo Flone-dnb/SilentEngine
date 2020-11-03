@@ -45,9 +45,9 @@ public:
 	* desc: used to set the 3D-geometry that will be drawn ones the container containing this component is spawned and visible.
 	* param "meshData": 3D-geometry data.
 	* param "bAddedVerticesOrUpdatedIndicesCount": this should be set to false if the new mesh data
-	contains the SAME AMOUNT of indices and vertices as the previous one. So if the new mesh data contains the same amount of
-	vertices but they have different positions in space then of course this value should be false. So if you have a SMeshComponent
-	with a box 3D-data and you want to only change the color or the size of this box then this value should be false.
+	contains the SAME AMOUNT of indices and vertices as the previous one. If the new mesh data contains the same amount of
+	vertices but they have different positions in space then of course this value should be false. So if you have a
+	SMeshComponent with a plane terrain and you want to only change the positions of the vertices then this value should be false.
 	This is just an optimization not to create a new index buffer on every setMeshData() call. You can just set this value to true every time, but it's
 	recommended to consider this optimization.
 	* param "bUpdateBoundingBox": TODO.
@@ -57,10 +57,17 @@ public:
 
 	//@@Function
 	/*
+	* desc: unbinds the material from the component so that this component will use default engine material.
+	* remarks: note that this function will not unregister the material, you should do it by yourself.
+	*/
+	void unbindMaterial        ();
+
+	//@@Function
+	/*
 	* desc: used to set the material of the mesh.
 	* return: false if successful, true if the material is not registered using SApplication::registerMaterial() function.
 	*/
-	bool setMeshMaterial       (const SMaterial& meshMaterial);
+	bool setMeshMaterial       (SMaterial* pMaterial);
 
 	//@@Function
 	/*
@@ -68,6 +75,47 @@ public:
 	* return: valid pointer if the material was assigned before, nullptr otherwise.
 	*/
 	SMaterial* getMeshMaterial ();
+
+	//@@Function
+	/*
+	* desc: used to set the UV offset to the mesh texture. Only affects how the textures will look for THIS mesh.
+	This setting will affect material UV settings only for this mesh.
+	* return: true if the UVs are not in [0, 1] range, false otherwise.
+	* remarks: should be in [0, 1] range.
+	*/
+	bool      setMeshTextureUVOffset(const SVector& vMeshTexUVOffset);
+
+	//@@Function
+	/*
+	* desc: used to set the UV scale to the mesh texture. Only affects how the textures will look for THIS mesh.
+	This setting will affect material UV settings only for this mesh.
+	*/
+	void      setTextureUVScale(const SVector& vTextureUVScale);
+
+	//@@Function
+	/*
+	* desc: used to set the UV rotation to the mesh texture. Only affects how the textures will look for THIS mesh.
+	This setting will affect material UV settings only for this mesh.
+	*/
+	void      setTextureUVRotation(float fRotation);
+
+	//@@Function
+	/*
+	* desc: returns the UV offset of the mesh texture.
+	*/
+	SVector  getTextureUVOffset() const;
+
+	//@@Function
+	/*
+	* desc: returns the UV scale of the mesh texture.
+	*/
+	SVector   getTextureUVScale() const;
+
+	//@@Function
+	/*
+	* desc: returns the UV rotation of the mesh texture.
+	*/
+	float     getTextureUVRotation() const;
 
 	//@@Function
 	/*

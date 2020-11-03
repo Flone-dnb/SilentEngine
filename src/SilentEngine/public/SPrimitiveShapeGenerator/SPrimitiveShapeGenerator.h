@@ -26,12 +26,9 @@ The struct represents the vertex structure used by the shaders.
 */
 struct SVertex
 {
-	//@@Variable
-	/* position of the vertex */
 	DirectX::XMFLOAT3 vPos;
-	//@@Variable
-	/* normal of the vertex */
 	DirectX::XMFLOAT3 vNormal;
+	DirectX::XMFLOAT2 vUV;
 };
 
 //@@Struct
@@ -273,36 +270,12 @@ struct SMeshData
 			SVertex vertex;
 			vertex.vPos = vVertices[i].vPosition;
 			vertex.vNormal = vVertices[i].vNormal;
+			vertex.vUV = vVertices[i].vUV;
 
 			vShaderVertices.push_back(vertex);
 		}
 
 		return vShaderVertices;
-	}
-
-	//@@Function
-	/*
-	* desc: sets the material that this mesh will use.
-	*/
-	void setMeshMaterial(const SMaterial& meshMaterial)
-	{
-		this->meshMaterial = meshMaterial;
-	}
-
-	//@@Function
-	/*
-	* desc: returns the material that this mesh is using (if the setMeshMaterial() was called before), otherwise nullptr (default engine material).
-	*/
-	SMaterial* getMeshMaterial()
-	{
-		if (meshMaterial.iMatCBIndex == 0)
-		{
-			return nullptr;
-		}
-		else
-		{
-			return &meshMaterial;
-		}
 	}
 
 	//@@Function
@@ -316,9 +289,41 @@ struct SMeshData
 
 private:
 
-	friend class SApplication;
+	//@@Function
+	/*
+	* desc: sets the material that this mesh will use. Used by mesh components.
+	*/
+	void setMeshMaterial(SMaterial* pMeshMaterial)
+	{
+		this->pMeshMaterial = pMeshMaterial;
+	}
 
-	SMaterial meshMaterial;
+	//@@Function
+	/*
+	* desc: returns the material that this mesh is using (if the setMeshMaterial() was called before), otherwise nullptr (default engine material).
+	* Used by mesh components.
+	*/
+	SMaterial* getMeshMaterial()
+	{
+		if (pMeshMaterial)
+		{
+			return pMeshMaterial;
+		}
+		else
+		{
+			return nullptr;
+		}
+	}
+
+
+	friend class SApplication;
+	friend class SMeshComponent;
+	friend class SRuntimeMeshComponent;
+	friend class SContainer;
+	friend class SComponent;
+
+	// nullptr or registered original material
+	SMaterial* pMeshMaterial = nullptr;
 
 	//@@Variable
 	/* the vector that contains all vertices of the mesh data. */

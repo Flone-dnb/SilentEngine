@@ -15,11 +15,11 @@
 
 struct SLightProps
 {
-	DirectX::XMFLOAT3 vLightColor;
+	DirectX::XMFLOAT3 vLightColor = { 1.0f, 1.0f, 1.0f };
 	float fFalloffStart = 1.0f; // point/spot light only
-	DirectX::XMFLOAT3 vDirection; // directional/spot light only
+	DirectX::XMFLOAT3 vDirection = { 0.0f, 0.0f, -1.0f }; // directional/spot light only
 	float fFalloffEnd = 30.0f; // point/spot light only
-	DirectX::XMFLOAT3 vPosition; // point/spot light only
+	DirectX::XMFLOAT3 vPosition = { 0.0f, 0.0f, 0.0f }; // point/spot light only
 	float fSpotLightRange = 128.0f; // spot light only
 };
 

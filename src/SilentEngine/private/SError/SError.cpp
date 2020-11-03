@@ -11,6 +11,8 @@
 #include <windows.h>
 #include <winnt.h>
 
+#include "SilentEngine/Public/SApplication/SApplication.h"
+
 void SError::showErrorMessageBox(HRESULT hresult, std::wstring sPathToFailedFunction)
 {
 	LPTSTR errorText = NULL;
@@ -37,6 +39,12 @@ void SError::showErrorMessageBox(HRESULT hresult, std::wstring sPathToFailedFunc
 		std::wstring sErrorString = L"An unknown error occurred at " + sPathToFailedFunction;
 
 		MessageBox(0, sErrorString.c_str(), L"Error", 0);
+	}
+
+	if (hresult == 0x887a0005)
+	{
+		// ?
+		SApplication::getApp()->showDeviceRemovedReason();
 	}
 
 	HRESULT error = hresult;

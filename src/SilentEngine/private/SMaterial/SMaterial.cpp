@@ -9,25 +9,26 @@
 
 // Custom
 #include "SilentEngine/Private/SGeometry/SGeometry.h"
+#include "SilentEngine/Public/SApplication/SApplication.h"
 #include "SilentEngine/Private/SMath/SMath.h"
 
 SMaterial::SMaterial()
 {
 	sMaterialName = "";
 
-	pRegisteredOriginal = nullptr;
-
 	bRegistered = false;
 	bLastFrameResourceIndexValid = false;
 
 	iMatCBIndex = 0;
-	iDiffuseSRVHeapIndex = -1;
-	iNormalSRVHeapIndex = -1;
 
 	iUpdateCBInFrameResourceCount = SFRAME_RES_COUNT;
 	iFrameResourceIndexLastUpdated = 0;
 
-	mMatTransform = SMath::getIdentityMatrix4x4();
+	vMatTransform = SMath::getIdentityMatrix4x4();
+
+	vMatUVOffset = SVector(1.0f, 1.0f, 1.0f);
+	vMatUVScale  = SVector(1.0f, 1.0f, 1.0f);
+	fMatRotation = 0.0f;
 }
 
 SMaterial::SMaterial(std::string sMaterialName) : SMaterial()
@@ -35,19 +36,127 @@ SMaterial::SMaterial(std::string sMaterialName) : SMaterial()
 	this->sMaterialName = sMaterialName;
 }
 
-void SMaterial::setMaterialName(const std::string& sName)
+SMaterial::SMaterial(const SMaterial& mat) : SMaterial()
 {
-	sMaterialName = sName;
+	matProps = mat.matProps;
+
+	vMatUVOffset = mat.vMatUVOffset;
+	fMatRotation = mat.fMatRotation;
+	vMatUVScale = mat.vMatUVScale;
+
+	vMatTransform = mat.vMatTransform;
+}
+
+SMaterial& SMaterial::operator=(const SMaterial& mat)
+{
+	matProps = mat.matProps;
+
+	vMatUVOffset = mat.vMatUVOffset;
+	fMatRotation = mat.fMatRotation;
+	vMatUVScale = mat.vMatUVScale;
+
+	vMatTransform = mat.vMatTransform;
+
+	return *this;
 }
 
 void SMaterial::setMaterialProperties(const SMaterialProperties & matProps)
 {
-	this->matProps = matProps;
-
 	if (bRegistered)
 	{
-		pRegisteredOriginal->matProps = matProps;
-		pRegisteredOriginal->iUpdateCBInFrameResourceCount = SFRAME_RES_COUNT;
+		SApplication::getApp()->mtxUpdateMat.lock();
+
+		this->matProps = matProps;
+
+		iUpdateCBInFrameResourceCount = SFRAME_RES_COUNT;
+
+		SApplication::getApp()->mtxUpdateMat.unlock();
+	}
+}
+
+bool SMaterial::setMaterialUVOffset(const SVector& vMaterialUVOffset)
+{
+	if (bRegistered)
+	{
+		if (vMaterialUVOffset.getX() < 0.0f || vMaterialUVOffset.getX() > 1.0f)
+		{
+			return true;
+		}
+
+		if (vMaterialUVOffset.getY() < 0.0f || vMaterialUVOffset.getY() > 1.0f)
+		{
+			return true;
+		}
+
+		vMatUVOffset = vMaterialUVOffset;
+
+		updateMatTransform();
+
+		iUpdateCBInFrameResourceCount = SFRAME_RES_COUNT;
+
+		return false;
+	}
+
+	return true;
+}
+
+void SMaterial::setMaterialUVScale(const SVector& vMaterialUVScale)
+{
+	if (bRegistered)
+	{
+		vMatUVScale = vMaterialUVScale;
+
+		updateMatTransform();
+
+		iUpdateCBInFrameResourceCount = SFRAME_RES_COUNT;
+	}
+}
+
+void SMaterial::setMaterialUVRotation(float fRotation)
+{
+	if (bRegistered)
+	{
+		fMatRotation = fRotation;
+
+		updateMatTransform();
+
+		iUpdateCBInFrameResourceCount = SFRAME_RES_COUNT;
+	}
+}
+
+SVector SMaterial::getMaterialUVOffset() const
+{
+	if (bRegistered)
+	{
+		return vMatUVOffset;
+	}
+	else
+	{
+		return SVector();
+	}
+}
+
+SVector SMaterial::getMaterialUVScale() const
+{
+	if (bRegistered)
+	{
+		return vMatUVScale;
+	}
+	else
+	{
+		return SVector();
+	}
+}
+
+float SMaterial::getMaterialUVRotation() const
+{
+	if (bRegistered)
+	{
+		return fMatRotation;
+	}
+	else
+	{
+		return 0.0f;
 	}
 }
 
@@ -58,12 +167,52 @@ std::string SMaterial::getMaterialName() const
 
 SMaterialProperties SMaterial::getMaterialProperties() const
 {
-	return matProps;
+	if (bRegistered)
+	{
+		// [Crashed here?]
+		// You might have called unregisterMaterial() on a material
+		// that is in use by some spawned component.
+		return matProps;
+	}
+	else
+	{
+		return SMaterialProperties();
+	}
+}
+
+void SMaterial::updateMatTransform()
+{
+	SApplication::getApp()->mtxUpdateMat.lock();
+
+	DirectX::XMMATRIX transform = DirectX::XMMatrixIdentity() *
+		DirectX::XMMatrixTranslation(-0.5f, -0.5f, 0.0f) * // move center to the origin point
+		DirectX::XMMatrixScaling(vMatUVScale.getX(), vMatUVScale.getY(), vMatUVScale.getZ()) *
+		DirectX::XMMatrixRotationZ(DirectX::XMConvertToRadians(fMatRotation)) *
+		DirectX::XMMatrixTranslation(vMatUVOffset.getX(), vMatUVOffset.getY(), vMatUVOffset.getZ()) *
+		DirectX::XMMatrixTranslation(0.5f, 0.5f, 0.0f); // move center back.
+
+	DirectX::XMStoreFloat4x4(&vMatTransform, transform);
+
+	SApplication::getApp()->mtxUpdateMat.unlock();
 }
 
 void SMaterialProperties::setRoughness(float fRoughness)
 {
 	this->fRoughness = fRoughness;
+}
+
+bool SMaterialProperties::getDiffuseTexture(STextureHandle* pTextureHandle)
+{
+	if (diffuseTexture.getTextureName() == "")
+	{
+		return true;
+	}
+	else
+	{
+		*pTextureHandle = diffuseTexture;
+
+		return false;
+	}
 }
 
 float SMaterialProperties::getRoughness() const
@@ -105,4 +254,63 @@ void SMaterialProperties::setSpecularColor(const SVector & vRGB)
 	vSpecularColor.x = vRGB.getX();
 	vSpecularColor.y = vRGB.getY();
 	vSpecularColor.z = vRGB.getZ();
+}
+
+bool SMaterialProperties::setDiffuseTexture(STextureHandle textureHandle)
+{
+	if (textureHandle.bRegistered)
+	{
+		diffuseTexture = textureHandle;
+
+		bHasDiffuseTexture = true;
+
+		return false;
+	}
+	else
+	{
+		return true;
+	}
+}
+
+void SMaterialProperties::unbindTexture(STextureHandle textureHandle)
+{
+	if (diffuseTexture.getTextureName() == textureHandle.getTextureName())
+	{
+		diffuseTexture = STextureHandle();
+
+		bHasDiffuseTexture = false;
+
+		return;
+	}
+
+	if (normalTexture.getTextureName() == textureHandle.getTextureName())
+	{
+		normalTexture = STextureHandle();
+
+		bHasDiffuseTexture = false;
+
+		return;
+	}
+}
+
+std::string STextureHandle::getTextureName() const
+{
+	return sTextureName;
+}
+
+std::wstring STextureHandle::getPathToTextureFile() const
+{
+	return sPathToTexture;
+}
+
+unsigned long long STextureHandle::getTextureSizeInBytesOnGPU() const
+{
+	if (pRefToTexture)
+	{
+		return pRefToTexture->iResourceSizeInBytesOnGPU;
+	}
+	else
+	{
+		return 0;
+	}
 }

@@ -11,6 +11,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <mutex>
 
 // Custom
 #include "SilentEngine/Public/SVector/SVector.h"
@@ -221,12 +222,6 @@ protected:
 
 	//@@Function
 	/*
-	* desc: true if any of the child components are using a material with the given name.
-	*/
-	bool doesAnyChildComponentsUsingThisMaterial(const std::string& sMaterialName);
-
-	//@@Function
-	/*
 	* desc: returns the world matrix (that includes parents).
 	*/
 	DirectX::XMMATRIX XM_CALLCONV getWorldMatrix();
@@ -254,6 +249,9 @@ protected:
 	SVector     vLocalZAxisVector;
 
 	SComponentType componentType;
+
+
+	std::mutex  mtxComponentProps;
 
 
 	SRenderItem renderData; // will be null for components that doesn't have mesh data

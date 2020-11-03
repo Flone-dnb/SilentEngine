@@ -13,6 +13,14 @@ SVector::SVector()
 	fW  = 0.0f;
 }
 
+SVector::SVector(float fU, float fV)
+{
+	vVector.x = fU;
+	vVector.y = fV;
+	vVector.z = 1.0f;
+	fW = 0.0f;
+}
+
 SVector::SVector(float fX, float fY, float fZ)
 {
 	vVector.x = fX;

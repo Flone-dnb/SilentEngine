@@ -64,6 +64,16 @@ float SVideoSettings::getScreenAspectRatio()
 	return pApp->getScreenAspectRatio();
 }
 
+void SVideoSettings::setTextureFilterMode(TEX_FILTER_MODE textureFilterMode)
+{
+	pApp->textureFilterIndex = textureFilterMode;
+}
+
+TEX_FILTER_MODE SVideoSettings::getTextureFilterMode()
+{
+	return pApp->textureFilterIndex;
+}
+
 void SVideoSettings::setBackBufferFillColor(SVector vColor)
 {
 	pApp->setBackBufferFillColor(vColor);
@@ -102,6 +112,11 @@ std::vector<std::wstring> SVideoSettings::getSupportedDisplayAdapters()
 std::wstring SVideoSettings::getCurrentDisplayAdapter()
 {
 	return pApp->getCurrentDisplayAdapter();
+}
+
+bool SVideoSettings::getVideoMemoryUsageInBytesOfCurrentDisplayAdapter(UINT64* pSizeInBytes) const
+{
+	return pApp->getVideoMemoryUsageInBytesOfCurrentDisplayAdapter(pSizeInBytes);
 }
 
 bool SVideoSettings::getVideoMemorySizeInBytesOfCurrentDisplayAdapter(unsigned long long* pSizeInBytes)

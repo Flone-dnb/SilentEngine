@@ -29,6 +29,7 @@
 struct SObjectConstants
 {
 	DirectX::XMFLOAT4X4 vWorld = SMath::getIdentityMatrix4x4();
+	DirectX::XMFLOAT4X4 vTexTransform = SMath::getIdentityMatrix4x4();
 };
 
 struct SMaterialConstants
@@ -40,7 +41,17 @@ struct SMaterialConstants
 
 	float fRoughness = 0.5f;
 
-	DirectX::XMFLOAT4X4 mMatTransform = SMath::getIdentityMatrix4x4();
+	DirectX::XMFLOAT4X4 vMatTransform = SMath::getIdentityMatrix4x4();
+
+	int bHasDiffuseTexture = 0;
+	int bHasNormalTexture = 0;
+};
+
+enum TEX_FILTER_MODE
+{
+	TFM_POINT = 0,
+	TFM_LINEAR = 1,
+	TFM_ANISOTROPIC = 2
 };
 
 struct SRenderPassConstants
@@ -70,7 +81,7 @@ struct SRenderPassConstants
 	int iPointLightCount = 0;
 	int iSpotLightCount = 0;
 
-	float pad2;
+	int iTextureFilterIndex = TFM_ANISOTROPIC;
 
 	SLightProps lights[MAX_LIGHTS];
 };

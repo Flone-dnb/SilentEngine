@@ -112,6 +112,9 @@
     <Filter Include="SilentEngine\Public\EntityComponentSystem\SDirectionalLightComponent">
       <UniqueIdentifier>{b8302868-83f4-4041-ad57-7baf3902e0e9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="SilentEngine\Private\DDSTextureLoader">
+      <UniqueIdentifier>{057dd242-b632-4fd9-affd-5686e42ba953}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\SilentEngine\public\SApplication\SApplication.cpp">
@@ -188,6 +191,9 @@
     </ClCompile>
     <ClCompile Include="..\src\SilentEngine\Public\EntityComponentSystem\SDirectionalLightComponent\SDirectionalLightComponent.cpp">
       <Filter>SilentEngine\Public\EntityComponentSystem\SDirectionalLightComponent</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SilentEngine\Private\DDSTextureLoader.cpp">
+      <Filter>SilentEngine\Private\DDSTextureLoader</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -271,6 +277,9 @@
     </ClInclude>
     <ClInclude Include="..\src\SilentEngine\Public\EntityComponentSystem\SDirectionalLightComponent\SDirectionalLightComponent.h">
       <Filter>SilentEngine\Public\EntityComponentSystem\SDirectionalLightComponent</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SilentEngine\Private\DDSTextureLoader.h">
+      <Filter>SilentEngine\Private\DDSTextureLoader</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

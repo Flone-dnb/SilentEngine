@@ -12,7 +12,8 @@
 #include <vector>
 
 // Custom
-#include "SilentEngine/public/SVector/SVector.h"
+#include "SilentEngine/Public/SVector/SVector.h"
+#include "SilentEngine/Private/SFrameResource/SFrameResource.h"
 #include <dxgiformat.h>
 
 //@@Struct
@@ -173,6 +174,21 @@ public:
 
 	//@@Function
 	/*
+	* desc: sets the texture filter mode.
+	* param "textureFilterMode": point filter - fast, bad quality,
+	linear filter - medium quality,
+	anisotropic filter - slow, best quality.
+	* remarks: default texture filter is anisotropic filter.
+	*/
+	void      setTextureFilterMode                 (TEX_FILTER_MODE textureFilterMode);
+	//@@Function
+	/*
+	* desc: returns the texture filter mode.
+	* remarks: default texture filter is anisotropic filter.
+	*/
+	TEX_FILTER_MODE getTextureFilterMode           ();
+	//@@Function
+	/*
 	* desc: used to set the "background" color of the world.
 	* param "vColor": the vector that contains the color in XYZ as RGB.
 	*/
@@ -224,6 +240,14 @@ public:
 	* remarks: should be called after calling the SApplication::init().
 	*/
 	std::wstring               getCurrentDisplayAdapter    ();
+	//@@Function
+	/*
+	* desc: returns currently used memory space (i.e. how much of the VRAM is used) of the display adapter (i.e. "video card").
+	* param "pSizeInBytes": pointer to your unsigned long long value which will be used to set the memory value.
+	* return: false if successful, true otherwise.
+	* remarks: should be called after calling the SApplication::init().
+	*/
+	bool                       getVideoMemoryUsageInBytesOfCurrentDisplayAdapter(UINT64* pSizeInBytes) const;
 	//@@Function
 	/*
 	* desc: used to retrieve the size of the VRAM (video memory) of the current display adapter (i.e. "video card").

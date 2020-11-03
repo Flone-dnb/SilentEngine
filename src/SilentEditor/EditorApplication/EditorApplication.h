@@ -13,9 +13,6 @@
 // Custom
 #include "SilentEngine/public/SApplication/SApplication.h"
 
-class MyContainer;
-
-
 class EditorApplication : public SApplication
 {
 public:

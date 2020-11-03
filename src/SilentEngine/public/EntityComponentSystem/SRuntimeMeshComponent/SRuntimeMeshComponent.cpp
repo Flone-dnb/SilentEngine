@@ -44,6 +44,8 @@ void SRuntimeMeshComponent::setVisibility(bool bVisible)
 
 void SRuntimeMeshComponent::setMeshData(const SMeshData& meshData, bool bAddedVerticesOrUpdatedIndicesCount, bool bUpdateBoundingBox)
 {
+	mtxComponentProps.lock();
+
 	mtxDrawComponent.lock();
 	this->meshData = meshData;
 	mtxDrawComponent.unlock();
@@ -84,13 +86,24 @@ void SRuntimeMeshComponent::setMeshData(const SMeshData& meshData, bool bAddedVe
 			pApp->mtxSpawnDespawn.unlock();
 		}
 	}
+
+	mtxComponentProps.unlock();
 }
 
-bool SRuntimeMeshComponent::setMeshMaterial(const SMaterial& meshMaterial)
+void SRuntimeMeshComponent::unbindMaterial()
 {
-	if (meshMaterial.bRegistered)
+	mtxComponentProps.lock();
+
+	meshData.setMeshMaterial(nullptr);
+
+	mtxComponentProps.unlock();
+}
+
+bool SRuntimeMeshComponent::setMeshMaterial(SMaterial* pMaterial)
+{
+	if (pMaterial->bRegistered)
 	{
-		meshData.setMeshMaterial(meshMaterial);
+		meshData.setMeshMaterial(pMaterial);
 
 		return false;
 	}
@@ -106,6 +119,50 @@ bool SRuntimeMeshComponent::setMeshMaterial(const SMaterial& meshMaterial)
 SMaterial* SRuntimeMeshComponent::getMeshMaterial()
 {
 	return meshData.getMeshMaterial();
+}
+
+bool SRuntimeMeshComponent::setMeshTextureUVOffset(const SVector& vMeshTexUVOffset)
+{
+	mtxComponentProps.lock();
+
+	bool bResult = renderData.setTextureUVOffset(vMeshTexUVOffset);
+
+	mtxComponentProps.unlock();
+
+	return bResult;
+}
+
+void SRuntimeMeshComponent::setTextureUVScale(const SVector& vTextureUVScale)
+{
+	mtxComponentProps.lock();
+
+	renderData.setTextureUVScale(vTextureUVScale);
+
+	mtxComponentProps.unlock();
+}
+
+void SRuntimeMeshComponent::setTextureUVRotation(float fRotation)
+{
+	mtxComponentProps.lock();
+
+	renderData.setTextureUVRotation(fRotation);
+
+	mtxComponentProps.unlock();
+}
+
+SVector SRuntimeMeshComponent::getTextureUVOffset() const
+{
+	return renderData.getTextureUVOffset();
+}
+
+SVector SRuntimeMeshComponent::getTextureUVScale() const
+{
+	return renderData.getTextureUVScale();
+}
+
+float SRuntimeMeshComponent::getTextureUVRotation() const
+{
+	return renderData.getTextureUVRotation();
 }
 
 SMeshData SRuntimeMeshComponent::getMeshData() const
@@ -175,7 +232,11 @@ void SRuntimeMeshComponent::createIndexBuffer()
 
 void SRuntimeMeshComponent::updateWorldMatrix()
 {
+	mtxComponentProps.lock();
+
 	XMStoreFloat4x4(&renderData.vWorld, getWorldMatrix());
+
+	mtxComponentProps.unlock();
 }
 
 void SRuntimeMeshComponent::updateMyAndChildsLocationRotationScale()

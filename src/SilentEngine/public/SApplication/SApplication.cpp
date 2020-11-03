@@ -1,5 +1,4 @@
 // ******************************************************************
-// ******************************************************************
 // This file is part of the Silent Engine.
 // Copyright Aleksandr "Flone" Tretyakov (github.com/Flone-dnb).
 // Licensed under the ZLib license.
@@ -12,6 +11,10 @@
 // STL
 #include <array>
 #include <thread>
+#include <fstream>
+#include <filesystem>
+
+namespace fs = std::filesystem;
 
 // DirectX
 #if defined(DEBUG) || defined(_DEBUG) 
@@ -19,6 +22,8 @@
 #include <InitGuid.h>
 #pragma comment(lib, "dxguid.lib")
 #endif
+
+#include "SilentEngine/Private/DDSTextureLoader.h"
 
 // Custom
 #include "SilentEngine/Private/SError/SError.h"
@@ -58,11 +63,14 @@ bool SApplication::close()
 	}
 }
 
-bool SApplication::registerMaterial(SMaterial& material)
+SMaterial* SApplication::registerMaterial(const std::string& sMaterialName, bool& bErrorOccurred)
 {
-	if (material.getMaterialName() == "")
+	bErrorOccurred = false;
+
+	if (sMaterialName == "")
 	{
-		return true;
+		bErrorOccurred = true;
+		return nullptr;
 	}
 
 	bool bHasUniqueName = true;
@@ -72,7 +80,7 @@ bool SApplication::registerMaterial(SMaterial& material)
 
 	for (size_t i = 0; i < vRegisteredMaterials.size(); i++)
 	{
-		if (vRegisteredMaterials[i].getMaterialName() == material.getMaterialName())
+		if (vRegisteredMaterials[i]->getMaterialName() == sMaterialName)
 		{
 			bHasUniqueName = false;
 			break;
@@ -90,13 +98,13 @@ bool SApplication::registerMaterial(SMaterial& material)
 			iNewMaterialCBIndex = vFrameResources[i]->addNewMaterialCB(&bExpanded);
 		}
 
-		material.iMatCBIndex = iNewMaterialCBIndex;
-		material.bRegistered = true;
-		material.iUpdateCBInFrameResourceCount = SFRAME_RES_COUNT;
+		SMaterial* pMat = new SMaterial();
+		pMat->sMaterialName = sMaterialName;
+		pMat->iMatCBIndex = iNewMaterialCBIndex;
+		pMat->bRegistered = true;
+		pMat->iUpdateCBInFrameResourceCount = SFRAME_RES_COUNT;
 
-		vRegisteredMaterials.push_back(material);
-
-		material.pRegisteredOriginal = &vRegisteredMaterials.back();
+		vRegisteredMaterials.push_back(pMat);
 
 		if (bExpanded)
 		{
@@ -106,24 +114,28 @@ bool SApplication::registerMaterial(SMaterial& material)
 
 			for (size_t i = 0; i < vRegisteredMaterials.size(); i++)
 			{
-				vRegisteredMaterials[i].iUpdateCBInFrameResourceCount = SFRAME_RES_COUNT;
+				vRegisteredMaterials[i]->iUpdateCBInFrameResourceCount = SFRAME_RES_COUNT;
 			}
 
 			// Recreate cbv heap.
-			createCBVHeap();
-			createConstantBufferViews();
+			createCBVSRVHeap();
+			createViews();
 
 			mtxDraw.unlock();
 		}
 
 		mtxSpawnDespawn.unlock();
 		mtxMaterial.unlock();
-		return false;
+
+		return pMat;
 	}
 	else
 	{
+		mtxSpawnDespawn.unlock();
 		mtxMaterial.unlock();
-		return true;
+
+		bErrorOccurred = true;
+		return nullptr;
 	}
 }
 
@@ -135,9 +147,9 @@ SMaterial* SApplication::getRegisteredMaterial(const std::string& sMaterialName)
 
 	for (size_t i = 0; i < vRegisteredMaterials.size(); i++)
 	{
-		if (vRegisteredMaterials[i].getMaterialName() == sMaterialName)
+		if (vRegisteredMaterials[i]->getMaterialName() == sMaterialName)
 		{
-			pMaterial = &vRegisteredMaterials[i];
+			pMaterial = vRegisteredMaterials[i];
 			break;
 		}
 	}
@@ -147,23 +159,18 @@ SMaterial* SApplication::getRegisteredMaterial(const std::string& sMaterialName)
 	return pMaterial;
 }
 
-std::vector<SMaterial>* SApplication::getRegisteredMaterials()
+std::vector<SMaterial*>* SApplication::getRegisteredMaterials()
 {
 	return &vRegisteredMaterials;
 }
 
 bool SApplication::unregisterMaterial(const std::string& sMaterialName)
 {
-	if (getCurrentLevel() == nullptr)
-	{
-		return true;
-	}
-
-
 	if (sMaterialName == sDefaultEngineMaterialName)
 	{
 		return true;
 	}
+
 
 
 	// Is this material registered?
@@ -174,7 +181,7 @@ bool SApplication::unregisterMaterial(const std::string& sMaterialName)
 
 	for (size_t i = 0; i < vRegisteredMaterials.size(); i++)
 	{
-		if (vRegisteredMaterials[i].getMaterialName() == sMaterialName)
+		if (vRegisteredMaterials[i]->getMaterialName() == sMaterialName)
 		{
 			bRegistered = true;
 			break;
@@ -190,87 +197,336 @@ bool SApplication::unregisterMaterial(const std::string& sMaterialName)
 
 
 
-	// See if any object is using this material.
+	// Remove material.
 
-	std::vector<SContainer*>* pvRenderableContainers = nullptr;
-	getCurrentLevel()->getRenderableContainers(pvRenderableContainers);
+	mtxMaterial.lock();
+	mtxSpawnDespawn.lock();
 
-	std::vector<SContainer*>* pvNotRenderableContainers = nullptr;
-	getCurrentLevel()->getNotRenderableContainers(pvNotRenderableContainers);
+	bool bResized = false;
 
-	bool bSomeObjectIsUsingThisMaterial = false;
-
-	for (size_t i = 0; i < pvRenderableContainers->size(); i++)
+	for (size_t i = 0; i < vRegisteredMaterials.size(); i++)
 	{
-		if (pvRenderableContainers->operator[](i)->doesAnyChildComponentsUsingThisMaterial(sMaterialName))
+		if (vRegisteredMaterials[i]->getMaterialName() == sMaterialName)
 		{
-			bSomeObjectIsUsingThisMaterial = true;
+			for (size_t k = 0; k < vFrameResources.size(); k++)
+			{
+				vFrameResources[k]->removeMaterialCB(vRegisteredMaterials[i]->iMatCBIndex, &bResized);
+			}
+
+			vRegisteredMaterials[i]->bRegistered = false;
+
+			delete vRegisteredMaterials[i];
+
+			vRegisteredMaterials.erase(vRegisteredMaterials.begin() + i);
+
 			break;
 		}
 	}
 
-	if (bSomeObjectIsUsingThisMaterial == false)
+	if (bResized)
 	{
-		for (size_t i = 0; i < pvNotRenderableContainers->size(); i++)
-		{
-			if (pvNotRenderableContainers->operator[](i)->doesAnyChildComponentsUsingThisMaterial(sMaterialName))
-			{
-				bSomeObjectIsUsingThisMaterial = true;
-				break;
-			}
-		}
-	}
+		mtxDraw.lock();
 
-	if (bSomeObjectIsUsingThisMaterial)
-	{
-		return true;
-	}
-	else
-	{
-		mtxMaterial.lock();
-		mtxSpawnDespawn.lock();
-
-		bool bResized = false;
+		flushCommandQueue();
 
 		for (size_t i = 0; i < vRegisteredMaterials.size(); i++)
 		{
-			if (vRegisteredMaterials[i].getMaterialName() == sMaterialName)
-			{
-				for (size_t i = 0; i < vFrameResources.size(); i++)
-				{
-					vFrameResources[i]->removeMaterialCB(vRegisteredMaterials[i].iMatCBIndex, &bResized);
-				}
-
-				vRegisteredMaterials[i].bRegistered = false;
-
-				vRegisteredMaterials.erase(vRegisteredMaterials.begin() + i);
-				break;
-			}
+			vRegisteredMaterials[i]->iUpdateCBInFrameResourceCount = SFRAME_RES_COUNT;
 		}
 
-		if (bResized)
-		{
-			mtxDraw.lock();
+		// Recreate cbv heap.
+		createCBVSRVHeap();
+		createViews();
 
-			flushCommandQueue();
-
-			for (size_t i = 0; i < vRegisteredMaterials.size(); i++)
-			{
-				vRegisteredMaterials[i].iUpdateCBInFrameResourceCount = SFRAME_RES_COUNT;
-			}
-
-			// Recreate cbv heap.
-			createCBVHeap();
-			createConstantBufferViews();
-
-			mtxDraw.unlock();
-		}
-
-		mtxSpawnDespawn.unlock();
-		mtxMaterial.unlock();
-
-		return false;
+		mtxDraw.unlock();
 	}
+
+	mtxSpawnDespawn.unlock();
+	mtxMaterial.unlock();
+
+	return false;
+}
+
+STextureHandle SApplication::loadTextureFromDiskToGPU(std::string sTextureName, std::wstring sPathToTexture, bool& bErrorOccurred)
+{
+	bErrorOccurred = false;
+
+
+	// See if the texture name is empty.
+
+	if (sTextureName == "")
+	{
+		bErrorOccurred = true;
+
+		return STextureHandle();
+	}
+
+
+
+	// See if the texture name is not unique.
+
+	mtxTexture.lock();
+
+	for (size_t i = 0; i < vLoadedTextures.size(); i++)
+	{
+		if (vLoadedTextures[i]->sTextureName == sTextureName)
+		{
+			bErrorOccurred = true;
+
+			mtxTexture.unlock();
+
+			return STextureHandle();
+		}
+	}
+
+	mtxTexture.unlock();
+
+
+
+
+	// See if the file exists.
+
+	std::ifstream textureFile(sPathToTexture);
+
+	if (textureFile.is_open() == false)
+	{
+		bErrorOccurred = true;
+
+		return STextureHandle();
+	}
+	else
+	{
+		textureFile.close();
+	}
+
+
+
+	// See if the file format is .dds.
+
+	// (use ISO C++17 Standard for no errors on MSVC 2019 toolset)
+	if (fs::path(sPathToTexture).extension().string() != ".dds")
+	{
+		bErrorOccurred = true;
+
+		return STextureHandle();
+	}
+
+
+
+	// Load texture.
+
+	STextureInternal* pTexture = new STextureInternal();
+	pTexture->sTextureName = sTextureName;
+	pTexture->sPathToTexture = sPathToTexture;
+
+	mtxTexture.lock();
+	mtxDraw.lock();
+
+	flushCommandQueue();
+	resetCommandList();
+	
+	HRESULT hresult = DirectX::CreateDDSTextureFromFile12(pDevice.Get(), pCommandList.Get(), sPathToTexture.c_str(),
+		pTexture->pResource, pTexture->pUploadHeap);
+
+	if (FAILED(hresult))
+	{
+		SError::showErrorMessageBox(hresult, L"SApplication::loadTextureFromDiskToGPU::DirectX::CreateDDSTextureFromFile12()");
+
+		mtxDraw.unlock();
+		mtxTexture.unlock();
+
+		bErrorOccurred = true;
+		
+		delete pTexture;
+
+		return STextureHandle();
+	}
+
+	if (executeCommandList())
+	{
+		mtxDraw.unlock();
+		mtxTexture.unlock();
+
+		bErrorOccurred = true;
+
+		delete pTexture;
+
+		return STextureHandle();
+	}
+
+	if (flushCommandQueue())
+	{
+		mtxDraw.unlock();
+		mtxTexture.unlock();
+
+		bErrorOccurred = true;
+
+		delete pTexture;
+
+		return STextureHandle();
+	}
+
+	mtxDraw.unlock();
+
+
+
+	// Check if the texture size is x4.
+
+	if (pTexture->pResource->GetDesc().Width % 4 != 0   || pTexture->pResource->GetDesc().Height % 4 != 0
+		|| pTexture->pResource->GetDesc().Width != pTexture->pResource->GetDesc().Height)
+	{
+		// Will be released automatically.
+		//texture.pResource->Release();
+
+		mtxTexture.unlock();
+
+		bErrorOccurred = true;
+
+		return STextureHandle();
+	}
+
+
+
+	// Get Resource size.
+
+	D3D12_RESOURCE_DESC texDesc = pTexture->pResource->GetDesc();
+
+	D3D12_RESOURCE_ALLOCATION_INFO info = pDevice->GetResourceAllocationInfo(0, 1, &texDesc);
+	pTexture->iResourceSizeInBytesOnGPU = info.SizeInBytes + info.Alignment;
+
+
+	
+	// Add texture to loaded textures array.
+
+	vLoadedTextures.push_back(pTexture);
+
+
+
+	// Add the SRV to this texture.
+
+	mtxSpawnDespawn.lock();
+	mtxDraw.lock();
+
+	flushCommandQueue();
+
+	// Recreate cbv heap.
+	createCBVSRVHeap();
+	createViews();
+
+	mtxDraw.unlock();
+	mtxSpawnDespawn.unlock();
+	mtxTexture.unlock();
+
+
+
+	// Return texture handle.
+
+	STextureHandle texHandle;
+	texHandle.sTextureName = sTextureName;
+	texHandle.sPathToTexture = sPathToTexture;
+	texHandle.bRegistered = true;
+
+	texHandle.pRefToTexture = vLoadedTextures.back();
+
+
+	return texHandle;
+}
+
+STextureHandle SApplication::getLoadedTexture(const std::string& sTextureName, bool& bNotFound)
+{
+	bNotFound = true;
+
+	STextureHandle tex;
+
+	for (size_t i = 0; i < vLoadedTextures.size(); i++)
+	{
+		if (vLoadedTextures[i]->sTextureName == sTextureName)
+		{
+			bNotFound = false;
+
+			tex.bRegistered = true;
+			tex.pRefToTexture  = vLoadedTextures[i];
+			tex.sTextureName   = vLoadedTextures[i]->sTextureName;
+			tex.sPathToTexture = vLoadedTextures[i]->sPathToTexture;
+
+			break;
+		}
+	}
+
+	return tex;
+}
+
+std::vector<STextureHandle> SApplication::getLoadedTextures()
+{
+	std::vector<STextureHandle> vTextures;
+
+	mtxTexture.lock();
+
+	for (size_t i = 0; i < vLoadedTextures.size(); i++)
+	{
+		STextureHandle tex;
+		tex.bRegistered = true;
+		tex.sTextureName = vLoadedTextures[i]->sTextureName;
+		tex.sPathToTexture = vLoadedTextures[i]->sPathToTexture;
+		tex.pRefToTexture = vLoadedTextures[i];
+
+		vTextures.push_back(tex);
+	}
+
+	mtxTexture.unlock();
+
+	return vTextures;
+}
+
+bool SApplication::unloadTextureFromGPU(STextureHandle& textureHandle)
+{
+	if (textureHandle.bRegistered == false)
+	{
+		return true;
+	}
+
+
+	mtxTexture.lock();
+
+	textureHandle.bRegistered = false;
+
+	for (size_t i = 0; i < vLoadedTextures.size(); i++)
+	{
+		if (vLoadedTextures[i]->sTextureName == textureHandle.getTextureName())
+		{
+			unsigned long iLeftRef = vLoadedTextures[i]->pResource.Reset();
+
+			if (iLeftRef != 0)
+			{
+				showMessageBox(L"Error", L"SApplication::unloadTextureFromGPU() error: texture ref count is not 0.");
+			}
+
+			delete vLoadedTextures[i];
+			vLoadedTextures.erase(vLoadedTextures.begin() + i);
+
+			break;
+		}
+	}
+
+
+
+	// Remove the SRV to this texture.
+
+	mtxSpawnDespawn.lock();
+	mtxDraw.lock();
+
+	flushCommandQueue();
+
+	// Recreate cbv heap.
+	createCBVSRVHeap();
+	createViews();
+
+	mtxDraw.unlock();
+	mtxSpawnDespawn.unlock();
+	mtxTexture.unlock();
+	
+
+	return false;
 }
 
 SLevel* SApplication::getCurrentLevel() const
@@ -414,8 +670,8 @@ bool SApplication::spawnContainerInLevel(SContainer* pContainer)
 
 
 			// Recreate cbv heap.
-			createCBVHeap();
-			createConstantBufferViews();
+			createCBVSRVHeap();
+			createViews();
 		}
 	}
 
@@ -532,8 +788,8 @@ void SApplication::despawnContainerFromLevel(SContainer* pContainer)
 			}
 
 			// Recreate cbv heap.
-			createCBVHeap();
-			createConstantBufferViews();
+			createCBVSRVHeap();
+			createViews();
 		}
 	}
 
@@ -1787,21 +2043,26 @@ void SApplication::updateComponentAndChilds(SComponent* pComponent, SUploadBuffe
 
 		if (pMeshComponent->renderData.iUpdateCBInFrameResourceCount > 0)
 		{
+			pMeshComponent->mtxComponentProps.lock();
+
 			DirectX::XMMATRIX world = DirectX::XMLoadFloat4x4(&pMeshComponent->renderData.vWorld);
+			DirectX::XMMATRIX texTransform = DirectX::XMLoadFloat4x4(&pMeshComponent->renderData.vTexTransform);
 
 			SObjectConstants objConstants;
 			DirectX::XMStoreFloat4x4(&objConstants.vWorld, DirectX::XMMatrixTranspose(world));
+			DirectX::XMStoreFloat4x4(&objConstants.vTexTransform, DirectX::XMMatrixTranspose(texTransform));
 
 			pCurrentObjectCB->copyDataToElement(pMeshComponent->renderData.iObjCBIndex, objConstants);
 
 			// Next FrameResource need to be updated too.
 			pMeshComponent->renderData.iUpdateCBInFrameResourceCount--;
+
+			pMeshComponent->mtxComponentProps.unlock();
 		}
 	}
 	else if (pComponent->componentType == SCT_RUNTIME_MESH)
 	{
 		SRuntimeMeshComponent* pRuntimeMeshComponent = dynamic_cast<SRuntimeMeshComponent*>(pComponent);
-
 
 
 		if (pRuntimeMeshComponent->bNoMeshDataOnSpawn == false)
@@ -1826,15 +2087,21 @@ void SApplication::updateComponentAndChilds(SComponent* pComponent, SUploadBuffe
 
 		if (pRuntimeMeshComponent->renderData.iUpdateCBInFrameResourceCount > 0)
 		{
+			pRuntimeMeshComponent->mtxComponentProps.lock();
+
 			DirectX::XMMATRIX world = DirectX::XMLoadFloat4x4(&pRuntimeMeshComponent->renderData.vWorld);
+			DirectX::XMMATRIX texTransform = DirectX::XMLoadFloat4x4(&pRuntimeMeshComponent->renderData.vTexTransform);
 
 			SObjectConstants objConstants;
 			DirectX::XMStoreFloat4x4(&objConstants.vWorld, DirectX::XMMatrixTranspose(world));
+			DirectX::XMStoreFloat4x4(&objConstants.vTexTransform, DirectX::XMMatrixTranspose(texTransform));
 
 			pCurrentObjectCB->copyDataToElement(pRuntimeMeshComponent->renderData.iObjCBIndex, objConstants);
 
 			// Next FrameResource need to be updated too.
 			pRuntimeMeshComponent->renderData.iUpdateCBInFrameResourceCount--;
+
+			pRuntimeMeshComponent->mtxComponentProps.unlock();
 		}
 	}
 
@@ -1843,11 +2110,14 @@ void SApplication::updateComponentAndChilds(SComponent* pComponent, SUploadBuffe
 	{
 		mtxMaterial.lock();
 
-		SMaterial* pMaterial = &pComponent->meshData.meshMaterial;
+		pComponent->mtxComponentProps.lock();
+		mtxUpdateMat.lock();
 
-		if(pMaterial->iMatCBIndex == 0)
+		SMaterial* pMaterial = pComponent->meshData.getMeshMaterial();
+
+		if(pMaterial == nullptr)
 		{
-			pMaterial = &vRegisteredMaterials[0];
+			pMaterial = vRegisteredMaterials[0];
 		}
 
 		if (pMaterial->iUpdateCBInFrameResourceCount > 0)
@@ -1865,6 +2135,9 @@ void SApplication::updateComponentAndChilds(SComponent* pComponent, SUploadBuffe
 				updateMaterialInFrameResource(pMaterial, pCurrentMaterialCB);
 			}
 		}
+
+		mtxUpdateMat.unlock();
+		pComponent->mtxComponentProps.unlock();
 
 		mtxMaterial.unlock();
 	}
@@ -1904,6 +2177,7 @@ void SApplication::updateMainPassCB()
 	mainRenderPassCB.iDirectionalLightCount = 0;
 	mainRenderPassCB.iPointLightCount = 0;
 	mainRenderPassCB.iSpotLightCount = 0;
+	mainRenderPassCB.iTextureFilterIndex = textureFilterIndex;
 
 	SLevel* pLevel = getCurrentLevel();
 
@@ -2038,17 +2312,17 @@ void SApplication::draw()
 
 	// CB.
 
-	ID3D12DescriptorHeap* descriptorHeaps[] = { pCBVHeap.Get() };
+	ID3D12DescriptorHeap* descriptorHeaps[] = { pCBVSRVHeap.Get() };
 	pCommandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 
 	pCommandList->SetGraphicsRootSignature(pRootSignature.Get());
 
 
 	int iRenderPassCBVIndex = iRenderPassCBVOffset + iCurrentFrameResourceIndex;
-	auto renderPassCBVHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(pCBVHeap->GetGPUDescriptorHandleForHeapStart());
+	auto renderPassCBVHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(pCBVSRVHeap->GetGPUDescriptorHandleForHeapStart());
 	renderPassCBVHandle.Offset(iRenderPassCBVIndex, iCBVSRVUAVDescriptorSize);
 
-	pCommandList->SetGraphicsRootDescriptorTable(2, renderPassCBVHandle);
+	pCommandList->SetGraphicsRootDescriptorTable(0, renderPassCBVHandle);
 
 
 
@@ -2213,16 +2487,72 @@ void SApplication::drawComponentAndChilds(SComponent* pComponent)
 		
 		size_t iObjCount = roundUp(iActualObjectCBCount, OBJECT_CB_RESIZE_MULTIPLE);
 		size_t iMaterialCount = roundUp(vRegisteredMaterials.size(), OBJECT_CB_RESIZE_MULTIPLE);
+		size_t iTextureCount = vLoadedTextures.size();
+
+
+		
+		// Texture descriptor table.
+
+		auto heapHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(pCBVSRVHeap->GetGPUDescriptorHandleForHeapStart());
+
+		STextureHandle tex;
+		bool bHasTexture = false;
+
+		if (pComponent->componentType == SCT_MESH)
+		{
+			SMeshComponent* pMeshComponent = dynamic_cast<SMeshComponent*>(pComponent);
+			
+			if (pMeshComponent->getMeshMaterial())
+			{
+				if (pMeshComponent->getMeshMaterial()->getMaterialProperties().getDiffuseTexture(&tex) == false)
+				{
+					bHasTexture = true;
+				}
+			}
+		}
+		else
+		{
+			SRuntimeMeshComponent* pRuntimeMeshComponent = dynamic_cast<SRuntimeMeshComponent*>(pComponent);
+
+			if (pRuntimeMeshComponent->getMeshMaterial())
+			{
+				if (pRuntimeMeshComponent->getMeshMaterial()->getMaterialProperties().getDiffuseTexture(&tex) == false)
+				{
+					bHasTexture = true;
+				}
+			}
+		}
+
+		if (bHasTexture)
+		{
+			heapHandle.Offset(iObjCount + iMaterialCount + iCurrentFrameResourceIndex * (iObjCount + iMaterialCount + iTextureCount)
+				+ tex.pRefToTexture->iTexSRVHeapIndex, iCBVSRVUAVDescriptorSize);
+			pCommandList->SetGraphicsRootDescriptorTable(3, heapHandle);
+
+			// [Crashed here?]
+			// You might have unloaded the texture in use.
+			// Unbind texture/material first, to make sure that no object is using
+			// the texture before unloading it.
+		}
+
+
 
 		// Object descriptor table.
-		UINT iCBVIndex = iCurrentFrameResourceIndex * (iObjCount + iMaterialCount) + pComponent->getRenderData()->iObjCBIndex;
-		auto cbvHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(pCBVHeap->GetGPUDescriptorHandleForHeapStart());
+
+		// [Crashed here?]
+		// You might have unloaded the texture in use.
+		// Unbind texture/material first, to make sure that no object is using
+		// the texture before unloading it.
+		UINT iCBVIndex = iCurrentFrameResourceIndex * (iObjCount + iMaterialCount + iTextureCount) + pComponent->getRenderData()->iObjCBIndex;
+		auto cbvHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(pCBVSRVHeap->GetGPUDescriptorHandleForHeapStart());
 		cbvHandle.Offset(iCBVIndex, iCBVSRVUAVDescriptorSize);
 
-		pCommandList->SetGraphicsRootDescriptorTable(0, cbvHandle);
+		pCommandList->SetGraphicsRootDescriptorTable(1, cbvHandle);
+
 
 
 		// Material descriptor table.
+
 		size_t iMatCBIndex = 0;
 
 		if (pComponent->meshData.getMeshMaterial())
@@ -2230,14 +2560,16 @@ void SApplication::drawComponentAndChilds(SComponent* pComponent)
 			iMatCBIndex = pComponent->meshData.getMeshMaterial()->iMatCBIndex;
 		}
 
-		iCBVIndex = iObjCount + iCurrentFrameResourceIndex * (iObjCount + iMaterialCount) + iMatCBIndex;
-		cbvHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(pCBVHeap->GetGPUDescriptorHandleForHeapStart());
+		iCBVIndex = iObjCount + iCurrentFrameResourceIndex * (iObjCount + iMaterialCount + iTextureCount) + iMatCBIndex;
+		cbvHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(pCBVSRVHeap->GetGPUDescriptorHandleForHeapStart());
 		cbvHandle.Offset(iCBVIndex, iCBVSRVUAVDescriptorSize);
 
-		pCommandList->SetGraphicsRootDescriptorTable(1, cbvHandle);
+		pCommandList->SetGraphicsRootDescriptorTable(2, cbvHandle);
+
 
 
 		// Draw.
+
 		pCommandList->DrawIndexedInstanced(pComponent->getRenderData()->iIndexCount, 1, pComponent->getRenderData()->iStartIndexLocation,
 			pComponent->getRenderData()->iStartVertexLocation, 0);
 
@@ -2333,6 +2665,35 @@ size_t SApplication::roundUp(size_t iNum, size_t iMultiple)
 	}
 
 	return iNum + iMultiple - iRemainder;
+}
+
+std::array<const CD3DX12_STATIC_SAMPLER_DESC, 3> SApplication::getStaticSamples()
+{
+	const CD3DX12_STATIC_SAMPLER_DESC pointWrap(
+		0,
+		D3D12_FILTER_MIN_MAG_MIP_POINT,
+		D3D12_TEXTURE_ADDRESS_MODE_WRAP,
+		D3D12_TEXTURE_ADDRESS_MODE_WRAP,
+		D3D12_TEXTURE_ADDRESS_MODE_WRAP
+	);
+
+	const CD3DX12_STATIC_SAMPLER_DESC linearWrap(
+		1,
+		D3D12_FILTER_MIN_MAG_MIP_LINEAR,
+		D3D12_TEXTURE_ADDRESS_MODE_WRAP,
+		D3D12_TEXTURE_ADDRESS_MODE_WRAP,
+		D3D12_TEXTURE_ADDRESS_MODE_WRAP
+	);
+
+	const CD3DX12_STATIC_SAMPLER_DESC anisotropicWrap(
+		2,
+		D3D12_FILTER_ANISOTROPIC,
+		D3D12_TEXTURE_ADDRESS_MODE_WRAP,
+		D3D12_TEXTURE_ADDRESS_MODE_WRAP,
+		D3D12_TEXTURE_ADDRESS_MODE_WRAP
+	);
+
+	return { pointWrap, linearWrap, anisotropicWrap };
 }
 
 LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -2999,10 +3360,12 @@ bool SApplication::createRTVAndDSVDescriptorHeaps()
 	return false;
 }
 
-bool SApplication::createCBVHeap()
+bool SApplication::createCBVSRVHeap()
 {
 	size_t iObjCount = roundUp(iActualObjectCBCount, OBJECT_CB_RESIZE_MULTIPLE); // for SObjectConstants
 	iObjCount += roundUp(vRegisteredMaterials.size(), OBJECT_CB_RESIZE_MULTIPLE); // for SMaterialConstants
+	iObjCount += vLoadedTextures.size(); // one SRV per texture
+	// new stuff goes here
 
 	// Each frame resource contains N objects, so we need (iFrameResourcesCount * N)
 	// + 1 for SRenderPassConstants per frame resource.
@@ -3017,7 +3380,7 @@ bool SApplication::createCBVHeap()
 	cbvHeapDesc.Flags          = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	cbvHeapDesc.NodeMask       = 0;
 
-	HRESULT hresult = pDevice->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&pCBVHeap));
+	HRESULT hresult = pDevice->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&pCBVSRVHeap));
 	if (FAILED(hresult))
 	{
 		SError::showErrorMessageBox(hresult, L"SApplication::createCBVDescriptorHeap::ID3D12Device::CreateDescriptorHeap()");
@@ -3027,12 +3390,13 @@ bool SApplication::createCBVHeap()
 	return false;
 }
 
-void SApplication::createConstantBufferViews()
+void SApplication::createViews()
 {
 	UINT iObjectConstantBufferSizeInBytes = SMath::makeMultipleOf256(sizeof(SObjectConstants));
 
 	size_t iObjectCount   = roundUp(iActualObjectCBCount, OBJECT_CB_RESIZE_MULTIPLE);
 	size_t iMaterialCount = roundUp(vRegisteredMaterials.size(), OBJECT_CB_RESIZE_MULTIPLE);
+	size_t iTextureCount  = vLoadedTextures.size();
 
 	// Need (iFrameResourcesCount * iObjectCount) CBVs.
 	for (int iFrameIndex = 0; iFrameIndex < iFrameResourcesCount; iFrameIndex++)
@@ -3047,8 +3411,8 @@ void SApplication::createConstantBufferViews()
 			currentObjectConstantBufferAddress += i * iObjectConstantBufferSizeInBytes;
 
 			// Offset to the object CBV in the descriptor heap.
-			int iIndexInHeap = iFrameIndex * (iObjectCount + iMaterialCount) + i;
-			auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(pCBVHeap->GetCPUDescriptorHandleForHeapStart());
+			int iIndexInHeap = iFrameIndex * (iObjectCount + iMaterialCount + iTextureCount) + i;
+			auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(pCBVSRVHeap->GetCPUDescriptorHandleForHeapStart());
 			handle.Offset(iIndexInHeap, iCBVSRVUAVDescriptorSize);
 
 			D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc;
@@ -3076,8 +3440,8 @@ void SApplication::createConstantBufferViews()
 			currentMaterialConstantBufferAddress += i * iMaterialCBSizeInBytes;
 
 			// Offset to the material CBV in the descriptor heap.
-			int iIndexInHeap = iObjectCount + iFrameIndex * (iObjectCount + iMaterialCount) + i;
-			auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(pCBVHeap->GetCPUDescriptorHandleForHeapStart());
+			int iIndexInHeap = iObjectCount + iFrameIndex * (iObjectCount + iMaterialCount + iTextureCount) + i;
+			auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(pCBVSRVHeap->GetCPUDescriptorHandleForHeapStart());
 			handle.Offset(iIndexInHeap, iCBVSRVUAVDescriptorSize);
 
 			D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc;
@@ -3089,6 +3453,31 @@ void SApplication::createConstantBufferViews()
 	}
 
 
+	// Need one SRV per loaded texture.
+	for (int iFrameIndex = 0; iFrameIndex < iFrameResourcesCount; iFrameIndex++)
+	{
+		for (size_t i = 0; i < vLoadedTextures.size(); i++)
+		{
+			int iIndexInHeap = iObjectCount + iMaterialCount + iFrameIndex * (iObjectCount + iMaterialCount + iTextureCount) + i;
+			auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(pCBVSRVHeap->GetCPUDescriptorHandleForHeapStart());
+
+			handle.Offset(iIndexInHeap, iCBVSRVUAVDescriptorSize);
+
+			D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+			srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+			srvDesc.Format = vLoadedTextures[i]->pResource->GetDesc().Format;
+			srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+			srvDesc.Texture2D.MostDetailedMip = 0;
+			srvDesc.Texture2D.MipLevels = vLoadedTextures[i]->pResource->GetDesc().MipLevels;
+			srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
+
+			pDevice->CreateShaderResourceView(vLoadedTextures[i]->pResource.Get(), &srvDesc, handle);
+
+			vLoadedTextures[i]->iTexSRVHeapIndex = i;
+		}
+	}
+
+
 
 	UINT iRenderPassCBSizeInBytes = SMath::makeMultipleOf256(sizeof(SRenderPassConstants));
 
@@ -3096,11 +3485,12 @@ void SApplication::createConstantBufferViews()
 	for (int iFrameIndex = 0; iFrameIndex < iFrameResourcesCount; iFrameIndex++)
 	{
 		ID3D12Resource* pRenderPassCB = vFrameResources[iFrameIndex]->pRenderPassCB->getResource();
+
 		D3D12_GPU_VIRTUAL_ADDRESS renderPassCBAddress = pRenderPassCB->GetGPUVirtualAddress();
 
 		// Offset in the descriptor heap.
 		int iIndexInHeap = iRenderPassCBVOffset + iFrameIndex;
-		auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(pCBVHeap->GetCPUDescriptorHandleForHeapStart());
+		auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(pCBVSRVHeap->GetCPUDescriptorHandleForHeapStart());
 		handle.Offset(iIndexInHeap, iCBVSRVUAVDescriptorSize);
 
 		D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc;
@@ -3124,24 +3514,31 @@ bool SApplication::createRootSignature()
 	// The root signature defines the resources the shader programs expect.
 
 	CD3DX12_DESCRIPTOR_RANGE cbvTable0;
-	cbvTable0.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0); // cbObject
+	cbvTable0.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0); // cbRenderPass
 
 	CD3DX12_DESCRIPTOR_RANGE cbvTable1;
-	cbvTable1.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1); // cbMaterial
+	cbvTable1.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1); // cbObject
 
 	CD3DX12_DESCRIPTOR_RANGE cbvTable2;
-	cbvTable2.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 2); // cbRenderPass
+	cbvTable2.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 2); // cbMaterial
+
+	CD3DX12_DESCRIPTOR_RANGE srvTable0;
+	srvTable0.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0); // srv
 
 	// Root parameter can be a table, root descriptor or root constants.
-	CD3DX12_ROOT_PARAMETER slotRootParameter[3];
+	CD3DX12_ROOT_PARAMETER slotRootParameter[4];
 
-	// Create root CBVs.
-	slotRootParameter[0].InitAsDescriptorTable(1, &cbvTable0);
-	slotRootParameter[1].InitAsDescriptorTable(1, &cbvTable1);
-	slotRootParameter[2].InitAsDescriptorTable(1, &cbvTable2);
+	// Perfomance TIP: Order from most frequent to least frequent.
+	slotRootParameter[0].InitAsDescriptorTable(1, &cbvTable0); // cbRenderPass
+	slotRootParameter[1].InitAsDescriptorTable(1, &cbvTable1); // cbObject
+	slotRootParameter[2].InitAsDescriptorTable(1, &cbvTable2); // cbMaterial
+	slotRootParameter[3].InitAsDescriptorTable(1, &srvTable0, D3D12_SHADER_VISIBILITY_PIXEL); // srv
+
+	// Static samples don't need a heap.
+	auto staticSamples = getStaticSamples();
 
 	// A root signature is an array of root parameters.
-	CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc(3, slotRootParameter, 0, nullptr, 
+	CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc(4, slotRootParameter, static_cast<UINT>(staticSamples.size()), staticSamples.data(),
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
 
@@ -3188,7 +3585,8 @@ bool SApplication::createShadersAndInputLayout()
 	vInputLayout =
 	{
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "UV", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
 	};
 
 	return false;
@@ -3305,22 +3703,24 @@ bool SApplication::resetCommandList()
 
 bool SApplication::createDefaultMaterial()
 {
-	SMaterial defaultMaterial;
+	bool bError = false;
 
-	SMaterialProperties matProps;
-	matProps.setDiffuseColor(SVector(1.0f, 0.0f, 0.0f, 1.0f));
-	matProps.setSpecularColor(SVector(1.0f, 1.0f, 1.0f));
-	matProps.setRoughness(0.0f);
+	SMaterial* pDefaultMat = registerMaterial(sDefaultEngineMaterialName, bError);
 
-	defaultMaterial.setMaterialName(sDefaultEngineMaterialName);
-	defaultMaterial.setMaterialProperties(matProps);
-
-	if (registerMaterial(defaultMaterial))
+	if (bError)
 	{
+		showMessageBox(L"Error", L"SApplication::createDefaultMaterial() error: failed to register the default material.");
 		return true;
 	}
 	else
 	{
+		SMaterialProperties matProps;
+		matProps.setDiffuseColor(SVector(1.0f, 0.0f, 0.0f, 1.0f));
+		matProps.setSpecularColor(SVector(1.0f, 1.0f, 1.0f));
+		matProps.setRoughness(0.0f);
+
+		pDefaultMat->setMaterialProperties(matProps);
+
 		return false;
 	}
 }
@@ -3342,16 +3742,23 @@ bool SApplication::executeCommandList()
 }
 void SApplication::updateMaterialInFrameResource(SMaterial * pMaterial, SUploadBuffer<SMaterialConstants>* pMaterialCB)
 {
-	DirectX::XMMATRIX mMatTransform = DirectX::XMLoadFloat4x4(&pMaterial->mMatTransform);
-
 	SMaterialConstants matConstants;
+
 	SMaterialProperties matProps = pMaterial->getMaterialProperties();
+
 	SVector vDiffuse = matProps.getDiffuseColor();
 	SVector vFresnel = matProps.getSpecularColor();
+
 	matConstants.vDiffuseAlbedo = { vDiffuse.getX(), vDiffuse.getY(), vDiffuse.getZ(), vDiffuse.getW() };
 	matConstants.vFresnelR0 = { vFresnel.getX(), vFresnel.getY(), vFresnel.getZ() };
 	matConstants.fRoughness = matProps.getRoughness();
-	matConstants.mMatTransform = SMath::getIdentityMatrix4x4();
+
+	matConstants.bHasDiffuseTexture = matProps.bHasDiffuseTexture;
+	matConstants.bHasNormalTexture = matProps.bHasNormalTexture;
+
+	DirectX::XMMATRIX vMatTransform = DirectX::XMLoadFloat4x4(&pMaterial->vMatTransform);
+	DirectX::XMStoreFloat4x4(&matConstants.vMatTransform, DirectX::XMMatrixTranspose(vMatTransform));
+
 
 	pMaterialCB->copyDataToElement(pMaterial->iMatCBIndex, matConstants);
 
@@ -3405,6 +3812,13 @@ D3D12_CPU_DESCRIPTOR_HANDLE SApplication::getDepthStencilViewHandle() const
 	return pDSVHeap->GetCPUDescriptorHandleForHeapStart();
 }
 
+void SApplication::showDeviceRemovedReason()
+{
+	HRESULT hResult = pDevice->GetDeviceRemovedReason();
+
+	SError::showErrorMessageBox(hResult, L"SApplication::showDeviceRemovedReason()");
+}
+
 SApplication::SApplication(HINSTANCE hInstance)
 {
 	hApplicationInstance = hInstance;
@@ -3417,7 +3831,7 @@ SApplication::SApplication(HINSTANCE hInstance)
 
 #if defined(DEBUG) || defined(_DEBUG)
 	bCompileShadersInRelease = false;
-#elif
+#else
 	bCompileShadersInRelease = true;
 #endif
 }
@@ -3442,6 +3856,30 @@ SApplication::~SApplication()
 	{
 		delete pCurrentLevel;
 	}
+
+
+	for (size_t i = 0; i < vLoadedTextures.size(); i++)
+	{
+		unsigned long iLeft = vLoadedTextures[i]->pResource.Reset();
+
+		if (iLeft != 0)
+		{
+			showMessageBox(L"Error", L"SApplication::~SApplication() error: texture ref count is not 0.");
+		}
+
+		delete vLoadedTextures[i];
+	}
+
+	vLoadedTextures.clear();
+
+
+	for (size_t i = 0; i < vRegisteredMaterials.size(); i++)
+	{
+		delete vRegisteredMaterials[i];
+	}
+
+	vRegisteredMaterials.clear();
+
 
 	delete pVideoSettings;
 	delete pProfiler;
@@ -3500,12 +3938,12 @@ bool SApplication::init()
 
 	createFrameResources();
 
-	if (createCBVHeap())
+	if (createCBVSRVHeap())
 	{
 		return true;
 	}
 
-	createConstantBufferViews();
+	createViews();
 
 	if (createPSO())
 	{

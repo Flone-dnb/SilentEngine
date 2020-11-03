@@ -243,12 +243,6 @@ private:
 
 	//@@Function
 	/*
-	* desc: true if any of the child components are using a material with the given name.
-	*/
-	bool doesAnyChildComponentsUsingThisMaterial(const std::string& sMaterialName);
-
-	//@@Function
-	/*
 	* desc: true if the container is spawned in the level, false otherwise.
 	*/
 	void setSpawnedInLevel        (bool bSpawned);

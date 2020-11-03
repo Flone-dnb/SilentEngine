@@ -268,31 +268,6 @@ void SComponent::updateVertexBufferIndexForRuntimeMeshComponents(size_t iIfIndex
 	}
 }
 
-bool SComponent::doesAnyChildComponentsUsingThisMaterial(const std::string& sMaterialName)
-{
-	bool bUsing = false;
-
-	for (size_t i = 0; i < vChildComponents.size(); i++)
-	{
-		if (vChildComponents[i]->meshData.getMeshMaterial()->getMaterialName() == sMaterialName)
-		{
-			bUsing = true;
-			break;
-		}
-		else
-		{
-			bUsing = vChildComponents[i]->doesAnyChildComponentsUsingThisMaterial(sMaterialName);
-
-			if (bUsing)
-			{
-				break;
-			}
-		}
-	}
-
-    return bUsing;
-}
-
 DirectX::XMMATRIX XM_CALLCONV SComponent::getWorldMatrix()
 {
 	DirectX::XMMATRIX parentWorld = DirectX::XMMatrixIdentity();
