@@ -301,7 +301,7 @@ private:
 	//@@Function
 	/*
 	* desc: returns the material that this mesh is using (if the setMeshMaterial() was called before), otherwise nullptr (default engine material).
-	* Used by mesh components.
+	Used by mesh components.
 	*/
 	SMaterial* getMeshMaterial()
 	{
