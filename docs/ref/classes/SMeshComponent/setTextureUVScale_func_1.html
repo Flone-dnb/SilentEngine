@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../../doc.css">
-    <title>getRegisteredMaterials - Silent Engine Documentation</title>
+    <title>setTextureUVScale - Silent Engine Documentation</title>
 </head>
 <body>
     <div class="nav_panel">
@@ -16,18 +16,11 @@
     </div>
     
 	<div class="cpp_doc">
-		<h3 class="cpp_object"> getRegisteredMaterials </h3>
-		<div class="cpp_codeobject_desc"> returns all registered materials. 	 </div>
+		<h3 class="cpp_object"> setTextureUVScale </h3>
+		<div class="cpp_codeobject_desc"> used to set the UV scale to the mesh texture. Only affects how the textures will look for THIS mesh. This setting will affect material UV settings only for this mesh. </div>
 		<br>
-		<code class="cpp_func_line_code"> std::vector&lt;SMaterial*&gt;* getRegisteredMaterials(); </code>
+		<code class="cpp_func_line_code"> void  setTextureUVScale(const <a class="cpp_link_ref" href="../SVector/index.html">SVector</a>&amp; vTextureUVScale); </code>
 		<br>
-		<br>
-		----------------------------------------------
-		<br>
-		<br>
-		<div class="cpp_func_param"> Return Value </div>
-		<br>
-		<div class="cpp_func_param_desc"> valid pointer if successful, nullptr otherwise. 	 </div>
 		<br>
 		
 	</div>

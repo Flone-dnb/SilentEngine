@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../../doc.css">
-    <title>setNearClipPlane - Silent Engine Documentation</title>
+    <title>getLoadedTexture - Silent Engine Documentation</title>
 </head>
 <body>
     <div class="nav_panel">
@@ -16,26 +16,26 @@
     </div>
     
 	<div class="cpp_doc">
-		<h3 class="cpp_object"> setNearClipPlane </h3>
-		<div class="cpp_codeobject_desc"> used to set the camera's near clip plane. 	 </div>
+		<h3 class="cpp_object"> getLoadedTexture </h3>
+		<div class="cpp_codeobject_desc"> returns a loaded texture. 	 </div>
 		<br>
-		<code class="cpp_func_line_code"> bool setNearClipPlane<br>(<br>&nbsp;&nbsp;&nbsp;float fNearClipPlaneValue<br>); </code>
+		<code class="cpp_func_line_code"> STextureHandle getLoadedTexture<br>(<br>&nbsp;&nbsp;&nbsp;const std::string&amp; sTextureName,<br>&nbsp;&nbsp;&nbsp;bool&amp; bNotFound<br>); </code>
 		<br>
 		<br>
-		<div class="cpp_func_param">fNearClipPlaneValue</div>
+		<div class="cpp_func_param">sTextureName</div>
 		<br>
-		<div class="cpp_func_param_desc">near clip plane value. 	</div>
+		<div class="cpp_func_param_desc">the name of the loaded texture. 	</div>
+		<br>
+		<div class="cpp_func_param">bNotFound</div>
+		<br>
+		<div class="cpp_func_param_desc">will be true if there is no loaded texture with this name. 	</div>
 		<br>
 	----------------------------------------------
 	<br>
 	<br>
 	<div class="cpp_func_param"> Return Value </div>
 	<br>
-	<div class="cpp_func_param_desc"> false if successful, true otherwise. 	 </div>
-	<br>
-	<div class="cpp_func_param"> Remarks </div>
-	<br>
-	<div class="cpp_func_param_desc"> should be called after calling the SApplication::init(). Change with caution, may cause z-fighting. 	 </div>
+	<div class="cpp_func_param_desc"> valid handle if successful. 	 </div>
 	<br>
 	
 </div>

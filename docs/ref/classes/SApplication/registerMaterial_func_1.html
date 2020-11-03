@@ -17,23 +17,31 @@
     
 	<div class="cpp_doc">
 		<h3 class="cpp_object"> registerMaterial </h3>
-		<div class="cpp_codeobject_desc"> registers the given material in the application so it can be used in the component, such as SMeshComponent. 	 </div>
+		<div class="cpp_codeobject_desc"> registers a new material in the application so it can be used in the component, such as SMeshComponent. 	 </div>
 		<br>
-		<code class="cpp_func_line_code"> bool   registerMaterial(SMaterial&amp; material); </code>
-		<br>
-		<br>
-		----------------------------------------------
+		<code class="cpp_func_line_code"> SMaterial*  registerMaterial<br>(<br>&nbsp;&nbsp;&nbsp;const std::string&amp; sMaterialName,<br>&nbsp;&nbsp;&nbsp;bool&amp; bErrorOccurred<br>); </code>
 		<br>
 		<br>
-		<div class="cpp_func_param"> Return Value </div>
+		<div class="cpp_func_param">sMaterialName</div>
 		<br>
-		<div class="cpp_func_param_desc"> false if successful, true otherwise. 	 </div>
+		<div class="cpp_func_param_desc">unique name if the new material. 	</div>
 		<br>
-		<div class="cpp_func_param"> Remarks </div>
+		<div class="cpp_func_param">bErrorOccurred</div>
 		<br>
-		<div class="cpp_func_param_desc"> any material should be registered first and only then used. You can reuse already registered materials on any number of components you want. It's recommended to use this function in loading moments of your application (ex. loading screen) as this function may drop the framerate a little. 	 </div>
+		<div class="cpp_func_param_desc">will be true if an error occurred and the returned pointer is nullptr. 	</div>
 		<br>
-		
-	</div>
+	----------------------------------------------
+	<br>
+	<br>
+	<div class="cpp_func_param"> Return Value </div>
+	<br>
+	<div class="cpp_func_param_desc"> valid pointer if successful, nullptr otherwise. 	 </div>
+	<br>
+	<div class="cpp_func_param"> Remarks </div>
+	<br>
+	<div class="cpp_func_param_desc"> any material should be registered first and only then used. You can reuse already registered materials on any number of components you want. It's recommended to use this function in loading moments of your application (ex. loading screen) as this function may drop the framerate a little. 	 </div>
+	<br>
+	
+</div>
 </body>
 </html>

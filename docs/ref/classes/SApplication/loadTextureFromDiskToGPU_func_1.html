@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../../doc.css">
+    <title>loadTextureFromDiskToGPU - Silent Engine Documentation</title>
+</head>
+<body>
+    <div class="nav_panel">
+        <a class="cpp_link_title" href="../../classes/index.html"> Classes </a>
+		<br>
+		<a class="cpp_link_title" href="../../structs/index.html"> Structs </a>
+		<br>
+		<a class="cpp_link_title" href="../../enums/index.html"> Enums </a>
+    </div>
+    
+	<div class="cpp_doc">
+		<h3 class="cpp_object"> loadTextureFromDiskToGPU </h3>
+		<div class="cpp_codeobject_desc"> loads the given texture from the disk to the GPU memory so it can be used in the materials. 	 </div>
+		<br>
+		<code class="cpp_func_line_code"> STextureHandle loadTextureFromDiskToGPU<br>(<br>&nbsp;&nbsp;&nbsp;std::string sTextureName,<br>&nbsp;&nbsp;&nbsp;std::wstring sPathToTextureFile,<br>&nbsp;&nbsp;&nbsp;bool&amp; bErrorOccurred<br>); </code>
+		<br>
+		<br>
+		<div class="cpp_func_param">sTextureName</div>
+		<br>
+		<div class="cpp_func_param_desc">unique name of the texture, cannot be empty. 	</div>
+		<br>
+		<div class="cpp_func_param">sPathToTexture</div>
+		<br>
+		<div class="cpp_func_param_desc">path to the texture file (only .dds texture format). 	</div>
+		<br>
+		<div class="cpp_func_param">bErrorOccurred</div>
+		<br>
+		<div class="cpp_func_param_desc">will be true if an error occurred and the returned handle is invalid, false otherwise. 	</div>
+		<br>
+	----------------------------------------------
+	<br>
+	<br>
+	<div class="cpp_func_param"> Remarks </div>
+	<br>
+	<div class="cpp_func_param_desc"> note that you will need to unload the loaded textures, it's not gonna happen automatically, but all loaded textures will be unloaded in the SApplication's destructor function. You can reuse already loaded textures on any number of materials you want. This struct (STextureHandle) is just a handle to the actual texture so you can make copies of it. It's recommended to use this function in loading moments of your application (ex. loading screen) as this function may drop the framerate a little. 	 </div>
+	<br>
+	
+</div>
+</body>
+</html>

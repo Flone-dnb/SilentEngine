@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../../doc.css">
-    <title>createCBVHeap - Silent Engine Documentation</title>
+    <title>unloadTextureFromGPU - Silent Engine Documentation</title>
 </head>
 <body>
     <div class="nav_panel">
@@ -16,10 +16,10 @@
     </div>
     
 	<div class="cpp_doc">
-		<h3 class="cpp_object"> createCBVHeap </h3>
-		<div class="cpp_codeobject_desc"> creates CBV descriptor heap. 	 </div>
+		<h3 class="cpp_object"> unloadTextureFromGPU </h3>
+		<div class="cpp_codeobject_desc"> unloads the given texture from the GPU memory. 	 </div>
 		<br>
-		<code class="cpp_func_line_code"> bool createCBVHeap(); </code>
+		<code class="cpp_func_line_code"> bool   unloadTextureFromGPU(STextureHandle&amp; textureHandle); </code>
 		<br>
 		<br>
 		----------------------------------------------
@@ -28,6 +28,10 @@
 		<div class="cpp_func_param"> Return Value </div>
 		<br>
 		<div class="cpp_func_param_desc"> false if successful, true otherwise. 	 </div>
+		<br>
+		<div class="cpp_func_param"> Remarks </div>
+		<br>
+		<div class="cpp_func_param_desc"> if any spawned object uses this texture then the crash will appear, first, make sure that no spawned object is using the material with this texture: by using SMaterial::unbindTexture() or SComponent::unbindMaterial(). If you want to clear all textures and material, the right way is to unbindMaterial() on all components, then use unloadTexture() and then unregisterMaterial(). 	 </div>
 		<br>
 		
 	</div>

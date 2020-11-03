@@ -31,7 +31,7 @@
 		<br>
 		<div class="cpp_func_param"> Remarks </div>
 		<br>
-		<div class="cpp_func_param_desc"> you cannot unregister the Default Engine Material. It's recommended to use this function in loading moments of your application (ex. loading screen) as this function may drop the framerate a little. 	 </div>
+		<div class="cpp_func_param_desc"> make sure that this material is not used in any component !!! (by using SComponent::unbindMaterial()). This function will not unload the textures that this material is using. You cannot unregister the Default Engine Material. It's recommended to use this function in loading moments of your application (ex. loading screen) as this function may drop the framerate a little. All registered material will be unregistered in the SApplication's destructor function. 	 </div>
 		<br>
 		
 	</div>
