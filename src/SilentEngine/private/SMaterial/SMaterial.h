@@ -70,6 +70,15 @@ struct STextureInternal
 
 struct SMaterialProperties
 {
+	//@@Function
+	/*
+	* desc: sets the custom transparency.
+	* remarks: it's recommended to change this value only in onTick() function.
+	If this transparency in the component is enabled then
+	the material will use this value as an alpha for this material on top of the diffuse texture alpha channel.
+	*/
+	void    setCustomTransparency(float fCustomTransparency = 1.0f);
+
 	void    setRoughness     (float fRoughness);
 
 	//@@Function
@@ -85,7 +94,8 @@ struct SMaterialProperties
 	/*
 	* desc: sets the texture for diffuse color.
 	* return: true (error) if the texture is not loaded by the SApplication::loadTextureFromDiskToGPU(), false otherwise.
-	* remarks: changing the diffuse color (setDiffuseColor()) will affect the final look of the material as texture and color will blend.
+	* remarks: alpha channel of the diffuse texture controls the transparency (see setCustomTransparency() for more).
+	Changing the diffuse color (setDiffuseColor()) will affect the final look of the material as texture and color will blend.
 	*/
 	bool    setDiffuseTexture(STextureHandle textureHandle);
 
@@ -94,6 +104,12 @@ struct SMaterialProperties
 	* desc: unbinds the texture from the material if the texture with the given name exists.
 	*/
 	void    unbindTexture    (STextureHandle textureHandle);
+
+	//@@Function
+	/*
+	* desc: returns the custom transparency of the material.
+	*/
+	float   getCustomTransparency() const;
 
 	//@@Function
 	/*
@@ -117,6 +133,7 @@ private:
 	friend class SApplication;
 
 	float fRoughness = 0.5f;
+	float fCustomTransparency = 1.0f;
 
 	// Diffuse albedo.
 	DirectX::XMFLOAT4 vDiffuseColor = { 1.0f, 1.0f, 1.0f, 1.0f };
@@ -127,28 +144,14 @@ private:
 	bool bHasNormalTexture = false;
 
 	STextureHandle diffuseTexture;
-	STextureHandle normalTexture;
 	// if added new texture then add new texture to unbindTexture()
 	// and in SMaterialConstants 'bHasTexture'
+	// and in SApplication::unloadTextureFromGPU where it says "// ADD OTHER TEXTURES HERE".
 };
 
 class SMaterial
 {
 public:
-
-	SMaterial();
-	SMaterial(std::string sMaterialName);
-	//@@Function
-	/*
-	* desc: only copies the material properties and UV offset/rotation/scale.
-	*/
-	SMaterial(const SMaterial& mat);
-	//@@Function
-	/*
-	* desc: only copies the material properties and UV offset/rotation/scale.
-	*/
-	SMaterial& operator= (const SMaterial& mat);
-
 
 	//@@Function
 	/*
@@ -208,11 +211,28 @@ public:
 
 private:
 
-
 	friend class SApplication;
 	friend class SMeshComponent;
 	friend class SRuntimeMeshComponent;
 	friend class SMeshData;
+
+
+	// Only SApplication can create instances of SMaterial.
+
+	SMaterial();
+	SMaterial(std::string sMaterialName);
+	//@@Function
+	/*
+	* desc: only copies the material properties and UV offset/rotation/scale.
+	*/
+	SMaterial(const SMaterial& mat);
+	//@@Function
+	/*
+	* desc: only copies the material properties and UV offset/rotation/scale.
+	*/
+	SMaterial& operator= (const SMaterial& mat);
+
+
 
 	void updateMatTransform();
 

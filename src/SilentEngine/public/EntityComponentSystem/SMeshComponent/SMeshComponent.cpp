@@ -37,6 +37,20 @@ void SMeshComponent::setVisibility(bool bVisible)
 	this->bVisible = bVisible;
 }
 
+bool SMeshComponent::setEnableTransparency(bool bEnable)
+{
+	if (bSpawnedInLevel)
+	{
+		return true;
+	}
+	else
+	{
+		bEnableTransparency = bEnable;
+
+		return false;
+	}
+}
+
 void SMeshComponent::setMeshData(const SMeshData& meshData, bool bAddedVerticesOrUpdatedIndicesCount, bool bUpdateBoundingBox)
 {
 	SMaterial* pOldMat = this->meshData.pMeshMaterial;
@@ -103,6 +117,11 @@ SMaterial* SMeshComponent::getMeshMaterial()
 	return meshData.getMeshMaterial();
 }
 
+bool SMeshComponent::getEnableTransparency() const
+{
+	return bEnableTransparency;
+}
+
 bool SMeshComponent::setMeshTextureUVOffset(const SVector& vMeshTexUVOffset)
 {
 	mtxComponentProps.lock();
@@ -155,6 +174,16 @@ SMeshData SMeshComponent::getMeshData() const
 bool SMeshComponent::isVisible() const
 {
 	return bVisible;
+}
+
+void SMeshComponent::unbindMaterialsIncludingChilds()
+{
+	unbindMaterial();
+
+	for (size_t i = 0; i < vChildComponents.size(); i++)
+	{
+		vChildComponents[i]->unbindMaterialsIncludingChilds();
+	}
 }
 
 SRenderItem* SMeshComponent::getRenderData()

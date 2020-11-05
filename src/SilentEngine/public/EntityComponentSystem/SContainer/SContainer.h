@@ -111,6 +111,12 @@ public:
 
 	//@@Function
 	/*
+	* desc: unbinds used materials from all components and child components.
+	*/
+	void unbindMaterialsFromAllComponents();
+
+	//@@Function
+	/*
 	* desc: determines if the overridable functions like onKeyboardButtonDown() are called in the container.
 	* return: true if enabled, false otherwise.
 	*/
@@ -251,6 +257,11 @@ private:
 	* desc: sets the starting CB index for this container.
 	*/
 	void setStartIndexInCB        (size_t iStartIndex);
+	//@@Function
+	/*
+	* desc: returns all opaque and transparent mesh components.
+	*/
+	void getAllMeshComponents(std::vector<SComponent*>* pvOpaqueComponents, std::vector<SComponent*>* pvTransparentComponents);
 	//@@Function
 	/*
 	* desc: creates the vertex buffer for only runtime mesh components for given frame resource.

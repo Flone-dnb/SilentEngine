@@ -54,13 +54,6 @@ public:
 		*/
 		void despawnContainerFromLevel      (SContainer* pContainer);
 
-		//@@Function
-		/*
-		* desc: used to set the ambient light intensity.
-		* param "vRBG": rgb color vector.
-		*/
-		void setAmbientLight                (SVector vRGB);
-
 
 	// Get functions
 
@@ -82,13 +75,6 @@ public:
 		*/
 		void getNotRenderableContainers (std::vector<SContainer*>*& pvNotRenderableContainers);
 
-		//@@Function
-		/*
-		* desc: used to retrieve the ambient light intensity.
-		* return: rgb color vector.
-		*/
-		SVector getAmbientLight() const;
-
 
 private:
 
@@ -97,12 +83,6 @@ private:
 	//@@Variable
 	/* pointer to the SApplication that owns the level. */
 	SApplication* pApp;
-
-
-	//@@Variable
-	/* ambient light on the level. */
-	SVector vAmbientLight;
-
 
 
 	// Containers.

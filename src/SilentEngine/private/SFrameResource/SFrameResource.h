@@ -22,6 +22,7 @@
 #include "SilentEngine/Private/SGeometry/SGeometry.h"
 #include "SilentEngine/Public/SPrimitiveShapeGenerator/SPrimitiveShapeGenerator.h"
 #include "SilentEngine/Private/EntityComponentSystem/SLightComponent/SLightComponent.h"
+#include "SilentEngine/Public/SVector/SVector.h"
 
 /*
 * remarks: per-object constant buffer data. Every SComponentType::SCT_MESH, SCT_RUNTIME_MESH component has this.
@@ -42,6 +43,8 @@ struct SMaterialConstants
 	float fRoughness = 0.5f;
 
 	DirectX::XMFLOAT4X4 vMatTransform = SMath::getIdentityMatrix4x4();
+
+	float fCustomTransparency = 1.0f;
 
 	int bHasDiffuseTexture = 0;
 	int bHasNormalTexture = 0;
@@ -83,7 +86,30 @@ struct SRenderPassConstants
 
 	int iTextureFilterIndex = TFM_ANISOTROPIC;
 
+	DirectX::XMFLOAT4 vFogColor = { 0.5f, 0.5f, 0.5f, 1.0f };
+	float fFogStart = fFarZ / 2;
+	float fFogRange = fFogStart;
+	DirectX::XMFLOAT2 pad2;
+
 	SLightProps lights[MAX_LIGHTS];
+};
+
+// Stuff from SRenderPassConstants that user can change.
+struct SGlobalVisualSettings
+{
+	// Default: 0.0f, 0.0f, 0.0f.
+	SVector vAmbientLightRGB = SVector(0.0f, 0.0f, 0.0f);
+
+	// Default: 0.0f, 0.0f, 0.0f, 0.0f.
+	SVector vDistantFogColorRGBA = SVector(0.0f, 0.0f, 0.0f, 0.0f);
+
+	// Default: 1000.0f.
+    // (fog start distance from camera)
+	float fDistantFogStart = 1000.0f;
+
+	// Default: 500.0f
+	// (fog length from fDistantFogStart)
+	float fDistantFogRange = 500.0f;
 };
 
 class SFrameResource

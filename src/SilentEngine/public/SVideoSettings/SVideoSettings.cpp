@@ -84,11 +84,6 @@ void SVideoSettings::setEnableWireframeMode(bool bEnable)
 	pApp->setEnableWireframeMode(bEnable);
 }
 
-void SVideoSettings::setEnableBackfaceCulling(bool bEnable)
-{
-	pApp->setEnableBackfaceCulling(bEnable);
-}
-
 SVector SVideoSettings::getBackBufferFillColor()
 {
 	return pApp->getBackBufferFillColor();
@@ -97,11 +92,6 @@ SVector SVideoSettings::getBackBufferFillColor()
 bool SVideoSettings::isWireframeModeEnabled()
 {
 	return pApp->isWireframeModeEnabled();
-}
-
-bool SVideoSettings::isBackfaceCullingEnabled()
-{
-	return pApp->isBackfaceCullingEnabled();
 }
 
 std::vector<std::wstring> SVideoSettings::getSupportedDisplayAdapters()

@@ -63,6 +63,16 @@ bool SApplication::close()
 	}
 }
 
+void SApplication::setGlobalVisualSettings(SGlobalVisualSettings settings)
+{
+	renderPassVisualSettings = settings;
+}
+
+SGlobalVisualSettings SApplication::getGlobalVisualSettings()
+{
+	return renderPassVisualSettings;
+}
+
 SMaterial* SApplication::registerMaterial(const std::string& sMaterialName, bool& bErrorOccurred)
 {
 	bErrorOccurred = false;
@@ -201,6 +211,43 @@ bool SApplication::unregisterMaterial(const std::string& sMaterialName)
 
 	mtxMaterial.lock();
 	mtxSpawnDespawn.lock();
+	mtxDraw.lock();
+
+
+	// Find if any spawned object is using this material.
+
+	std::vector<SComponent*> vAllSpawnedMeshComponents = vAllRenderableSpawnedOpaqueComponents;
+	vAllSpawnedMeshComponents.insert(vAllSpawnedMeshComponents.end(), vAllRenderableSpawnedTransparentComponents.begin(),
+		vAllRenderableSpawnedTransparentComponents.end());
+
+	for (size_t i = 0; i < vAllSpawnedMeshComponents.size(); i++)
+	{
+		if (vAllSpawnedMeshComponents[i]->componentType == SCT_MESH)
+		{
+			if (dynamic_cast<SMeshComponent*>(vAllSpawnedMeshComponents[i])->getMeshMaterial())
+			{
+				// Not the default material.
+				if (dynamic_cast<SMeshComponent*>(vAllSpawnedMeshComponents[i])->getMeshMaterial()->getMaterialName() == sMaterialName)
+				{
+					dynamic_cast<SMeshComponent*>(vAllSpawnedMeshComponents[i])->unbindMaterial();
+				}
+			}
+		}
+		else if (vAllSpawnedMeshComponents[i]->componentType == SCT_RUNTIME_MESH)
+		{
+			if (dynamic_cast<SRuntimeMeshComponent*>(vAllSpawnedMeshComponents[i])->getMeshMaterial())
+			{
+				// Not the default material.
+				if (dynamic_cast<SRuntimeMeshComponent*>(vAllSpawnedMeshComponents[i])->getMeshMaterial()->getMaterialName() == sMaterialName)
+				{
+					dynamic_cast<SRuntimeMeshComponent*>(vAllSpawnedMeshComponents[i])->unbindMaterial();
+				}
+			}
+		}
+	}
+
+
+
 
 	bool bResized = false;
 
@@ -225,8 +272,6 @@ bool SApplication::unregisterMaterial(const std::string& sMaterialName)
 
 	if (bResized)
 	{
-		mtxDraw.lock();
-
 		flushCommandQueue();
 
 		for (size_t i = 0; i < vRegisteredMaterials.size(); i++)
@@ -237,12 +282,11 @@ bool SApplication::unregisterMaterial(const std::string& sMaterialName)
 		// Recreate cbv heap.
 		createCBVSRVHeap();
 		createViews();
-
-		mtxDraw.unlock();
 	}
 
 	mtxSpawnDespawn.unlock();
 	mtxMaterial.unlock();
+	mtxDraw.unlock();
 
 	return false;
 }
@@ -487,6 +531,54 @@ bool SApplication::unloadTextureFromGPU(STextureHandle& textureHandle)
 
 
 	mtxTexture.lock();
+	mtxSpawnDespawn.lock();
+	mtxDraw.lock();
+
+	// Find if any spawned object is using a material with this texture.
+
+	std::vector<SComponent*> vAllSpawnedMeshComponents = vAllRenderableSpawnedOpaqueComponents;
+	vAllSpawnedMeshComponents.insert(vAllSpawnedMeshComponents.end(), vAllRenderableSpawnedTransparentComponents.begin(),
+		vAllRenderableSpawnedTransparentComponents.end());
+
+	for (size_t i = 0; i < vAllSpawnedMeshComponents.size(); i++)
+	{
+		if (vAllSpawnedMeshComponents[i]->componentType == SCT_MESH)
+		{
+			if (dynamic_cast<SMeshComponent*>(vAllSpawnedMeshComponents[i])->getMeshMaterial())
+			{
+				// Not the default material.
+				SMaterialProperties matProps = dynamic_cast<SMeshComponent*>(vAllSpawnedMeshComponents[i])->getMeshMaterial()->getMaterialProperties();
+				STextureHandle texHandle;
+				if (matProps.getDiffuseTexture(&texHandle) == false)
+				{
+					if (texHandle.getTextureName() == textureHandle.getTextureName())
+					{
+						dynamic_cast<SMeshComponent*>(vAllSpawnedMeshComponents[i])->unbindMaterial();
+					}
+				}
+
+				// ADD OTHER TEXTURES HERE
+			}
+		}
+		else if (vAllSpawnedMeshComponents[i]->componentType == SCT_RUNTIME_MESH)
+		{
+			if (dynamic_cast<SRuntimeMeshComponent*>(vAllSpawnedMeshComponents[i])->getMeshMaterial())
+			{
+				// Not the default material.
+				SMaterialProperties matProps = dynamic_cast<SRuntimeMeshComponent*>(vAllSpawnedMeshComponents[i])->getMeshMaterial()->getMaterialProperties();
+				STextureHandle texHandle;
+				if (matProps.getDiffuseTexture(&texHandle) == false)
+				{
+					if (texHandle.getTextureName() == textureHandle.getTextureName())
+					{
+						dynamic_cast<SRuntimeMeshComponent*>(vAllSpawnedMeshComponents[i])->unbindMaterial();
+					}
+				}
+
+				// ADD OTHER TEXTURES HERE
+			}
+		}
+	}
 
 	textureHandle.bRegistered = false;
 
@@ -512,9 +604,6 @@ bool SApplication::unloadTextureFromGPU(STextureHandle& textureHandle)
 
 	// Remove the SRV to this texture.
 
-	mtxSpawnDespawn.lock();
-	mtxDraw.lock();
-
 	flushCommandQueue();
 
 	// Recreate cbv heap.
@@ -538,17 +627,11 @@ bool SApplication::spawnContainerInLevel(SContainer* pContainer)
 {
 	mtxSpawnDespawn.lock();
 
-	std::vector<SContainer*>* pvRenderableContainers = nullptr;
-	getCurrentLevel()->getRenderableContainers(pvRenderableContainers);
-
-	std::vector<SContainer*>* pvNotRenderableContainers = nullptr;
-	getCurrentLevel()->getNotRenderableContainers(pvNotRenderableContainers);
-
 	bool bHasUniqueName = true;
 
-	for (size_t i = 0; i < pvRenderableContainers->size(); i++)
+	for (size_t i = 0; i < vAllRenderableSpawnedContainers.size(); i++)
 	{
-		if (pvRenderableContainers->operator[](i)->getContainerName() == pContainer->getContainerName())
+		if (vAllRenderableSpawnedContainers[i]->getContainerName() == pContainer->getContainerName())
 		{
 			bHasUniqueName = false;
 			break;
@@ -557,9 +640,9 @@ bool SApplication::spawnContainerInLevel(SContainer* pContainer)
 
 	if (bHasUniqueName)
 	{
-		for (size_t i = 0; i < pvNotRenderableContainers->size(); i++)
+		for (size_t i = 0; i < vAllNonrenderableSpawnedContainers.size(); i++)
 		{
-			if (pvNotRenderableContainers->operator[](i)->getContainerName() == pContainer->getContainerName())
+			if (vAllNonrenderableSpawnedContainers[i]->getContainerName() == pContainer->getContainerName())
 			{
 				bHasUniqueName = false;
 				break;
@@ -609,7 +692,13 @@ bool SApplication::spawnContainerInLevel(SContainer* pContainer)
 	if (iCBCount == 0)
 	{
 		// No renderable components inside.
+
+		std::vector<SContainer*>* pvNotRenderableContainers = nullptr;
+		pCurrentLevel->getNotRenderableContainers(pvNotRenderableContainers);
+
 		pvNotRenderableContainers->push_back(pContainer);
+
+		vAllNonrenderableSpawnedContainers.push_back(pContainer);
 	}
 	else
 	{
@@ -652,8 +741,16 @@ bool SApplication::spawnContainerInLevel(SContainer* pContainer)
 		}
 
 
+		std::vector<SContainer*>* pvRenderableContainers = nullptr;
+		pCurrentLevel->getRenderableContainers(pvRenderableContainers);
 
 		pvRenderableContainers->push_back(pContainer);
+
+		vAllRenderableSpawnedContainers.push_back(pContainer);
+
+
+		pContainer->getAllMeshComponents(&vAllRenderableSpawnedOpaqueComponents,
+			&vAllRenderableSpawnedTransparentComponents);
 
 
 		if (bExpanded)
@@ -716,6 +813,15 @@ void SApplication::despawnContainerFromLevel(SContainer* pContainer)
 				break;
 			}
 		}
+
+		for (size_t i = 0; i < vAllNonrenderableSpawnedContainers.size(); i++)
+		{
+			if (vAllNonrenderableSpawnedContainers[i] == pContainer)
+			{
+				vAllNonrenderableSpawnedContainers.erase(vAllNonrenderableSpawnedContainers.begin() + i);
+				break;
+			}
+		}
 	}
 	else
 	{
@@ -754,6 +860,15 @@ void SApplication::despawnContainerFromLevel(SContainer* pContainer)
 				break;
 			}
 		}
+
+		for (size_t i = 0; i < vAllRenderableSpawnedContainers.size(); i++)
+		{
+			if (vAllRenderableSpawnedContainers[i] == pContainer)
+			{
+				vAllRenderableSpawnedContainers.erase(vAllRenderableSpawnedContainers.begin() + i);
+				break;
+			}
+		}
 		
 
 		size_t iStartIndex = pContainer->getStartIndexInCB();
@@ -775,6 +890,11 @@ void SApplication::despawnContainerFromLevel(SContainer* pContainer)
 
 		pContainer->setStartIndexInCB(0);
 
+
+		removeComponentsFromGlobalVectors(pContainer);
+
+
+
 		if (bResized)
 		{
 			// All CBs are cleared (they are new), need to refill them.
@@ -794,6 +914,11 @@ void SApplication::despawnContainerFromLevel(SContainer* pContainer)
 	}
 
 	pContainer->setSpawnedInLevel(false);
+
+	if (bExitCalled)
+	{
+		delete pContainer;
+	}
 
 	mtxSpawnDespawn.unlock();
 	mtxDraw.unlock();
@@ -864,12 +989,12 @@ void SApplication::setBackBufferFillColor(SVector vColor)
 
 void SApplication::setEnableWireframeMode(bool bEnable)
 {
-	bUseFillModeWireframe = bEnable;
-}
+	mtxDraw.lock();
 
-void SApplication::setEnableBackfaceCulling(bool bEnable)
-{
-	bUseBackFaceCulling = bEnable;
+	// Don't change this value is draw() in progress.
+	bUseFillModeWireframe = bEnable;
+
+	mtxDraw.unlock();
 }
 
 void SApplication::setMSAAEnabled(bool bEnable)
@@ -1626,11 +1751,6 @@ bool SApplication::isWireframeModeEnabled() const
 	return bUseFillModeWireframe;
 }
 
-bool SApplication::isBackfaceCullingEnabled() const
-{
-	return bUseBackFaceCulling;
-}
-
 unsigned long long SApplication::getTriangleCountInWorld()
 {
 	if (pCurrentLevel)
@@ -2179,13 +2299,21 @@ void SApplication::updateMainPassCB()
 	mainRenderPassCB.iSpotLightCount = 0;
 	mainRenderPassCB.iTextureFilterIndex = textureFilterIndex;
 
+	mainRenderPassCB.vAmbientLightRGBA = { renderPassVisualSettings.vAmbientLightRGB.getX(),
+		renderPassVisualSettings.vAmbientLightRGB.getY(),
+		renderPassVisualSettings.vAmbientLightRGB.getZ(),
+		1.0f};
+	mainRenderPassCB.vFogColor = { renderPassVisualSettings.vDistantFogColorRGBA.getX(),
+		renderPassVisualSettings.vDistantFogColorRGBA.getY(),
+		renderPassVisualSettings.vDistantFogColorRGBA.getZ(),
+		renderPassVisualSettings.vDistantFogColorRGBA.getW()};
+	mainRenderPassCB.fFogStart = renderPassVisualSettings.fDistantFogStart;
+	mainRenderPassCB.fFogRange = renderPassVisualSettings.fDistantFogRange;
+
 	SLevel* pLevel = getCurrentLevel();
 
 	if (pLevel)
 	{
-		SVector vAmbientLight = pLevel->getAmbientLight();
-		mainRenderPassCB.vAmbientLightRGBA = { vAmbientLight.getX(), vAmbientLight.getY(), vAmbientLight.getZ(), 1.0f };
-
 		mtxSpawnDespawn.lock();
 
 		size_t iCurrentIndex = 0;
@@ -2253,21 +2381,13 @@ void SApplication::draw()
 
 	// A command list can be reset after it has been added to the command queue via ExecuteCommandList (was added in init()).
 
-	if (bUseFillModeWireframe && bUseBackFaceCulling == false)
+	if (bUseFillModeWireframe)
 	{
-		hresult = pCommandList->Reset(pCurrentCommandListAllocator.Get(), pNoBackfaceCullingWireframePSO.Get());
-	}
-	else if (bUseFillModeWireframe)
-	{
-		hresult = pCommandList->Reset(pCurrentCommandListAllocator.Get(), pWireframePSO.Get());
-	}
-	else if (bUseBackFaceCulling == false)
-	{
-		hresult = pCommandList->Reset(pCurrentCommandListAllocator.Get(), pNoBackfaceCullingPSO.Get());
+		hresult = pCommandList->Reset(pCurrentCommandListAllocator.Get(), pOpaqueWireframePSO.Get());
 	}
 	else
 	{
-		hresult = pCommandList->Reset(pCurrentCommandListAllocator.Get(), pPSO.Get());
+		hresult = pCommandList->Reset(pCurrentCommandListAllocator.Get(), pOpaquePSO.Get());
 	}
 
 	if (FAILED(hresult))
@@ -2310,13 +2430,15 @@ void SApplication::draw()
 
 
 
-	// CB.
+	// CBV/SRV heap.
 
 	ID3D12DescriptorHeap* descriptorHeaps[] = { pCBVSRVHeap.Get() };
 	pCommandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 
 	pCommandList->SetGraphicsRootSignature(pRootSignature.Get());
 
+
+	// Render pass cb.
 
 	int iRenderPassCBVIndex = iRenderPassCBVOffset + iCurrentFrameResourceIndex;
 	auto renderPassCBVHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(pCBVSRVHeap->GetGPUDescriptorHandleForHeapStart());
@@ -2326,7 +2448,41 @@ void SApplication::draw()
 
 
 
-	drawVisibleRenderableContainers();
+	// Draw.
+
+	iLastFrameDrawCallCount = 0;
+
+	mtxSpawnDespawn.lock();
+
+	drawOpaqueComponents();
+
+	if (bUseFillModeWireframe)
+	{
+		if (MSAA_Enabled)
+		{
+			pCommandList->SetPipelineState(pTransparentAlphaToCoverageWireframePSO.Get());
+		}
+		else
+		{
+			pCommandList->SetPipelineState(pTransparentWireframePSO.Get());
+		}
+	}
+	else
+	{
+		if (MSAA_Enabled)
+		{
+			pCommandList->SetPipelineState(pTransparentAlphaToCoveragePSO.Get());
+		}
+		else
+		{
+			pCommandList->SetPipelineState(pTransparentPSO.Get());
+		}
+	}
+
+	drawTransparentComponents();
+
+	mtxSpawnDespawn.unlock();
+
 
 
 	pCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(getCurrentBackBufferResource(), 
@@ -2430,32 +2586,29 @@ void SApplication::draw()
 	mtxDraw.unlock();
 }
 
-void SApplication::drawVisibleRenderableContainers()
+void SApplication::drawOpaqueComponents()
 {
-	iLastFrameDrawCallCount = 0;
-
-	mtxSpawnDespawn.lock();
-
-	std::vector<SContainer*>* pvRenderableContainers = nullptr;
-	pCurrentLevel->getRenderableContainers(pvRenderableContainers);
-
-	for (size_t i = 0; i < pvRenderableContainers->size(); i++)
+	for (size_t i = 0; i < vAllRenderableSpawnedOpaqueComponents.size(); i++)
 	{
-		if (pvRenderableContainers->operator[](i)->isVisible() == false)
+		if (vAllRenderableSpawnedOpaqueComponents[i]->getContainer()->isVisible())
 		{
-			continue;
-		}
-
-		for (size_t j = 0; j < pvRenderableContainers->operator[](i)->vComponents.size(); j++)
-		{
-			drawComponentAndChilds(pvRenderableContainers->operator[](i)->vComponents[j]);
+			drawComponent(vAllRenderableSpawnedOpaqueComponents[i]);
 		}
 	}
-
-	mtxSpawnDespawn.unlock();
 }
 
-void SApplication::drawComponentAndChilds(SComponent* pComponent)
+void SApplication::drawTransparentComponents()
+{
+	for (size_t i = 0; i < vAllRenderableSpawnedTransparentComponents.size(); i++)
+	{
+		if (vAllRenderableSpawnedTransparentComponents[i]->getContainer()->isVisible())
+		{
+			drawComponent(vAllRenderableSpawnedTransparentComponents[i]);
+		}
+	}
+}
+
+void SApplication::drawComponent(SComponent* pComponent)
 {
 	bool bDrawThisComponent = false;
 
@@ -2480,17 +2633,17 @@ void SApplication::drawComponentAndChilds(SComponent* pComponent)
 
 	if (bDrawThisComponent)
 	{
-		pCommandList->IASetVertexBuffers     (0, 1, &pComponent->getRenderData()->pGeometry->getVertexBufferView());
-		pCommandList->IASetIndexBuffer       (&pComponent->getRenderData()->pGeometry->getIndexBufferView());
-		pCommandList->IASetPrimitiveTopology (pComponent->getRenderData()->primitiveTopologyType);
+		pCommandList->IASetVertexBuffers(0, 1, &pComponent->getRenderData()->pGeometry->getVertexBufferView());
+		pCommandList->IASetIndexBuffer(&pComponent->getRenderData()->pGeometry->getIndexBufferView());
+		pCommandList->IASetPrimitiveTopology(pComponent->getRenderData()->primitiveTopologyType);
 
-		
+
 		size_t iObjCount = roundUp(iActualObjectCBCount, OBJECT_CB_RESIZE_MULTIPLE);
 		size_t iMaterialCount = roundUp(vRegisteredMaterials.size(), OBJECT_CB_RESIZE_MULTIPLE);
 		size_t iTextureCount = vLoadedTextures.size();
 
 
-		
+
 		// Texture descriptor table.
 
 		auto heapHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(pCBVSRVHeap->GetGPUDescriptorHandleForHeapStart());
@@ -2501,7 +2654,7 @@ void SApplication::drawComponentAndChilds(SComponent* pComponent)
 		if (pComponent->componentType == SCT_MESH)
 		{
 			SMeshComponent* pMeshComponent = dynamic_cast<SMeshComponent*>(pComponent);
-			
+
 			if (pMeshComponent->getMeshMaterial())
 			{
 				if (pMeshComponent->getMeshMaterial()->getMaterialProperties().getDiffuseTexture(&tex) == false)
@@ -2528,21 +2681,12 @@ void SApplication::drawComponentAndChilds(SComponent* pComponent)
 			heapHandle.Offset(iObjCount + iMaterialCount + iCurrentFrameResourceIndex * (iObjCount + iMaterialCount + iTextureCount)
 				+ tex.pRefToTexture->iTexSRVHeapIndex, iCBVSRVUAVDescriptorSize);
 			pCommandList->SetGraphicsRootDescriptorTable(3, heapHandle);
-
-			// [Crashed here?]
-			// You might have unloaded the texture in use.
-			// Unbind texture/material first, to make sure that no object is using
-			// the texture before unloading it.
 		}
 
 
 
 		// Object descriptor table.
 
-		// [Crashed here?]
-		// You might have unloaded the texture in use.
-		// Unbind texture/material first, to make sure that no object is using
-		// the texture before unloading it.
 		UINT iCBVIndex = iCurrentFrameResourceIndex * (iObjCount + iMaterialCount + iTextureCount) + pComponent->getRenderData()->iObjCBIndex;
 		auto cbvHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(pCBVSRVHeap->GetGPUDescriptorHandleForHeapStart());
 		cbvHandle.Offset(iCBVIndex, iCBVSRVUAVDescriptorSize);
@@ -2574,13 +2718,6 @@ void SApplication::drawComponentAndChilds(SComponent* pComponent)
 			pComponent->getRenderData()->iStartVertexLocation, 0);
 
 		iLastFrameDrawCallCount++;
-	}
-
-	std::vector<SComponent*> vChilds = pComponent->getChildComponents();
-
-	for (size_t i = 0; i < vChilds.size(); i++)
-	{
-		drawComponentAndChilds(vChilds[i]);
 	}
 }
 
@@ -3579,8 +3716,15 @@ bool SApplication::createRootSignature()
 
 bool SApplication::createShadersAndInputLayout()
 {
+	const D3D_SHADER_MACRO alphaTestDefines[] =
+	{
+		"ALPHA_TEST", "1",
+		NULL, NULL
+	};
+
 	mShaders["basicVS"] = SGeometry::compileShader(L"shaders/basic.hlsl", nullptr, "VS", "vs_5_1", bCompileShadersInRelease);
 	mShaders["basicPS"] = SGeometry::compileShader(L"shaders/basic.hlsl", nullptr, "PS", "ps_5_1", bCompileShadersInRelease);
+	mShaders["basicAlphaPS"] = SGeometry::compileShader(L"shaders/basic.hlsl", alphaTestDefines, "PS", "ps_5_1", bCompileShadersInRelease);
 
 	vInputLayout =
 	{
@@ -3616,6 +3760,18 @@ bool SApplication::createPSO()
 	rastDesc.FillMode = D3D12_FILL_MODE_SOLID;
 	rastDesc.MultisampleEnable = MSAA_Enabled;
 
+	D3D12_RENDER_TARGET_BLEND_DESC transparencyBlendDesc;
+	transparencyBlendDesc.BlendEnable = true;
+	transparencyBlendDesc.LogicOpEnable = false;
+	transparencyBlendDesc.SrcBlend = D3D12_BLEND_SRC_ALPHA;
+	transparencyBlendDesc.DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+	transparencyBlendDesc.BlendOp = D3D12_BLEND_OP_ADD;
+	transparencyBlendDesc.SrcBlendAlpha = D3D12_BLEND_ONE;
+	transparencyBlendDesc.DestBlendAlpha = D3D12_BLEND_ZERO;
+	transparencyBlendDesc.BlendOpAlpha = D3D12_BLEND_OP_ADD;
+	transparencyBlendDesc.LogicOp = D3D12_LOGIC_OP_NOOP;
+	transparencyBlendDesc.RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+
 	psoDesc.RasterizerState   = rastDesc;
 	psoDesc.BlendState        = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
 	psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
@@ -3627,35 +3783,65 @@ bool SApplication::createPSO()
 	psoDesc.SampleDesc.Quality = MSAA_Enabled ? (MSAA_Quality - 1) : 0;
 	psoDesc.DSVFormat         = DepthStencilFormat;
 
-	HRESULT hresult = pDevice->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pPSO));
+
+	HRESULT hresult = pDevice->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pOpaquePSO));
 	if (FAILED(hresult))
 	{
 		SError::showErrorMessageBox(hresult, L"SApplication::createPSO::ID3D12Device::CreateGraphicsPipelineState()");
 		return true;
 	}
 
-	D3D12_GRAPHICS_PIPELINE_STATE_DESC wireframePsoDesc = psoDesc;
-	wireframePsoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;
-	hresult = pDevice->CreateGraphicsPipelineState(&wireframePsoDesc, IID_PPV_ARGS(&pWireframePSO));
+
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC transparentPsoDesc = psoDesc;
+	transparentPsoDesc.BlendState.RenderTarget[0] = transparencyBlendDesc;
+	transparentPsoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+	transparentPsoDesc.PS =
+	{
+		reinterpret_cast<BYTE*>(mShaders["basicAlphaPS"]->GetBufferPointer()),
+		mShaders["basicAlphaPS"]->GetBufferSize()
+	};
+	hresult = pDevice->CreateGraphicsPipelineState(&transparentPsoDesc, IID_PPV_ARGS(&pTransparentPSO));
 	if (FAILED(hresult))
 	{
 		SError::showErrorMessageBox(hresult, L"SApplication::createPSO::ID3D12Device::CreateGraphicsPipelineState()");
 		return true;
 	}
 
-	D3D12_GRAPHICS_PIPELINE_STATE_DESC noBackfacePsoDesc = psoDesc;
-	noBackfacePsoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
-	hresult = pDevice->CreateGraphicsPipelineState(&noBackfacePsoDesc, IID_PPV_ARGS(&pNoBackfaceCullingPSO));
+
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC transparentAlphaToCoveragePsoDesc = transparentPsoDesc;
+	transparentAlphaToCoveragePsoDesc.BlendState.AlphaToCoverageEnable = true;
+	hresult = pDevice->CreateGraphicsPipelineState(&transparentAlphaToCoveragePsoDesc, IID_PPV_ARGS(&pTransparentAlphaToCoveragePSO));
 	if (FAILED(hresult))
 	{
 		SError::showErrorMessageBox(hresult, L"SApplication::createPSO::ID3D12Device::CreateGraphicsPipelineState()");
 		return true;
 	}
 
-	D3D12_GRAPHICS_PIPELINE_STATE_DESC noBackfaceWireframePsoDesc = psoDesc;
-	noBackfaceWireframePsoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
-	noBackfaceWireframePsoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;
-	hresult = pDevice->CreateGraphicsPipelineState(&noBackfaceWireframePsoDesc, IID_PPV_ARGS(&pNoBackfaceCullingWireframePSO));
+
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC opaqueWireframePsoDesc = psoDesc;
+	opaqueWireframePsoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;
+	hresult = pDevice->CreateGraphicsPipelineState(&opaqueWireframePsoDesc, IID_PPV_ARGS(&pOpaqueWireframePSO));
+	if (FAILED(hresult))
+	{
+		SError::showErrorMessageBox(hresult, L"SApplication::createPSO::ID3D12Device::CreateGraphicsPipelineState()");
+		return true;
+	}
+
+
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC transparentWireframePsoDesc = transparentPsoDesc;
+	transparentWireframePsoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;
+	hresult = pDevice->CreateGraphicsPipelineState(&transparentWireframePsoDesc, IID_PPV_ARGS(&pTransparentWireframePSO));
+	if (FAILED(hresult))
+	{
+		SError::showErrorMessageBox(hresult, L"SApplication::createPSO::ID3D12Device::CreateGraphicsPipelineState()");
+		return true;
+	}
+
+
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC transparentAlphaToCoverageWireframePsoDesc = transparentAlphaToCoveragePsoDesc;
+	transparentAlphaToCoverageWireframePsoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;
+	hresult = pDevice->CreateGraphicsPipelineState(&transparentAlphaToCoverageWireframePsoDesc,
+		IID_PPV_ARGS(&pTransparentAlphaToCoverageWireframePSO));
 	if (FAILED(hresult))
 	{
 		SError::showErrorMessageBox(hresult, L"SApplication::createPSO::ID3D12Device::CreateGraphicsPipelineState()");
@@ -3673,22 +3859,7 @@ bool SApplication::resetCommandList()
 
 	Microsoft::WRL::ComPtr<ID3D12CommandAllocator> pCurrentCommandListAllocator = pCurrentFrameResource->pCommandListAllocator;
 
-	if (bUseFillModeWireframe && bUseBackFaceCulling == false)
-	{
-		hresult = pCommandList->Reset(pCurrentCommandListAllocator.Get(), pNoBackfaceCullingWireframePSO.Get());
-	}
-	else if (bUseFillModeWireframe)
-	{
-		hresult = pCommandList->Reset(pCurrentCommandListAllocator.Get(), pWireframePSO.Get());
-	}
-	else if (bUseBackFaceCulling == false)
-	{
-		hresult = pCommandList->Reset(pCurrentCommandListAllocator.Get(), pNoBackfaceCullingPSO.Get());
-	}
-	else
-	{
-		hresult = pCommandList->Reset(pCurrentCommandListAllocator.Get(), pPSO.Get());
-	}
+	hresult = pCommandList->Reset(pCurrentCommandListAllocator.Get(), pOpaquePSO.Get());
 
 	if (FAILED(hresult))
 	{
@@ -3756,6 +3927,8 @@ void SApplication::updateMaterialInFrameResource(SMaterial * pMaterial, SUploadB
 	matConstants.bHasDiffuseTexture = matProps.bHasDiffuseTexture;
 	matConstants.bHasNormalTexture = matProps.bHasNormalTexture;
 
+	matConstants.fCustomTransparency = matProps.fCustomTransparency;
+
 	DirectX::XMMATRIX vMatTransform = DirectX::XMLoadFloat4x4(&pMaterial->vMatTransform);
 	DirectX::XMStoreFloat4x4(&matConstants.vMatTransform, DirectX::XMMatrixTranspose(vMatTransform));
 
@@ -3819,6 +3992,72 @@ void SApplication::showDeviceRemovedReason()
 	SError::showErrorMessageBox(hResult, L"SApplication::showDeviceRemovedReason()");
 }
 
+void SApplication::removeComponentsFromGlobalVectors(SContainer* pContainer)
+{
+	std::vector<SComponent*> vOpaqueMeshComponents;
+	std::vector<SComponent*> vTransparentMeshComponents;
+
+	pContainer->getAllMeshComponents(&vOpaqueMeshComponents, &vTransparentMeshComponents);
+
+	size_t iLeftComponents = vOpaqueMeshComponents.size();
+
+	for (long long i = 0; i < vAllRenderableSpawnedOpaqueComponents.size(); i++)
+	{
+		for (long long j = 0; j < vOpaqueMeshComponents.size(); j++)
+		{
+			if (vAllRenderableSpawnedOpaqueComponents[i] == vOpaqueMeshComponents[j])
+			{
+				vAllRenderableSpawnedOpaqueComponents.erase(vAllRenderableSpawnedOpaqueComponents.begin() + i);
+				i--;
+
+				iLeftComponents--;
+
+				break;
+			}
+		}
+
+		if (iLeftComponents == 0)
+		{
+			break;
+		}
+	}
+
+	if (iLeftComponents != 0)
+	{
+		showMessageBox(L"Error", L"SApplication::despawnContainerFromLevel() error: not all opaque components were removed.");
+	}
+
+
+
+	iLeftComponents = vTransparentMeshComponents.size();
+
+	for (long long i = 0; i < vAllRenderableSpawnedTransparentComponents.size(); i++)
+	{
+		for (long long j = 0; j < vTransparentMeshComponents.size(); j++)
+		{
+			if (vAllRenderableSpawnedTransparentComponents[i] == vTransparentMeshComponents[j])
+			{
+				vAllRenderableSpawnedTransparentComponents.erase(vAllRenderableSpawnedTransparentComponents.begin() + i);
+				i--;
+
+				iLeftComponents--;
+
+				break;
+			}
+		}
+
+		if (iLeftComponents == 0)
+		{
+			break;
+		}
+	}
+
+	if (iLeftComponents != 0)
+	{
+		showMessageBox(L"Error", L"SApplication::despawnContainerFromLevel() error: not all transparent components were removed.");
+	}
+}
+
 SApplication::SApplication(HINSTANCE hInstance)
 {
 	hApplicationInstance = hInstance;
@@ -3838,6 +4077,13 @@ SApplication::SApplication(HINSTANCE hInstance)
 
 SApplication::~SApplication()
 {
+	bExitCalled = true; // delete containers when the level will despawn them
+
+	if (pCurrentLevel)
+	{
+		delete pCurrentLevel;
+	}
+
 	if(bInitCalled)
 	{
 		flushCommandQueue();
@@ -3851,11 +4097,6 @@ SApplication::~SApplication()
 
 	mtxSpawnDespawn.lock();
 	mtxSpawnDespawn.unlock();
-
-	if (pCurrentLevel)
-	{
-		delete pCurrentLevel;
-	}
 
 
 	for (size_t i = 0; i < vLoadedTextures.size(); i++)

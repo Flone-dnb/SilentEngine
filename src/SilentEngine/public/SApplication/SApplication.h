@@ -56,7 +56,6 @@ class SComponent;
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
 
-
 //@@Class
 /*
 The class represents an application instance. It holds all main entities.
@@ -157,6 +156,20 @@ public:
 		*/
 		static bool     close                                  ();
 
+
+	// Visual settings.
+
+		//@@Function
+		/*
+		* desc: used to set the global visual settings.
+		*/
+		void             setGlobalVisualSettings               (SGlobalVisualSettings settings);
+		//@@Function
+		/*
+		* desc: returns the global visual settings.
+		*/
+		SGlobalVisualSettings getGlobalVisualSettings          ();
+
 	
 	// Materials
 
@@ -188,8 +201,13 @@ public:
 		/*
 		* desc: unregisters a material with the given name, make sure that no object is using this material.
 		* return: false if successful, true otherwise.
-		* remarks: make sure that this material is not used in any component !!! (by using SComponent::unbindMaterial()).
+		* remarks: if any spawned object uses this material then the material will be unbinded from such objects,
+		you can manually unbind the material from objects that use it
+		by using SComponent::unbindMaterial().
 		This function will not unload the textures that this material is using.
+		If you want to clear all textures and material, the right way is to
+		call SContainer::unbindMaterialsFromAllComponents() (or unbindMaterial() on all components and child components), and then use
+		unloadTexture() and unregisterMaterial() (no matter in what order).
 		You cannot unregister the Default Engine Material.
 		It's recommended to use this function in loading moments of your application (ex. loading screen)
 		as this function may drop the framerate a little.
@@ -231,12 +249,14 @@ public:
 		/*
 		* desc: unloads the given texture from the GPU memory.
 		* return: false if successful, true otherwise.
-		* remarks: if any spawned object uses this texture then the crash will appear,
-		first, make sure that no spawned object is using the material with this texture:
+		* remarks: if any spawned object uses the material with this texture then the material will be unbinded from such objects,
+		you can manually unbind the material/texture from objects that use it
 		by using SMaterial::unbindTexture() or SComponent::unbindMaterial().
 		If you want to clear all textures and material, the right way is to
-		unbindMaterial() on all components, then use unloadTexture() and then
-		unregisterMaterial().
+		call SContainer::unbindMaterialsFromAllComponents() (or unbindMaterial() on all components and child components), and then use
+		unloadTexture() and unregisterMaterial() (no matter in what order).
+		It's recommended to use this function in loading moments of your application (ex. loading screen)
+		as this function may drop the framerate a little.
 		*/
 		bool            unloadTextureFromGPU                   (STextureHandle& textureHandle);
 
@@ -676,18 +696,9 @@ private:
 		* desc: draws the frame.
 		*/
 		void draw                            ();
-		//@@Function
-		/*
-		* desc: draws the visible renderable containers.
-		*/
-		void drawVisibleRenderableContainers ();
-		//@@Function
-		/*
-		* desc: draws visible renderable components.
-		* param "pComponent": component to draw.
-		*/
-		void drawComponentAndChilds          (SComponent* pComponent);
-
+		void drawOpaqueComponents            ();
+		void drawTransparentComponents       ();
+		void drawComponent                   (SComponent* pComponent);
 		//@@Function
 		/*
 		* desc: used to set the FPS limit (FPS cap).
@@ -807,12 +818,6 @@ private:
 		* param "bEnable": true to enable, false to disable.
 		*/
 		void setEnableWireframeMode               (bool bEnable);
-		//@@Function
-		/*
-		* desc: used to enable/disable backface culling technique.
-		* param "bEnable": true to enable, false to disable.
-		*/
-		void setEnableBackfaceCulling             (bool bEnable);
 
 		//@@Function
 		/*
@@ -826,12 +831,6 @@ private:
 		* return: true if enabled, false otherwise.
 		*/
 		bool isWireframeModeEnabled               () const;
-		//@@Function
-		/*
-		* desc: used to determine if the backface culling technique is enabled.
-		* return: true if enabled, false otherwise.
-		*/
-		bool isBackfaceCullingEnabled             () const;
 		//@@Function
 		/*
 		* desc: returns the number of triangles in the world (current level).
@@ -1038,7 +1037,9 @@ private:
 		D3D12_CPU_DESCRIPTOR_HANDLE getDepthStencilViewHandle      () const;
 
 
+
 		void showDeviceRemovedReason();
+		void removeComponentsFromGlobalVectors(SContainer* pContainer);
 
 
 
@@ -1060,10 +1061,14 @@ private:
 	Microsoft::WRL::ComPtr<IDXGIAdapter3>   pAdapter;
 	Microsoft::WRL::ComPtr<IDXGIOutput>     pOutput;
 	Microsoft::WRL::ComPtr<IDXGISwapChain1> pSwapChain;
-	Microsoft::WRL::ComPtr<ID3D12PipelineState> pPSO;
-	Microsoft::WRL::ComPtr<ID3D12PipelineState> pWireframePSO;
-	Microsoft::WRL::ComPtr<ID3D12PipelineState> pNoBackfaceCullingPSO;
-	Microsoft::WRL::ComPtr<ID3D12PipelineState> pNoBackfaceCullingWireframePSO;
+
+	Microsoft::WRL::ComPtr<ID3D12PipelineState> pOpaquePSO;
+	Microsoft::WRL::ComPtr<ID3D12PipelineState> pTransparentPSO;
+	Microsoft::WRL::ComPtr<ID3D12PipelineState> pTransparentAlphaToCoveragePSO;
+
+	Microsoft::WRL::ComPtr<ID3D12PipelineState> pOpaqueWireframePSO;
+	Microsoft::WRL::ComPtr<ID3D12PipelineState> pTransparentWireframePSO;
+	Microsoft::WRL::ComPtr<ID3D12PipelineState> pTransparentAlphaToCoverageWireframePSO;
 
 
 	// Command objects.
@@ -1141,6 +1146,10 @@ private:
 	
 	// Level
 	SLevel*        pCurrentLevel = nullptr;
+	std::vector<SContainer*> vAllRenderableSpawnedContainers;
+	std::vector<SContainer*> vAllNonrenderableSpawnedContainers;
+	std::vector<SComponent*> vAllRenderableSpawnedOpaqueComponents;
+	std::vector<SComponent*> vAllRenderableSpawnedTransparentComponents;
 
 
 	// MSAA.
@@ -1186,8 +1195,8 @@ private:
 
 
 	// Graphics
+	SGlobalVisualSettings renderPassVisualSettings;
 	float          backBufferFillColor[4]   = {0.0f, 0.0f, 0.0f, 1.0f};
-	bool           bUseBackFaceCulling      = true;
 	bool           bUseFillModeWireframe    = false;
 
 

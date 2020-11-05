@@ -216,6 +216,14 @@ bool SContainer::setContainerName(const std::string& sContainerName)
 	}
 }
 
+void SContainer::unbindMaterialsFromAllComponents()
+{
+	for (size_t i = 0; i < vComponents.size(); i++)
+	{
+		vComponents[i]->unbindMaterialsIncludingChilds();
+	}
+}
+
 bool SContainer::isUserInputCallsEnabled() const
 {
 	return bEnableUserInputCalls;
@@ -314,6 +322,14 @@ void SContainer::setSpawnedInLevel(bool bSpawned)
 void SContainer::setStartIndexInCB(size_t iStartIndex)
 {
 	iStartIndexCB = iStartIndex;
+}
+
+void SContainer::getAllMeshComponents(std::vector<SComponent*>* pvOpaqueComponents, std::vector<SComponent*>* pvTransparentComponents)
+{
+	for (size_t i = 0; i < vComponents.size(); i++)
+	{
+		vComponents[i]->getAllMeshComponents(pvOpaqueComponents, pvTransparentComponents);
+	}
 }
 
 void SContainer::createVertexBufferForRuntimeMeshComponents(SFrameResource* pFrameResource)

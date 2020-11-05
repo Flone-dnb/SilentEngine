@@ -42,6 +42,20 @@ void SRuntimeMeshComponent::setVisibility(bool bVisible)
 	this->bVisible = bVisible;
 }
 
+bool SRuntimeMeshComponent::setEnableTransparency(bool bEnable)
+{
+	if (bSpawnedInLevel)
+	{
+		return true;
+	}
+	else
+	{
+		bEnableTransparency = bEnable;
+
+		return false;
+	}
+}
+
 void SRuntimeMeshComponent::setMeshData(const SMeshData& meshData, bool bAddedVerticesOrUpdatedIndicesCount, bool bUpdateBoundingBox)
 {
 	mtxComponentProps.lock();
@@ -121,6 +135,11 @@ SMaterial* SRuntimeMeshComponent::getMeshMaterial()
 	return meshData.getMeshMaterial();
 }
 
+bool SRuntimeMeshComponent::getEnableTransparency() const
+{
+	return bEnableTransparency;
+}
+
 bool SRuntimeMeshComponent::setMeshTextureUVOffset(const SVector& vMeshTexUVOffset)
 {
 	mtxComponentProps.lock();
@@ -178,6 +197,16 @@ bool SRuntimeMeshComponent::isVisible() const
 SRenderItem* SRuntimeMeshComponent::getRenderData()
 {
     return &renderData;
+}
+
+void SRuntimeMeshComponent::unbindMaterialsIncludingChilds()
+{
+	unbindMaterial();
+
+	for (size_t i = 0; i < vChildComponents.size(); i++)
+	{
+		vChildComponents[i]->unbindMaterialsIncludingChilds();
+	}
 }
 
 void SRuntimeMeshComponent::createIndexBuffer()

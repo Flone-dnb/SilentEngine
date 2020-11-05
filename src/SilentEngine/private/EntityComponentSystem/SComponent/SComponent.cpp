@@ -20,6 +20,7 @@ SComponent::SComponent()
 	sComponentName = "";
 
 	bSpawnedInLevel = false;
+	bEnableTransparency = false;
 
 	pParentComponent = nullptr;
 	pContainer       = nullptr;
@@ -304,6 +305,26 @@ DirectX::XMMATRIX XM_CALLCONV SComponent::getWorldMatrix()
 		DirectX::XMMatrixTranslation(vLocation.getX(), vLocation.getY(), vLocation.getZ());
 
 	return myWorld * parentWorld;
+}
+
+void SComponent::getAllMeshComponents(std::vector<SComponent*>* pvOpaqueComponents, std::vector<SComponent*>* pvTransparentComponents)
+{
+	if (componentType == SCT_MESH || componentType == SCT_RUNTIME_MESH)
+	{
+		if (bEnableTransparency)
+		{
+			pvTransparentComponents->push_back(this);
+		}
+		else
+		{
+			pvOpaqueComponents->push_back(this);
+		}
+	}
+
+	for (size_t i = 0; i < vChildComponents.size(); i++)
+	{
+		getAllMeshComponents(pvOpaqueComponents, pvTransparentComponents);
+	}
 }
 
 size_t SComponent::getMeshComponentsCount() const

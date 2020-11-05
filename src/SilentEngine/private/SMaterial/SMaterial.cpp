@@ -169,9 +169,6 @@ SMaterialProperties SMaterial::getMaterialProperties() const
 {
 	if (bRegistered)
 	{
-		// [Crashed here?]
-		// You might have called unregisterMaterial() on a material
-		// that is in use by some spawned component.
 		return matProps;
 	}
 	else
@@ -194,6 +191,11 @@ void SMaterial::updateMatTransform()
 	DirectX::XMStoreFloat4x4(&vMatTransform, transform);
 
 	SApplication::getApp()->mtxUpdateMat.unlock();
+}
+
+void SMaterialProperties::setCustomTransparency(float fCustomTransparency)
+{
+	this->fCustomTransparency = SMath::clamp(fCustomTransparency, 0.0f, 1.0f);
 }
 
 void SMaterialProperties::setRoughness(float fRoughness)
@@ -282,15 +284,11 @@ void SMaterialProperties::unbindTexture(STextureHandle textureHandle)
 
 		return;
 	}
+}
 
-	if (normalTexture.getTextureName() == textureHandle.getTextureName())
-	{
-		normalTexture = STextureHandle();
-
-		bHasDiffuseTexture = false;
-
-		return;
-	}
+float SMaterialProperties::getCustomTransparency() const
+{
+	return fCustomTransparency;
 }
 
 std::string STextureHandle::getTextureName() const

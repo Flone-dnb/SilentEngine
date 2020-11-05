@@ -25,7 +25,7 @@ SLevel::~SLevel()
 
 	for (size_t i = 0; i < vAllContainers.size(); i++)
 	{
-		delete vAllContainers[i];
+		pApp->despawnContainerFromLevel(vAllContainers[i]);
 	}
 }
 
@@ -39,11 +39,6 @@ void SLevel::despawnContainerFromLevel(SContainer* pContainer)
 	pApp->despawnContainerFromLevel(pContainer);
 }
 
-void SLevel::setAmbientLight(SVector vRGB)
-{
-	vAmbientLight = vRGB;
-}
-
 void SLevel::getRenderableContainers(std::vector<SContainer*>*& pvRenderableContainers)
 {
 	pvRenderableContainers = &vRenderableContainers;
@@ -52,9 +47,4 @@ void SLevel::getRenderableContainers(std::vector<SContainer*>*& pvRenderableCont
 void SLevel::getNotRenderableContainers(std::vector<SContainer*>*& pvNotRenderableContainers)
 {
 	pvNotRenderableContainers = &vNotRenderableContainers;
-}
-
-SVector SLevel::getAmbientLight() const
-{
-	return vAmbientLight;
 }

@@ -42,6 +42,16 @@ public:
 
 	//@@Function
 	/*
+	* desc: determines if the material on this component should consider the alpha channel
+	of the diffuse texture or a custom value from SMaterial::setCustomTransparency().
+	* return: false if successful, true if this component is spawned.
+	* remarks: this value can only be changed before this component is spawned.
+	Transparency is disabled by default.
+	*/
+	bool setEnableTransparency(bool bEnable);
+
+	//@@Function
+	/*
 	* desc: used to set the 3D-geometry that will be drawn ones the container containing this component is spawned and visible.
 	* param "meshData": 3D-geometry data.
 	* param "bAddedVerticesOrUpdatedIndicesCount": this should be set to false if the new mesh data
@@ -71,13 +81,6 @@ public:
 
 	//@@Function
 	/*
-	* desc: used to retrieve the material of the mesh.
-	* return: valid pointer if the material was assigned before, nullptr otherwise.
-	*/
-	SMaterial* getMeshMaterial ();
-
-	//@@Function
-	/*
 	* desc: used to set the UV offset to the mesh texture. Only affects how the textures will look for THIS mesh.
 	This setting will affect material UV settings only for this mesh.
 	* return: true if the UVs are not in [0, 1] range, false otherwise.
@@ -98,6 +101,20 @@ public:
 	This setting will affect material UV settings only for this mesh.
 	*/
 	void      setTextureUVRotation(float fRotation);
+
+	//@@Function
+	/*
+	* desc: used to retrieve the material of the mesh.
+	* return: valid pointer if the material was assigned before, nullptr otherwise.
+	*/
+	SMaterial* getMeshMaterial();
+
+	//@@Function
+	/*
+	* desc: returns true if the transparency for this component is enabled.
+	* remarks: transparency is disabled by default.
+	*/
+	bool     getEnableTransparency() const;
 
 	//@@Function
 	/*
@@ -134,6 +151,8 @@ private:
 	friend class SApplication;
 	friend class SComponent;
 	friend class SContainer;
+
+	virtual void unbindMaterialsIncludingChilds() override;
 
 	//@@Function
 	/*

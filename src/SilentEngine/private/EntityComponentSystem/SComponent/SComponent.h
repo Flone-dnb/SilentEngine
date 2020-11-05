@@ -155,6 +155,14 @@ protected:
 	*/
 	virtual SRenderItem* getRenderData() {return nullptr;};
 
+	virtual void unbindMaterialsIncludingChilds() {};
+
+	//@@Function
+	/*
+	* desc: returns all opaque and transparent mesh components.
+	*/
+	void getAllMeshComponents(std::vector<SComponent*>* pvOpaqueComponents, std::vector<SComponent*>* pvTransparentComponents);
+
 	//@@Function
 	/*
 	* desc: returns the number of mesh components (mesh and runtime mesh components) (even in child components).
@@ -265,5 +273,6 @@ protected:
 
 
 	bool bSpawnedInLevel;
+	bool bEnableTransparency;
 };
 

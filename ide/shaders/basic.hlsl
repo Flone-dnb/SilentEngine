@@ -40,6 +40,11 @@ cbuffer cbPass : register(b0)
 	int iSpotLightCount;
 	
 	int iTextureFilterIndex;
+
+    float4 vFogColor;
+	float  fFogStart;
+	float  fFogRange;
+	float2 pad2;
 	
     Light    vLights[MAX_LIGHTS];
 };
@@ -59,6 +64,8 @@ cbuffer cbMaterial : register(b2)
     float fRoughness;
 
     float4x4 vMatTransform;
+
+    float fCustomTransparency;
 
     int bHasDiffuseTexture;
     int bHasNormalTexture;
@@ -104,6 +111,9 @@ float4 PS(VertexOut pin) : SV_Target
 {
     float4 vDiffuse = float4(1.0f, 1.0f, 1.0f, 1.0f);
 
+
+    // Apply texture.
+
     if (bHasDiffuseTexture)
     {
         if (iTextureFilterIndex == 0)
@@ -122,11 +132,20 @@ float4 PS(VertexOut pin) : SV_Target
 
     vDiffuse *= vDiffuseColor;
 
+#ifdef ALPHA_TEST // only for components with bEnableTransparency
+	clip(vDiffuse.a - 0.02f);
+#endif
+
+
+
+    // Calculate lighting.
 
     // Normals may be unnormalized after the rasterization (when they are interpolated).
     pin.vNormal = normalize(pin.vNormal);
 
-    float3 vToCamera = normalize(vCameraPos - pin.vPosWorldSpace);
+    float3 vToCamera = vCameraPos - pin.vPosWorldSpace;
+    float3 vDistToCamera = length(vToCamera);
+    vToCamera = normalize(vToCamera);
 
     float4 vAmbientDiffuseLight = vAmbientLight * vDiffuse;
     
@@ -137,9 +156,23 @@ float4 PS(VertexOut pin) : SV_Target
 
     float4 vLitColor = vDirectLight + vAmbientDiffuseLight;
 
+
+
+    // Apply distant fog.
+
+    float fFogAmount = saturate(((vDistToCamera - fFogStart) / fFogRange) * vFogColor.a);
+	vLitColor = lerp(vLitColor, vFogColor, fFogAmount);
+
+
+
     // Common convention to take alpha from diffuse material.
     vLitColor.a = vDiffuse.a;
 	
+#ifdef ALPHA_TEST // only for components with bEnableTransparency
+	vLitColor.a *= fCustomTransparency;
+#endif
+	
+    
     return vLitColor;
 }
 

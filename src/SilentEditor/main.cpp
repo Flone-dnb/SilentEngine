@@ -16,7 +16,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE prevInstance, PSTR cmdLine, in
 
 	EditorApplication app(hInstance);
 
-	//app.initCompileShadersInRelease();
+	//app.initCompileShadersInRelease();  // do for more fps in debug build
+	//app.initDisableD3DDebugLayer(); // not recommended, but do for more fps in debug build
 
 	app.setWindowTitleText(L"Silent Editor");
 

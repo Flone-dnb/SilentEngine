@@ -199,12 +199,6 @@ public:
 	* param "bEnable": true to enable, false to disable.
 	*/
 	void      setEnableWireframeMode               (bool bEnable);
-	//@@Function
-	/*
-	* desc: used to enable/disable backface culling technique.
-	* param "bEnable": true to enable, false to disable.
-	*/
-	void      setEnableBackfaceCulling             (bool bEnable);
 
 	//@@Function
 	/*
@@ -218,12 +212,6 @@ public:
 	* return: true if enabled, false otherwise.
 	*/
 	bool      isWireframeModeEnabled               ();
-	//@@Function
-	/*
-	* desc: used to determine if the backface culling technique is enabled.
-	* return: true if enabled, false otherwise.
-	*/
-	bool      isBackfaceCullingEnabled             ();
 
 	
 	// Display adapters.
