@@ -160,7 +160,7 @@ float4 PS(VertexOut pin) : SV_Target
 
     // Apply distant fog.
 
-    float fFogAmount = saturate(((vDistToCamera - fFogStart) / fFogRange) * vFogColor.a);
+    float fFogAmount = saturate(((vDistToCamera - fFogStart) / fFogRange));
 	vLitColor = lerp(vLitColor, vFogColor, fFogAmount);
 
 
