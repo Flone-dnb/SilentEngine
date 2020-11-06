@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../../doc.css">
-    <title>getAmbientLight - Silent Engine Documentation</title>
+    <title>setEnableTransparency - Silent Engine Documentation</title>
 </head>
 <body>
     <div class="nav_panel">
@@ -16,10 +16,10 @@
     </div>
     
 	<div class="cpp_doc">
-		<h3 class="cpp_object"> getAmbientLight </h3>
-		<div class="cpp_codeobject_desc"> used to retrieve the ambient light intensity. 	 </div>
+		<h3 class="cpp_object"> setEnableTransparency </h3>
+		<div class="cpp_codeobject_desc"> determines if the material on this component should consider the alpha channel of the diffuse texture or a custom value from SMaterial::setCustomTransparency(). </div>
 		<br>
-		<code class="cpp_func_line_code"> <a class="cpp_link_ref" href="../SVector/index.html">SVector</a> getAmbientLight() const; </code>
+		<code class="cpp_func_line_code"> bool setEnableTransparency(bool bEnable); </code>
 		<br>
 		<br>
 		----------------------------------------------
@@ -27,7 +27,11 @@
 		<br>
 		<div class="cpp_func_param"> Return Value </div>
 		<br>
-		<div class="cpp_func_param_desc"> rgb color vector. 	 </div>
+		<div class="cpp_func_param_desc"> false if successful, true if this component is spawned. </div>
+		<br>
+		<div class="cpp_func_param"> Remarks </div>
+		<br>
+		<div class="cpp_func_param_desc"> this value can only be changed before this component is spawned. Transparency is disabled by default. </div>
 		<br>
 		
 	</div>
