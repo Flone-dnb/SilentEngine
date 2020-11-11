@@ -44,6 +44,8 @@ struct SMaterialConstants
 
 	DirectX::XMFLOAT4X4 vMatTransform = SMath::getIdentityMatrix4x4();
 
+	DirectX::XMFLOAT4 vFinalDiffuseMult = { 0.0f, 0.0f, 0.0f, 0.0f };
+
 	float fCustomTransparency = 1.0f;
 
 	int bHasDiffuseTexture = 0;

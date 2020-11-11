@@ -79,6 +79,13 @@ struct SMaterialProperties
 	*/
 	void    setCustomTransparency(float fCustomTransparency = 1.0f);
 
+	//@@Function
+	/*
+	* desc: adds 'diffuse (texture) color * vRGBAMultiplier' to the final color of the pixel fragment.
+	* remarks: this can be used to make the skybox not black when there is no light sources.
+	*/
+	void    setAddDiffuseMultiplierToFinalColor(const SVector& vRGBAMultiplier);
+
 	void    setRoughness     (float fRoughness);
 
 	//@@Function
@@ -113,6 +120,12 @@ struct SMaterialProperties
 
 	//@@Function
 	/*
+	* desc: returns the diffuse multiplier for the final color of the pixel fragment.
+	*/
+	SVector getDiffuseMultiplierToFinalColor() const;
+
+	//@@Function
+	/*
 	* desc: used to retrieve the diffuse texture of the material.
 	* param "pTextureHandle": valid pointer if the material has a texture.
 	* return: true if the material has no texture, false otherwise.
@@ -134,6 +147,8 @@ private:
 
 	float fRoughness = 0.5f;
 	float fCustomTransparency = 1.0f;
+
+	DirectX::XMFLOAT4 vFinalDiffuseMult = { 0.0f, 0.0f, 0.0f, 0.0f };
 
 	// Diffuse albedo.
 	DirectX::XMFLOAT4 vDiffuseColor = { 1.0f, 1.0f, 1.0f, 1.0f };

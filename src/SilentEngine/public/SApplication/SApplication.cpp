@@ -3928,6 +3928,7 @@ void SApplication::updateMaterialInFrameResource(SMaterial * pMaterial, SUploadB
 	matConstants.bHasNormalTexture = matProps.bHasNormalTexture;
 
 	matConstants.fCustomTransparency = matProps.fCustomTransparency;
+	matConstants.vFinalDiffuseMult = matProps.vFinalDiffuseMult;
 
 	DirectX::XMMATRIX vMatTransform = DirectX::XMLoadFloat4x4(&pMaterial->vMatTransform);
 	DirectX::XMStoreFloat4x4(&matConstants.vMatTransform, DirectX::XMMatrixTranspose(vMatTransform));

@@ -65,6 +65,8 @@ cbuffer cbMaterial : register(b2)
 
     float4x4 vMatTransform;
 
+    float4 vFinalDiffuseMult;
+
     float fCustomTransparency;
 
     int bHasDiffuseTexture;
@@ -172,6 +174,7 @@ float4 PS(VertexOut pin) : SV_Target
 	vLitColor.a *= fCustomTransparency;
 #endif
 	
+    vLitColor += (vDiffuse * vFinalDiffuseMult);
     
     return vLitColor;
 }

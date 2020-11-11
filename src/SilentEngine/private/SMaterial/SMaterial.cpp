@@ -198,6 +198,14 @@ void SMaterialProperties::setCustomTransparency(float fCustomTransparency)
 	this->fCustomTransparency = SMath::clamp(fCustomTransparency, 0.0f, 1.0f);
 }
 
+void SMaterialProperties::setAddDiffuseMultiplierToFinalColor(const SVector& vRGBAMultiplier)
+{
+	vFinalDiffuseMult.x = vRGBAMultiplier.getX();
+	vFinalDiffuseMult.y = vRGBAMultiplier.getY();
+	vFinalDiffuseMult.z = vRGBAMultiplier.getZ();
+	vFinalDiffuseMult.w = vRGBAMultiplier.getW();
+}
+
 void SMaterialProperties::setRoughness(float fRoughness)
 {
 	this->fRoughness = fRoughness;
@@ -289,6 +297,18 @@ void SMaterialProperties::unbindTexture(STextureHandle textureHandle)
 float SMaterialProperties::getCustomTransparency() const
 {
 	return fCustomTransparency;
+}
+
+SVector SMaterialProperties::getDiffuseMultiplierToFinalColor() const
+{
+	SVector vRGBAMult;
+
+	vRGBAMult.setX(vFinalDiffuseMult.x);
+	vRGBAMult.setY(vFinalDiffuseMult.y);
+	vRGBAMult.setZ(vFinalDiffuseMult.z);
+	vRGBAMult.setW(vFinalDiffuseMult.w);
+
+	return vRGBAMult;
 }
 
 std::string STextureHandle::getTextureName() const
