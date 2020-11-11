@@ -115,6 +115,12 @@
     <Filter Include="SilentEngine\Private\DDSTextureLoader">
       <UniqueIdentifier>{057dd242-b632-4fd9-affd-5686e42ba953}</UniqueIdentifier>
     </Filter>
+    <Filter Include="SilentEngine\Public\FileImport">
+      <UniqueIdentifier>{94c89a58-dcf0-46a7-b47f-69ef89a25b97}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SilentEngine\Public\FileImport\SFormatOBJImporter">
+      <UniqueIdentifier>{2997dee3-3c6d-4174-bb60-177160f1eb50}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\SilentEngine\public\SApplication\SApplication.cpp">
@@ -194,6 +200,9 @@
     </ClCompile>
     <ClCompile Include="..\src\SilentEngine\Private\DDSTextureLoader.cpp">
       <Filter>SilentEngine\Private\DDSTextureLoader</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SilentEngine\Public\FileImport\SFormatOBJImporter\SFormatOBJImporter.cpp">
+      <Filter>SilentEngine\Public\FileImport\SFormatOBJImporter</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -280,6 +289,9 @@
     </ClInclude>
     <ClInclude Include="..\src\SilentEngine\Private\DDSTextureLoader.h">
       <Filter>SilentEngine\Private\DDSTextureLoader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SilentEngine\Public\FileImport\SFormatOBJImporter\SFormatOBJImporter.h">
+      <Filter>SilentEngine\Public\FileImport\SFormatOBJImporter</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

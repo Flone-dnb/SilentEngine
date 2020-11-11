@@ -50,7 +50,6 @@
 
 #define ENGINE_D3D_FEATURE_LEVEL D3D_FEATURE_LEVEL_12_1
 
-
 class SContainer;
 class SComponent;
 // ------------------------------------------------------------------------------------------------
@@ -346,6 +345,12 @@ public:
 	// "Get" functions
 
 		// Camera
+
+		//@@Function
+		/*
+		* desc: returns the camera's (eyes) position in world.
+		*/
+		SVector                getCameraLocation               () const;
 
 		//@@Function
 		/*
@@ -650,7 +655,7 @@ private:
 		*/
 		bool executeCommandList              ();
 
-		void updateMaterialInFrameResource(SMaterial* pMaterial, SUploadBuffer<SMaterialConstants>* pMaterialCB);
+		void updateMaterialInFrameResource   (SMaterial* pMaterial, SUploadBuffer<SMaterialConstants>* pMaterialCB);
 
 
 	// Window

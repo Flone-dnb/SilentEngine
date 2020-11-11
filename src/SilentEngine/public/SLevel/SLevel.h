@@ -15,6 +15,7 @@
 
 class SApplication;
 class SContainer;
+class SMeshComponent;
 
 //@@Class
 /*

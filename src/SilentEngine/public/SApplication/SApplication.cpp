@@ -419,8 +419,7 @@ STextureHandle SApplication::loadTextureFromDiskToGPU(std::string sTextureName, 
 	if (pTexture->pResource->GetDesc().Width % 4 != 0   || pTexture->pResource->GetDesc().Height % 4 != 0
 		|| pTexture->pResource->GetDesc().Width != pTexture->pResource->GetDesc().Height)
 	{
-		// Will be released automatically.
-		//texture.pResource->Release();
+		delete pTexture;
 
 		mtxTexture.unlock();
 
@@ -856,7 +855,7 @@ void SApplication::despawnContainerFromLevel(SContainer* pContainer)
 		{
 			if (pvRenderableContainers->operator[](i) == pContainer)
 			{
-				pvRenderableContainers->erase( pvRenderableContainers->begin() + i );
+				pvRenderableContainers->erase(pvRenderableContainers->begin() + i);
 				break;
 			}
 		}
@@ -869,7 +868,8 @@ void SApplication::despawnContainerFromLevel(SContainer* pContainer)
 				break;
 			}
 		}
-		
+
+
 
 		size_t iStartIndex = pContainer->getStartIndexInCB();
 
@@ -1704,6 +1704,11 @@ float SApplication::getNearClipPlaneValue() const
 float SApplication::getFarClipPlaneValue() const
 {
 	return fFarClipPlaneValue;
+}
+
+SVector SApplication::getCameraLocation() const
+{
+	return SVector(vCameraPos.x, vCameraPos.y, vCameraPos.z);
 }
 
 void SApplication::getFixedCameraLocalAxisVector(SVector* pvXAxis, SVector* pvYAxis, SVector* pvZAxis) const
@@ -3911,6 +3916,7 @@ bool SApplication::executeCommandList()
 
 	return false;
 }
+
 void SApplication::updateMaterialInFrameResource(SMaterial * pMaterial, SUploadBuffer<SMaterialConstants>* pMaterialCB)
 {
 	SMaterialConstants matConstants;

@@ -44,7 +44,6 @@ struct SMeshVertex
 		this->vNormal = { 0.0f, 0.0f, 0.0f };
 		this->vTangent = { 0.0f, 0.0f, 0.0f };
 		this->vUV = { 0.0f, 0.0f };
-		this->vColor = DirectX::PackedVector::XMCOLOR(1.0f, 1.0f, 1.0f, 1.0f);
 	};
 	//@@Function
 	/*
@@ -57,7 +56,6 @@ struct SMeshVertex
 		this->vNormal   = {0.0f, 0.0f, 0.0f};
 		this->vTangent  = {0.0f, 0.0f, 0.0f};
 		this->vUV       = {0.0f, 0.0f};
-		this->vColor    = DirectX::PackedVector::XMCOLOR(1.0f, 1.0f, 1.0f, 1.0f);
 	}
 	//@@Function
 	/*
@@ -68,14 +66,12 @@ struct SMeshVertex
 		const SVector& vPosition,
 		const SVector& vNormal,
 		const SVector& vTangent,
-		const SVector& vUV,
-		const SVector& vColorRGBA)
+		const SVector& vUV)
 	{
 		this->vPosition = {vPosition.getX(), vPosition.getY(), vPosition.getZ()};
 		this->vNormal   = {vNormal.getX(),   vNormal.getY(),   vNormal.getZ()};
 		this->vTangent  = {vTangent.getX(),  vTangent.getY(),  vTangent.getZ()};
 		this->vUV       = {vUV.getX(),       vUV.getY()};
-		this->vColor    = DirectX::PackedVector::XMCOLOR(vColorRGBA.getX(), vColorRGBA.getY(), vColorRGBA.getZ(), vColorRGBA.getW());
 	}
 	//@@Function
 	/*
@@ -86,14 +82,12 @@ struct SMeshVertex
 		float fPosX, float fPosY, float fPosZ,
 		float fNormalX, float fNormalY, float fNormalZ,
 		float fTangentX, float fTangentY, float fTangentZ,
-		float fU, float fV,
-		float fColorR = 1.0f, float fColorG = 1.0f, float fColorB = 1.0f, float fColorA = 1.0f)
+		float fU, float fV)
 	{
 		this->vPosition = {fPosX, fPosY, fPosZ};
 		this->vNormal   = {fNormalX, fNormalY, fNormalZ};
 		this->vTangent  = {fTangentX, fTangentY, fTangentZ};
 		this->vUV       = {fU, fV};
-		this->vColor    = DirectX::PackedVector::XMCOLOR(fColorR, fColorG, fColorB, fColorA);
 	}
 
 private:
@@ -101,21 +95,10 @@ private:
 	friend class SMeshData;
 	friend class SPrimitiveShapeGenerator;
 
-	//@@Variable
-	/* position of the vertex. */
 	DirectX::XMFLOAT3 vPosition;
-	//@@Variable
-	/* normal vector of the vertex. */
 	DirectX::XMFLOAT3 vNormal;
-	//@@Variable
-	/* tangent vector of the vertex. */
 	DirectX::XMFLOAT3 vTangent;
-	//@@Variable
-	/* uv coordinates of the vertex. */
 	DirectX::XMFLOAT2 vUV;
-	//@@Variable
-	/* color of the vertex. */
-	DirectX::PackedVector::XMCOLOR vColor;
 };
 
 
@@ -207,6 +190,15 @@ struct SMeshData
 	std::vector<SMeshVertex>& getVertices()
 	{
 		return vVertices;
+	}
+
+	//@@Function
+	/*
+	* desc: returns the index of the mesh data.
+	*/
+	std::uint32_t getIndexAt(size_t i)
+	{
+		return vIndices32[i];
 	}
 
 	//@@Function

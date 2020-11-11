@@ -201,6 +201,7 @@
     <ClCompile Include="..\src\SilentEngine\Public\EntityComponentSystem\SRuntimeMeshComponent\SRuntimeMeshComponent.cpp" />
     <ClCompile Include="..\src\SilentEngine\Public\EntityComponentSystem\SSpotLightComponent\SSpotLightComponent.cpp" />
     <ClCompile Include="..\src\SilentEngine\Public\EntityComponentSystem\STargetComponent\STargetComponent.cpp" />
+    <ClCompile Include="..\src\SilentEngine\Public\FileImport\SFormatOBJImporter\SFormatOBJImporter.cpp" />
     <ClCompile Include="..\src\SilentEngine\public\SApplication\SApplication.cpp" />
     <ClCompile Include="..\src\SilentEngine\Public\SLevel\SLevel.cpp" />
     <ClCompile Include="..\src\SilentEngine\public\SPrimitiveShapeGenerator\SPrimitiveShapeGenerator.cpp" />
@@ -229,6 +230,7 @@
     <ClInclude Include="..\src\SilentEngine\Public\EntityComponentSystem\SRuntimeMeshComponent\SRuntimeMeshComponent.h" />
     <ClInclude Include="..\src\SilentEngine\Public\EntityComponentSystem\SSpotLightComponent\SSpotLightComponent.h" />
     <ClInclude Include="..\src\SilentEngine\Public\EntityComponentSystem\STargetComponent\STargetComponent.h" />
+    <ClInclude Include="..\src\SilentEngine\Public\FileImport\SFormatOBJImporter\SFormatOBJImporter.h" />
     <ClInclude Include="..\src\SilentEngine\public\SApplication\SApplication.h" />
     <ClInclude Include="..\src\SilentEngine\public\SKeyboardKey\SKeyboardKey.h" />
     <ClInclude Include="..\src\SilentEngine\Public\SLevel\SLevel.h" />
