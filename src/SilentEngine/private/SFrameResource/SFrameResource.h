@@ -81,6 +81,9 @@ struct SRenderPassConstants
 	float fDeltaTime       = 0.0f;
 
 	DirectX::XMFLOAT4  vAmbientLightRGBA = { 0.0f, 0.0f, 0.0f, 1.0f };
+	DirectX::XMFLOAT3  vCameraMultiplyColor = { 1.0f, 1.0f, 1.0f };
+
+	float fGamma = 1.0f;
 
 	int iDirectionalLightCount = 0;
 	int iPointLightCount = 0;
@@ -91,7 +94,7 @@ struct SRenderPassConstants
 	DirectX::XMFLOAT4 vFogColor = { 0.5f, 0.5f, 0.5f, 1.0f };
 	float fFogStart = fFarZ / 2;
 	float fFogRange = fFogStart;
-	DirectX::XMFLOAT2 pad2;
+	DirectX::XMFLOAT2 pad3;
 
 	SLightProps lights[MAX_LIGHTS];
 };
@@ -100,9 +103,19 @@ struct SRenderPassConstants
 struct SGlobalVisualSettings
 {
 	// Default: 0.0f, 0.0f, 0.0f.
+	// (constant light that affects every object - ambient light)
 	SVector vAmbientLightRGB = SVector(0.0f, 0.0f, 0.0f);
 
+	// Default: 1.0f, 1.0f, 1.0f.
+	// (multiplies the color of the pixel fragment, may be used as a gamma multiplier)
+	SVector vCameraMultiplyColor = SVector(1.0f, 1.0f, 1.0f);
+	
+	// Default: 1.0f
+	// (use to control the gamma)
+	float fGamma = 1.0f;
+
 	// Default: 0.0f, 0.0f, 0.0f, 0.0f.
+	// (color of the fog)
 	SVector vDistantFogColorRGBA = SVector(0.0f, 0.0f, 0.0f, 0.0f);
 
 	// Default: 1000.0f.

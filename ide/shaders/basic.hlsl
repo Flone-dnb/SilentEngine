@@ -34,6 +34,8 @@ cbuffer cbPass : register(b0)
     float    fDeltaTime;
 
     float4   vAmbientLight;
+    float3   vCameraMultiplyColor;
+    float    fGamma;
 
 	int iDirectionalLightCount;
 	int iPointLightCount;
@@ -44,7 +46,7 @@ cbuffer cbPass : register(b0)
     float4 vFogColor;
 	float  fFogStart;
 	float  fFogRange;
-	float2 pad2;
+	float2 pad3;
 	
     Light    vLights[MAX_LIGHTS];
 };
@@ -138,6 +140,8 @@ float4 PS(VertexOut pin) : SV_Target
 	clip(vDiffuse.a - 0.02f);
 #endif
 
+    vDiffuse *= 1 / fGamma;
+
 
 
     // Calculate lighting.
@@ -175,6 +179,12 @@ float4 PS(VertexOut pin) : SV_Target
 #endif
 	
     vLitColor += (vDiffuse * vFinalDiffuseMult);
+
+    vLitColor *= float4(vCameraMultiplyColor, 1.0f);
+
+    vLitColor = pow(vLitColor, fGamma);
+
+    vLitColor = saturate(vLitColor);
     
     return vLitColor;
 }

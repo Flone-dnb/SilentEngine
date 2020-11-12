@@ -2314,6 +2314,9 @@ void SApplication::updateMainPassCB()
 		renderPassVisualSettings.vDistantFogColorRGBA.getW()};
 	mainRenderPassCB.fFogStart = renderPassVisualSettings.fDistantFogStart;
 	mainRenderPassCB.fFogRange = renderPassVisualSettings.fDistantFogRange;
+	mainRenderPassCB.vCameraMultiplyColor = { renderPassVisualSettings.vCameraMultiplyColor.getX(),
+		renderPassVisualSettings.vCameraMultiplyColor.getY(), renderPassVisualSettings.vCameraMultiplyColor.getZ() };
+	mainRenderPassCB.fGamma = renderPassVisualSettings.fGamma;
 
 	SLevel* pLevel = getCurrentLevel();
 
