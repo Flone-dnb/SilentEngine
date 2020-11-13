@@ -27,7 +27,7 @@ public:
 	* param "pMeshData": a pointer to your SMeshData instance that will be filled.
 	* return: false if successful, true otherwise.
 	*/
-	static bool importMeshDataFromFile(const std::wstring& sPathToFile, SMeshData* pMeshData, bool bFlipY = true);
+	static bool importMeshDataFromFile(const std::wstring& sPathToFile, SMeshData* pMeshData, bool bFlipUVByY = true);
 
 private:
 

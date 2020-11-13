@@ -17,7 +17,7 @@ namespace fs = std::filesystem;
 #include "SilentEngine/Private/SError/SError.h"
 #include "SilentEngine/Public/SVector/SVector.h"
 
-bool SFormatOBJImporter::importMeshDataFromFile(const std::wstring& sPathToFile, SMeshData* pMeshData, bool bFlipY)
+bool SFormatOBJImporter::importMeshDataFromFile(const std::wstring& sPathToFile, SMeshData* pMeshData, bool bFlipUVByY)
 {
 	// See if the file exists.
 
@@ -71,7 +71,7 @@ bool SFormatOBJImporter::importMeshDataFromFile(const std::wstring& sPathToFile,
 			{
 				vUVs.push_back(readValues(sReadLine, 3, 2));
 
-				if (bFlipY)
+				if (bFlipUVByY)
 				{
 					vUVs.back().setY(1.0f - vUVs.back().getY());
 				}
