@@ -123,7 +123,7 @@ void STimer::unpause()
 	{
 		std::chrono::time_point<std::chrono::steady_clock> unpauseTime = std::chrono::steady_clock::now();
 
-		dTimeInPauseInMS += static_cast<double>(std::chrono::duration_cast<std::chrono::milliseconds>(unpauseTime - pauseTime).count());
+		dTimeInPauseInMS += std::chrono::duration_cast<std::chrono::nanoseconds>(unpauseTime - pauseTime).count() / 1000000.0;
 
 		bRunning = true;
 	}

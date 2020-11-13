@@ -1337,12 +1337,12 @@ void SApplication::setFPSLimit(float fFPSLimit)
 	if (fFPSLimit <= 0.1f)
 	{
 		this->fFPSLimit = 0.0f;
-		fDelayBetweenFramesInMS = 0.0f;
+		dDelayBetweenFramesInMS = 0.0;
 	}
 	else
 	{
 		this->fFPSLimit = fFPSLimit;
-		fDelayBetweenFramesInMS = 1000.0f / fFPSLimit;
+		dDelayBetweenFramesInMS = 1000.0 / fFPSLimit;
 	}
 }
 
@@ -4687,11 +4687,11 @@ int SApplication::run()
 
 				if (fFPSLimit >= 1.0f)
 				{
- 					float fTimeToRenderFrame = frameTimer.getElapsedTimeInMS();
+ 					double dTimeToRenderFrameInMS = frameTimer.getElapsedTimeInMS();
 
-					if (fDelayBetweenFramesInMS > fTimeToRenderFrame)
+					if (dDelayBetweenFramesInMS > dTimeToRenderFrameInMS)
 					{
-						Sleep(static_cast<unsigned long>(fDelayBetweenFramesInMS - fTimeToRenderFrame));
+						Sleep(static_cast<unsigned long>(dDelayBetweenFramesInMS - dTimeToRenderFrameInMS));
 					}
 
 					frameTimer.start();

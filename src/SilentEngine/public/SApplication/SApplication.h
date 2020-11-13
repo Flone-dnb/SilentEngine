@@ -1210,7 +1210,7 @@ private:
 	int            iFPS                     = 0;
 	float          fTimeToRenderFrame       = 0.0f;
 	float          fFPSLimit                = 0.0f;
-	double         fDelayBetweenFramesInMS  = 0.0f;
+	double         dDelayBetweenFramesInMS  = 0.0;
 	bool           bShowFrameStatsInTitle   = false;
 	bool           bCompileShadersInRelease = false;
 
