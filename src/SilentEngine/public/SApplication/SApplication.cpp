@@ -2308,12 +2308,12 @@ void SApplication::updateMainPassCB()
 		renderPassVisualSettings.vAmbientLightRGB.getY(),
 		renderPassVisualSettings.vAmbientLightRGB.getZ(),
 		1.0f};
-	mainRenderPassCB.vFogColor = { renderPassVisualSettings.vDistantFogColorRGBA.getX(),
-		renderPassVisualSettings.vDistantFogColorRGBA.getY(),
-		renderPassVisualSettings.vDistantFogColorRGBA.getZ(),
-		renderPassVisualSettings.vDistantFogColorRGBA.getW()};
-	mainRenderPassCB.fFogStart = renderPassVisualSettings.fDistantFogStart;
-	mainRenderPassCB.fFogRange = renderPassVisualSettings.fDistantFogRange;
+	mainRenderPassCB.vFogColor = { renderPassVisualSettings.distantFog.vDistantFogColorRGBA.getX(),
+		renderPassVisualSettings.distantFog.vDistantFogColorRGBA.getY(),
+		renderPassVisualSettings.distantFog.vDistantFogColorRGBA.getZ(),
+		renderPassVisualSettings.distantFog.vDistantFogColorRGBA.getW()};
+	mainRenderPassCB.fFogStart = renderPassVisualSettings.distantFog.fDistantFogStart;
+	mainRenderPassCB.fFogRange = renderPassVisualSettings.distantFog.fDistantFogRange;
 	mainRenderPassCB.vCameraMultiplyColor = { renderPassVisualSettings.vCameraMultiplyColor.getX(),
 		renderPassVisualSettings.vCameraMultiplyColor.getY(), renderPassVisualSettings.vCameraMultiplyColor.getZ() };
 	mainRenderPassCB.fGamma = renderPassVisualSettings.fGamma;

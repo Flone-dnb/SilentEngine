@@ -99,6 +99,21 @@ struct SRenderPassConstants
 	SLightProps lights[MAX_LIGHTS];
 };
 
+struct SDistantFog
+{
+	// Default: 0.0f, 0.0f, 0.0f, 0.0f.
+	// (color of the fog)
+	SVector vDistantFogColorRGBA = SVector(0.0f, 0.0f, 0.0f, 0.0f);
+
+	// Default: 1000.0f.
+	// (fog start distance from camera)
+	float fDistantFogStart = 1000.0f;
+
+	// Default: 500.0f
+	// (fog length from fDistantFogStart)
+	float fDistantFogRange = 500.0f;
+};
+
 // Stuff from SRenderPassConstants that user can change.
 struct SGlobalVisualSettings
 {
@@ -114,17 +129,8 @@ struct SGlobalVisualSettings
 	// (use to control the gamma)
 	float fGamma = 1.0f;
 
-	// Default: 0.0f, 0.0f, 0.0f, 0.0f.
-	// (color of the fog)
-	SVector vDistantFogColorRGBA = SVector(0.0f, 0.0f, 0.0f, 0.0f);
-
-	// Default: 1000.0f.
-    // (fog start distance from camera)
-	float fDistantFogStart = 1000.0f;
-
-	// Default: 500.0f
-	// (fog length from fDistantFogStart)
-	float fDistantFogRange = 500.0f;
+	// (use to control the distant fog)
+	SDistantFog distantFog;
 };
 
 class SFrameResource
