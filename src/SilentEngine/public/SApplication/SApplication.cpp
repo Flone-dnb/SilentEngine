@@ -2317,6 +2317,7 @@ void SApplication::updateMainPassCB()
 	mainRenderPassCB.vCameraMultiplyColor = { renderPassVisualSettings.vCameraMultiplyColor.getX(),
 		renderPassVisualSettings.vCameraMultiplyColor.getY(), renderPassVisualSettings.vCameraMultiplyColor.getZ() };
 	mainRenderPassCB.fGamma = renderPassVisualSettings.fGamma;
+	mainRenderPassCB.fSaturation = renderPassVisualSettings.fSaturation;
 
 	SLevel* pLevel = getCurrentLevel();
 

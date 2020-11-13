@@ -23,7 +23,7 @@ cbuffer cbPass : register(b0)
     float4x4 vInvViewProj;
 	
     float3   vCameraPos;
-	float    pad1;
+	float    fSaturation;
 	
     float2   vRenderTargetSize;
     float2   vInvRenderTargetSize;
@@ -140,7 +140,7 @@ float4 PS(VertexOut pin) : SV_Target
 	clip(vDiffuse.a - 0.02f);
 #endif
 
-    vDiffuse *= 1 / fGamma;
+    vDiffuse *= 1.0f / fGamma;
 
 
 
@@ -178,10 +178,25 @@ float4 PS(VertexOut pin) : SV_Target
 	vLitColor.a *= fCustomTransparency;
 #endif
 	
+    // Apply vFinalDiffuseMult.
     vLitColor += (vDiffuse * vFinalDiffuseMult);
 
+    // Apply vCameraMultiplyColor.
     vLitColor *= float4(vCameraMultiplyColor, 1.0f);
 
+    // Apply saturation.
+    float fLuminance = 0.2126f * vLitColor.r + 0.7152f * vLitColor.g + 0.0722f * vLitColor.b;
+    float3 vColorDiff = vLitColor - float3(fLuminance, fLuminance, fLuminance);
+
+    vColorDiff *= fSaturation;
+
+    float3 vSaturatedColor = clamp(float3(fLuminance, fLuminance, fLuminance) + vColorDiff, 0.0f, 1.0f);
+
+    vLitColor.rgb = lerp(vLitColor.rgb, vSaturatedColor, 0.5f);
+
+
+
+    // Apply gamma.
     vLitColor = pow(vLitColor, fGamma);
 
     vLitColor = saturate(vLitColor);

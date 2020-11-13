@@ -69,7 +69,8 @@ struct SRenderPassConstants
 	DirectX::XMFLOAT4X4 vInvViewProj        = SMath::getIdentityMatrix4x4();
 
 	DirectX::XMFLOAT3   vCameraPos          = { 0.0f, 0.0f, 0.0f };
-	float pad1;
+
+	float fSaturation = 1.0f;
 
 	DirectX::XMFLOAT2  vRenderTargetSize    = { 0.0f, 0.0f };
 	DirectX::XMFLOAT2  vInvRenderTargetSize = { 0.0f, 0.0f };
@@ -125,9 +126,13 @@ struct SGlobalVisualSettings
 	// (multiplies the color of the pixel fragment, may be used as a gamma multiplier)
 	SVector vCameraMultiplyColor = SVector(1.0f, 1.0f, 1.0f);
 	
-	// Default: 1.0f
+	// Default: 1.0f.
 	// (use to control the gamma)
 	float fGamma = 1.0f;
+
+	// Default: 1.0f - no saturation.
+	// (use in range [-1.0f, ...] to control the saturation of the image)
+	float fSaturation = 1.0f;
 
 	// (use to control the distant fog)
 	SDistantFog distantFog;
