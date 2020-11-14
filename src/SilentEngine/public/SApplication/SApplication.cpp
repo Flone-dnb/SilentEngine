@@ -2319,6 +2319,9 @@ void SApplication::updateMainPassCB()
 	mainRenderPassCB.fGamma = renderPassVisualSettings.fGamma;
 	mainRenderPassCB.fSaturation = renderPassVisualSettings.fSaturation;
 
+	mainRenderPassCB.iMainWindowHeight = iMainWindowHeight;
+	mainRenderPassCB.iMainWindowWidth = iMainWindowWidth;
+
 	SLevel* pLevel = getCurrentLevel();
 
 	if (pLevel)

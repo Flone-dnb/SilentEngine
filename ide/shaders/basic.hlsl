@@ -46,7 +46,9 @@ cbuffer cbPass : register(b0)
     float4 vFogColor;
 	float  fFogStart;
 	float  fFogRange;
-	float2 pad3;
+
+    int iMainWindowWidth;
+	int iMainWindowHeight;
 	
     Light    vLights[MAX_LIGHTS];
 };

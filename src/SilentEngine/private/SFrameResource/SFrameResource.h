@@ -95,7 +95,9 @@ struct SRenderPassConstants
 	DirectX::XMFLOAT4 vFogColor = { 0.5f, 0.5f, 0.5f, 1.0f };
 	float fFogStart = fFarZ / 2;
 	float fFogRange = fFogStart;
-	DirectX::XMFLOAT2 pad3;
+
+	int iMainWindowWidth = 800;
+	int iMainWindowHeight = 600;
 
 	SLightProps lights[MAX_LIGHTS];
 };
