@@ -17,7 +17,7 @@
 #include "SilentEngine/Public/EntityComponentSystem/SContainer/SContainer.h"
 
 
-SRuntimeMeshComponent::SRuntimeMeshComponent(std::string sComponentName)
+SRuntimeMeshComponent::SRuntimeMeshComponent(std::string sComponentName) : SComponent()
 {
 	componentType = SCT_RUNTIME_MESH;
 
@@ -54,6 +54,44 @@ bool SRuntimeMeshComponent::setEnableTransparency(bool bEnable)
 
 		return false;
 	}
+}
+
+void SRuntimeMeshComponent::setUseCustomShader(SShader* pCustomShader, bool bForceChangeEvenIfSpawned)
+{
+	if (pCustomShader == this->pCustomShader) return;
+
+	if (bSpawnedInLevel == false)
+	{
+		this->pCustomShader = pCustomShader;
+	}
+	else if (bForceChangeEvenIfSpawned)
+	{
+		SApplication::getApp()->forceChangeMeshShader(this->pCustomShader, pCustomShader, this, bEnableTransparency);
+
+		this->pCustomShader = pCustomShader;
+	}
+}
+
+bool SRuntimeMeshComponent::setUseDefaultShader(bool bForceUseDefaultEvenIfSpawned)
+{
+	if (pCustomShader == nullptr) return false;
+
+	if (bSpawnedInLevel == false)
+	{
+		pCustomShader = nullptr;
+
+		return false;
+	}
+	else if (bForceUseDefaultEvenIfSpawned)
+	{
+		SApplication::getApp()->forceChangeMeshShader(this->pCustomShader, nullptr, this, bEnableTransparency);
+
+		this->pCustomShader = nullptr;
+
+		return false;
+	}
+
+	return true;
 }
 
 void SRuntimeMeshComponent::setMeshData(const SMeshData& meshData, bool bAddedVerticesOrUpdatedIndicesCount, bool bUpdateBoundingBox)
@@ -187,6 +225,11 @@ float SRuntimeMeshComponent::getTextureUVRotation() const
 SMeshData SRuntimeMeshComponent::getMeshData() const
 {
 	return meshData;
+}
+
+SShader* SRuntimeMeshComponent::getCustomShader() const
+{
+	return pCustomShader;
 }
 
 bool SRuntimeMeshComponent::isVisible() const

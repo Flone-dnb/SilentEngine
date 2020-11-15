@@ -380,3 +380,19 @@ size_t SContainer::getStartIndexInCB() const
 {
 	return iStartIndexCB;
 }
+
+void SContainer::addMeshesByShader(std::vector<SShaderObjects>* pOpaqueMeshesByShader, std::vector<SShaderObjects>* pTransparentMeshesByShader) const
+{
+	for (size_t i = 0; i < vComponents.size(); i++)
+	{
+		vComponents[i]->addMeshesByShader(pOpaqueMeshesByShader, pTransparentMeshesByShader);
+	}
+}
+
+void SContainer::removeMeshesByShader(std::vector<SShaderObjects>* pOpaqueMeshesByShader, std::vector<SShaderObjects>* pTransparentMeshesByShader) const
+{
+	for (size_t i = 0; i < vComponents.size(); i++)
+	{
+		vComponents[i]->removeMeshesByShader(pOpaqueMeshesByShader, pTransparentMeshesByShader);
+	}
+}

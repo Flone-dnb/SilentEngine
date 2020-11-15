@@ -52,6 +52,8 @@
 
 class SContainer;
 class SComponent;
+class SShader;
+class SShaderObjects;
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
 
@@ -258,6 +260,35 @@ public:
 		as this function may drop the framerate a little.
 		*/
 		bool            unloadTextureFromGPU                   (STextureHandle& textureHandle);
+
+
+	// Shaders
+
+		//@@Function
+		/*
+		* desc: used to compile and prepare the custom shader.
+		* return: valid pointer if the shader was found and compiled, nullptr otherwise.
+		* remarks: You will need to call unloadCompiledShaderFromGPU() later when you don't need this shader anymore -
+		this will not happen automatically, but all shaders will be unloaded in the SApplication destructor function.
+		It's recommended to use this function in loading moments of your application (ex. loading screen)
+		as this function may drop the framerate a little.
+		*/
+		SShader*        compileCustomShader                   (const std::wstring& sPathToShaderFile);
+
+		//@@Function
+		/*
+		* desc: used to retrieve all compiled custom shaders.
+		*/
+		void            getCompiledCustomShaders              (std::vector<SShader*>* pvShaders);
+
+		//@@Function
+		/*
+		* desc: used to unload and unprepare the custom shader from the GPU.
+		* return: false if successful, true otherwise.
+		* remarks: if any spawned object is using this shader, it will switch to the default engine shader. You can do it manually
+		by calling the SComponent::setUseDefaultShader() function when the object is not spawned.
+		*/
+		bool            unloadCompiledShaderFromGPU           (SShader* pShader);
 
 
 	// Level
@@ -636,7 +667,7 @@ private:
 		* desc: creates PSO.
 		* return: false if successful, true otherwise.
 		*/
-		bool createPSO                       ();
+		bool createPSO                       (SShader* pPSOsForCustomShader = nullptr);
 		//@@Function
 		/*
 		* desc: resets command list so it can be used.
@@ -1045,6 +1076,9 @@ private:
 
 		void showDeviceRemovedReason();
 		void removeComponentsFromGlobalVectors(SContainer* pContainer);
+		void releaseShader(SShader* pShader);
+		void removeShaderFromObjects(SShader* pShader, std::vector<SShaderObjects>* pObjectsByShader);
+		void forceChangeMeshShader(SShader* pOldShader, SShader* pNewShader, SComponent* pComponent, bool bUsesTransparency);
 
 
 
@@ -1073,7 +1107,6 @@ private:
 
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> pOpaqueWireframePSO;
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> pTransparentWireframePSO;
-	Microsoft::WRL::ComPtr<ID3D12PipelineState> pTransparentAlphaToCoverageWireframePSO;
 
 
 	// Command objects.
@@ -1120,11 +1153,14 @@ private:
 	size_t iActualObjectCBCount = 0;
 
 
-	// Materials / Textures.
+	// Materials / Textures / Shaders
 	std::vector<SMaterial*> vRegisteredMaterials;
 	std::string sDefaultEngineMaterialName = "Default Engine Material";
 	std::vector<STextureInternal*> vLoadedTextures;
 	TEX_FILTER_MODE textureFilterIndex = TFM_ANISOTROPIC;
+	std::vector<SShader*> vCompiledUserShaders;
+	std::vector<SShaderObjects> vOpaqueMeshesByCustomShader;
+	std::vector<SShaderObjects> vTransparentMeshesByCustomShader;
 	
 
 	// Camera.
@@ -1149,7 +1185,7 @@ private:
 	SProfiler*     pProfiler;
 
 	
-	// Level
+	// Level / Objects
 	SLevel*        pCurrentLevel = nullptr;
 	std::vector<SContainer*> vAllRenderableSpawnedContainers;
 	std::vector<SContainer*> vAllNonrenderableSpawnedContainers;
@@ -1222,6 +1258,7 @@ private:
 	std::mutex     mtxMaterial;
 	std::mutex     mtxUpdateMat;
 	std::mutex     mtxTexture;
+	std::mutex     mtxShader;
 	std::mutex     mtxDraw;
 
 

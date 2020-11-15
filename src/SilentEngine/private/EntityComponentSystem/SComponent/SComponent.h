@@ -28,6 +28,8 @@ enum SComponentType
 
 class SContainer;
 class SFrameResource;
+class SShader;
+class SShaderObjects;
 
 //@@Class
 /*
@@ -227,12 +229,21 @@ protected:
 	* desc: called when parent's location/rotation/scale are changed.
 	*/
 	virtual void updateMyAndChildsLocationRotationScale () = 0;
-
 	//@@Function
 	/*
 	* desc: returns the world matrix (that includes parents).
 	*/
 	DirectX::XMMATRIX XM_CALLCONV getWorldMatrix();
+	//@@Function
+	/*
+	* desc: adds meshes to vectors based on their transparency if they use custom shader.
+	*/
+	void addMeshesByShader(std::vector<SShaderObjects>* pOpaqueMeshesByShader, std::vector<SShaderObjects>* pTransparentMeshesByShader) const;
+	//@@Function
+	/*
+	* desc: removes meshes from vectors based on their transparency if they use custom shader.
+	*/
+	void removeMeshesByShader(std::vector<SShaderObjects>* pOpaqueMeshesByShader, std::vector<SShaderObjects>* pTransparentMeshesByShader) const;
 
 
 	friend class SApplication;
@@ -264,6 +275,7 @@ protected:
 
 	SRenderItem renderData; // will be null for components that doesn't have mesh data
 	SMeshData   meshData; // will be null for components that doesn't have mesh data
+	SShader*    pCustomShader;
 
 
 	std::string sComponentName;

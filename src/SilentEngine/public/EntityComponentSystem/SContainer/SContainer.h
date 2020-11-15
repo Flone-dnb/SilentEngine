@@ -20,6 +20,7 @@
 
 class SComponent;
 class SFrameResource;
+class SShaderObjects;
 
 //@@Class
 /*
@@ -293,6 +294,16 @@ private:
 	* desc: returns iStartIndexCB.
 	*/
 	size_t getStartIndexInCB      () const;
+	//@@Function
+	/*
+	* desc: adds meshes to vectors based on their transparency if they use custom shader.
+	*/
+	void addMeshesByShader(std::vector<SShaderObjects>* pOpaqueMeshesByShader, std::vector<SShaderObjects>* pTransparentMeshesByShader) const;
+	//@@Function
+	/*
+	* desc: removes meshes from vectors based on their transparency if they use custom shader.
+	*/
+	void removeMeshesByShader(std::vector<SShaderObjects>* pOpaqueMeshesByShader, std::vector<SShaderObjects>* pTransparentMeshesByShader) const;
 
 
 	// -----------------------------------------------

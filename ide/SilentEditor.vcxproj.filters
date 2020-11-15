@@ -121,6 +121,9 @@
     <Filter Include="SilentEngine\Public\FileImport\SFormatOBJImporter">
       <UniqueIdentifier>{2997dee3-3c6d-4174-bb60-177160f1eb50}</UniqueIdentifier>
     </Filter>
+    <Filter Include="SilentEngine\Private\SShader">
+      <UniqueIdentifier>{474539cc-b7b8-4a51-bf33-1c085f2b1cc5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\SilentEngine\public\SApplication\SApplication.cpp">
@@ -203,6 +206,9 @@
     </ClCompile>
     <ClCompile Include="..\src\SilentEngine\Public\FileImport\SFormatOBJImporter\SFormatOBJImporter.cpp">
       <Filter>SilentEngine\Public\FileImport\SFormatOBJImporter</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SilentEngine\Private\SShader\SShader.cpp">
+      <Filter>SilentEngine\Private\SShader</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -292,6 +298,9 @@
     </ClInclude>
     <ClInclude Include="..\src\SilentEngine\Public\FileImport\SFormatOBJImporter\SFormatOBJImporter.h">
       <Filter>SilentEngine\Public\FileImport\SFormatOBJImporter</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SilentEngine\Private\SShader\SShader.h">
+      <Filter>SilentEngine\Private\SShader</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

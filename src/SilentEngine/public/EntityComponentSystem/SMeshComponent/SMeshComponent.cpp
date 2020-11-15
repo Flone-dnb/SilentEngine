@@ -16,7 +16,7 @@
 #include "SilentEngine/Public/SApplication/SApplication.h"
 #include "SilentEngine/Public/EntityComponentSystem/SContainer/SContainer.h"
 
-SMeshComponent::SMeshComponent(std::string sComponentName)
+SMeshComponent::SMeshComponent(std::string sComponentName) : SComponent()
 {
 	componentType = SCT_MESH;
 
@@ -48,6 +48,22 @@ bool SMeshComponent::setEnableTransparency(bool bEnable)
 		bEnableTransparency = bEnable;
 
 		return false;
+	}
+}
+
+void SMeshComponent::setUseCustomShader(SShader* pCustomShader, bool bForceChangeEvenIfSpawned)
+{
+	if (pCustomShader == this->pCustomShader) return;
+
+	if (bSpawnedInLevel == false)
+	{
+		this->pCustomShader = pCustomShader;
+	}
+	else if (bForceChangeEvenIfSpawned)
+	{
+		SApplication::getApp()->forceChangeMeshShader(this->pCustomShader, pCustomShader, this, bEnableTransparency);
+
+		this->pCustomShader = pCustomShader;
 	}
 }
 
@@ -93,6 +109,28 @@ void SMeshComponent::unbindMaterial()
 	meshData.setMeshMaterial(nullptr);
 
 	mtxComponentProps.unlock();
+}
+
+bool SMeshComponent::setUseDefaultShader(bool bForceUseDefaultEvenIfSpawned)
+{
+	if (pCustomShader == nullptr) return false;
+
+	if (bSpawnedInLevel == false)
+	{
+		pCustomShader = nullptr;
+
+		return false;
+	}
+	else if (bForceUseDefaultEvenIfSpawned)
+	{
+		SApplication::getApp()->forceChangeMeshShader(this->pCustomShader, nullptr, this, bEnableTransparency);
+
+		this->pCustomShader = nullptr;
+
+		return false;
+	}
+
+	return true;
 }
 
 bool SMeshComponent::setMeshMaterial(SMaterial* pMaterial)
@@ -169,6 +207,11 @@ float SMeshComponent::getTextureUVRotation() const
 SMeshData SMeshComponent::getMeshData() const
 {
     return meshData;
+}
+
+SShader* SMeshComponent::getCustomShader() const
+{
+	return pCustomShader;
 }
 
 bool SMeshComponent::isVisible() const

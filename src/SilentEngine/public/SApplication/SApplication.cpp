@@ -33,6 +33,7 @@ namespace fs = std::filesystem;
 #include "SilentEngine/Private/EntityComponentSystem/SComponent/SComponent.h"
 #include "SilentEngine/Public/EntityComponentSystem/SMeshComponent/SMeshComponent.h"
 #include "SilentEngine/Public/EntityComponentSystem/SRuntimeMeshComponent/SRuntimeMeshComponent.h"
+#include "SilentEngine/Private/SShader/SShader.h"
 
 
 SApplication* SApplication::pApp = nullptr;
@@ -617,6 +618,109 @@ bool SApplication::unloadTextureFromGPU(STextureHandle& textureHandle)
 	return false;
 }
 
+SShader* SApplication::compileCustomShader(const std::wstring& sPathToShaderFile)
+{
+	// See if the file exists.
+
+	std::ifstream shaderFile(sPathToShaderFile);
+
+	if (shaderFile.is_open() == false)
+	{
+		return nullptr;
+	}
+	else
+	{
+		shaderFile.close();
+	}
+
+
+
+	// See if the file format is .dds.
+
+	// (use ISO C++17 Standard for no errors on MSVC 2019 toolset)
+	if (fs::path(sPathToShaderFile).extension().string() != ".hlsl")
+	{
+		return nullptr;
+	}
+
+
+	const D3D_SHADER_MACRO alphaTestDefines[] =
+	{
+		"ALPHA_TEST", "1",
+		NULL, NULL
+	};
+
+
+	SShader* pNewShader = new SShader(sPathToShaderFile);
+
+	pNewShader->pVS = SGeometry::compileShader(sPathToShaderFile, nullptr, "VS", "vs_5_1", bCompileShadersInRelease);
+	pNewShader->pPS = SGeometry::compileShader(sPathToShaderFile, nullptr, "PS", "ps_5_1", bCompileShadersInRelease);
+	pNewShader->pAlphaPS = SGeometry::compileShader(sPathToShaderFile, alphaTestDefines, "PS", "ps_5_1", bCompileShadersInRelease);
+
+
+	if (createPSO(pNewShader))
+	{
+		releaseShader(pNewShader);
+
+		return nullptr;
+	}
+
+	mtxShader.lock();
+	vCompiledUserShaders.push_back(pNewShader);
+	mtxShader.unlock();
+
+	return pNewShader;
+}
+
+void SApplication::getCompiledCustomShaders(std::vector<SShader*>* pvShaders)
+{
+	pvShaders = &vCompiledUserShaders;
+}
+
+bool SApplication::unloadCompiledShaderFromGPU(SShader* pShader)
+{
+	if (pShader == nullptr) return false;
+
+	mtxShader.lock();
+
+	mtxDraw.lock();
+	mtxSpawnDespawn.lock();
+
+
+	removeShaderFromObjects(pShader, &vOpaqueMeshesByCustomShader);
+	removeShaderFromObjects(pShader, &vTransparentMeshesByCustomShader);
+
+
+	bool bFound = false;
+
+	for (size_t i = 0; i < vCompiledUserShaders.size(); i++)
+	{
+		if (vCompiledUserShaders[i] == pShader)
+		{
+			releaseShader(pShader);
+
+			vCompiledUserShaders.erase(vCompiledUserShaders.begin() + i);
+
+			bFound = true;
+			break;
+		}
+	}
+
+	mtxSpawnDespawn.unlock();
+	mtxDraw.unlock();
+
+	mtxShader.unlock();
+
+	if (bFound)
+	{
+		return false;
+	}
+	else
+	{
+		return true;
+	}
+}
+
 SLevel* SApplication::getCurrentLevel() const
 {
 	return pCurrentLevel;
@@ -750,6 +854,10 @@ bool SApplication::spawnContainerInLevel(SContainer* pContainer)
 
 		pContainer->getAllMeshComponents(&vAllRenderableSpawnedOpaqueComponents,
 			&vAllRenderableSpawnedTransparentComponents);
+
+		mtxShader.lock();
+		pContainer->addMeshesByShader(&vOpaqueMeshesByCustomShader, &vTransparentMeshesByCustomShader);
+		mtxShader.unlock();
 
 
 		if (bExpanded)
@@ -893,6 +1001,9 @@ void SApplication::despawnContainerFromLevel(SContainer* pContainer)
 
 		removeComponentsFromGlobalVectors(pContainer);
 
+		mtxShader.lock();
+		pContainer->removeMeshesByShader(&vOpaqueMeshesByCustomShader, &vTransparentMeshesByCustomShader);
+		mtxShader.unlock();
 
 
 		if (bResized)
@@ -2465,19 +2576,13 @@ void SApplication::draw()
 	iLastFrameDrawCallCount = 0;
 
 	mtxSpawnDespawn.lock();
+	mtxShader.lock();
 
 	drawOpaqueComponents();
 
 	if (bUseFillModeWireframe)
 	{
-		if (MSAA_Enabled)
-		{
-			pCommandList->SetPipelineState(pTransparentAlphaToCoverageWireframePSO.Get());
-		}
-		else
-		{
-			pCommandList->SetPipelineState(pTransparentWireframePSO.Get());
-		}
+		pCommandList->SetPipelineState(pTransparentWireframePSO.Get());
 	}
 	else
 	{
@@ -2493,6 +2598,7 @@ void SApplication::draw()
 
 	drawTransparentComponents();
 
+	mtxShader.unlock();
 	mtxSpawnDespawn.unlock();
 
 
@@ -2600,22 +2706,59 @@ void SApplication::draw()
 
 void SApplication::drawOpaqueComponents()
 {
-	for (size_t i = 0; i < vAllRenderableSpawnedOpaqueComponents.size(); i++)
+	for (size_t i = 0; i < vOpaqueMeshesByCustomShader.size(); i++)
 	{
-		if (vAllRenderableSpawnedOpaqueComponents[i]->getContainer()->isVisible())
+		if (i != 0)
 		{
-			drawComponent(vAllRenderableSpawnedOpaqueComponents[i]);
+			if (bUseFillModeWireframe)
+			{
+				pCommandList->SetPipelineState(vOpaqueMeshesByCustomShader[i].pShader->pOpaqueWireframePSO.Get());
+			}
+			else
+			{
+				pCommandList->SetPipelineState(vOpaqueMeshesByCustomShader[i].pShader->pOpaquePSO.Get());
+			}
+		}
+
+		for (size_t j = 0; j < vOpaqueMeshesByCustomShader[i].vMeshComponentsWithThisShader.size(); j++)
+		{
+			if (vOpaqueMeshesByCustomShader[i].vMeshComponentsWithThisShader[j]->getContainer()->isVisible())
+			{
+				drawComponent(vOpaqueMeshesByCustomShader[i].vMeshComponentsWithThisShader[j]);
+			}
 		}
 	}
 }
 
 void SApplication::drawTransparentComponents()
 {
-	for (size_t i = 0; i < vAllRenderableSpawnedTransparentComponents.size(); i++)
+	for (size_t i = 0; i < vTransparentMeshesByCustomShader.size(); i++)
 	{
-		if (vAllRenderableSpawnedTransparentComponents[i]->getContainer()->isVisible())
+		if (i != 0)
 		{
-			drawComponent(vAllRenderableSpawnedTransparentComponents[i]);
+			if (bUseFillModeWireframe)
+			{
+				pCommandList->SetPipelineState(vTransparentMeshesByCustomShader[i].pShader->pTransparentWireframePSO.Get());
+			}
+			else
+			{
+				if (MSAA_Enabled)
+				{
+					pCommandList->SetPipelineState(vTransparentMeshesByCustomShader[i].pShader->pTransparentAlphaToCoveragePSO.Get());
+				}
+				else
+				{
+					pCommandList->SetPipelineState(vTransparentMeshesByCustomShader[i].pShader->pTransparentPSO.Get());
+				}
+			}
+		}
+
+		for (size_t j = 0; j < vTransparentMeshesByCustomShader[i].vMeshComponentsWithThisShader.size(); j++)
+		{
+			if (vTransparentMeshesByCustomShader[i].vMeshComponentsWithThisShader[j]->getContainer()->isVisible())
+			{
+				drawComponent(vTransparentMeshesByCustomShader[i].vMeshComponentsWithThisShader[j]);
+			}
 		}
 	}
 }
@@ -3728,15 +3871,27 @@ bool SApplication::createRootSignature()
 
 bool SApplication::createShadersAndInputLayout()
 {
+	// Also change in SApplication::compileCustomShader().
 	const D3D_SHADER_MACRO alphaTestDefines[] =
 	{
 		"ALPHA_TEST", "1",
 		NULL, NULL
 	};
+	// Also change in SApplication::compileCustomShader().
 
 	mShaders["basicVS"] = SGeometry::compileShader(L"shaders/basic.hlsl", nullptr, "VS", "vs_5_1", bCompileShadersInRelease);
 	mShaders["basicPS"] = SGeometry::compileShader(L"shaders/basic.hlsl", nullptr, "PS", "ps_5_1", bCompileShadersInRelease);
 	mShaders["basicAlphaPS"] = SGeometry::compileShader(L"shaders/basic.hlsl", alphaTestDefines, "PS", "ps_5_1", bCompileShadersInRelease);
+
+
+	// All meshes with default shader will be here.
+
+	SShaderObjects so;
+	so.pShader = nullptr;
+
+	vOpaqueMeshesByCustomShader.push_back(so);
+	vTransparentMeshesByCustomShader.push_back(so);
+
 
 	vInputLayout =
 	{
@@ -3749,23 +3904,40 @@ bool SApplication::createShadersAndInputLayout()
 }
 
 
-bool SApplication::createPSO()
+bool SApplication::createPSO(SShader* pPSOsForCustomShader)
 {
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc;
 	memset(&psoDesc, 0, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
 
 	psoDesc.InputLayout = { vInputLayout.data(), static_cast<UINT>(vInputLayout.size()) };
 	psoDesc.pRootSignature = pRootSignature.Get();
-	psoDesc.VS =
+
+	if (pPSOsForCustomShader)
 	{
-		reinterpret_cast<BYTE*>(mShaders["basicVS"]->GetBufferPointer()),
-		mShaders["basicVS"]->GetBufferSize()
-	};
-	psoDesc.PS =
+		psoDesc.VS =
+		{
+			reinterpret_cast<BYTE*>(pPSOsForCustomShader->pVS->GetBufferPointer()),
+			pPSOsForCustomShader->pVS->GetBufferSize()
+		};
+		psoDesc.PS =
+		{
+			reinterpret_cast<BYTE*>(pPSOsForCustomShader->pPS->GetBufferPointer()),
+			pPSOsForCustomShader->pPS->GetBufferSize()
+		};
+	}
+	else
 	{
-		reinterpret_cast<BYTE*>(mShaders["basicPS"]->GetBufferPointer()),
-		mShaders["basicPS"]->GetBufferSize()
-	};
+		psoDesc.VS =
+		{
+			reinterpret_cast<BYTE*>(mShaders["basicVS"]->GetBufferPointer()),
+			mShaders["basicVS"]->GetBufferSize()
+		};
+		psoDesc.PS =
+		{
+			reinterpret_cast<BYTE*>(mShaders["basicPS"]->GetBufferPointer()),
+			mShaders["basicPS"]->GetBufferSize()
+		};
+	}
 
 	CD3DX12_RASTERIZER_DESC rastDesc(D3D12_DEFAULT);
 	rastDesc.CullMode = D3D12_CULL_MODE_BACK;
@@ -3796,69 +3968,134 @@ bool SApplication::createPSO()
 	psoDesc.DSVFormat         = DepthStencilFormat;
 
 
-	HRESULT hresult = pDevice->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pOpaquePSO));
-	if (FAILED(hresult))
+	HRESULT hresult;
+	if (pPSOsForCustomShader)
 	{
-		SError::showErrorMessageBox(hresult, L"SApplication::createPSO::ID3D12Device::CreateGraphicsPipelineState()");
-		return true;
+		hresult = pDevice->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pPSOsForCustomShader->pOpaquePSO));
+		if (FAILED(hresult))
+		{
+			SError::showErrorMessageBox(hresult, L"SApplication::createPSO::ID3D12Device::CreateGraphicsPipelineState() (custom shader)");
+			return true;
+		}
+	}
+	else
+	{
+		hresult = pDevice->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pOpaquePSO));
+		if (FAILED(hresult))
+		{
+			SError::showErrorMessageBox(hresult, L"SApplication::createPSO::ID3D12Device::CreateGraphicsPipelineState()");
+			return true;
+		}
 	}
 
 
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC transparentPsoDesc = psoDesc;
 	transparentPsoDesc.BlendState.RenderTarget[0] = transparencyBlendDesc;
 	transparentPsoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
-	transparentPsoDesc.PS =
+
+	if (pPSOsForCustomShader)
 	{
-		reinterpret_cast<BYTE*>(mShaders["basicAlphaPS"]->GetBufferPointer()),
-		mShaders["basicAlphaPS"]->GetBufferSize()
-	};
-	hresult = pDevice->CreateGraphicsPipelineState(&transparentPsoDesc, IID_PPV_ARGS(&pTransparentPSO));
-	if (FAILED(hresult))
-	{
-		SError::showErrorMessageBox(hresult, L"SApplication::createPSO::ID3D12Device::CreateGraphicsPipelineState()");
-		return true;
+		transparentPsoDesc.PS =
+		{
+			reinterpret_cast<BYTE*>(pPSOsForCustomShader->pAlphaPS->GetBufferPointer()),
+			pPSOsForCustomShader->pAlphaPS->GetBufferSize()
+		};
+		hresult = pDevice->CreateGraphicsPipelineState(&transparentPsoDesc, IID_PPV_ARGS(&pPSOsForCustomShader->pTransparentPSO));
+		if (FAILED(hresult))
+		{
+			SError::showErrorMessageBox(hresult, L"SApplication::createPSO::ID3D12Device::CreateGraphicsPipelineState() (custom shader)");
+			return true;
+		}
 	}
+	else
+	{
+		transparentPsoDesc.PS =
+		{
+			reinterpret_cast<BYTE*>(mShaders["basicAlphaPS"]->GetBufferPointer()),
+			mShaders["basicAlphaPS"]->GetBufferSize()
+		};
+		hresult = pDevice->CreateGraphicsPipelineState(&transparentPsoDesc, IID_PPV_ARGS(&pTransparentPSO));
+		if (FAILED(hresult))
+		{
+			SError::showErrorMessageBox(hresult, L"SApplication::createPSO::ID3D12Device::CreateGraphicsPipelineState()");
+			return true;
+		}
+	}
+	
 
 
-	D3D12_GRAPHICS_PIPELINE_STATE_DESC transparentAlphaToCoveragePsoDesc = transparentPsoDesc;
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC transparentAlphaToCoveragePsoDesc;
+	transparentAlphaToCoveragePsoDesc = transparentPsoDesc;
 	transparentAlphaToCoveragePsoDesc.BlendState.AlphaToCoverageEnable = true;
-	hresult = pDevice->CreateGraphicsPipelineState(&transparentAlphaToCoveragePsoDesc, IID_PPV_ARGS(&pTransparentAlphaToCoveragePSO));
-	if (FAILED(hresult))
+
+	if (pPSOsForCustomShader)
 	{
-		SError::showErrorMessageBox(hresult, L"SApplication::createPSO::ID3D12Device::CreateGraphicsPipelineState()");
-		return true;
+		hresult = pDevice->CreateGraphicsPipelineState(&transparentAlphaToCoveragePsoDesc, IID_PPV_ARGS(&pPSOsForCustomShader->pTransparentAlphaToCoveragePSO));
+		if (FAILED(hresult))
+		{
+			SError::showErrorMessageBox(hresult, L"SApplication::createPSO::ID3D12Device::CreateGraphicsPipelineState() (custom shader)");
+			return true;
+		}
 	}
+	else
+	{
+		hresult = pDevice->CreateGraphicsPipelineState(&transparentAlphaToCoveragePsoDesc, IID_PPV_ARGS(&pTransparentAlphaToCoveragePSO));
+		if (FAILED(hresult))
+		{
+			SError::showErrorMessageBox(hresult, L"SApplication::createPSO::ID3D12Device::CreateGraphicsPipelineState()");
+			return true;
+		}
+	}
+
 
 
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC opaqueWireframePsoDesc = psoDesc;
 	opaqueWireframePsoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;
-	hresult = pDevice->CreateGraphicsPipelineState(&opaqueWireframePsoDesc, IID_PPV_ARGS(&pOpaqueWireframePSO));
-	if (FAILED(hresult))
+
+	if (pPSOsForCustomShader)
 	{
-		SError::showErrorMessageBox(hresult, L"SApplication::createPSO::ID3D12Device::CreateGraphicsPipelineState()");
-		return true;
+		hresult = pDevice->CreateGraphicsPipelineState(&opaqueWireframePsoDesc, IID_PPV_ARGS(&pPSOsForCustomShader->pOpaqueWireframePSO));
+		if (FAILED(hresult))
+		{
+			SError::showErrorMessageBox(hresult, L"SApplication::createPSO::ID3D12Device::CreateGraphicsPipelineState() (custom shader)");
+			return true;
+		}
 	}
+	else
+	{
+		hresult = pDevice->CreateGraphicsPipelineState(&opaqueWireframePsoDesc, IID_PPV_ARGS(&pOpaqueWireframePSO));
+		if (FAILED(hresult))
+		{
+			SError::showErrorMessageBox(hresult, L"SApplication::createPSO::ID3D12Device::CreateGraphicsPipelineState()");
+			return true;
+		}
+	}
+	
 
 
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC transparentWireframePsoDesc = transparentPsoDesc;
 	transparentWireframePsoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;
-	hresult = pDevice->CreateGraphicsPipelineState(&transparentWireframePsoDesc, IID_PPV_ARGS(&pTransparentWireframePSO));
-	if (FAILED(hresult))
-	{
-		SError::showErrorMessageBox(hresult, L"SApplication::createPSO::ID3D12Device::CreateGraphicsPipelineState()");
-		return true;
-	}
 
-
-	D3D12_GRAPHICS_PIPELINE_STATE_DESC transparentAlphaToCoverageWireframePsoDesc = transparentAlphaToCoveragePsoDesc;
-	transparentAlphaToCoverageWireframePsoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;
-	hresult = pDevice->CreateGraphicsPipelineState(&transparentAlphaToCoverageWireframePsoDesc,
-		IID_PPV_ARGS(&pTransparentAlphaToCoverageWireframePSO));
-	if (FAILED(hresult))
+	if (pPSOsForCustomShader)
 	{
-		SError::showErrorMessageBox(hresult, L"SApplication::createPSO::ID3D12Device::CreateGraphicsPipelineState()");
-		return true;
+		
+		hresult = pDevice->CreateGraphicsPipelineState(&transparentWireframePsoDesc, IID_PPV_ARGS(&pPSOsForCustomShader->pTransparentWireframePSO));
+		if (FAILED(hresult))
+		{
+			SError::showErrorMessageBox(hresult, L"SApplication::createPSO::ID3D12Device::CreateGraphicsPipelineState() (custom shader)");
+			return true;
+		}
 	}
+	else
+	{
+		hresult = pDevice->CreateGraphicsPipelineState(&transparentWireframePsoDesc, IID_PPV_ARGS(&pTransparentWireframePSO));
+		if (FAILED(hresult))
+		{
+			SError::showErrorMessageBox(hresult, L"SApplication::createPSO::ID3D12Device::CreateGraphicsPipelineState()");
+			return true;
+		}
+	}
+	
 
 	return false;
 }
@@ -4072,6 +4309,189 @@ void SApplication::removeComponentsFromGlobalVectors(SContainer* pContainer)
 	}
 }
 
+void SApplication::releaseShader(SShader* pShader)
+{
+	unsigned long iLeft = pShader->pVS.Reset();
+
+	if (iLeft != 0)
+	{
+		showMessageBox(L"Error", L"SApplication::releaseShader() error: vs ref count is not 0.");
+	}
+
+	iLeft = pShader->pPS.Reset();
+
+	if (iLeft != 0)
+	{
+		showMessageBox(L"Error", L"SApplication::releaseShader() error: ps ref count is not 0.");
+	}
+
+	iLeft = pShader->pAlphaPS.Reset();
+
+	if (iLeft != 0)
+	{
+		showMessageBox(L"Error", L"SApplication::releaseShader() error: alpha ps ref count is not 0.");
+	}
+
+	iLeft = pShader->pOpaquePSO.Reset();
+
+	if (iLeft != 0)
+	{
+		showMessageBox(L"Error", L"SApplication::releaseShader() error: opaque shader pso ref count is not 0.");
+	}
+
+	iLeft = pShader->pTransparentPSO.Reset();
+
+	if (iLeft != 0)
+	{
+		showMessageBox(L"Error", L"SApplication::releaseShader() error: transparent shader pso ref count is not 0.");
+	}
+
+	iLeft = pShader->pTransparentAlphaToCoveragePSO.Reset();
+
+	if (iLeft != 0)
+	{
+		showMessageBox(L"Error", L"SApplication::releaseShader() error: transparent alpha to coverage shader pso ref count is not 0.");
+	}
+
+	iLeft = pShader->pOpaqueWireframePSO.Reset();
+
+	if (iLeft != 0)
+	{
+		showMessageBox(L"Error", L"SApplication::releaseShader() error: opaque wireframe pso ref count is not 0.");
+	}
+
+	iLeft = pShader->pTransparentWireframePSO.Reset();
+
+	if (iLeft != 0)
+	{
+		showMessageBox(L"Error", L"SApplication::releaseShader() error: transparent wireframe pso ref count is not 0.");
+	}
+
+	delete pShader;
+}
+
+void SApplication::removeShaderFromObjects(SShader* pShader, std::vector<SShaderObjects>* pObjectsByShader)
+{
+	for (size_t i = 0; i < pObjectsByShader->size(); i++)
+	{
+		if (pObjectsByShader->operator[](i).pShader == pShader)
+		{
+			for (size_t j = 0; j < pObjectsByShader->operator[](i).vMeshComponentsWithThisShader.size(); j++)
+			{
+				if (pObjectsByShader->operator[](i).vMeshComponentsWithThisShader[j]->componentType == SCT_MESH)
+				{
+					dynamic_cast<SMeshComponent*>(pObjectsByShader->operator[](i).vMeshComponentsWithThisShader[j])->pCustomShader = nullptr;
+
+					// Add to default engine shader.
+					pObjectsByShader->operator[](0).vMeshComponentsWithThisShader.push_back(pObjectsByShader->operator[](i).vMeshComponentsWithThisShader[j]);
+				}
+				else if (pObjectsByShader->operator[](i).vMeshComponentsWithThisShader[j]->componentType == SCT_RUNTIME_MESH)
+				{
+					dynamic_cast<SRuntimeMeshComponent*>(pObjectsByShader->operator[](i).vMeshComponentsWithThisShader[j])->pCustomShader = nullptr;
+
+					// Add to default engine shader.
+					pObjectsByShader->operator[](0).vMeshComponentsWithThisShader.push_back(pObjectsByShader->operator[](i).vMeshComponentsWithThisShader[j]);
+				}
+			}
+
+			pObjectsByShader->erase(pObjectsByShader->begin() + i);
+
+
+			break;
+		}
+	}
+}
+
+void SApplication::forceChangeMeshShader(SShader* pOldShader, SShader* pNewShader, SComponent* pComponent, bool bUsesTransparency)
+{
+	std::vector<SShaderObjects>* pObjectsByShader;
+
+	if (bUsesTransparency)
+	{
+		pObjectsByShader = &vTransparentMeshesByCustomShader;
+	}
+	else
+	{
+		pObjectsByShader = &vOpaqueMeshesByCustomShader;
+	}
+
+
+	bool bFound = false;
+	size_t iOldVectorIndex = 0;
+	size_t iOldObjectIndex = 0;
+
+	bool bFoundNew = false;
+	size_t iNewVectorIndex = 0;
+
+	mtxShader.lock();
+
+	for (size_t i = 0; i < pObjectsByShader->size(); i++)
+	{
+		if (pObjectsByShader->operator[](i).pShader == pOldShader)
+		{
+			for (size_t j = 0; j < pObjectsByShader->operator[](i).vMeshComponentsWithThisShader.size(); j++)
+			{
+				if (pObjectsByShader->operator[](i).vMeshComponentsWithThisShader[j] == pComponent)
+				{
+					bFound = true;
+
+					iOldObjectIndex = j;
+
+					break;
+				}
+			}
+
+			if (bFound)
+			{
+				iOldVectorIndex = i;
+			}
+		}
+		else if (pObjectsByShader->operator[](i).pShader == pNewShader)
+		{
+			bFoundNew = true;
+			iNewVectorIndex = i;
+		}
+	}
+
+	if (bFound == false)
+	{
+		SError::showErrorMessageBox(L"SApplication::forceChangeMeshShader()", L"Could not find specified old shader / object.");
+		mtxShader.unlock();
+		return;
+	}
+
+
+	mtxDraw.lock();
+
+	pObjectsByShader->operator[](iOldVectorIndex).vMeshComponentsWithThisShader.erase(
+		pObjectsByShader->operator[](iOldVectorIndex).vMeshComponentsWithThisShader.begin() + iOldObjectIndex);
+
+	if ((pObjectsByShader->operator[](iOldVectorIndex).vMeshComponentsWithThisShader.size() == 0)
+		&& (pObjectsByShader->operator[](iOldVectorIndex).pShader != nullptr))
+	{
+		pObjectsByShader->erase(pObjectsByShader->begin() + iOldVectorIndex);
+	}
+
+
+	if (bFoundNew)
+	{
+		pObjectsByShader->operator[](iNewVectorIndex).vMeshComponentsWithThisShader.push_back(pComponent);
+	}
+	else
+	{
+		SShaderObjects so;
+		so.pShader = pNewShader;
+		so.vMeshComponentsWithThisShader.push_back(pComponent);
+
+		pObjectsByShader->push_back(so);
+	}
+
+	mtxDraw.unlock();
+
+
+	mtxShader.unlock();
+}
+
 SApplication::SApplication(HINSTANCE hInstance)
 {
 	hApplicationInstance = hInstance;
@@ -4113,6 +4533,9 @@ SApplication::~SApplication()
 	mtxSpawnDespawn.unlock();
 
 
+
+	// Clear loaded textures.
+
 	for (size_t i = 0; i < vLoadedTextures.size(); i++)
 	{
 		unsigned long iLeft = vLoadedTextures[i]->pResource.Reset();
@@ -4126,6 +4549,17 @@ SApplication::~SApplication()
 	}
 
 	vLoadedTextures.clear();
+
+
+	// Clear compiledShaders.
+
+	for (size_t i = 0; i < vCompiledUserShaders.size(); i++)
+	{
+		releaseShader(vCompiledUserShaders[i]);
+	}
+
+	vCompiledUserShaders.clear();
+
 
 
 	for (size_t i = 0; i < vRegisteredMaterials.size(); i++)

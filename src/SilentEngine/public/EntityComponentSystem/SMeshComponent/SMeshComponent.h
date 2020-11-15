@@ -14,6 +14,8 @@
 #include "SilentEngine/Private/EntityComponentSystem/SComponent/SComponent.h"
 #include "SilentEngine/Public/SPrimitiveShapeGenerator/SPrimitiveShapeGenerator.h"
 
+class SShader;
+
 //@@Class
 /*
 This class represents the component that has some mesh data (3D-geometry) inside of it.
@@ -52,6 +54,14 @@ public:
 
 	//@@Function
 	/*
+	* desc: used to assign the custom shader that this mesh will use.
+	* param "bForceChangeEvenIfSpawned": forces the engine to change the shader even if this mesh is spawned (might cause small fps drop).
+	* remarks: use SApplication::compileCustomShader() to compile custom shaders first.
+	*/
+	void setUseCustomShader   (SShader* pCustomShader, bool bForceChangeEvenIfSpawned = false);
+
+	//@@Function
+	/*
 	* desc: used to set the 3D-geometry that will be drawn ones the container containing this component is spawned and visible.
 	* param "meshData": 3D-geometry data.
 	* param "bAddedVerticesOrUpdatedIndicesCount": this should be set to false if the new mesh data
@@ -71,6 +81,14 @@ public:
 	* remarks: note that this function will not unregister the material, you should do it by yourself.
 	*/
 	void unbindMaterial        ();
+
+	//@@Function
+	/*
+	* desc: used to switch the custom used shader to a default one.
+	* param "bForceUseDefaultEvenIfSpawned": forces the engine to change the shader even if this mesh is spawned (causes small fps drop).
+	* return: false if successful, true if this mesh is spawned and the 'bForceUseDefaultEvenIfSpawned' is false.
+	*/
+	bool setUseDefaultShader   (bool bForceUseDefaultEvenIfSpawned = false);
 
 	//@@Function
 	/*
@@ -139,6 +157,14 @@ public:
 	* desc: used to retrieve the mesh data.
 	*/
 	SMeshData getMeshData      () const;
+
+	//@@Function
+	/*
+	* desc: used to retrieve the custom shader.
+	* return: nullptr if the custom shader was not assigned, valid pointer otherwise.
+	*/
+	SShader* getCustomShader() const;
+
 	//@@Function
 	/*
 	* desc: determines if the component is visible (i.e. drawn).

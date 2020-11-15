@@ -12,6 +12,7 @@
 #include "SilentEngine/Public/EntityComponentSystem/SRuntimeMeshComponent/SRuntimeMeshComponent.h"
 #include "SilentEngine/Private/EntityComponentSystem/SLightComponent/SLightComponent.h" // remove this line
 #include "SilentEngine/Private/SError/SError.h"
+#include "SilentEngine/Private/SShader/SShader.h"
 
 SComponent::SComponent()
 {
@@ -24,6 +25,7 @@ SComponent::SComponent()
 
 	pParentComponent = nullptr;
 	pContainer       = nullptr;
+	pCustomShader    = nullptr;
 
 	iMeshComponentsCount = 0;
 
@@ -305,6 +307,117 @@ DirectX::XMMATRIX XM_CALLCONV SComponent::getWorldMatrix()
 		DirectX::XMMatrixTranslation(vLocation.getX(), vLocation.getY(), vLocation.getZ());
 
 	return myWorld * parentWorld;
+}
+
+void SComponent::addMeshesByShader(std::vector<SShaderObjects>* pOpaqueMeshesByShader, std::vector<SShaderObjects>* pTransparentMeshesByShader) const
+{
+	if (componentType == SCT_MESH || componentType == SCT_RUNTIME_MESH)
+	{
+		std::vector<SShaderObjects>* pVectorToLook;
+
+		if (bEnableTransparency)
+		{
+			pVectorToLook = pTransparentMeshesByShader;
+		}
+		else
+		{
+			pVectorToLook = pOpaqueMeshesByShader;
+		}
+
+
+		bool bFound = false;
+
+		for (size_t i = 0; i < pVectorToLook->size(); i++)
+		{
+			if (pVectorToLook->operator[](i).pShader == pCustomShader)
+			{
+				pVectorToLook->operator[](i).vMeshComponentsWithThisShader.push_back(const_cast<SComponent*>(this));
+
+				bFound = true;
+
+				break;
+			}
+		}
+
+		if (bFound == false)
+		{
+			SShaderObjects so;
+			so.pShader = pCustomShader;
+			so.vMeshComponentsWithThisShader.push_back(const_cast<SComponent*>(this));
+
+			pVectorToLook->push_back(so);
+		}
+	}
+
+	for (size_t i = 0; i < vChildComponents.size(); i++)
+	{
+		vChildComponents[i]->addMeshesByShader(pOpaqueMeshesByShader, pTransparentMeshesByShader);
+	}
+}
+
+void SComponent::removeMeshesByShader(std::vector<SShaderObjects>* pOpaqueMeshesByShader, std::vector<SShaderObjects>* pTransparentMeshesByShader) const
+{
+	if (componentType == SCT_MESH || componentType == SCT_RUNTIME_MESH)
+	{
+		std::vector<SShaderObjects>* pVectorToLook;
+
+		if (bEnableTransparency)
+		{
+			pVectorToLook = pTransparentMeshesByShader;
+		}
+		else
+		{
+			pVectorToLook = pOpaqueMeshesByShader;
+		}
+
+
+		bool bFound = false;
+
+		for (size_t i = 0; i < pVectorToLook->size(); i++)
+		{
+			if (pVectorToLook->operator[](i).pShader == pCustomShader)
+			{
+				bool bFoundObject = false;
+
+				for (size_t k = 0; k < pVectorToLook->operator[](i).vMeshComponentsWithThisShader.size(); k++)
+				{
+					if (pVectorToLook->operator[](i).vMeshComponentsWithThisShader[k] == this)
+					{
+						bFoundObject = true;
+
+						pVectorToLook->operator[](i).vMeshComponentsWithThisShader.erase(
+							pVectorToLook->operator[](i).vMeshComponentsWithThisShader.begin() + k);
+
+						break;
+					}
+				}
+
+				if (bFoundObject == false)
+				{
+					SError::showErrorMessageBox(L"SComponent::removeMeshesByShader()", L"Could not find the object in the shader array.");
+				}
+
+				if ((pVectorToLook->operator[](i).vMeshComponentsWithThisShader.size() == 0) && (pVectorToLook->operator[](i).pShader != nullptr))
+				{
+					pVectorToLook->erase(pVectorToLook->begin() + i);
+				}
+
+				bFound = true;
+
+				break;
+			}
+		}
+
+		if (bFound == false)
+		{
+			SError::showErrorMessageBox(L"SComponent::removeMeshesByShader()", L"Could not find the object by the given shader in the array.");
+		}
+	}
+
+	for (size_t i = 0; i < vChildComponents.size(); i++)
+	{
+		vChildComponents[i]->removeMeshesByShader(pOpaqueMeshesByShader, pTransparentMeshesByShader);
+	}
 }
 
 void SComponent::getAllMeshComponents(std::vector<SComponent*>* pvOpaqueComponents, std::vector<SComponent*>* pvTransparentComponents)
