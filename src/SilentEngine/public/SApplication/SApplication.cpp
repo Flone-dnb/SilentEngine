@@ -4417,8 +4417,6 @@ void SApplication::forceChangeMeshShader(SShader* pOldShader, SShader* pNewShade
 
 
 	bool bFound = false;
-	size_t iOldVectorIndex = 0;
-	size_t iOldObjectIndex = 0;
 
 	bool bFoundNew = false;
 	size_t iNewVectorIndex = 0;
@@ -4435,21 +4433,33 @@ void SApplication::forceChangeMeshShader(SShader* pOldShader, SShader* pNewShade
 				{
 					bFound = true;
 
-					iOldObjectIndex = j;
+					pObjectsByShader->operator[](i).vMeshComponentsWithThisShader.erase(
+						pObjectsByShader->operator[](i).vMeshComponentsWithThisShader.begin() + j);
+
+					if ((pObjectsByShader->operator[](i).vMeshComponentsWithThisShader.size() == 0)
+						&& (pObjectsByShader->operator[](i).pShader != nullptr))
+					{
+						pObjectsByShader->erase(pObjectsByShader->begin() + i);
+					}
 
 					break;
 				}
 			}
 
-			if (bFound)
+			if (bFound && bFoundNew)
 			{
-				iOldVectorIndex = i;
+				break;
 			}
 		}
 		else if (pObjectsByShader->operator[](i).pShader == pNewShader)
 		{
 			bFoundNew = true;
 			iNewVectorIndex = i;
+
+			if (bFound)
+			{
+				break;
+			}
 		}
 	}
 
@@ -4458,18 +4468,6 @@ void SApplication::forceChangeMeshShader(SShader* pOldShader, SShader* pNewShade
 		SError::showErrorMessageBox(L"SApplication::forceChangeMeshShader()", L"Could not find specified old shader / object.");
 		mtxShader.unlock();
 		return;
-	}
-
-
-	mtxDraw.lock();
-
-	pObjectsByShader->operator[](iOldVectorIndex).vMeshComponentsWithThisShader.erase(
-		pObjectsByShader->operator[](iOldVectorIndex).vMeshComponentsWithThisShader.begin() + iOldObjectIndex);
-
-	if ((pObjectsByShader->operator[](iOldVectorIndex).vMeshComponentsWithThisShader.size() == 0)
-		&& (pObjectsByShader->operator[](iOldVectorIndex).pShader != nullptr))
-	{
-		pObjectsByShader->erase(pObjectsByShader->begin() + iOldVectorIndex);
 	}
 
 
@@ -4485,8 +4483,6 @@ void SApplication::forceChangeMeshShader(SShader* pOldShader, SShader* pNewShade
 
 		pObjectsByShader->push_back(so);
 	}
-
-	mtxDraw.unlock();
 
 
 	mtxShader.unlock();
