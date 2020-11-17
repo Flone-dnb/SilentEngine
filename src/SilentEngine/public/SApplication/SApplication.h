@@ -879,7 +879,7 @@ private:
 
 		//@@Function
 		/*
-		* desc: returns the list of the display adapters (i.e. "video cards") on your PC that engine supports.
+		* desc: returns the list of the display adapters (i.e. GPUs) on your PC that engine supports.
 		* remarks: should be called after calling the SApplication::init().
 		*/
 		std::vector<std::wstring>  getSupportedDisplayAdapters () const;
