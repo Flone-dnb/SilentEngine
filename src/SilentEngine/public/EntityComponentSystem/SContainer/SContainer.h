@@ -44,7 +44,6 @@ public:
 	*/
 	virtual ~SContainer();
 
-
 	//@@Function
 	/*
 	* desc: sets the location for the container and its components maintaining the local position of the components relative to the container.
@@ -334,4 +333,3 @@ private:
 	bool bCallTick;
 	bool bIsEditorObject;
 };
-

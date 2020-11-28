@@ -43,6 +43,11 @@ public:
 	SComponent();
 	SComponent(const SComponent&) = delete;
 	SComponent& operator= (const SComponent&) = delete;
+
+	//@@Function
+	/*
+	* remarks: all child components will be deleted.
+	*/
 	virtual ~SComponent();
 
 

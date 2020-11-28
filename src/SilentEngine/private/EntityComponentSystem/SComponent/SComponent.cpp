@@ -84,6 +84,8 @@ bool SComponent::addChildComponent(SComponent* pComponent)
 		}
 		else
 		{
+			SError::showErrorMessageBox(L"SComponent::addChildComponent()", L"The component has no parent and it can't have child "
+				L"components yet. Add the component to the container or other component and then use this function.");
 			return true;
 		}
 	}
@@ -123,7 +125,7 @@ void SComponent::setLocalLocation(const SVector& location)
 {
 	if (!pContainer)
 	{
-		SError::showErrorMessageBox(L"SComponent::setLocation()", L"pContainer was nullptr - add the component to a container.");
+		SError::showErrorMessageBox(L"SComponent::setLocalLocation()", L"Add the component to a container or other component first.");
 		return;
 	}
 
@@ -153,7 +155,7 @@ void SComponent::setLocalRotation(const SVector& rotation)
 {
 	if (!pContainer)
 	{
-		SError::showErrorMessageBox(L"SComponent::setRotation()", L"pContainer was nullptr - add the component to a container.");
+		SError::showErrorMessageBox(L"SComponent::setLocalRotation()", L"Add the component to a container or other component first.");
 		return;
 	}
 
@@ -185,7 +187,7 @@ void SComponent::setLocalScale(const SVector& scale)
 {
 	if (!pContainer)
 	{
-		SError::showErrorMessageBox(L"SComponent::setScale()", L"pContainer was nullptr - add the component to a container.");
+		SError::showErrorMessageBox(L"SComponent::setLocalScale()", L"Add the component to a container or other component first.");
 		return;
 	}
 
@@ -548,7 +550,7 @@ SVector SComponent::getLocationInWorld()
 {
 	if (!pContainer)
 	{
-		SError::showErrorMessageBox(L"SComponent::getLocationInWorld()", L"pContainer was nullptr. First, add the component to a container.");
+		SError::showErrorMessageBox(L"SComponent::getLocationInWorld()", L"Add the component to a container or other component first.");
 		return SVector(0.0f, 0.0f, 0.0f);
 	}
 
