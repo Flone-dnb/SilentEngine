@@ -420,6 +420,8 @@ STextureHandle SApplication::loadTextureFromDiskToGPU(std::string sTextureName, 
 	if (pTexture->pResource->GetDesc().Width % 4 != 0   || pTexture->pResource->GetDesc().Height % 4 != 0
 		|| pTexture->pResource->GetDesc().Width != pTexture->pResource->GetDesc().Height)
 	{
+		SError::showErrorMessageBox(L"SApplication::loadTextureFromDiskToGPU()", L"The texture size should be a multiple of 4.");
+		
 		delete pTexture;
 
 		mtxTexture.unlock();
