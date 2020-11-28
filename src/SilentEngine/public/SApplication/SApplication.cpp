@@ -730,6 +730,11 @@ SLevel* SApplication::getCurrentLevel() const
 
 bool SApplication::spawnContainerInLevel(SContainer* pContainer)
 {
+	if (pContainer->bSpawnedInLevel)
+	{
+		return true;
+	}
+
 	mtxSpawnDespawn.lock();
 
 	bool bHasUniqueName = true;
@@ -891,6 +896,11 @@ bool SApplication::spawnContainerInLevel(SContainer* pContainer)
 
 void SApplication::despawnContainerFromLevel(SContainer* pContainer)
 {
+	if (pContainer->bSpawnedInLevel == false)
+	{
+		return;
+	}
+	
 	mtxSpawnDespawn.lock();
 
 	// Remove lights.
