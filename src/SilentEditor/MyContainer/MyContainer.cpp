@@ -16,7 +16,7 @@ MyContainer::MyContainer(const std::string& sContainerName) : SContainer(sContai
 	// require you to change the near clip plane (in this example to 1.0 at least) to avoid z-fighting.
 	// In the case of a space game also do not forget about float precision in terms of position (as it's stored in floats).
 
-	
+
 }
 
 MyContainer::~MyContainer()

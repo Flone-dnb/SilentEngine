@@ -35,6 +35,7 @@
 #include "SilentEngine/Public/SProfiler/SProfiler.h"
 #include "SilentEngine/Public/SLevel/SLevel.h"
 #include "SilentEngine/Private/SMaterial/SMaterial.h"
+#include "SilentEngine/Private/SBlurEffect/SBlurEffect.h"
 
 // Other
 #include <Windows.h>
@@ -636,7 +637,7 @@ private:
 		* desc: creates CBV/SRV/UAV descriptor heap.
 		* return: false if successful, true otherwise.
 		*/
-		bool createCBVSRVHeap                ();
+		bool createCBVSRVUAVHeap             ();
 		//@@Function
 		/*
 		* desc: creates CBVs/SRVs/UAVs.
@@ -656,6 +657,7 @@ private:
 		* return: false if successful, true otherwise.
 		*/
 		bool createRootSignature             ();
+		bool createBlurRootSignature         ();
 		//@@Function
 		/*
 		* desc: compiles shaders and fills input layout.
@@ -1108,6 +1110,9 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> pOpaqueWireframePSO;
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> pTransparentWireframePSO;
 
+	Microsoft::WRL::ComPtr<ID3D12PipelineState> pBlurHorizontalPSO;
+	Microsoft::WRL::ComPtr<ID3D12PipelineState> pBlurVerticalPSO;
+
 
 	// Command objects.
 	Microsoft::WRL::ComPtr<ID3D12CommandQueue>        pCommandQueue;
@@ -1130,7 +1135,7 @@ private:
 	// Descriptor heaps and descriptor sizes
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> pRTVHeap;
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> pDSVHeap;
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> pCBVSRVHeap;
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> pCBVSRVUAVHeap;
 	UINT iRTVDescriptorSize                 = 0;
 	UINT iDSVDescriptorSize                 = 0;
 	UINT iCBVSRVUAVDescriptorSize           = 0;
@@ -1144,6 +1149,7 @@ private:
 
 	std::vector<D3D12_INPUT_ELEMENT_DESC>        vInputLayout;
 	Microsoft::WRL::ComPtr<ID3D12RootSignature>  pRootSignature;
+	Microsoft::WRL::ComPtr<ID3D12RootSignature>  pBlurRootSignature;
 	std::unordered_map<std::string, Microsoft::WRL::ComPtr<ID3DBlob>> mShaders;
 
 
@@ -1182,7 +1188,7 @@ private:
 
 	// Profiler.
 	friend class SProfiler;
-	SProfiler*     pProfiler;
+	SProfiler*   pProfiler;
 
 	
 	// Level / Objects
@@ -1198,6 +1204,10 @@ private:
 	bool           MSAA_Enabled             = true;
 	UINT           MSAA_SampleCount         = 4;
 	UINT           MSAA_Quality             = 0;
+
+	
+	// Blur.
+	std::unique_ptr<SBlurEffect> pBlurEffect;
 
 
 	// Screen.

@@ -129,7 +129,7 @@ SMaterial* SApplication::registerMaterial(const std::string& sMaterialName, bool
 			}
 
 			// Recreate cbv heap.
-			createCBVSRVHeap();
+			createCBVSRVUAVHeap();
 			createViews();
 
 			mtxDraw.unlock();
@@ -281,7 +281,7 @@ bool SApplication::unregisterMaterial(const std::string& sMaterialName)
 		}
 
 		// Recreate cbv heap.
-		createCBVSRVHeap();
+		createCBVSRVUAVHeap();
 		createViews();
 	}
 
@@ -456,7 +456,7 @@ STextureHandle SApplication::loadTextureFromDiskToGPU(std::string sTextureName, 
 	flushCommandQueue();
 
 	// Recreate cbv heap.
-	createCBVSRVHeap();
+	createCBVSRVUAVHeap();
 	createViews();
 
 	mtxDraw.unlock();
@@ -609,7 +609,7 @@ bool SApplication::unloadTextureFromGPU(STextureHandle& textureHandle)
 	flushCommandQueue();
 
 	// Recreate cbv heap.
-	createCBVSRVHeap();
+	createCBVSRVUAVHeap();
 	createViews();
 
 	mtxDraw.unlock();
@@ -881,7 +881,7 @@ bool SApplication::spawnContainerInLevel(SContainer* pContainer)
 
 
 			// Recreate cbv heap.
-			createCBVSRVHeap();
+			createCBVSRVUAVHeap();
 			createViews();
 		}
 	}
@@ -1031,7 +1031,7 @@ void SApplication::despawnContainerFromLevel(SContainer* pContainer)
 			}
 
 			// Recreate cbv heap.
-			createCBVSRVHeap();
+			createCBVSRVUAVHeap();
 			createViews();
 		}
 	}
@@ -2201,6 +2201,15 @@ bool SApplication::onResize()
 		XMStoreFloat4x4(&vProj, P);
 
 
+
+		// Update blur.
+
+		if (pBlurEffect)
+		{
+			pBlurEffect->resizeResources(iMainWindowWidth, iMainWindowHeight);
+		}
+
+
 		return false;
 	}
 	else
@@ -2567,7 +2576,7 @@ void SApplication::draw()
 
 	// CBV/SRV heap.
 
-	ID3D12DescriptorHeap* descriptorHeaps[] = { pCBVSRVHeap.Get() };
+	ID3D12DescriptorHeap* descriptorHeaps[] = { pCBVSRVUAVHeap.Get() };
 	pCommandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 
 	pCommandList->SetGraphicsRootSignature(pRootSignature.Get());
@@ -2576,7 +2585,7 @@ void SApplication::draw()
 	// Render pass cb.
 
 	int iRenderPassCBVIndex = iRenderPassCBVOffset + iCurrentFrameResourceIndex;
-	auto renderPassCBVHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(pCBVSRVHeap->GetGPUDescriptorHandleForHeapStart());
+	auto renderPassCBVHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(pCBVSRVUAVHeap->GetGPUDescriptorHandleForHeapStart());
 	renderPassCBVHandle.Offset(iRenderPassCBVIndex, iCBVSRVUAVDescriptorSize);
 
 	pCommandList->SetGraphicsRootDescriptorTable(0, renderPassCBVHandle);
@@ -2613,9 +2622,7 @@ void SApplication::draw()
 	mtxShader.unlock();
 	mtxSpawnDespawn.unlock();
 
-
-
-	pCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(getCurrentBackBufferResource(), 
+	pCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(getCurrentBackBufferResource(),
 		D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
 
 	if (MSAA_Enabled)
@@ -2623,16 +2630,16 @@ void SApplication::draw()
 		// Resolve MSAA render target to our swap chain buffer.
 
 		CD3DX12_RESOURCE_BARRIER barriers1[] = {
-			CD3DX12_RESOURCE_BARRIER::Transition(pMSAARenderTarget.Get(), 
+			CD3DX12_RESOURCE_BARRIER::Transition(pMSAARenderTarget.Get(),
 			D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RESOLVE_SOURCE),
-			CD3DX12_RESOURCE_BARRIER::Transition(getCurrentBackBufferResource(true), 
+			CD3DX12_RESOURCE_BARRIER::Transition(getCurrentBackBufferResource(true),
 			D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RESOLVE_DEST)
 		};
 
 		CD3DX12_RESOURCE_BARRIER barriers2[] = {
-			CD3DX12_RESOURCE_BARRIER::Transition(pMSAARenderTarget.Get(), 
+			CD3DX12_RESOURCE_BARRIER::Transition(pMSAARenderTarget.Get(),
 			D3D12_RESOURCE_STATE_RESOLVE_SOURCE, D3D12_RESOURCE_STATE_PRESENT),
-			CD3DX12_RESOURCE_BARRIER::Transition(getCurrentBackBufferResource(true), 
+			CD3DX12_RESOURCE_BARRIER::Transition(getCurrentBackBufferResource(true),
 			D3D12_RESOURCE_STATE_RESOLVE_DEST, D3D12_RESOURCE_STATE_PRESENT)
 		};
 
@@ -2641,6 +2648,23 @@ void SApplication::draw()
 		pCommandList->ResolveSubresource(getCurrentBackBufferResource(true), 0, pMSAARenderTarget.Get(), 0, BackBufferFormat);
 
 		pCommandList->ResourceBarrier(2, barriers2);
+	}
+	
+	if (getGlobalVisualSettings().screenBlurEffect.bEnableScreenBlur)
+	{
+		pBlurEffect->addBlurToTexture(pCommandList.Get(), pBlurRootSignature.Get(), pBlurHorizontalPSO.Get(), pBlurVerticalPSO.Get(),
+			getCurrentBackBufferResource(true), getGlobalVisualSettings().screenBlurEffect.iBlurStrength);
+
+		// Prepare to copy blurred output to the back buffer.
+		// back buffer resource is in copy_source state.
+		pCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(getCurrentBackBufferResource(true),
+			D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_COPY_DEST));
+
+		pCommandList->CopyResource(getCurrentBackBufferResource(true), pBlurEffect->getOutput());
+
+		// Transition to PRESENT state.
+		pCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(getCurrentBackBufferResource(true),
+			D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PRESENT));
 	}
 
 
@@ -2813,7 +2837,7 @@ void SApplication::drawComponent(SComponent* pComponent)
 
 		// Texture descriptor table.
 
-		auto heapHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(pCBVSRVHeap->GetGPUDescriptorHandleForHeapStart());
+		auto heapHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(pCBVSRVUAVHeap->GetGPUDescriptorHandleForHeapStart());
 
 		STextureHandle tex;
 		bool bHasTexture = false;
@@ -2845,8 +2869,7 @@ void SApplication::drawComponent(SComponent* pComponent)
 
 		if (bHasTexture)
 		{
-			heapHandle.Offset(iObjCount + iMaterialCount + iCurrentFrameResourceIndex * (iObjCount + iMaterialCount + iTextureCount)
-				+ tex.pRefToTexture->iTexSRVHeapIndex, iCBVSRVUAVDescriptorSize);
+			heapHandle.Offset(iRenderPassCBVOffset + iFrameResourcesCount + tex.pRefToTexture->iTexSRVHeapIndex, iCBVSRVUAVDescriptorSize);
 			pCommandList->SetGraphicsRootDescriptorTable(3, heapHandle);
 		}
 
@@ -2854,8 +2877,8 @@ void SApplication::drawComponent(SComponent* pComponent)
 
 		// Object descriptor table.
 
-		UINT iCBVIndex = iCurrentFrameResourceIndex * (iObjCount + iMaterialCount + iTextureCount) + pComponent->getRenderData()->iObjCBIndex;
-		auto cbvHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(pCBVSRVHeap->GetGPUDescriptorHandleForHeapStart());
+		UINT iCBVIndex = iCurrentFrameResourceIndex * (iObjCount + iMaterialCount) + pComponent->getRenderData()->iObjCBIndex;
+		auto cbvHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(pCBVSRVUAVHeap->GetGPUDescriptorHandleForHeapStart());
 		cbvHandle.Offset(iCBVIndex, iCBVSRVUAVDescriptorSize);
 
 		pCommandList->SetGraphicsRootDescriptorTable(1, cbvHandle);
@@ -2871,8 +2894,8 @@ void SApplication::drawComponent(SComponent* pComponent)
 			iMatCBIndex = pComponent->meshData.getMeshMaterial()->iMatCBIndex;
 		}
 
-		iCBVIndex = iObjCount + iCurrentFrameResourceIndex * (iObjCount + iMaterialCount + iTextureCount) + iMatCBIndex;
-		cbvHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(pCBVSRVHeap->GetGPUDescriptorHandleForHeapStart());
+		iCBVIndex = iObjCount + iCurrentFrameResourceIndex * (iObjCount + iMaterialCount) + iMatCBIndex;
+		cbvHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(pCBVSRVUAVHeap->GetGPUDescriptorHandleForHeapStart());
 		cbvHandle.Offset(iCBVIndex, iCBVSRVUAVDescriptorSize);
 
 		pCommandList->SetGraphicsRootDescriptorTable(2, cbvHandle);
@@ -3664,12 +3687,14 @@ bool SApplication::createRTVAndDSVDescriptorHeaps()
 	return false;
 }
 
-bool SApplication::createCBVSRVHeap()
+bool SApplication::createCBVSRVUAVHeap()
 {
 	size_t iObjCount = roundUp(iActualObjectCBCount, OBJECT_CB_RESIZE_MULTIPLE); // for SObjectConstants
 	iObjCount += roundUp(vRegisteredMaterials.size(), OBJECT_CB_RESIZE_MULTIPLE); // for SMaterialConstants
-	iObjCount += vLoadedTextures.size(); // one SRV per texture
-	// new stuff goes here
+
+
+	// new stuff per frame resource goes here
+
 
 	// Each frame resource contains N objects, so we need (iFrameResourcesCount * N)
 	// + 1 for SRenderPassConstants per frame resource.
@@ -3678,13 +3703,21 @@ bool SApplication::createCBVSRVHeap()
 	// Save an offset to the start of the render pass CBVs.
 	iRenderPassCBVOffset = iObjCount * iFrameResourcesCount;
 
+
+	iDescriptorCount += vLoadedTextures.size(); // one SRV per texture
+	iDescriptorCount += BLUR_VIEW_COUNT; // for blur effect
+
+
+	// new global stuff goes here
+
+
 	D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc;
 	cbvHeapDesc.NumDescriptors = iDescriptorCount;
 	cbvHeapDesc.Type           = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 	cbvHeapDesc.Flags          = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	cbvHeapDesc.NodeMask       = 0;
 
-	HRESULT hresult = pDevice->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&pCBVSRVHeap));
+	HRESULT hresult = pDevice->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&pCBVSRVUAVHeap));
 	if (FAILED(hresult))
 	{
 		SError::showErrorMessageBox(hresult, L"SApplication::createCBVDescriptorHeap::ID3D12Device::CreateDescriptorHeap()");
@@ -3715,8 +3748,8 @@ void SApplication::createViews()
 			currentObjectConstantBufferAddress += i * iObjectConstantBufferSizeInBytes;
 
 			// Offset to the object CBV in the descriptor heap.
-			int iIndexInHeap = iFrameIndex * (iObjectCount + iMaterialCount + iTextureCount) + i;
-			auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(pCBVSRVHeap->GetCPUDescriptorHandleForHeapStart());
+			int iIndexInHeap = iFrameIndex * (iObjectCount + iMaterialCount) + i;
+			auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(pCBVSRVUAVHeap->GetCPUDescriptorHandleForHeapStart());
 			handle.Offset(iIndexInHeap, iCBVSRVUAVDescriptorSize);
 
 			D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc;
@@ -3744,8 +3777,8 @@ void SApplication::createViews()
 			currentMaterialConstantBufferAddress += i * iMaterialCBSizeInBytes;
 
 			// Offset to the material CBV in the descriptor heap.
-			int iIndexInHeap = iObjectCount + iFrameIndex * (iObjectCount + iMaterialCount + iTextureCount) + i;
-			auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(pCBVSRVHeap->GetCPUDescriptorHandleForHeapStart());
+			int iIndexInHeap = iObjectCount + iFrameIndex * (iObjectCount + iMaterialCount) + i;
+			auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(pCBVSRVUAVHeap->GetCPUDescriptorHandleForHeapStart());
 			handle.Offset(iIndexInHeap, iCBVSRVUAVDescriptorSize);
 
 			D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc;
@@ -3755,32 +3788,6 @@ void SApplication::createViews()
 			pDevice->CreateConstantBufferView(&cbvDesc, handle);
 		}
 	}
-
-
-	// Need one SRV per loaded texture.
-	for (int iFrameIndex = 0; iFrameIndex < iFrameResourcesCount; iFrameIndex++)
-	{
-		for (size_t i = 0; i < vLoadedTextures.size(); i++)
-		{
-			int iIndexInHeap = iObjectCount + iMaterialCount + iFrameIndex * (iObjectCount + iMaterialCount + iTextureCount) + i;
-			auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(pCBVSRVHeap->GetCPUDescriptorHandleForHeapStart());
-
-			handle.Offset(iIndexInHeap, iCBVSRVUAVDescriptorSize);
-
-			D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-			srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-			srvDesc.Format = vLoadedTextures[i]->pResource->GetDesc().Format;
-			srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-			srvDesc.Texture2D.MostDetailedMip = 0;
-			srvDesc.Texture2D.MipLevels = vLoadedTextures[i]->pResource->GetDesc().MipLevels;
-			srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
-
-			pDevice->CreateShaderResourceView(vLoadedTextures[i]->pResource.Get(), &srvDesc, handle);
-
-			vLoadedTextures[i]->iTexSRVHeapIndex = i;
-		}
-	}
-
 
 
 	UINT iRenderPassCBSizeInBytes = SMath::makeMultipleOf256(sizeof(SRenderPassConstants));
@@ -3794,7 +3801,7 @@ void SApplication::createViews()
 
 		// Offset in the descriptor heap.
 		int iIndexInHeap = iRenderPassCBVOffset + iFrameIndex;
-		auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(pCBVSRVHeap->GetCPUDescriptorHandleForHeapStart());
+		auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(pCBVSRVUAVHeap->GetCPUDescriptorHandleForHeapStart());
 		handle.Offset(iIndexInHeap, iCBVSRVUAVDescriptorSize);
 
 		D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc;
@@ -3802,6 +3809,44 @@ void SApplication::createViews()
 		cbvDesc.SizeInBytes = iRenderPassCBSizeInBytes;
 
 		pDevice->CreateConstantBufferView(&cbvDesc, handle);
+	}
+
+
+	// Need one SRV per loaded texture.
+	for (size_t i = 0; i < vLoadedTextures.size(); i++)
+	{
+		int iIndexInHeap = iRenderPassCBVOffset + iFrameResourcesCount + i;
+		auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(pCBVSRVUAVHeap->GetCPUDescriptorHandleForHeapStart());
+
+		handle.Offset(iIndexInHeap, iCBVSRVUAVDescriptorSize);
+
+		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+		srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+		srvDesc.Format = vLoadedTextures[i]->pResource->GetDesc().Format;
+		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+		srvDesc.Texture2D.MostDetailedMip = 0;
+		srvDesc.Texture2D.MipLevels = vLoadedTextures[i]->pResource->GetDesc().MipLevels;
+		srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
+
+		pDevice->CreateShaderResourceView(vLoadedTextures[i]->pResource.Get(), &srvDesc, handle);
+
+		vLoadedTextures[i]->iTexSRVHeapIndex = i;
+	}
+
+
+	if (pBlurEffect)
+	{
+		// Need 2 SRV & 2 UAV for blur.
+
+		int iIndexInHeap = iRenderPassCBVOffset + iFrameResourcesCount + iTextureCount;
+
+		auto cpuHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(pCBVSRVUAVHeap->GetCPUDescriptorHandleForHeapStart());
+		cpuHandle.Offset(iIndexInHeap, iCBVSRVUAVDescriptorSize);
+
+		auto gpuHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(pCBVSRVUAVHeap->GetGPUDescriptorHandleForHeapStart());
+		gpuHandle.Offset(iIndexInHeap, iCBVSRVUAVDescriptorSize);
+
+		pBlurEffect->assignHeapHandles(cpuHandle, gpuHandle, iCBVSRVUAVDescriptorSize);
 	}
 }
 
@@ -3881,6 +3926,60 @@ bool SApplication::createRootSignature()
 	return false;
 }
 
+bool SApplication::createBlurRootSignature()
+{
+	CD3DX12_DESCRIPTOR_RANGE srvTable;
+	srvTable.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+
+	CD3DX12_DESCRIPTOR_RANGE uavTable;
+	uavTable.Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0);
+
+
+	CD3DX12_ROOT_PARAMETER slotRootParameter[3];
+
+	// Perfomance TIP: Order from most frequent to least frequent.
+	slotRootParameter[0].InitAsConstants(11, 0);
+	slotRootParameter[1].InitAsDescriptorTable(1, &srvTable);
+	slotRootParameter[2].InitAsDescriptorTable(1, &uavTable);
+
+
+	CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc(3, slotRootParameter,
+		0, nullptr,
+		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+
+	Microsoft::WRL::ComPtr<ID3DBlob> serializedRootSig = nullptr;
+	Microsoft::WRL::ComPtr<ID3DBlob> errorBlob = nullptr;
+	HRESULT hr = D3D12SerializeRootSignature(&rootSigDesc, D3D_ROOT_SIGNATURE_VERSION_1,
+		serializedRootSig.GetAddressOf(), errorBlob.GetAddressOf());
+
+	if (errorBlob != nullptr)
+	{
+		OutputDebugStringA((char*)errorBlob->GetBufferPointer());
+	}
+
+	if (FAILED(hr))
+	{
+		SError::showErrorMessageBox(hr, L"SApplication::createBlurRootSignature::ID3D12Device::D3D12SerializeRootSignature()");
+		return true;
+	}
+
+
+	hr = pDevice->CreateRootSignature(
+		0,
+		serializedRootSig->GetBufferPointer(),
+		serializedRootSig->GetBufferSize(),
+		IID_PPV_ARGS(&pBlurRootSignature)
+	);
+	if (FAILED(hr))
+	{
+		SError::showErrorMessageBox(hr, L"SApplication::createBlurRootSignature::ID3D12Device::CreateRootSignature()");
+		return true;
+	}
+
+
+	return false;
+}
+
 bool SApplication::createShadersAndInputLayout()
 {
 	// Also change in SApplication::compileCustomShader().
@@ -3894,6 +3993,8 @@ bool SApplication::createShadersAndInputLayout()
 	mShaders["basicVS"] = SGeometry::compileShader(L"shaders/basic.hlsl", nullptr, "VS", "vs_5_1", bCompileShadersInRelease);
 	mShaders["basicPS"] = SGeometry::compileShader(L"shaders/basic.hlsl", nullptr, "PS", "ps_5_1", bCompileShadersInRelease);
 	mShaders["basicAlphaPS"] = SGeometry::compileShader(L"shaders/basic.hlsl", alphaTestDefines, "PS", "ps_5_1", bCompileShadersInRelease);
+	mShaders["horzBlurCS"] = SGeometry::compileShader(L"shaders/compute_blur.hlsl", nullptr, "horzBlurCS", "cs_5_1", bCompileShadersInRelease);
+	mShaders["vertBlurCS"] = SGeometry::compileShader(L"shaders/compute_blur.hlsl", nullptr, "vertBlurCS", "cs_5_1", bCompileShadersInRelease);
 
 
 	// All meshes with default shader will be here.
@@ -4104,6 +4205,40 @@ bool SApplication::createPSO(SShader* pPSOsForCustomShader)
 		if (FAILED(hresult))
 		{
 			SError::showErrorMessageBox(hresult, L"SApplication::createPSO::ID3D12Device::CreateGraphicsPipelineState()");
+			return true;
+		}
+
+
+		// PSO for blur.
+
+		D3D12_COMPUTE_PIPELINE_STATE_DESC horzBlurPSO = {};
+		horzBlurPSO.pRootSignature = pBlurRootSignature.Get();
+		horzBlurPSO.CS =
+		{
+			reinterpret_cast<BYTE*>(mShaders["horzBlurCS"]->GetBufferPointer()),
+			mShaders["horzBlurCS"]->GetBufferSize()
+		};
+		horzBlurPSO.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
+		hresult = pDevice->CreateComputePipelineState(&horzBlurPSO, IID_PPV_ARGS(&pBlurHorizontalPSO));
+		if (FAILED(hresult))
+		{
+			SError::showErrorMessageBox(hresult, L"SApplication::createPSO::ID3D12Device::CreateGraphicsPipelineState() (blur horizontal pso)");
+			return true;
+		}
+
+
+		D3D12_COMPUTE_PIPELINE_STATE_DESC vertBlurPSO = {};
+		vertBlurPSO.pRootSignature = pBlurRootSignature.Get();
+		vertBlurPSO.CS =
+		{
+			reinterpret_cast<BYTE*>(mShaders["vertBlurCS"]->GetBufferPointer()),
+			mShaders["vertBlurCS"]->GetBufferSize()
+		};
+		vertBlurPSO.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
+		hresult = pDevice->CreateComputePipelineState(&vertBlurPSO, IID_PPV_ARGS(&pBlurVerticalPSO));
+		if (FAILED(hresult))
+		{
+			SError::showErrorMessageBox(hresult, L"SApplication::createPSO::ID3D12Device::CreateGraphicsPipelineState() (blur vertical pso)");
 			return true;
 		}
 	}
@@ -4616,6 +4751,8 @@ bool SApplication::init()
 	// Do the initial resize code.
 	onResize();
 
+	pBlurEffect = std::make_unique<SBlurEffect>(pDevice.Get(), iMainWindowWidth, iMainWindowHeight, BackBufferFormat);
+
 	HRESULT hresult = pCommandList->Reset(pCommandListAllocator.Get(), nullptr);
 	if (FAILED(hresult))
 	{
@@ -4628,6 +4765,11 @@ bool SApplication::init()
 		return true;
 	}
 
+	if (createBlurRootSignature())
+	{
+		return true;
+	}
+
 	if (createShadersAndInputLayout())
 	{
 		return true;
@@ -4635,7 +4777,7 @@ bool SApplication::init()
 
 	createFrameResources();
 
-	if (createCBVSRVHeap())
+	if (createCBVSRVUAVHeap())
 	{
 		return true;
 	}

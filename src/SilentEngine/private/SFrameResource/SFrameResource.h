@@ -117,6 +117,17 @@ struct SDistantFog
 	float fDistantFogRange = 500.0f;
 };
 
+struct STextureBlur
+{
+	// Default: false - no blur.
+	// (used to blur the screen)
+	bool bEnableScreenBlur = false;
+
+	// Default: 4.
+	// (use in range [1, ...] to control the overall blurriness.
+	size_t iBlurStrength = 4;
+};
+
 // Stuff from SRenderPassConstants that user can change.
 struct SGlobalVisualSettings
 {
@@ -135,6 +146,8 @@ struct SGlobalVisualSettings
 	// Default: 1.0f - no saturation.
 	// (use in range [-1.0f, ...] to control the saturation of the image)
 	float fSaturation = 1.0f;
+
+	STextureBlur screenBlurEffect;
 
 	// (use to control the distant fog)
 	SDistantFog distantFog;
