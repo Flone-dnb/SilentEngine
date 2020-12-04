@@ -456,6 +456,14 @@ public:
 		*/
 		void                   showMessageBox                   (const std::wstring& sMessageBoxTitle, const std::wstring& sMessageText) const;
 
+		//@@Function
+		/*
+		* desc: enabling this will copy screen pixels, for next frame only, to specified pPixels buffer.
+		* param "pPixels": unsigned char array with the size equal to (width * height * 4), use getWindowSize() to get width and height.
+		* remarks: you can access the pixels in onTick() function, each pixel is in rgba format where each component is 1 byte.
+		*/
+		void                   makeOneCopyOfScreenPixelsToCustomBuffer(unsigned char* pPixels);
+
 
 protected:
 
@@ -1081,6 +1089,7 @@ private:
 		void releaseShader(SShader* pShader);
 		void removeShaderFromObjects(SShader* pShader, std::vector<SShaderObjects>* pObjectsByShader);
 		void forceChangeMeshShader(SShader* pOldShader, SShader* pNewShader, SComponent* pComponent, bool bUsesTransparency);
+		void saveBackBufferPixels();
 
 
 
@@ -1212,6 +1221,10 @@ private:
 
 	// Screen.
 	bool           bFullscreen              = false;
+	bool           bSaveBackBufferPixelsForUser = false;
+	unsigned char* pPixels = nullptr;
+	Microsoft::WRL::ComPtr<ID3D12Resource> pPixelsReadBackBuffer;
+	UINT64         iPixelsBufferSize        = 0;
 	int            iMainWindowWidth         = 800;
 	int            iMainWindowHeight        = 600;
 	float          fFOVInDeg                = 90;

@@ -1562,6 +1562,13 @@ void SApplication::showMessageBox(const std::wstring& sMessageBoxTitle, const st
 	MessageBox(0, sMessageText.c_str(), sMessageBoxTitle.c_str(), 0);
 }
 
+void SApplication::makeOneCopyOfScreenPixelsToCustomBuffer(unsigned char* pPixels)
+{
+	bSaveBackBufferPixelsForUser = true;
+
+	this->pPixels = pPixels;
+}
+
 std::vector<std::wstring> SApplication::getSupportedDisplayAdapters() const
 {
 	std::vector<std::wstring> vSupportedAdapters;
@@ -2668,6 +2675,16 @@ void SApplication::draw()
 	}
 
 
+
+
+	// Should be last draw() step:
+	if (bSaveBackBufferPixelsForUser)
+	{
+		// Write commands to save back buffer pixels for user.
+		saveBackBufferPixels();
+	}
+
+
 	// Stop recording commands.
 
 	hresult = pCommandList->Close();
@@ -2685,6 +2702,28 @@ void SApplication::draw()
 	ID3D12CommandList* commandLists[] = { pCommandList.Get() };
 	pCommandQueue->ExecuteCommandLists(_countof(commandLists), commandLists);
 
+
+	if (bSaveBackBufferPixelsForUser)
+	{
+		flushCommandQueue();
+
+
+		D3D12_RANGE readbackBufferRange{ 0, iPixelsBufferSize };
+		unsigned char* pMappedData = nullptr;
+
+		pPixelsReadBackBuffer->Map(0, &readbackBufferRange, reinterpret_cast<void**>(&pMappedData));
+
+		std::memcpy(pPixels, pMappedData, iPixelsBufferSize);
+
+		pPixelsReadBackBuffer->Unmap(0, nullptr);
+
+
+		bSaveBackBufferPixelsForUser = false;
+
+		pPixels = nullptr;
+
+		pPixelsReadBackBuffer->Release();
+	}
 
 
 	// Swap back & front buffers.
@@ -4633,6 +4672,42 @@ void SApplication::forceChangeMeshShader(SShader* pOldShader, SShader* pNewShade
 
 
 	mtxShader.unlock();
+}
+
+void SApplication::saveBackBufferPixels()
+{
+	if (BackBufferFormat == DXGI_FORMAT_R8G8B8A8_UNORM)
+	{
+		ID3D12Resource* pBackBuffer = getCurrentBackBufferResource(true);
+		D3D12_RESOURCE_DESC desc = pBackBuffer->GetDesc();
+
+		D3D12_PLACED_SUBRESOURCE_FOOTPRINT footprint;
+
+		pDevice->GetCopyableFootprints(&desc, 0, 1, 0, &footprint, nullptr, nullptr, &iPixelsBufferSize);
+
+		HRESULT hresult = pDevice->CreateCommittedResource(
+				&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_READBACK),
+				D3D12_HEAP_FLAG_NONE,
+				&CD3DX12_RESOURCE_DESC::Buffer(iPixelsBufferSize),
+				D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS(&pPixelsReadBackBuffer));
+
+		CD3DX12_TEXTURE_COPY_LOCATION dst(pPixelsReadBackBuffer.Get(), footprint);
+		CD3DX12_TEXTURE_COPY_LOCATION src(pBackBuffer, 0);
+
+		pCommandList->CopyTextureRegion(&dst, 0, 0, 0, &src, nullptr);
+
+		/*pCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
+			getCurrentBackBufferResource(true), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_COPY_SOURCE));
+
+		pCommandList->CopyResource(pPixelsReadBackBuffer.Get(), getCurrentBackBufferResource(true));
+
+		pCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
+			getCurrentBackBufferResource(true), D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_PRESENT));*/
+	}
+	else
+	{
+		SError::showErrorMessageBox(L"SApplication::saveBackBufferPixels()", L"Unsupported back buffer format.");
+	}
 }
 
 SApplication::SApplication(HINSTANCE hInstance)
