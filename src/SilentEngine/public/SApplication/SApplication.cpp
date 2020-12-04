@@ -2677,13 +2677,13 @@ void SApplication::draw()
 
 
 
-	// Should be last draw() step:
+
+	// SHOULD BE LAST draw() STEP:
 	if (bSaveBackBufferPixelsForUser)
 	{
 		// Write commands to save back buffer pixels for user.
 		saveBackBufferPixels();
 	}
-
 
 	// Stop recording commands.
 

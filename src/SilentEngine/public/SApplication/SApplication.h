@@ -460,7 +460,7 @@ public:
 		/*
 		* desc: enabling this will copy screen pixels, for next frame only, to specified pPixels buffer.
 		* param "pPixels": unsigned char array with the size equal to (width * height * 4), use getWindowSize() to get width and height.
-		* remarks: you can access the pixels in onTick() function, each pixel is in rgba format where each component is 1 byte.
+		* remarks: you can access the pixels in onTick() function, each pixel is in 'rgba' format where each component is 'unsigned char'.
 		*/
 		void                   makeOneCopyOfScreenPixelsToCustomBuffer(unsigned char* pPixels);
 
