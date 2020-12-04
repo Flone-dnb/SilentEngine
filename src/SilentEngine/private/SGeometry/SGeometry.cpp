@@ -20,24 +20,45 @@
 #pragma comment(lib,"d3dcompiler.lib")
 
 
-Microsoft::WRL::ComPtr<ID3D12Resource> SGeometry::createDefaultBuffer(ID3D12Device* pDevice, ID3D12GraphicsCommandList* pCommandList, const void* pInitBufferData, UINT64 iDataSizeInBytes, Microsoft::WRL::ComPtr<ID3D12Resource>& pUploadBuffer)
+Microsoft::WRL::ComPtr<ID3D12Resource> SGeometry::createBufferWithData(ID3D12Device* pDevice, ID3D12GraphicsCommandList* pCommandList,
+	const void* pInitBufferData, UINT64 iDataSizeInBytes, Microsoft::WRL::ComPtr<ID3D12Resource>& pOutUploadBuffer, bool bCreateUAVBuffer)
 {
 	Microsoft::WRL::ComPtr<ID3D12Resource> pDefaultBuffer;
 
 	// Create the actual default buffer resource.
 
-	HRESULT hresult = pDevice->CreateCommittedResource(
-		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
-		D3D12_HEAP_FLAG_NONE,
-		&CD3DX12_RESOURCE_DESC::Buffer(iDataSizeInBytes),
-		D3D12_RESOURCE_STATE_COMMON,
-		nullptr,
-		IID_PPV_ARGS(pDefaultBuffer.GetAddressOf()));
-	if (FAILED(hresult))
+	HRESULT hresult;
+	if (bCreateUAVBuffer)
 	{
-		SError::showErrorMessageBox(hresult, L"SGeometry::createDefaultBuffer::ID3D12Device::CreateCommittedResource() (default buffer)");
-		return nullptr;
+		hresult = pDevice->CreateCommittedResource(
+			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+			D3D12_HEAP_FLAG_NONE,
+			&CD3DX12_RESOURCE_DESC::Buffer(iDataSizeInBytes, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS),
+			D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+			nullptr,
+			IID_PPV_ARGS(pDefaultBuffer.GetAddressOf()));
+		if (FAILED(hresult))
+		{
+			SError::showErrorMessageBox(hresult, L"SGeometry::createDefaultBuffer::ID3D12Device::CreateCommittedResource() (default buffer)");
+			return nullptr;
+		}
 	}
+	else
+	{
+		hresult = pDevice->CreateCommittedResource(
+			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+			D3D12_HEAP_FLAG_NONE,
+			&CD3DX12_RESOURCE_DESC::Buffer(iDataSizeInBytes),
+			D3D12_RESOURCE_STATE_COMMON,
+			nullptr,
+			IID_PPV_ARGS(pDefaultBuffer.GetAddressOf()));
+		if (FAILED(hresult))
+		{
+			SError::showErrorMessageBox(hresult, L"SGeometry::createDefaultBuffer::ID3D12Device::CreateCommittedResource() (default buffer)");
+			return nullptr;
+		}
+	}
+	
 
 
 	// In order to copy CPU memory data into our default buffer, we need to create an intermediate upload heap.
@@ -48,7 +69,7 @@ Microsoft::WRL::ComPtr<ID3D12Resource> SGeometry::createDefaultBuffer(ID3D12Devi
 		&CD3DX12_RESOURCE_DESC::Buffer(iDataSizeInBytes),
 		D3D12_RESOURCE_STATE_GENERIC_READ,
 		nullptr,
-		IID_PPV_ARGS(pUploadBuffer.GetAddressOf()));
+		IID_PPV_ARGS(pOutUploadBuffer.GetAddressOf()));
 	if (FAILED(hresult))
 	{
 		SError::showErrorMessageBox(hresult, L"SGeometry::createDefaultBuffer::ID3D12Device::CreateCommittedResource() (upload heap)");
@@ -67,19 +88,35 @@ Microsoft::WRL::ComPtr<ID3D12Resource> SGeometry::createDefaultBuffer(ID3D12Devi
 
 	// Copy the data to the default buffer resource.
 
-	pCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(pDefaultBuffer.Get(), 
-		D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST));
+	if (bCreateUAVBuffer)
+	{
+		pCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(pDefaultBuffer.Get(),
+			D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_DEST));
+	}
+	else
+	{
+		pCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(pDefaultBuffer.Get(),
+			D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST));
+	}
 
 
 
 	// Copy CPU memory into the intermediate upload heap. Using ID3D12CommandList::CopySubresourceRegion.
 
-	UpdateSubresources<1>(pCommandList, pDefaultBuffer.Get(), pUploadBuffer.Get(), 0, 0, 1, &subResourceData);
+	UpdateSubresources<1>(pCommandList, pDefaultBuffer.Get(), pOutUploadBuffer.Get(), 0, 0, 1, &subResourceData);
 
 
-
-	pCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(pDefaultBuffer.Get(),
-		D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_GENERIC_READ));
+	if (bCreateUAVBuffer)
+	{
+		pCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(pDefaultBuffer.Get(),
+			D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_UNORDERED_ACCESS));
+	}
+	else
+	{
+		pCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(pDefaultBuffer.Get(),
+			D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_GENERIC_READ));
+	}
+	
 
 	// pUploadBuffer has to be kept alive because the command list has not been executed yet that performs the actual copy.
 	// The caller can Release the pUploadBuffer after it knows the copy has been executed.

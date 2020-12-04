@@ -277,7 +277,7 @@ void SMeshComponent::createGeometryBuffers(bool bAddedVerticesOrUpdatedIndicesCo
 		renderData.pGeometry->freeUploaders();
 	}
 
-	renderData.pGeometry->pVertexBufferGPU = SGeometry::createDefaultBuffer(pApp->pDevice.Get(), pApp->pCommandList.Get(), vShaderVertices.data(),
+	renderData.pGeometry->pVertexBufferGPU = SGeometry::createBufferWithData(pApp->pDevice.Get(), pApp->pCommandList.Get(), vShaderVertices.data(),
 		renderData.pGeometry->iVertexBufferSizeInBytes, renderData.pGeometry->pVertexBufferUploader);
 
 	if (bAddedVerticesOrUpdatedIndicesCount)
@@ -287,7 +287,7 @@ void SMeshComponent::createGeometryBuffers(bool bAddedVerticesOrUpdatedIndicesCo
 			//std::memcpy(renderData.pGeometry->pIndexBufferCPU->GetBufferPointer(), meshData.getIndices32().data(),
 			//	renderData.pGeometry->iIndexBufferSizeInBytes);
 
-			renderData.pGeometry->pIndexBufferGPU = SGeometry::createDefaultBuffer(pApp->pDevice.Get(), pApp->pCommandList.Get(), meshData.getIndices32().data(),
+			renderData.pGeometry->pIndexBufferGPU = SGeometry::createBufferWithData(pApp->pDevice.Get(), pApp->pCommandList.Get(), meshData.getIndices32().data(),
 				renderData.pGeometry->iIndexBufferSizeInBytes, renderData.pGeometry->pIndexBufferUploader);
 		}
 		else
@@ -295,7 +295,7 @@ void SMeshComponent::createGeometryBuffers(bool bAddedVerticesOrUpdatedIndicesCo
 			//std::memcpy(renderData.pGeometry->pIndexBufferCPU->GetBufferPointer(), meshData.getIndices16().data(),
 			//	renderData.pGeometry->iIndexBufferSizeInBytes);
 
-			renderData.pGeometry->pIndexBufferGPU = SGeometry::createDefaultBuffer(pApp->pDevice.Get(), pApp->pCommandList.Get(), meshData.getIndices16().data(),
+			renderData.pGeometry->pIndexBufferGPU = SGeometry::createBufferWithData(pApp->pDevice.Get(), pApp->pCommandList.Get(), meshData.getIndices16().data(),
 				renderData.pGeometry->iIndexBufferSizeInBytes, renderData.pGeometry->pIndexBufferUploader);
 		}
 	}

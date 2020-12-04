@@ -185,12 +185,12 @@ public:
 
 	// pUploadBuffer has to be kept alive because the command list has not been executed yet that performs the actual copy.
 	// The caller can Release the pUploadBuffer after it knows the copy has been executed.
-	static Microsoft::WRL::ComPtr<ID3D12Resource> createDefaultBuffer(
+	static Microsoft::WRL::ComPtr<ID3D12Resource> createBufferWithData(
 		ID3D12Device* pDevice,
 		ID3D12GraphicsCommandList* pCommandList,
 		const void* pInitBufferData,
 		UINT64 iDataSizeInBytes,
-		Microsoft::WRL::ComPtr<ID3D12Resource>& pUploadBuffer);
+		Microsoft::WRL::ComPtr<ID3D12Resource>& pOutUploadBuffer, bool bCreateUAVBuffer = false);
 
 
 	static Microsoft::WRL::ComPtr<ID3DBlob> compileShader(
