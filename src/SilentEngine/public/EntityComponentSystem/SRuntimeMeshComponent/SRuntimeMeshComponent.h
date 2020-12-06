@@ -23,7 +23,8 @@
 This class represents the component that has some mesh data (3D-geometry) inside of it, but unlike the SMeshComponent,
 SRuntimeMeshComponent is used for 3D-geometry that is changing its data very often (using setMeshData(), every frame for example).
 This component has some optimizations so changing mesh data very often will be more efficient than SMeshComponent and will have
-less influence on the performance.
+less influence on the performance. Please note that if you're using compute shader to update mesh data, it may be more efficient to use SMeshComponent 
+(and so it's recommended). SRuntimeMeshComponent has CPU optimizations so updating mesh data from CPU is faster with this component.
 */
 class SRuntimeMeshComponent : public SComponent
 {
@@ -239,6 +240,7 @@ private:
 
 	bool        bIndexOfVertexBufferValid;
 	bool        bNoMeshDataOnSpawn;
+	bool        bNewMeshData;
 	bool        bVisible;
 };
 

@@ -127,6 +127,9 @@
     <Filter Include="SilentEngine\Private\SBlurEffect">
       <UniqueIdentifier>{319fe186-96a5-46c1-899e-7fe09cd82e2b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="SilentEngine\Private\SComputeShader">
+      <UniqueIdentifier>{bdde6cb1-19a4-4428-a76e-643701c205da}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\SilentEngine\public\SApplication\SApplication.cpp">
@@ -215,6 +218,9 @@
     </ClCompile>
     <ClCompile Include="..\src\SilentEngine\Private\SBlurEffect\SBlurEffect.cpp">
       <Filter>SilentEngine\Private\SBlurEffect</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SilentEngine\Private\SComputeShader\SComputeShader.cpp">
+      <Filter>SilentEngine\Private\SComputeShader</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -310,6 +316,9 @@
     </ClInclude>
     <ClInclude Include="..\src\SilentEngine\Private\SBlurEffect\SBlurEffect.h">
       <Filter>SilentEngine\Private\SBlurEffect</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SilentEngine\Private\SComputeShader\SComputeShader.h">
+      <Filter>SilentEngine\Private\SComputeShader</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

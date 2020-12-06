@@ -167,6 +167,17 @@ public:
 
 	//@@Function
 	/*
+	* desc: used to retrieve the mesh data as a resource for SComputeShader.
+	* param "bGetVertexBuffer": set true to get vertex buffer as a resource for SComputeShader, false for index buffer.
+	* return: nullptr if the component is not spawned (i.e. no buffer was created), valid pointer otherwise.
+	* remarks: pass this pointer to your compute shader in setAddMeshResource(), do not 'delete' this pointer (compute shader needs
+	this pointer for some time, it will delete it for you in its destructor). You can delete this mesh even if the compute shader is working,
+	the resource will not be released until at least somebody is using it (in this case in compute shader destructor the resource will be released).
+	*/
+	SMeshDataComputeResource* getMeshDataAsComputeResource(bool bGetVertexBuffer);
+
+	//@@Function
+	/*
 	* desc: determines if the component is visible (i.e. drawn).
 	* return: true if visible, false otherwise.
 	*/
@@ -177,8 +188,11 @@ private:
 	friend class SApplication;
 	friend class SComponent;
 	friend class SContainer;
+	friend class SComputeShader;
 
 	virtual void unbindMaterialsIncludingChilds() override;
+
+	Microsoft::WRL::ComPtr<ID3D12Resource> getResource(bool bVertexBuffer);
 
 	//@@Function
 	/*

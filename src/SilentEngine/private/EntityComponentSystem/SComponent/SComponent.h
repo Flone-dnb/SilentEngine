@@ -30,6 +30,13 @@ class SContainer;
 class SFrameResource;
 class SShader;
 class SShaderObjects;
+class SComputeShader;
+
+struct SComputeResourceBind
+{
+	SComputeShader* pShader;
+	std::string sResource;
+};
 
 //@@Class
 /*
@@ -250,11 +257,15 @@ protected:
 	*/
 	void removeMeshesByShader(std::vector<SShaderObjects>* pOpaqueMeshesByShader, std::vector<SShaderObjects>* pTransparentMeshesByShader) const;
 
+	void bindResourceUpdates(SComputeShader* pShader, const std::string& sResourceName);
+	void unbindResourceUpdates(SComputeShader* pShader);
+
 
 	friend class SApplication;
 	friend class SContainer;
 	friend class SMeshComponent;
 	friend class SRuntimeMeshComponent;
+	friend class SComputeShader;
 
 
 	SComponent* pParentComponent;
@@ -276,6 +287,9 @@ protected:
 
 
 	std::mutex  mtxComponentProps;
+	std::mutex  mtxResourceUsed;
+
+	std::vector<SComputeResourceBind> vResourceUsed;
 
 
 	SRenderItem renderData; // will be null for components that doesn't have mesh data

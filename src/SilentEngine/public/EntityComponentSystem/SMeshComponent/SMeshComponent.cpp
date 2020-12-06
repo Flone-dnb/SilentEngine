@@ -15,6 +15,7 @@
 #include "SilentEngine/Private/SError/SError.h"
 #include "SilentEngine/Public/SApplication/SApplication.h"
 #include "SilentEngine/Public/EntityComponentSystem/SContainer/SContainer.h"
+#include "SilentEngine/Private/SComputeShader/SComputeShader.h"
 
 SMeshComponent::SMeshComponent(std::string sComponentName) : SComponent()
 {
@@ -98,6 +99,13 @@ void SMeshComponent::setMeshData(const SMeshData& meshData, bool bAddedVerticesO
 	{
 		createGeometryBuffers(bAddedVerticesOrUpdatedIndicesCount);
 	}
+
+	mtxResourceUsed.lock();
+	for (size_t i = 0; i < vResourceUsed.size(); i++)
+	{
+		vResourceUsed[i].pShader->updateMeshResource(vResourceUsed[i].sResource);
+	}
+	mtxResourceUsed.unlock();
 
 	mtxComponentProps.unlock();
 }
@@ -214,6 +222,15 @@ SShader* SMeshComponent::getCustomShader() const
 	return pCustomShader;
 }
 
+SMeshDataComputeResource* SMeshComponent::getMeshDataAsComputeResource(bool bGetVertexBuffer)
+{
+	SMeshDataComputeResource* pMeshDataResource = new SMeshDataComputeResource();
+	pMeshDataResource->pResourceOwner = this;
+	pMeshDataResource->bVertexBuffer = bGetVertexBuffer;
+
+	return pMeshDataResource;
+}
+
 bool SMeshComponent::isVisible() const
 {
 	return bVisible;
@@ -229,10 +246,24 @@ void SMeshComponent::unbindMaterialsIncludingChilds()
 	}
 }
 
+Microsoft::WRL::ComPtr<ID3D12Resource> SMeshComponent::getResource(bool bVertexBuffer)
+{
+	if (bVertexBuffer)
+	{
+		return renderData.pGeometry->pVertexBufferGPU;
+	}
+	else
+	{
+		return renderData.pGeometry->pIndexBufferGPU;
+	}
+}
+
 SRenderItem* SMeshComponent::getRenderData()
 {
     return &renderData;
 }
+
+
 
 void SMeshComponent::createGeometryBuffers(bool bAddedVerticesOrUpdatedIndicesCount)
 {
@@ -265,20 +296,26 @@ void SMeshComponent::createGeometryBuffers(bool bAddedVerticesOrUpdatedIndicesCo
 		}
 	}*/
 
+
 	if (bSpawnedInLevel)
 	{
+		// Do not lock because this func will be
+		// called in spawnContainerInLevel() (when bSpawnedInLevel == false) and it will have lock already.
+
 		pApp->mtxDraw.lock();
 		pApp->mtxSpawnDespawn.lock();
 		pApp->flushCommandQueue();
 		pApp->resetCommandList();
-
-		renderData.iUpdateCBInFrameResourceCount = SFRAME_RES_COUNT;
-
-		renderData.pGeometry->freeUploaders();
 	}
 
+	renderData.iUpdateCBInFrameResourceCount = SFRAME_RES_COUNT;
+
+	renderData.pGeometry->freeUploaders();
+
+
+	// Create all with UAV flag/state so it can be easily used in compute shader as RW buffer.
 	renderData.pGeometry->pVertexBufferGPU = SGeometry::createBufferWithData(pApp->pDevice.Get(), pApp->pCommandList.Get(), vShaderVertices.data(),
-		renderData.pGeometry->iVertexBufferSizeInBytes, renderData.pGeometry->pVertexBufferUploader);
+		renderData.pGeometry->iVertexBufferSizeInBytes, renderData.pGeometry->pVertexBufferUploader, true);
 
 	if (bAddedVerticesOrUpdatedIndicesCount)
 	{
@@ -288,7 +325,7 @@ void SMeshComponent::createGeometryBuffers(bool bAddedVerticesOrUpdatedIndicesCo
 			//	renderData.pGeometry->iIndexBufferSizeInBytes);
 
 			renderData.pGeometry->pIndexBufferGPU = SGeometry::createBufferWithData(pApp->pDevice.Get(), pApp->pCommandList.Get(), meshData.getIndices32().data(),
-				renderData.pGeometry->iIndexBufferSizeInBytes, renderData.pGeometry->pIndexBufferUploader);
+				renderData.pGeometry->iIndexBufferSizeInBytes, renderData.pGeometry->pIndexBufferUploader, true);
 		}
 		else
 		{
@@ -296,9 +333,10 @@ void SMeshComponent::createGeometryBuffers(bool bAddedVerticesOrUpdatedIndicesCo
 			//	renderData.pGeometry->iIndexBufferSizeInBytes);
 
 			renderData.pGeometry->pIndexBufferGPU = SGeometry::createBufferWithData(pApp->pDevice.Get(), pApp->pCommandList.Get(), meshData.getIndices16().data(),
-				renderData.pGeometry->iIndexBufferSizeInBytes, renderData.pGeometry->pIndexBufferUploader);
+				renderData.pGeometry->iIndexBufferSizeInBytes, renderData.pGeometry->pIndexBufferUploader, true);
 		}
 	}
+
 
 	if (bSpawnedInLevel)
 	{

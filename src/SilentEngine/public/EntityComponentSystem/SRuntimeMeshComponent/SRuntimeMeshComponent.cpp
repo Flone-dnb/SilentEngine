@@ -30,6 +30,7 @@ SRuntimeMeshComponent::SRuntimeMeshComponent(std::string sComponentName) : SComp
 	bVisible = true;
 	bIndexOfVertexBufferValid = false;
 	bNoMeshDataOnSpawn = false;
+	bNewMeshData = false;
 }
 
 SRuntimeMeshComponent::~SRuntimeMeshComponent()
@@ -100,6 +101,7 @@ void SRuntimeMeshComponent::setMeshData(const SMeshData& meshData, bool bAddedVe
 
 	mtxDrawComponent.lock();
 	this->meshData = meshData;
+	bNewMeshData = true;
 	mtxDrawComponent.unlock();
 
 	if (bAddedVerticesOrUpdatedIndicesCount)
@@ -263,17 +265,21 @@ void SRuntimeMeshComponent::createIndexBuffer()
 		return;
 	}*/
 
+
 	if (bSpawnedInLevel)
 	{
+		// Do not lock because this func will be
+		// called in spawnContainerInLevel() (when bSpawnedInLevel == false) and it will have lock already.
+
 		pApp->mtxDraw.lock();
 		pApp->mtxSpawnDespawn.lock();
 		pApp->flushCommandQueue();
 		pApp->resetCommandList();
-
-		renderData.iUpdateCBInFrameResourceCount = SFRAME_RES_COUNT;
-
-		renderData.pGeometry->freeUploaders();
 	}
+
+	renderData.iUpdateCBInFrameResourceCount = SFRAME_RES_COUNT;
+
+	renderData.pGeometry->freeUploaders();
 
 
 	if (renderData.pGeometry->indexFormat == DXGI_FORMAT_R32_UINT)

@@ -13,6 +13,7 @@
 #include "SilentEngine/Private/EntityComponentSystem/SLightComponent/SLightComponent.h" // remove this line
 #include "SilentEngine/Private/SError/SError.h"
 #include "SilentEngine/Private/SShader/SShader.h"
+#include "SilentEngine/Public/SApplication/SApplication.h"
 
 SComponent::SComponent()
 {
@@ -40,6 +41,18 @@ SComponent::SComponent()
 
 SComponent::~SComponent()
 {
+	for (int i = 0; i < vResourceUsed.size(); i++)
+	{
+		if (SApplication::getApp()->doesComputeShaderExists(vResourceUsed[i].pShader) == false)
+		{
+			// Don't notify about setMeshData anymore.
+			vResourceUsed.erase(vResourceUsed.begin() + i);
+
+			i--;
+		}
+	}
+	
+
 	for (size_t i = 0; i < vChildComponents.size(); i++)
 	{
 		delete vChildComponents[i];
@@ -420,6 +433,34 @@ void SComponent::removeMeshesByShader(std::vector<SShaderObjects>* pOpaqueMeshes
 	{
 		vChildComponents[i]->removeMeshesByShader(pOpaqueMeshesByShader, pTransparentMeshesByShader);
 	}
+}
+
+void SComponent::bindResourceUpdates(SComputeShader* pShader, const std::string& sResourceName)
+{
+	SComputeResourceBind bind;
+	bind.pShader = pShader;
+	bind.sResource = sResourceName;
+
+	mtxResourceUsed.lock();
+	vResourceUsed.push_back(bind);
+	mtxResourceUsed.unlock();
+}
+
+void SComponent::unbindResourceUpdates(SComputeShader* pShader)
+{
+	mtxResourceUsed.lock();
+
+	for (size_t i = 0; i < vResourceUsed.size(); i++)
+	{
+		if (vResourceUsed[i].pShader == pShader)
+		{
+			vResourceUsed.erase(vResourceUsed.begin() + i);
+
+			break;
+		}
+	}
+
+	mtxResourceUsed.unlock();
 }
 
 void SComponent::getAllMeshComponents(std::vector<SComponent*>* pvOpaqueComponents, std::vector<SComponent*>* pvTransparentComponents)

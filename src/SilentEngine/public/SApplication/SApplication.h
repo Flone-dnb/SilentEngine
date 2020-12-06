@@ -36,6 +36,7 @@
 #include "SilentEngine/Public/SLevel/SLevel.h"
 #include "SilentEngine/Private/SMaterial/SMaterial.h"
 #include "SilentEngine/Private/SBlurEffect/SBlurEffect.h"
+#include "SilentEngine/Private/SComputeShader/SComputeShader.h"
 
 // Other
 #include <Windows.h>
@@ -55,6 +56,7 @@ class SContainer;
 class SComponent;
 class SShader;
 class SShaderObjects;
+class SComputeShader;
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
 
@@ -267,7 +269,7 @@ public:
 
 		//@@Function
 		/*
-		* desc: used to compile and prepare the custom shader.
+		* desc: used to compile and prepare the custom shader (VS and PS, see basic.hlsl for reference).
 		* return: valid pointer if the shader was found and compiled, nullptr otherwise.
 		* remarks: You will need to call unloadCompiledShaderFromGPU() later when you don't need this shader anymore -
 		this will not happen automatically, but all shaders will be unloaded in the SApplication destructor function.
@@ -290,6 +292,31 @@ public:
 		by calling the SComponent::setUseDefaultShader() function when the object is not spawned.
 		*/
 		bool            unloadCompiledShaderFromGPU           (SShader* pShader);
+
+		//@@Function
+		/*
+		* desc: used to register custom compute shader, use returned shader functions to configure it.
+		* return: valid pointer if the shader name is unique, nullptr otherwise.
+		* remarks: You will need to call unregisterCustomComputeShader() later when you don't need this shader anymore -
+		this will not happen automatically, but all shaders will be unloaded in the SApplication destructor function.
+		It's recommended to use this function in loading moments of your application (ex. loading screen)
+		as this function may drop the framerate a little.
+		*/
+		SComputeShader* registerCustomComputeShader           (const std::string& sUniqueShaderName);
+
+		//@@Function
+		/*
+		* desc: used to retrieve all custom registered compute shaders.
+		*/
+		void            getRegisteredComputeShaders(std::vector<SComputeShader*>* pvShaders);
+
+		//@@Function
+		/*
+		* desc: used to unregister custom compute shader. The passed pointer will be deleted.
+		* remarks: It's recommended to use this function in loading moments of your application (ex. loading screen)
+		as this function may drop the framerate a little.
+		*/
+		void            unregisterCustomComputeShader(SComputeShader* pComputeShader);
 
 
 	// Level
@@ -1090,13 +1117,20 @@ private:
 		void removeShaderFromObjects(SShader* pShader, std::vector<SShaderObjects>* pObjectsByShader);
 		void forceChangeMeshShader(SShader* pOldShader, SShader* pNewShader, SComponent* pComponent, bool bUsesTransparency);
 		void saveBackBufferPixels();
-
+		void executeCustomComputeShaders(bool bBeforeDraw);
+		void executeCustomComputeShader(SComputeShader* pComputeShader);
+		void doOptionalPauseForUserComputeShaders();
+		void copyUserComputeResults(SComputeShader* pComputeShader);
+		bool doesComponentExists(SComponent* pComponent);
+		bool doesComputeShaderExists(SComputeShader* pShader);
 
 
 	// -----------------------------------------------------------------
 
+	friend class SComponent;
 	friend class SMeshComponent;
 	friend class SRuntimeMeshComponent;
+	friend class SComputeShader;
 	friend class SMaterial;
 	friend class SLevel;
 	friend class SError;
@@ -1176,6 +1210,7 @@ private:
 	std::vector<SShader*> vCompiledUserShaders;
 	std::vector<SShaderObjects> vOpaqueMeshesByCustomShader;
 	std::vector<SShaderObjects> vTransparentMeshesByCustomShader;
+	std::vector<SComputeShader*> vUserComputeShaders;
 	
 
 	// Camera.
@@ -1279,10 +1314,12 @@ private:
 	
 	std::mutex     mtxSpawnDespawn;
 	std::mutex     mtxMaterial;
+	std::mutex     mtxComputeShader;
 	std::mutex     mtxUpdateMat;
 	std::mutex     mtxTexture;
 	std::mutex     mtxShader;
 	std::mutex     mtxDraw;
+	std::mutex     mtxFenceUpdate;
 
 
 	std::wstring   sMainWindowTitle         = L"Silent Application";

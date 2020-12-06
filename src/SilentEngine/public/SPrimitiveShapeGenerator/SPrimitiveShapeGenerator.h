@@ -26,9 +26,9 @@ The struct represents the vertex structure used by the shaders.
 */
 struct SVertex
 {
-	DirectX::XMFLOAT3 vPos;
-	DirectX::XMFLOAT3 vNormal;
-	DirectX::XMFLOAT2 vUV;
+	DirectX::XMFLOAT3 vPos; // 3 float values
+	DirectX::XMFLOAT3 vNormal; // 3 float values
+	DirectX::XMFLOAT2 vUV; // 2 float values
 };
 
 //@@Struct
@@ -102,6 +102,11 @@ private:
 };
 
 
+struct SMeshDataComputeResource
+{
+	class SComponent* pResourceOwner;
+	bool bVertexBuffer;
+};
 //@@Struct
 /*
 The struct represents the 3D-geometry data.

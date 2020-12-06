@@ -723,6 +723,57 @@ bool SApplication::unloadCompiledShaderFromGPU(SShader* pShader)
 	}
 }
 
+SComputeShader* SApplication::registerCustomComputeShader(const std::string& sUniqueShaderName)
+{
+	for (size_t i = 0; i < vUserComputeShaders.size(); i++)
+	{
+		if (vUserComputeShaders[i]->sComputeShaderName == sUniqueShaderName)
+		{
+			return nullptr;
+		}
+	}
+
+	SComputeShader* pNewComputeShader = new SComputeShader(pDevice.Get(), pCommandList.Get(), bCompileShadersInRelease, sUniqueShaderName);
+
+	mtxComputeShader.lock();
+	vUserComputeShaders.push_back(pNewComputeShader);
+	mtxComputeShader.unlock();
+
+	return pNewComputeShader;
+}
+
+void SApplication::getRegisteredComputeShaders(std::vector<SComputeShader*>* pvShaders)
+{
+	mtxComputeShader.lock();
+	pvShaders = &vUserComputeShaders;
+	mtxComputeShader.unlock();
+}
+
+void SApplication::unregisterCustomComputeShader(SComputeShader* pComputeShader)
+{
+	mtxComputeShader.lock();
+
+	for (size_t i = 0; i < vUserComputeShaders.size(); i++)
+	{
+		if (vUserComputeShaders[i] == pComputeShader)
+		{
+			mtxDraw.lock();
+
+			flushCommandQueue();
+
+			mtxDraw.unlock();
+
+			delete pComputeShader;
+
+			vUserComputeShaders.erase(vUserComputeShaders.begin() + i);
+
+			break;
+		}
+	}
+
+	mtxComputeShader.unlock();
+}
+
 SLevel* SApplication::getCurrentLevel() const
 {
 	return pCurrentLevel;
@@ -2329,7 +2380,7 @@ void SApplication::updateComponentAndChilds(SComponent* pComponent, SUploadBuffe
 		SRuntimeMeshComponent* pRuntimeMeshComponent = dynamic_cast<SRuntimeMeshComponent*>(pComponent);
 
 
-		if (pRuntimeMeshComponent->bNoMeshDataOnSpawn == false)
+		if (pRuntimeMeshComponent->bNoMeshDataOnSpawn == false && pRuntimeMeshComponent->bNewMeshData)
 		{
 			pRuntimeMeshComponent->mtxDrawComponent.lock();
 
@@ -2343,6 +2394,8 @@ void SApplication::updateComponentAndChilds(SComponent* pComponent, SUploadBuffe
 			}
 
 			pRuntimeMeshComponent->renderData.pGeometry->pVertexBufferGPU = pVertexBuffer->getResource();
+
+			pRuntimeMeshComponent->bNewMeshData = false;
 
 			pRuntimeMeshComponent->mtxDrawComponent.unlock();
 		}
@@ -2550,6 +2603,9 @@ void SApplication::draw()
 
 
 
+	executeCustomComputeShaders(true);
+
+
 	// Record new commands in the command list:
 
 	// Set the viewport and scissor rect. This needs to be reset whenever the command list is reset.
@@ -2674,11 +2730,11 @@ void SApplication::draw()
 			D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PRESENT));
 	}
 
+	executeCustomComputeShaders(false);
 
 
 
-
-	// SHOULD BE LAST draw() STEP:
+	// SHOULD BE LAST draw() STEP (before command list close):
 	if (bSaveBackBufferPixelsForUser)
 	{
 		// Write commands to save back buffer pixels for user.
@@ -2701,6 +2757,9 @@ void SApplication::draw()
 
 	ID3D12CommandList* commandLists[] = { pCommandList.Get() };
 	pCommandQueue->ExecuteCommandLists(_countof(commandLists), commandLists);
+
+
+	doOptionalPauseForUserComputeShaders();
 
 
 	if (bSaveBackBufferPixelsForUser)
@@ -2769,12 +2828,16 @@ void SApplication::draw()
 		iCurrentBackBuffer++;
 	}
 
+	mtxFenceUpdate.lock();
+
 	iCurrentFence++;
 	pCurrentFrameResource->iFence = iCurrentFence;
 
 	// Add an instruction to the command queue to set a new fence point.
 	// This fence point won't be set until the GPU finishes processing all the commands prior to this Signal().
 	pCommandQueue->Signal(pFence.Get(), iCurrentFence);
+
+	mtxFenceUpdate.unlock();
 
 	mtxDraw.unlock();
 }
@@ -2952,9 +3015,14 @@ void SApplication::drawComponent(SComponent* pComponent)
 
 bool SApplication::flushCommandQueue()
 {
+	mtxFenceUpdate.lock();
+
 	iCurrentFence++;
 
 	HRESULT hresult = pCommandQueue->Signal(pFence.Get(), iCurrentFence);
+
+	mtxFenceUpdate.unlock();
+
 	if (FAILED(hresult))
 	{
 		SError::showErrorMessageBox(hresult, L"SApplication::flushCommandQueue::ID3D12CommandQueue::Signal()");
@@ -4710,6 +4778,273 @@ void SApplication::saveBackBufferPixels()
 	}
 }
 
+void SApplication::executeCustomComputeShaders(bool bBeforeDraw)
+{
+	bool bExecutedAtLeastOne = false;
+
+	mtxComputeShader.lock();
+	for (size_t i = 0; i < vUserComputeShaders.size(); i++)
+	{
+		if (vUserComputeShaders[i]->bExecuteShader && (vUserComputeShaders[i]->bExecuteShaderBeforeDraw == bBeforeDraw))
+		{
+			vUserComputeShaders[i]->mtxComputeSettings.lock();
+
+			executeCustomComputeShader(vUserComputeShaders[i]);
+
+			vUserComputeShaders[i]->mtxComputeSettings.unlock();
+
+			bExecutedAtLeastOne = true;
+		}
+	}
+	mtxComputeShader.unlock();
+
+	if (bBeforeDraw && bExecutedAtLeastOne)
+	{
+		if (bUseFillModeWireframe)
+		{
+			pCommandList->SetPipelineState(pOpaqueWireframePSO.Get());
+		}
+		else
+		{
+			pCommandList->SetPipelineState(pOpaquePSO.Get());
+		}
+	}
+}
+
+void SApplication::executeCustomComputeShader(SComputeShader* pComputeShader)
+{
+	pCommandList->SetComputeRootSignature(pComputeShader->pComputeRootSignature.Get());
+	pCommandList->SetPipelineState(pComputeShader->pComputePSO.Get());
+
+	for (size_t i = 0; i < pComputeShader->vShaderResources.size(); i++)
+	{
+		if (pComputeShader->vShaderResources[i]->bIsUAV)
+		{
+			pCommandList->SetComputeRootUnorderedAccessView(i,
+				pComputeShader->vShaderResources[i]->pResource->GetGPUVirtualAddress());
+		}
+		else
+		{
+			pCommandList->SetComputeRootShaderResourceView(i,
+				pComputeShader->vShaderResources[i]->pResource->GetGPUVirtualAddress());
+		}
+	}
+
+	for (size_t i = 0; i < pComputeShader->vUsedRootIndex.size(); i++)
+	{
+		std::vector<float> vValuesToCopy;
+		UINT iUsedConstantsOnThisRootIndex = 0;
+
+		for (size_t j = 0; j < pComputeShader->v32BitConstants.size(); j++)
+		{
+			if (pComputeShader->v32BitConstants[j].iRootParamIndex == pComputeShader->vUsedRootIndex[i])
+			{
+				iUsedConstantsOnThisRootIndex++;
+				vValuesToCopy.push_back(pComputeShader->v32BitConstants[j]._32BitConstant);
+			}
+		}
+
+		pCommandList->SetComputeRoot32BitConstants(pComputeShader->vUsedRootIndex[i], vValuesToCopy.size(), vValuesToCopy.data(), 0);
+	}
+
+	pCommandList->Dispatch(pComputeShader->iThreadGroupCountX, pComputeShader->iThreadGroupCountY, pComputeShader->iThreadGroupCountZ);
+}
+
+void SApplication::doOptionalPauseForUserComputeShaders()
+{
+	bool bAtLeastOneShaderNeedsToWait = false;
+
+	for (size_t i = 0; i < vUserComputeShaders.size(); i++)
+	{
+		if (vUserComputeShaders[i]->bWaitForComputeShaderRightAfterDraw && vUserComputeShaders[i]->bWaitForComputeShaderToFinish &&
+			vUserComputeShaders[i]->bExecuteShader)
+		{
+			bAtLeastOneShaderNeedsToWait = true;
+
+			break;
+		}
+	}
+
+	if (bAtLeastOneShaderNeedsToWait)
+	{
+		for (size_t i = 0; i < vUserComputeShaders.size(); i++)
+		{
+			if (vUserComputeShaders[i]->bWaitForComputeShaderRightAfterDraw && vUserComputeShaders[i]->bWaitForComputeShaderToFinish &&
+				vUserComputeShaders[i]->bExecuteShader)
+			{
+				copyUserComputeResults(vUserComputeShaders[i]);
+			}
+		}
+	}
+	else
+	{
+		// Remember current fence and wait for it to finish.
+
+		for (size_t i = 0; i < vUserComputeShaders.size(); i++)
+		{
+			if (vUserComputeShaders[i]->bWaitForComputeShaderRightAfterDraw == false && vUserComputeShaders[i]->bWaitForComputeShaderToFinish &&
+				vUserComputeShaders[i]->bExecuteShader)
+			{
+				vUserComputeShaders[i]->mtxFencesVector.lock();
+
+				if (vUserComputeShaders[i]->vFinishFences.size() == 0)
+				{
+					mtxFenceUpdate.lock();
+
+					iCurrentFence++;
+
+					HRESULT hresult = pCommandQueue->Signal(pFence.Get(), iCurrentFence);
+
+					vUserComputeShaders[i]->vFinishFences.push_back(iCurrentFence);
+
+					mtxFenceUpdate.unlock();
+
+					if (FAILED(hresult))
+					{
+						SError::showErrorMessageBox(hresult, L"SApplication::doOptionalPauseForUserComputeShaders()::ID3D12CommandQueue::Signal()");
+						vUserComputeShaders[i]->mtxFencesVector.unlock();
+						continue;
+					}
+
+					vUserComputeShaders[i]->mtxFencesVector.unlock();
+				}
+				else
+				{
+					// Wait until the GPU has completed commands up to this fence point.
+					if (pFence->GetCompletedValue() >= vUserComputeShaders[i]->vFinishFences[0])
+					{
+						// Finished.
+						vUserComputeShaders[i]->mtxFencesVector.unlock();
+						// unlock because user can call stopShaderExecution() inside of the function below, and
+						// this will cause deadlock (see stopShaderExecution()).
+						copyUserComputeResults(vUserComputeShaders[i]);
+
+						vUserComputeShaders[i]->mtxFencesVector.lock();
+						if (vUserComputeShaders[i]->vFinishFences.size() > 0)
+						{
+							vUserComputeShaders[i]->vFinishFences.erase(vUserComputeShaders[i]->vFinishFences.begin());
+						}
+						vUserComputeShaders[i]->mtxFencesVector.unlock();
+					}
+					else
+					{
+						vUserComputeShaders[i]->mtxFencesVector.unlock();
+						continue;
+					}
+				}
+			}
+		}
+	}
+}
+
+void SApplication::copyUserComputeResults(SComputeShader* pComputeShader)
+{
+	SComputeShaderResource* pResourceToCopyFrom = nullptr;
+
+	// Find resource.
+	for (size_t k = 0; k < pComputeShader->vShaderResources.size(); k++)
+	{
+		if (pComputeShader->vShaderResources[k]->sResourceName == pComputeShader->sResourceNameToCopyFrom)
+		{
+			pResourceToCopyFrom = pComputeShader->vShaderResources[k];
+
+			break;
+		}
+	}
+
+	Microsoft::WRL::ComPtr<ID3D12Resource> pReadBackBuffer;
+
+	HRESULT hresult = pDevice->CreateCommittedResource(
+		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_READBACK),
+		D3D12_HEAP_FLAG_NONE,
+		&CD3DX12_RESOURCE_DESC::Buffer(pResourceToCopyFrom->iDataSizeInBytes),
+		D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS(&pReadBackBuffer));
+	if (FAILED(hresult))
+	{
+		SError::showErrorMessageBox(hresult, L"SApplication::doOptionalPauseForUserComputeShaders()");
+
+		return;
+	}
+
+
+	resetCommandList();
+
+	pCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(pResourceToCopyFrom->pResource.Get(),
+		D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE));
+	
+
+	pCommandList->CopyResource(pReadBackBuffer.Get(), pResourceToCopyFrom->pResource.Get());
+
+	pCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(pResourceToCopyFrom->pResource.Get(),
+		D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS));
+
+	executeCommandList();
+	flushCommandQueue();
+
+
+
+	D3D12_RANGE readbackBufferRange{ 0, pResourceToCopyFrom->iDataSizeInBytes };
+	char* pCopiedData = new char[pResourceToCopyFrom->iDataSizeInBytes];
+
+	char* pMappedData = nullptr;
+
+	pReadBackBuffer->Map(0, &readbackBufferRange, reinterpret_cast<void**>(&pMappedData));
+
+	std::memcpy(pCopiedData, pMappedData, pResourceToCopyFrom->iDataSizeInBytes);
+
+	pReadBackBuffer->Unmap(0, nullptr);
+
+
+	pReadBackBuffer->Release();
+
+	pComputeShader->finishedCopyingComputeResults(pCopiedData, pResourceToCopyFrom->iDataSizeInBytes);
+}
+
+bool SApplication::doesComponentExists(SComponent* pComponent)
+{
+	mtxSpawnDespawn.lock();
+
+	for (size_t i = 0; i < vAllRenderableSpawnedOpaqueComponents.size(); i++)
+	{
+		if (vAllRenderableSpawnedOpaqueComponents[i] == pComponent)
+		{
+			mtxSpawnDespawn.unlock();
+			return true;
+		}
+	}
+
+	for (size_t i = 0; i < vAllRenderableSpawnedTransparentComponents.size(); i++)
+	{
+		if (vAllRenderableSpawnedTransparentComponents[i] == pComponent)
+		{
+			mtxSpawnDespawn.unlock();
+			return true;
+		}
+	}
+
+	mtxSpawnDespawn.unlock();
+
+	return false;
+}
+
+bool SApplication::doesComputeShaderExists(SComputeShader* pShader)
+{
+	mtxComputeShader.lock();
+
+	for (size_t i = 0; i < vUserComputeShaders.size(); i++)
+	{
+		if (vUserComputeShaders[i] == pShader)
+		{
+			mtxComputeShader.unlock();
+			return true;
+		}
+	}
+
+	mtxComputeShader.unlock();
+
+	return false;
+}
+
 SApplication::SApplication(HINSTANCE hInstance)
 {
 	hApplicationInstance = hInstance;
@@ -4777,6 +5112,14 @@ SApplication::~SApplication()
 	}
 
 	vCompiledUserShaders.clear();
+
+
+	for (size_t i = 0; i < vUserComputeShaders.size(); i++)
+	{
+		delete vUserComputeShaders[i];
+	}
+
+	vUserComputeShaders.clear();
 
 
 
