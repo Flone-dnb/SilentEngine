@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../../doc.css">
+    <title>unloadCompiledShaderFromGPU - Silent Engine Documentation</title>
+</head>
+<body>
+    <div class="nav_panel">
+        <a class="cpp_link_title" href="../../classes/index.html"> Classes </a>
+		<br>
+		<a class="cpp_link_title" href="../../structs/index.html"> Structs </a>
+		<br>
+		<a class="cpp_link_title" href="../../enums/index.html"> Enums </a>
+    </div>
+    
+	<div class="cpp_doc">
+		<h3 class="cpp_object"> unloadCompiledShaderFromGPU </h3>
+		<div class="cpp_codeobject_desc"> used to unload and unprepare the custom shader from the GPU.    	 </div>
+		<br>
+		<code class="cpp_func_line_code"> bool   unloadCompiledShaderFromGPU(SShader* pShader); </code>
+		<br>
+		<br>
+		----------------------------------------------
+		<br>
+		<br>
+		<div class="cpp_func_param"> Return Value </div>
+		<br>
+		<div class="cpp_func_param_desc"> false if successful, true otherwise.    	 </div>
+		<br>
+		<div class="cpp_func_param"> Remarks </div>
+		<br>
+		<div class="cpp_func_param_desc"> if any spawned object is using this shader, it will switch to the default engine shader. You can do it manually     by calling the SComponent::setUseDefaultShader() function when the object is not spawned.    	 </div>
+		<br>
+		
+	</div>
+</body>
+</html>

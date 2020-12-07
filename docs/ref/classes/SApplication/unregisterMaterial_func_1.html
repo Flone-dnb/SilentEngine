@@ -17,7 +17,7 @@
     
 	<div class="cpp_doc">
 		<h3 class="cpp_object"> unregisterMaterial </h3>
-		<div class="cpp_codeobject_desc"> unregisters a material with the given name, make sure that no object is using this material. 	 </div>
+		<div class="cpp_codeobject_desc"> unregisters a material with the given name, make sure that no object is using this material.    	 </div>
 		<br>
 		<code class="cpp_func_line_code"> bool   unregisterMaterial(const std::string&amp; sMaterialName); </code>
 		<br>
@@ -27,11 +27,11 @@
 		<br>
 		<div class="cpp_func_param"> Return Value </div>
 		<br>
-		<div class="cpp_func_param_desc"> false if successful, true otherwise. 	 </div>
+		<div class="cpp_func_param_desc"> false if successful, true otherwise.    	 </div>
 		<br>
 		<div class="cpp_func_param"> Remarks </div>
 		<br>
-		<div class="cpp_func_param_desc"> if any spawned object uses this material then the material will be unbinded from such objects, you can manually unbind the material from objects that use it by using SComponent::unbindMaterial(). This function will not unload the textures that this material is using. If you want to clear all textures and material, the right way is to call SContainer::unbindMaterialsFromAllComponents() (or unbindMaterial() on all components and child components), and then use unloadTexture() and unregisterMaterial() (no matter in what order). You cannot unregister the Default Engine Material. It's recommended to use this function in loading moments of your application (ex. loading screen) as this function may drop the framerate a little. All registered material will be unregistered in the SApplication's destructor function. 	 </div>
+		<div class="cpp_func_param_desc"> if any spawned object uses this material then the material will be unbinded from such objects,     you can manually unbind the material from objects that use it     by using SComponent::unbindMaterial().     This function will not unload the textures that this material is using.     If you want to clear all textures and material, the right way is to     call SContainer::unbindMaterialsFromAllComponents() (or unbindMaterial() on all components and child components), and then use     unloadTexture() and unregisterMaterial() (no matter in what order).     You cannot unregister the Default Engine Material.     It's recommended to use this function in loading moments of your application (ex. loading screen)     as this function may drop the framerate a little.     All registered material will be unregistered in the SApplication's destructor function.    	 </div>
 		<br>
 		
 	</div>

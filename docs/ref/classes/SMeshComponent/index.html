@@ -20,7 +20,7 @@
 		<code class="cpp_codeobject"> class SMeshComponent : public SComponent </code>
 		<br>
 		<br>
-		<div class="cpp_codeobject_desc"> This class represents the component that has some mesh data (3D-geometry) inside of it. </div>
+		<div class="cpp_codeobject_desc">   This class represents the component that has some mesh data (3D-geometry) inside of it.  </div>
 		<br>
 		<div class="cpp_codeobject_path"> #include "Public/EntityComponentSystem/SMeshComponent/SMeshComponent.h" </div>
 		<br>
@@ -35,9 +35,13 @@
 				<br>
 				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="setEnableTransparency_func_1.html">setEnableTransparency</a></code>(bool bEnable); </code>
 				<br>
-				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="setMeshData_func_1.html">setMeshData</a></code>(const <a class="cpp_link_ref" href="../../structs/SMeshData/index.html">SMeshData</a>&amp; meshData, bool bAddedVerticesOrUpdatedIndicesCount, bool bUpdateBoundingBox = false); </code>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="setUseCustomShader_func_1.html">setUseCustomShader</a></code>(SShader* pCustomShader, bool bForceChangeEvenIfSpawned = false); </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="setMeshData_func_1.html">setMeshData</a></code>(const <a class="cpp_link_ref" href="../../structs/SMeshData/index.html">SMeshData</a>&amp; meshData, bool bAddedRemovedIndices, bool bUpdateBoundingBox = false); </code>
 				<br>
 				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="unbindMaterial_func_1.html">unbindMaterial</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="setUseDefaultShader_func_1.html">setUseDefaultShader</a></code>(bool bForceUseDefaultEvenIfSpawned = false); </code>
 				<br>
 				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="setMeshMaterial_func_1.html">setMeshMaterial</a></code>(SMaterial* pMaterial); </code>
 				<br>
@@ -59,6 +63,10 @@
 				<br>
 				<code class="cpp_function"> <a class="cpp_link_ref" href="../../structs/SMeshData/index.html">SMeshData</a> <code class="cpp_func_name"><a class="cpp_link" href="getMeshData_func_1.html">getMeshData</a></code>() const; </code>
 				<br>
+				<code class="cpp_function"> SShader* <code class="cpp_func_name"><a class="cpp_link" href="getCustomShader_func_1.html">getCustomShader</a></code>() const; </code>
+				<br>
+				<code class="cpp_function"> <a class="cpp_link_ref" href="../../structs/SMeshData/index.html">SMeshData</a>ComputeResource* <code class="cpp_func_name"><a class="cpp_link" href="getMeshDataAsComputeResource_func_1.html">getMeshDataAsComputeResource</a></code>(bool bGetVertexBuffer); </code>
+				<br>
 				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="isVisible_func_1.html">isVisible</a></code>() const; </code>
 				<br>
 			</div>
@@ -70,7 +78,7 @@
 			<div class="cpp_func_container">
 				<code class="cpp_function"> virtual SRenderItem* <code class="cpp_func_name"><a class="cpp_link" href="getRenderData_func_1.html">getRenderData</a></code>() override; </code>
 				<br>
-				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="createGeometryBuffers_func_1.html">createGeometryBuffers</a></code>(bool bAddedVerticesOrUpdatedIndicesCount); </code>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="createGeometryBuffers_func_1.html">createGeometryBuffers</a></code>(bool bAddedRemovedIndices); </code>
 				<br>
 				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="updateWorldMatrix_func_1.html">updateWorldMatrix</a></code>(); </code>
 				<br>

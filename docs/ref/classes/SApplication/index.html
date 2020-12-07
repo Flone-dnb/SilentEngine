@@ -20,7 +20,7 @@
 		<code class="cpp_codeobject"> class SApplication </code>
 		<br>
 		<br>
-		<div class="cpp_codeobject_desc"> The class represents an application instance. It holds all main entities. </div>
+		<div class="cpp_codeobject_desc">   The class represents an application instance. It holds all main entities.  </div>
 		<br>
 		<div class="cpp_codeobject_path"> #include "Public/SApplication/SApplication.h" </div>
 		<br>
@@ -71,6 +71,18 @@
 				<br>
 				<code class="cpp_function"> bool   <code class="cpp_func_name"><a class="cpp_link" href="unloadTextureFromGPU_func_1.html">unloadTextureFromGPU</a></code>(STextureHandle&amp; textureHandle); </code>
 				<br>
+				<code class="cpp_function"> SShader*  <code class="cpp_func_name"><a class="cpp_link" href="compileCustomShader_func_1.html">compileCustomShader</a></code>(const std::wstring&amp; sPathToShaderFile); </code>
+				<br>
+				<code class="cpp_function"> void   <code class="cpp_func_name"><a class="cpp_link" href="getCompiledCustomShaders_func_1.html">getCompiledCustomShaders</a></code>(std::vector&lt;SShader*&gt;* pvShaders); </code>
+				<br>
+				<code class="cpp_function"> bool   <code class="cpp_func_name"><a class="cpp_link" href="unloadCompiledShaderFromGPU_func_1.html">unloadCompiledShaderFromGPU</a></code>(SShader* pShader); </code>
+				<br>
+				<code class="cpp_function"> SComputeShader* <code class="cpp_func_name"><a class="cpp_link" href="registerCustomComputeShader_func_1.html">registerCustomComputeShader</a></code>(const std::string&amp; sUniqueShaderName); </code>
+				<br>
+				<code class="cpp_function"> void   <code class="cpp_func_name"><a class="cpp_link" href="getRegisteredComputeShaders_func_1.html">getRegisteredComputeShaders</a></code>(std::vector&lt;SComputeShader*&gt;* pvShaders); </code>
+				<br>
+				<code class="cpp_function"> void   <code class="cpp_func_name"><a class="cpp_link" href="unregisterCustomComputeShader_func_1.html">unregisterCustomComputeShader</a></code>(SComputeShader* pComputeShader); </code>
+				<br>
 				<code class="cpp_function"> <a class="cpp_link_ref" href="../SLevel/index.html">SLevel</a>*   <code class="cpp_func_name"><a class="cpp_link" href="getCurrentLevel_func_1.html">getCurrentLevel</a></code>() const; </code>
 				<br>
 				<code class="cpp_function"> bool   <code class="cpp_func_name"><a class="cpp_link" href="setCameraFOV_func_1.html">setCameraFOV</a></code>(float fFOVInDeg); </code>
@@ -91,6 +103,8 @@
 				<br>
 				<code class="cpp_function"> void   <code class="cpp_func_name"><a class="cpp_link" href="setWindowTitleText_func_1.html">setWindowTitleText</a></code>(const std::wstring&amp; sTitleText); </code>
 				<br>
+				<code class="cpp_function"> <a class="cpp_link_ref" href="../SVector/index.html">SVector</a>    <code class="cpp_func_name"><a class="cpp_link" href="getCameraLocation_func_1.html">getCameraLocation</a></code>() const; </code>
+				<br>
 				<code class="cpp_function"> void     <code class="cpp_func_name"><a class="cpp_link" href="getFixedCameraLocalAxisVector_func_1.html">getFixedCameraLocalAxisVector</a></code>(<a class="cpp_link_ref" href="../SVector/index.html">SVector</a>* pvXAxis, <a class="cpp_link_ref" href="../SVector/index.html">SVector</a>* pvYAxis, <a class="cpp_link_ref" href="../SVector/index.html">SVector</a>* pvZAxis) const; </code>
 				<br>
 				<code class="cpp_function"> void     <code class="cpp_func_name"><a class="cpp_link" href="getFixedCameraRotation_func_1.html">getFixedCameraRotation</a></code>(float* fPhi, float* fTheta) const; </code>
@@ -110,6 +124,8 @@
 				<code class="cpp_function"> <a class="cpp_link_ref" href="../SProfiler/index.html">SProfiler</a>*    <code class="cpp_func_name"><a class="cpp_link" href="getProfiler_func_1.html">getProfiler</a></code>() const; </code>
 				<br>
 				<code class="cpp_function"> void     <code class="cpp_func_name"><a class="cpp_link" href="showMessageBox_func_1.html">showMessageBox</a></code>(const std::wstring&amp; sMessageBoxTitle, const std::wstring&amp; sMessageText) const; </code>
+				<br>
+				<code class="cpp_function"> void     <code class="cpp_func_name"><a class="cpp_link" href="makeOneCopyOfScreenPixelsToCustomBuffer_func_1.html">makeOneCopyOfScreenPixelsToCustomBuffer</a></code>(unsigned char* pPixels); </code>
 				<br>
 			</div>
 		</details>
@@ -173,7 +189,7 @@
 				<br>
 				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="createRTVAndDSVDescriptorHeaps_func_1.html">createRTVAndDSVDescriptorHeaps</a></code>(); </code>
 				<br>
-				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="createCBVSRVHeap_func_1.html">createCBVSRVHeap</a></code>(); </code>
+				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="createCBVSRVUAVHeap_func_1.html">createCBVSRVUAVHeap</a></code>(); </code>
 				<br>
 				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="createViews_func_1.html">createViews</a></code>(); </code>
 				<br>
@@ -183,7 +199,7 @@
 				<br>
 				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="createShadersAndInputLayout_func_1.html">createShadersAndInputLayout</a></code>(); </code>
 				<br>
-				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="createPSO_func_1.html">createPSO</a></code>(); </code>
+				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="createPSO_func_1.html">createPSO</a></code>(SShader* pPSOsForCustomShader = nullptr); </code>
 				<br>
 				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="resetCommandList_func_1.html">resetCommandList</a></code>(); </code>
 				<br>
@@ -199,7 +215,7 @@
 				<br>
 				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="updateObjectCBs_func_1.html">updateObjectCBs</a></code>(); </code>
 				<br>
-				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="updateComponentAndChilds_func_1.html">updateComponentAndChilds</a></code>(SComponent* pComponent, SUploadBuffer&lt;SObjectConstants&gt;* pCurrentObjectCB,  SUploadBuffer&lt;SMaterialConstants&gt;* pCurrentMaterialCB); </code>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="updateComponentAndChilds_func_1.html">updateComponentAndChilds</a></code>(SComponent* pComponent, SUploadBuffer&lt;SObjectConstants&gt;* pCurrentObjectCB,                     SUploadBuffer&lt;SMaterialConstants&gt;* pCurrentMaterialCB); </code>
 				<br>
 				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="updateMainPassCB_func_1.html">updateMainPassCB</a></code>(); </code>
 				<br>

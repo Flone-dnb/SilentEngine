@@ -19,16 +19,16 @@
 		<h3 class="cpp_object"> setMeshData </h3>
 		<div class="cpp_codeobject_desc"> used to set the 3D-geometry that will be drawn ones the container containing this component is spawned and visible. </div>
 		<br>
-		<code class="cpp_func_line_code"> void setMeshData<br>(<br>&nbsp;&nbsp;&nbsp;const <a class="cpp_link_ref" href="../../structs/SMeshData/index.html">SMeshData</a>&amp; meshData,<br>&nbsp;&nbsp;&nbsp;bool bAddedVerticesOrUpdatedIndicesCount,<br>&nbsp;&nbsp;&nbsp;bool bUpdateBoundingBox = false<br>); </code>
+		<code class="cpp_func_line_code"> void setMeshData<br>(<br>&nbsp;&nbsp;&nbsp;const <a class="cpp_link_ref" href="../../structs/SMeshData/index.html">SMeshData</a>&amp; meshData,<br>&nbsp;&nbsp;&nbsp;bool bAddedRemovedVerticesOrAddedRemovedIndices,<br>&nbsp;&nbsp;&nbsp;bool bUpdateBoundingBox = false<br>); </code>
 		<br>
 		<br>
 		<div class="cpp_func_param">meshData</div>
 		<br>
 		<div class="cpp_func_param_desc">3D-geometry data.</div>
 		<br>
-		<div class="cpp_func_param">bAddedVerticesOrUpdatedIndicesCount</div>
+		<div class="cpp_func_param">bAddedRemovedVerticesOrAddedRemovedIndices</div>
 		<br>
-		<div class="cpp_func_param_desc">this should be set to false if the new mesh data contains the SAME AMOUNT of indices and vertices as the previous one. So if the new mesh data contains the same amount of vertices but they have different positions in space then of course this value should be false. So if you have a SRuntimeMeshComponent with a plane terrain and you want to only change the positions of the vertices then this value should be false. Setting this value to true all the time will almost fully nullify all optimizations that SRuntimeMeshComponent has.</div>
+		<div class="cpp_func_param_desc">this should be set to false if the new mesh data    contains the SAME AMOUNT of indices and vertices as the previous one. So if the new mesh data contains the same amount of    vertices but they have different positions in space then of course this value should be false. If you have a    SRuntimeMeshComponent with a plane terrain and you want to only change the positions of the vertices then    this value should be false. Setting this value to true all the time will almost fully nullify all optimizations that SRuntimeMeshComponent has.</div>
 		<br>
 		<div class="cpp_func_param">bUpdateBoundingBox</div>
 		<br>
