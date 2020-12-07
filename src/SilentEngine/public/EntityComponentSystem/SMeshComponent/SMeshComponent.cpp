@@ -304,7 +304,7 @@ void SMeshComponent::createGeometryBuffers(bool bAddedRemovedIndices)
 
 		pApp->mtxDraw.lock();
 		pApp->mtxSpawnDespawn.lock();
-		pApp->flushCommandQueue();
+		pApp->flushCommandQueue(); // vertex/index buffer may be in use currently
 		pApp->resetCommandList();
 	}
 

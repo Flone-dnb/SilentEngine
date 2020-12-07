@@ -273,7 +273,7 @@ void SRuntimeMeshComponent::createIndexBuffer()
 
 		pApp->mtxDraw.lock();
 		pApp->mtxSpawnDespawn.lock();
-		pApp->flushCommandQueue();
+		pApp->flushCommandQueue(); // vertex/index buffer may be in use currently
 		pApp->resetCommandList();
 	}
 
