@@ -64,16 +64,15 @@ public:
 	/*
 	* desc: used to set the 3D-geometry that will be drawn ones the container containing this component is spawned and visible.
 	* param "meshData": 3D-geometry data.
-	* param "bAddedVerticesOrUpdatedIndicesCount": this should be set to false if the new mesh data
-	contains the SAME AMOUNT of indices and vertices as the previous one. If the new mesh data contains the same amount of
-	vertices but they have different positions in space then of course this value should be false. So if you have a
-	SMeshComponent with a plane terrain and you want to only change the positions of the vertices then this value should be false.
+	* param "bAddedRemovedIndices": this should be set to false if the new mesh data
+	contains the SAME AMOUNT of indices as the previous one. If the new mesh data contains the same amount of
+	indices but they have different values then of course this value should be false.
 	This is just an optimization not to create a new index buffer on every setMeshData() call. You can just set this value to true every time, but it's
-	recommended to consider this optimization.
+	recommended to consider this optimization. Here we don't care about vertices because we create a new vertex buffer anyway (unlike SRuntimeMeshComponent).
 	* param "bUpdateBoundingBox": TODO.
 	* remarks: this function is thread-safe (you can call it from any thread).
 	*/
-	void setMeshData           (const SMeshData& meshData, bool bAddedVerticesOrUpdatedIndicesCount, bool bUpdateBoundingBox = false);
+	void setMeshData           (const SMeshData& meshData, bool bAddedRemovedIndices, bool bUpdateBoundingBox = false);
 
 	//@@Function
 	/*
@@ -202,9 +201,9 @@ private:
 
 	//@@Function
 	/*
-	* desc: creates vertex & index buffer (if bAddedVerticesOrUpdatedIndicesCount is true).
+	* desc: creates vertex & index buffer (if bAddedRemovedIndices is true).
 	*/
-	void createGeometryBuffers (bool bAddedVerticesOrUpdatedIndicesCount);
+	void createGeometryBuffers (bool bAddedRemovedIndices);
 	//@@Function
 	/*
 	* desc: updates the world matrix using getWorldMatrix().

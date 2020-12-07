@@ -69,15 +69,15 @@ public:
 	/*
 	* desc: used to set the 3D-geometry that will be drawn ones the container containing this component is spawned and visible.
 	* param "meshData": 3D-geometry data.
-	* param "bAddedVerticesOrUpdatedIndicesCount": this should be set to false if the new mesh data
+	* param "bAddedRemovedVerticesOrAddedRemovedIndices": this should be set to false if the new mesh data
 	contains the SAME AMOUNT of indices and vertices as the previous one. So if the new mesh data contains the same amount of
-	vertices but they have different positions in space then of course this value should be false. So if you have a
+	vertices but they have different positions in space then of course this value should be false. If you have a
 	SRuntimeMeshComponent with a plane terrain and you want to only change the positions of the vertices then
 	this value should be false. Setting this value to true all the time will almost fully nullify all optimizations that SRuntimeMeshComponent has.
 	* param "bUpdateBoundingBox": TODO.
 	* remarks: this function is thread-safe (you can call it from any thread).
 	*/
-	void setMeshData           (const SMeshData& meshData, bool bAddedVerticesOrUpdatedIndicesCount, bool bUpdateBoundingBox = false);
+	void setMeshData           (const SMeshData& meshData, bool bAddedRemovedVerticesOrAddedRemovedIndices, bool bUpdateBoundingBox = false);
 
 	//@@Function
 	/*

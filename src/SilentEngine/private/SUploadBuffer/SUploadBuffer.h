@@ -84,6 +84,10 @@ public:
 		std::memcpy(&pMappedData[iElementIndex * iElementSizeInBytes], &data, sizeof(T));
 	}
 
+	void copyData(void* pData, UINT64 iDataSizeInBytes)
+	{
+		std::memcpy(pMappedData, pData, iDataSizeInBytes);
+	}
 
 private:
 

@@ -68,7 +68,7 @@ void SMeshComponent::setUseCustomShader(SShader* pCustomShader, bool bForceChang
 	}
 }
 
-void SMeshComponent::setMeshData(const SMeshData& meshData, bool bAddedVerticesOrUpdatedIndicesCount, bool bUpdateBoundingBox)
+void SMeshComponent::setMeshData(const SMeshData& meshData, bool bAddedRemovedIndices, bool bUpdateBoundingBox)
 {
 	SMaterial* pOldMat = this->meshData.pMeshMaterial;
 	this->meshData = meshData;
@@ -76,7 +76,7 @@ void SMeshComponent::setMeshData(const SMeshData& meshData, bool bAddedVerticesO
 
 	mtxComponentProps.lock();
 
-	if (bAddedVerticesOrUpdatedIndicesCount)
+	if (bAddedRemovedIndices)
 	{
 		renderData.pGeometry->iVertexBufferSizeInBytes = meshData.getVerticesCount() * sizeof(SVertex);
 		renderData.pGeometry->iVertexGraphicsObjectSizeInBytes = sizeof(SVertex);
@@ -97,7 +97,7 @@ void SMeshComponent::setMeshData(const SMeshData& meshData, bool bAddedVerticesO
 
 	if (bSpawnedInLevel)
 	{
-		createGeometryBuffers(bAddedVerticesOrUpdatedIndicesCount);
+		createGeometryBuffers(bAddedRemovedIndices);
 	}
 
 	mtxResourceUsed.lock();
@@ -265,7 +265,7 @@ SRenderItem* SMeshComponent::getRenderData()
 
 
 
-void SMeshComponent::createGeometryBuffers(bool bAddedVerticesOrUpdatedIndicesCount)
+void SMeshComponent::createGeometryBuffers(bool bAddedRemovedIndices)
 {
 	SApplication* pApp = SApplication::getApp();
 
@@ -317,7 +317,7 @@ void SMeshComponent::createGeometryBuffers(bool bAddedVerticesOrUpdatedIndicesCo
 	renderData.pGeometry->pVertexBufferGPU = SGeometry::createBufferWithData(pApp->pDevice.Get(), pApp->pCommandList.Get(), vShaderVertices.data(),
 		renderData.pGeometry->iVertexBufferSizeInBytes, renderData.pGeometry->pVertexBufferUploader, true);
 
-	if (bAddedVerticesOrUpdatedIndicesCount)
+	if (bAddedRemovedIndices)
 	{
 		if (renderData.pGeometry->indexFormat == DXGI_FORMAT_R32_UINT)
 		{

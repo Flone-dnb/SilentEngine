@@ -2388,10 +2388,12 @@ void SApplication::updateComponentAndChilds(SComponent* pComponent, SUploadBuffe
 
 			std::vector<SVertex> vMeshShaderData = pRuntimeMeshComponent->meshData.toShaderVertex();
 
-			for (UINT64 i = 0; i < vMeshShaderData.size(); i++)
+			pVertexBuffer->copyData(vMeshShaderData.data(), vMeshShaderData.size() * sizeof(SVertex));
+
+			/*for (UINT64 i = 0; i < vMeshShaderData.size(); i++)
 			{
 				pVertexBuffer->copyDataToElement(i, vMeshShaderData[i]);
-			}
+			}*/
 
 			pRuntimeMeshComponent->renderData.pGeometry->pVertexBufferGPU = pVertexBuffer->getResource();
 

@@ -95,7 +95,7 @@ bool SRuntimeMeshComponent::setUseDefaultShader(bool bForceUseDefaultEvenIfSpawn
 	return true;
 }
 
-void SRuntimeMeshComponent::setMeshData(const SMeshData& meshData, bool bAddedVerticesOrUpdatedIndicesCount, bool bUpdateBoundingBox)
+void SRuntimeMeshComponent::setMeshData(const SMeshData& meshData, bool bAddedRemovedVerticesOrAddedRemovedIndices, bool bUpdateBoundingBox)
 {
 	mtxComponentProps.lock();
 
@@ -104,7 +104,7 @@ void SRuntimeMeshComponent::setMeshData(const SMeshData& meshData, bool bAddedVe
 	bNewMeshData = true;
 	mtxDrawComponent.unlock();
 
-	if (bAddedVerticesOrUpdatedIndicesCount)
+	if (bAddedRemovedVerticesOrAddedRemovedIndices)
 	{
 		renderData.pGeometry->iVertexBufferSizeInBytes = meshData.getVerticesCount() * sizeof(SVertex);
 		renderData.pGeometry->iVertexGraphicsObjectSizeInBytes = sizeof(SVertex);
