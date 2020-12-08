@@ -108,7 +108,7 @@ struct SDistantFog
 	// (color of the fog)
 	SVector vDistantFogColorRGBA = SVector(0.0f, 0.0f, 0.0f, 0.0f);
 
-	// Default: 1000.0f.
+	// Default: 1000.0f (no fog).
 	// (fog start distance from camera)
 	float fDistantFogStart = 1000.0f;
 
