@@ -5651,6 +5651,7 @@ int SApplication::run()
 
 		while(msg.message != WM_QUIT)
 		{
+			// don't use GetMessage() as it puts the thread to sleep until message.
 			if(PeekMessage( &msg, 0, 0, 0, PM_REMOVE ))
 			{
 				TranslateMessage( &msg );
