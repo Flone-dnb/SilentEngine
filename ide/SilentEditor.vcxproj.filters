@@ -130,6 +130,9 @@
     <Filter Include="SilentEngine\Private\SRenderItem">
       <UniqueIdentifier>{baaead86-85c4-414a-97cc-f95a753cf7ea}</UniqueIdentifier>
     </Filter>
+    <Filter Include="SilentEngine\Private\SMiscHelpers">
+      <UniqueIdentifier>{0544a124-f7c4-4007-9160-87d7e303cd18}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\SilentEngine\public\SApplication\SApplication.cpp">
@@ -221,6 +224,9 @@
     </ClCompile>
     <ClCompile Include="..\src\SilentEngine\Private\SRenderItem\SRenderItem.cpp">
       <Filter>SilentEngine\Private\SRenderItem</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SilentEngine\Private\SMiscHelpers\SMiscHelpers.cpp">
+      <Filter>SilentEngine\Private\SMiscHelpers</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -319,6 +325,9 @@
     </ClInclude>
     <ClInclude Include="..\src\SilentEngine\Private\SRenderItem\SRenderItem.h">
       <Filter>SilentEngine\Private\SRenderItem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SilentEngine\Private\SMiscHelpers\SMiscHelpers.h">
+      <Filter>SilentEngine\Private\SMiscHelpers</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -34,6 +34,7 @@ namespace fs = std::filesystem;
 #include "SilentEngine/Public/EntityComponentSystem/SMeshComponent/SMeshComponent.h"
 #include "SilentEngine/Public/EntityComponentSystem/SRuntimeMeshComponent/SRuntimeMeshComponent.h"
 #include "SilentEngine/Private/SShader/SShader.h"
+#include "SilentEngine/Private/SMiscHelpers/SMiscHelpers.h"
 
 
 SApplication* SApplication::pApp = nullptr;

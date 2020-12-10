@@ -10,11 +10,11 @@
 // Custom
 #include "SilentEngine/Private/SError/SError.h"
 #include "SilentEngine/Private/d3dx12.h"
-#include "SilentEngine/Private/SRenderItem/SRenderItem.h"
 #include "SilentEngine/Public/SApplication/SApplication.h"
 #include "SilentEngine/Private/EntityComponentSystem/SComponent/SComponent.h"
 #include "SilentEngine/Public/EntityComponentSystem/SMeshComponent/SMeshComponent.h"
 #include "SilentEngine/Public/EntityComponentSystem/SRuntimeMeshComponent/SRuntimeMeshComponent.h"
+#include "SilentEngine/Private/SMiscHelpers/SMiscHelpers.h"
 #include "SilentEngine/Public/SPrimitiveShapeGenerator/SPrimitiveShapeGenerator.h" // for SMeshDataComputeResource
 
 bool SComputeShader::copyComputeResults(const std::string& sResourceNameToCopyFrom, bool bBlockDraw, std::function<void(char*, size_t)> callback)

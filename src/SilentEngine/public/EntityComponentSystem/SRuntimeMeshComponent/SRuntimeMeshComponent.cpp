@@ -15,6 +15,7 @@
 #include "SilentEngine/Private/SError/SError.h"
 #include "SilentEngine/Public/SApplication/SApplication.h"
 #include "SilentEngine/Public/EntityComponentSystem/SContainer/SContainer.h"
+#include "SilentEngine/Private/SMiscHelpers/SMiscHelpers.h"
 
 
 SRuntimeMeshComponent::SRuntimeMeshComponent(std::string sComponentName) : SComponent()

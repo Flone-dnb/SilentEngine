@@ -16,6 +16,7 @@
 #include "SilentEngine/Public/SApplication/SApplication.h"
 #include "SilentEngine/Public/EntityComponentSystem/SContainer/SContainer.h"
 #include "SilentEngine/Private/SComputeShader/SComputeShader.h"
+#include "SilentEngine/Private/SMiscHelpers/SMiscHelpers.h"
 
 SMeshComponent::SMeshComponent(std::string sComponentName) : SComponent()
 {

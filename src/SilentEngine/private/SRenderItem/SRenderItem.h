@@ -178,26 +178,3 @@ struct SRenderItem
 	UINT iStartIndexLocation = 0;
 	int iStartVertexLocation = 0;
 };
-
-class SMiscHelpers
-{
-public:
-
-	// pUploadBuffer has to be kept alive because the command list has not been executed yet that performs the actual copy.
-	// The caller can Release the pUploadBuffer after it knows the copy has been executed.
-	static Microsoft::WRL::ComPtr<ID3D12Resource> createBufferWithData(
-		ID3D12Device* pDevice,
-		ID3D12GraphicsCommandList* pCommandList,
-		const void* pInitBufferData,
-		UINT64 iDataSizeInBytes,
-		Microsoft::WRL::ComPtr<ID3D12Resource>& pOutUploadBuffer, bool bCreateUAVBuffer = false);
-
-
-	static Microsoft::WRL::ComPtr<ID3DBlob> compileShader(
-		const std::wstring& sPathToShader,
-		const D3D_SHADER_MACRO* defines,
-		const std::string& sShaderEntryPoint,
-		const std::string& sShaderModel,
-		bool bCompileShadersInRelease);
-};
-
