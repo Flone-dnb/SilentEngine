@@ -193,9 +193,9 @@
     <ClCompile Include="..\src\SilentEngine\private\SError\SError.cpp" />
     <ClCompile Include="..\src\SilentEngine\private\SFrameResource\SFrameResource.cpp" />
     <ClCompile Include="..\src\SilentEngine\private\SGameTimer\SGameTimer.cpp" />
-    <ClCompile Include="..\src\SilentEngine\private\SGeometry\SGeometry.cpp" />
     <ClCompile Include="..\src\SilentEngine\Private\SMaterial\SMaterial.cpp" />
     <ClCompile Include="..\src\SilentEngine\private\SMath\SMath.cpp" />
+    <ClCompile Include="..\src\SilentEngine\Private\SRenderItem\SRenderItem.cpp" />
     <ClCompile Include="..\src\SilentEngine\Private\SShader\SShader.cpp" />
     <ClCompile Include="..\src\SilentEngine\Public\EntityComponentSystem\SContainer\SContainer.cpp" />
     <ClCompile Include="..\src\SilentEngine\Public\EntityComponentSystem\SDirectionalLightComponent\SDirectionalLightComponent.cpp" />
@@ -224,9 +224,9 @@
     <ClInclude Include="..\src\SilentEngine\private\SError\SError.h" />
     <ClInclude Include="..\src\SilentEngine\private\SFrameResource\SFrameResource.h" />
     <ClInclude Include="..\src\SilentEngine\private\SGameTimer\SGameTimer.h" />
-    <ClInclude Include="..\src\SilentEngine\private\SGeometry\SGeometry.h" />
     <ClInclude Include="..\src\SilentEngine\Private\SMaterial\SMaterial.h" />
     <ClInclude Include="..\src\SilentEngine\private\SMath\SMath.h" />
+    <ClInclude Include="..\src\SilentEngine\Private\SRenderItem\SRenderItem.h" />
     <ClInclude Include="..\src\SilentEngine\Private\SShader\SShader.h" />
     <ClInclude Include="..\src\SilentEngine\private\SUploadBuffer\SUploadBuffer.h" />
     <ClInclude Include="..\src\SilentEngine\Public\EntityComponentSystem\SContainer\SContainer.h" />

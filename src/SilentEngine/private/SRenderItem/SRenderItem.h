@@ -179,7 +179,7 @@ struct SRenderItem
 	int iStartVertexLocation = 0;
 };
 
-class SGeometry
+class SMiscHelpers
 {
 public:
 

@@ -10,7 +10,7 @@
 // Custom
 #include "SilentEngine/Private/SError/SError.h"
 #include "SilentEngine/Private/d3dx12.h"
-#include "SilentEngine/Private/SGeometry/SGeometry.h"
+#include "SilentEngine/Private/SRenderItem/SRenderItem.h"
 #include "SilentEngine/Public/SApplication/SApplication.h"
 #include "SilentEngine/Private/EntityComponentSystem/SComponent/SComponent.h"
 #include "SilentEngine/Public/EntityComponentSystem/SMeshComponent/SMeshComponent.h"
@@ -89,7 +89,7 @@ void SComputeShader::stopShaderExecution()
 
 void SComputeShader::compileShader(const std::wstring& sPathToShaderFile, const std::string& sShaderEntryFunctionName)
 {
-	pCompiledShader = SGeometry::compileShader(sPathToShaderFile, nullptr, sShaderEntryFunctionName, "cs_5_1", bCompileShaderInReleaseMode);
+	pCompiledShader = SMiscHelpers::compileShader(sPathToShaderFile, nullptr, sShaderEntryFunctionName, "cs_5_1", bCompileShaderInReleaseMode);
 
 	bCompiledShader = true;
 }
@@ -138,7 +138,7 @@ bool SComputeShader::setAddData(bool bReadOnlyData, const std::string& sResource
 		pApp->resetCommandList();
 
 		pNewResource->pResource =
-			SGeometry::createBufferWithData(pDevice, pCommandList, pInitData, iDataSizeInBytes, pNewResource->pUploadResource, !bReadOnlyData);
+			SMiscHelpers::createBufferWithData(pDevice, pCommandList, pInitData, iDataSizeInBytes, pNewResource->pUploadResource, !bReadOnlyData);
 
 		pApp->executeCommandList();
 		pApp->flushCommandQueue();

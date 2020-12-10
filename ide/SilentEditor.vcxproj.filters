@@ -34,9 +34,6 @@
     <Filter Include="SilentEngine\Private\SGameTimer">
       <UniqueIdentifier>{4e64ae65-f843-4ed1-afa6-17d6ad017812}</UniqueIdentifier>
     </Filter>
-    <Filter Include="SilentEngine\Private\SGeometry">
-      <UniqueIdentifier>{baaead86-85c4-414a-97cc-f95a753cf7ea}</UniqueIdentifier>
-    </Filter>
     <Filter Include="SilentEngine\Private\SMath">
       <UniqueIdentifier>{3c2b4270-f1ca-407c-a2ea-42bcc46fb894}</UniqueIdentifier>
     </Filter>
@@ -130,6 +127,9 @@
     <Filter Include="SilentEngine\Private\SComputeShader">
       <UniqueIdentifier>{bdde6cb1-19a4-4428-a76e-643701c205da}</UniqueIdentifier>
     </Filter>
+    <Filter Include="SilentEngine\Private\SRenderItem">
+      <UniqueIdentifier>{baaead86-85c4-414a-97cc-f95a753cf7ea}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\SilentEngine\public\SApplication\SApplication.cpp">
@@ -140,9 +140,6 @@
     </ClCompile>
     <ClCompile Include="..\src\SilentEngine\private\SGameTimer\SGameTimer.cpp">
       <Filter>SilentEngine\Private\SGameTimer</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\SilentEngine\private\SGeometry\SGeometry.cpp">
-      <Filter>SilentEngine\Private\SGeometry</Filter>
     </ClCompile>
     <ClCompile Include="..\src\SilentEngine\private\SError\SError.cpp">
       <Filter>SilentEngine\Private\SError</Filter>
@@ -222,6 +219,9 @@
     <ClCompile Include="..\src\SilentEngine\Private\SComputeShader\SComputeShader.cpp">
       <Filter>SilentEngine\Private\SComputeShader</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\SilentEngine\Private\SRenderItem\SRenderItem.cpp">
+      <Filter>SilentEngine\Private\SRenderItem</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\SilentEngine\public\SApplication\SApplication.h">
@@ -232,9 +232,6 @@
     </ClInclude>
     <ClInclude Include="..\src\SilentEngine\private\SGameTimer\SGameTimer.h">
       <Filter>SilentEngine\Private\SGameTimer</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\SilentEngine\private\SGeometry\SGeometry.h">
-      <Filter>SilentEngine\Private\SGeometry</Filter>
     </ClInclude>
     <ClInclude Include="..\src\SilentEngine\private\SError\SError.h">
       <Filter>SilentEngine\Private\SError</Filter>
@@ -319,6 +316,9 @@
     </ClInclude>
     <ClInclude Include="..\src\SilentEngine\Private\SComputeShader\SComputeShader.h">
       <Filter>SilentEngine\Private\SComputeShader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SilentEngine\Private\SRenderItem\SRenderItem.h">
+      <Filter>SilentEngine\Private\SRenderItem</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

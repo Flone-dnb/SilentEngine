@@ -14,7 +14,7 @@
 
 // Custom
 #include "SilentEngine/Private/EntityComponentSystem/SComponent/SComponent.h"
-#include "SilentEngine/Private/SGeometry/SGeometry.h"
+#include "SilentEngine/Private/SRenderItem/SRenderItem.h"
 #include "SilentEngine/Public/SPrimitiveShapeGenerator/SPrimitiveShapeGenerator.h"
 #include "SilentEngine/Private/SMaterial/SMaterial.h"
 

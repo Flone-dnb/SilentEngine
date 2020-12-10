@@ -19,7 +19,7 @@
 
 // Custom
 #include "SilentEngine/Private/SUploadBuffer/SUploadBuffer.h"
-#include "SilentEngine/Private/SGeometry/SGeometry.h"
+#include "SilentEngine/Private/SRenderItem/SRenderItem.h"
 #include "SilentEngine/Public/SPrimitiveShapeGenerator/SPrimitiveShapeGenerator.h"
 #include "SilentEngine/Private/EntityComponentSystem/SLightComponent/SLightComponent.h"
 #include "SilentEngine/Public/SVector/SVector.h"

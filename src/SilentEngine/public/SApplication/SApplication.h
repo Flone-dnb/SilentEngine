@@ -25,7 +25,7 @@
 
 // Custom
 #include "SilentEngine/Private/SGameTimer/SGameTimer.h"
-#include "SilentEngine/Private/SGeometry/SGeometry.h"
+#include "SilentEngine/Private/SRenderItem/SRenderItem.h"
 #include "SilentEngine/Private/SUploadBuffer/SUploadBuffer.h"
 #include "SilentEngine/Private/SFrameResource/SFrameResource.h"
 #include "SilentEngine/Public/SVector/SVector.h"

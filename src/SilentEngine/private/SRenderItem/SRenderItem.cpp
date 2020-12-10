@@ -6,7 +6,7 @@
 // ******************************************************************
 
 
-#include "SGeometry.h"
+#include "SRenderItem.h"
 
 // STL
 #include <fstream>
@@ -20,7 +20,7 @@
 #pragma comment(lib,"d3dcompiler.lib")
 
 
-Microsoft::WRL::ComPtr<ID3D12Resource> SGeometry::createBufferWithData(ID3D12Device* pDevice, ID3D12GraphicsCommandList* pCommandList,
+Microsoft::WRL::ComPtr<ID3D12Resource> SMiscHelpers::createBufferWithData(ID3D12Device* pDevice, ID3D12GraphicsCommandList* pCommandList,
 	const void* pInitBufferData, UINT64 iDataSizeInBytes, Microsoft::WRL::ComPtr<ID3D12Resource>& pOutUploadBuffer, bool bCreateUAVBuffer)
 {
 	Microsoft::WRL::ComPtr<ID3D12Resource> pDefaultBuffer;
@@ -39,7 +39,7 @@ Microsoft::WRL::ComPtr<ID3D12Resource> SGeometry::createBufferWithData(ID3D12Dev
 			IID_PPV_ARGS(pDefaultBuffer.GetAddressOf()));
 		if (FAILED(hresult))
 		{
-			SError::showErrorMessageBox(hresult, L"SGeometry::createDefaultBuffer::ID3D12Device::CreateCommittedResource() (default buffer)");
+			SError::showErrorMessageBox(hresult, L"SMiscHelpers::createDefaultBuffer::ID3D12Device::CreateCommittedResource() (default buffer)");
 			return nullptr;
 		}
 	}
@@ -54,7 +54,7 @@ Microsoft::WRL::ComPtr<ID3D12Resource> SGeometry::createBufferWithData(ID3D12Dev
 			IID_PPV_ARGS(pDefaultBuffer.GetAddressOf()));
 		if (FAILED(hresult))
 		{
-			SError::showErrorMessageBox(hresult, L"SGeometry::createDefaultBuffer::ID3D12Device::CreateCommittedResource() (default buffer)");
+			SError::showErrorMessageBox(hresult, L"SMiscHelpers::createDefaultBuffer::ID3D12Device::CreateCommittedResource() (default buffer)");
 			return nullptr;
 		}
 	}
@@ -72,7 +72,7 @@ Microsoft::WRL::ComPtr<ID3D12Resource> SGeometry::createBufferWithData(ID3D12Dev
 		IID_PPV_ARGS(pOutUploadBuffer.GetAddressOf()));
 	if (FAILED(hresult))
 	{
-		SError::showErrorMessageBox(hresult, L"SGeometry::createDefaultBuffer::ID3D12Device::CreateCommittedResource() (upload heap)");
+		SError::showErrorMessageBox(hresult, L"SMiscHelpers::createDefaultBuffer::ID3D12Device::CreateCommittedResource() (upload heap)");
 		return nullptr;
 	}
 
@@ -125,7 +125,7 @@ Microsoft::WRL::ComPtr<ID3D12Resource> SGeometry::createBufferWithData(ID3D12Dev
 	return pDefaultBuffer;
 }
 
-Microsoft::WRL::ComPtr<ID3DBlob> SGeometry::compileShader(const std::wstring& sPathToShader, 
+Microsoft::WRL::ComPtr<ID3DBlob> SMiscHelpers::compileShader(const std::wstring& sPathToShader,
 	const D3D_SHADER_MACRO* defines, 
 	const std::string& sShaderEntryPoint, 
 	const std::string& sShaderModel, bool bCompileShadersInRelease)
@@ -140,7 +140,7 @@ Microsoft::WRL::ComPtr<ID3DBlob> SGeometry::compileShader(const std::wstring& sP
 	}
 	else
 	{
-		SError::showErrorMessageBox(L"SGeometry::compileShader::D3DCompileFromFile()", L"file at " + sPathToShader + L" does not exist.");
+		SError::showErrorMessageBox(L"SMiscHelpers::compileShader::D3DCompileFromFile()", L"file at " + sPathToShader + L" does not exist.");
 		return nullptr;
 	}
 
@@ -167,7 +167,7 @@ Microsoft::WRL::ComPtr<ID3DBlob> SGeometry::compileShader(const std::wstring& sP
 
 	if (FAILED(hresult))
 	{
-		SError::showErrorMessageBox(hresult, L"SGeometry::compileShader::D3DCompileFromFile()");
+		SError::showErrorMessageBox(hresult, L"SMiscHelpers::compileShader::D3DCompileFromFile()");
 		return nullptr;
 	}
 

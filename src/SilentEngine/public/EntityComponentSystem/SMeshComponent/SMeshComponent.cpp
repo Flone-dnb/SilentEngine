@@ -314,7 +314,7 @@ void SMeshComponent::createGeometryBuffers(bool bAddedRemovedIndices)
 
 
 	// Create all with UAV flag/state so it can be easily used in compute shader as RW buffer.
-	renderData.pGeometry->pVertexBufferGPU = SGeometry::createBufferWithData(pApp->pDevice.Get(), pApp->pCommandList.Get(), vShaderVertices.data(),
+	renderData.pGeometry->pVertexBufferGPU = SMiscHelpers::createBufferWithData(pApp->pDevice.Get(), pApp->pCommandList.Get(), vShaderVertices.data(),
 		renderData.pGeometry->iVertexBufferSizeInBytes, renderData.pGeometry->pVertexBufferUploader, true);
 
 	if (bAddedRemovedIndices)
@@ -324,7 +324,7 @@ void SMeshComponent::createGeometryBuffers(bool bAddedRemovedIndices)
 			//std::memcpy(renderData.pGeometry->pIndexBufferCPU->GetBufferPointer(), meshData.getIndices32().data(),
 			//	renderData.pGeometry->iIndexBufferSizeInBytes);
 
-			renderData.pGeometry->pIndexBufferGPU = SGeometry::createBufferWithData(pApp->pDevice.Get(), pApp->pCommandList.Get(), meshData.getIndices32().data(),
+			renderData.pGeometry->pIndexBufferGPU = SMiscHelpers::createBufferWithData(pApp->pDevice.Get(), pApp->pCommandList.Get(), meshData.getIndices32().data(),
 				renderData.pGeometry->iIndexBufferSizeInBytes, renderData.pGeometry->pIndexBufferUploader, true);
 		}
 		else
@@ -332,7 +332,7 @@ void SMeshComponent::createGeometryBuffers(bool bAddedRemovedIndices)
 			//std::memcpy(renderData.pGeometry->pIndexBufferCPU->GetBufferPointer(), meshData.getIndices16().data(),
 			//	renderData.pGeometry->iIndexBufferSizeInBytes);
 
-			renderData.pGeometry->pIndexBufferGPU = SGeometry::createBufferWithData(pApp->pDevice.Get(), pApp->pCommandList.Get(), meshData.getIndices16().data(),
+			renderData.pGeometry->pIndexBufferGPU = SMiscHelpers::createBufferWithData(pApp->pDevice.Get(), pApp->pCommandList.Get(), meshData.getIndices16().data(),
 				renderData.pGeometry->iIndexBufferSizeInBytes, renderData.pGeometry->pIndexBufferUploader, true);
 		}
 	}

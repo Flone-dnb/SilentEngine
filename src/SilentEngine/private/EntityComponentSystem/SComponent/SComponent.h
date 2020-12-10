@@ -15,7 +15,7 @@
 
 // Custom
 #include "SilentEngine/Public/SVector/SVector.h"
-#include "SilentEngine/Private/SGeometry/SGeometry.h"
+#include "SilentEngine/Private/SRenderItem/SRenderItem.h"
 #include "SilentEngine/Public/SPrimitiveShapeGenerator/SPrimitiveShapeGenerator.h"
 
 enum SComponentType

@@ -8,7 +8,7 @@
 #include "SMaterial.h"
 
 // Custom
-#include "SilentEngine/Private/SGeometry/SGeometry.h"
+#include "SilentEngine/Private/SRenderItem/SRenderItem.h"
 #include "SilentEngine/Public/SApplication/SApplication.h"
 #include "SilentEngine/Private/SMath/SMath.h"
 
