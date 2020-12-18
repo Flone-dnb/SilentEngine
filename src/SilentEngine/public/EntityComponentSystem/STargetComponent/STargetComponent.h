@@ -32,5 +32,12 @@ public:
 
 	virtual ~STargetComponent() override;
 
+private:
+
+	//@@Function
+	/*
+	* desc: called when parent's location/rotation/scale are changed.
+	*/
+	virtual void updateMyAndChildsLocationRotationScale(bool bCalledOnSelf) override;
 };
 

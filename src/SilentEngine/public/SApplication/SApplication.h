@@ -37,6 +37,7 @@
 #include "SilentEngine/Private/SMaterial/SMaterial.h"
 #include "SilentEngine/Private/SBlurEffect/SBlurEffect.h"
 #include "SilentEngine/Private/SComputeShader/SComputeShader.h"
+#include "SilentEngine/Private/SCamera/SCamera.h"
 
 // Other
 #include <Windows.h>
@@ -57,6 +58,7 @@ class SComponent;
 class SShader;
 class SShaderObjects;
 class SComputeShader;
+class SCameraComponent;
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
 
@@ -331,37 +333,13 @@ public:
 
 	// "Set" functions
 
-		// Camera
-
 		//@@Function
 		/*
-		* desc: sets the virtual camera's vertical FOV.
-		* param "fFOVInDeg": vertical FOV value in degrees between 1 and 200.
-		* return: false if successful, true otherwise.
+		* desc: "If you hold down a key long enough to start the keyboard's repeat feature, the system sends multiple key-down messages,
+		followed by a single key-up message."
+		* remarks: disabled by default.
 		*/
-		bool            setCameraFOV                           (float fFOVInDeg);
-		//@@Function
-		/*
-		* desc: sets the fixed camera's zoom (radius in a spherical coordinate system).
-		* param "fZoom": radius value for a spherical coordinate system, should be higher than 0.
-		*/
-		void            setFixedCameraZoom                     (float fZoom);
-		//@@Function
-		/*
-		* desc: sets the fixed camera's rotation (phi and theta in a spherical coordinate system).
-		* param "fPhi": vertical rotation.
-		* param "fTheta": horizontal rotation.
-		*/
-		void            setFixedCameraRotation                 (float fPhi, float fTheta);
-		//@@Function
-		/*
-		* desc: sets the fixed camera's rotation shift.
-		* param "fHorizontalShift": horizontal rotation shift.
-		* param "fVerticalShift": vertical rotation shift.
-		*/
-		void            setFixedCameraRotationShift            (float fHorizontalShift, float fVerticalShift);
-
-		// Game
+		void setDisableKeyboardRepeat(bool bDisable);
 
 		//@@Function
 		/*
@@ -407,30 +385,9 @@ public:
 
 		//@@Function
 		/*
-		* desc: returns the camera's (eyes) position in world.
+		* desc: returns the camera's.
 		*/
-		SVector                getCameraLocation               () const;
-
-		//@@Function
-		/*
-		* desc: returns the vectors for the local axis of the fixed camera.
-		* param "pvXAxis": this vector is directed in the local X-axis.
-		* param "pvYAxis": this vector is directed in the local Y-axis.
-		* param "pvZAxis": this vector is directed in the local Z-axis.
-		*/
-		void                   getFixedCameraLocalAxisVector   (SVector* pvXAxis, SVector* pvYAxis, SVector* pvZAxis) const;
-		//@@Function
-		/*
-		* desc: returns the fixed camera's rotation.
-		* param "fPhi": the pointer to your float value that will receive the vertical rotation value.
-		* param "fTheta": the pointer to your float value that will receive the horizontal rotation value.
-		*/
-		void                   getFixedCameraRotation          (float* fPhi, float* fTheta) const;
-		//@@Function
-		/*
-		* desc: returns the fixed camera's zoom.
-		*/
-		float                  getFixedCameraZoom              () const;
+		SCamera*                getCamera                      ();
 
 		// Other
 
@@ -745,11 +702,6 @@ private:
 		void update                          ();
 		//@@Function
 		/*
-		* desc: updates the camera.
-		*/
-		void updateCamera                    ();
-		//@@Function
-		/*
 		* desc: updates the constant buffers.
 		*/
 		void updateObjectCBs                 ();
@@ -1010,37 +962,6 @@ private:
 		bool setInitEnableVSync                    (bool bEnable);
 
 
-	// Camera
-
-		//@@Function
-		/*
-		* desc: used to set the camera's near clip plane.
-		* param "fNearClipPlaneValue": near clip plane value.
-		* return: false if successful, true otherwise.
-		* remarks: should be called after calling the SApplication::init(). Change with caution, may cause z-fighting.
-		*/
-		bool setNearClipPlane                     (float fNearClipPlaneValue);
-		//@@Function
-		/*
-		* desc: used to set the camera's far clip plane.
-		* param "fFarClipPlaneValue": far clip plane value.
-		* return: false if successful, true otherwise.
-		* remarks: should be called after calling the SApplication::init(). Change with caution, may cause z-fighting.
-		*/
-		bool setFarClipPlane                      (float fFarClipPlaneValue);
-
-		//@@Function
-		/*
-		* desc: used to retrieve the camera's near clip plane.
-		*/
-		float getNearClipPlaneValue               () const;
-		//@@Function
-		/*
-		* desc: used to retrieve the camera's far clip plane.
-		*/
-		float getFarClipPlaneValue                () const;
-
-
 	// Level
 
 		//@@Function
@@ -1131,6 +1052,7 @@ private:
 	friend class SMeshComponent;
 	friend class SRuntimeMeshComponent;
 	friend class SComputeShader;
+	friend class SCameraComponent;
 	friend class SMaterial;
 	friend class SLevel;
 	friend class SError;
@@ -1211,13 +1133,6 @@ private:
 	std::vector<SShaderObjects> vOpaqueMeshesByCustomShader;
 	std::vector<SShaderObjects> vTransparentMeshesByCustomShader;
 	std::vector<SComputeShader*> vUserComputeShaders;
-	
-
-	// Camera.
-	DirectX::XMFLOAT3   vCameraPos = { 0.0f, 0.0f, 0.0f };
-	DirectX::XMFLOAT3   vCameraTargetPos = {0.0f, 0.0f, 0.0f};
-	DirectX::XMFLOAT4X4 vView   = SMath::getIdentityMatrix4x4();
-	DirectX::XMFLOAT4X4 vProj   = SMath::getIdentityMatrix4x4();
 
 
 	// Buffer formats.
@@ -1262,7 +1177,6 @@ private:
 	UINT64         iPixelsBufferSize        = 0;
 	int            iMainWindowWidth         = 800;
 	int            iMainWindowHeight        = 600;
-	float          fFOVInDeg                = 90;
 	UINT           iRefreshRateNumerator    = 60;
 	UINT           iRefreshRateDenominator  = 1;
 	DXGI_MODE_SCANLINE_ORDER iScanlineOrder = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
@@ -1272,11 +1186,7 @@ private:
 	// Viewport
 	D3D12_VIEWPORT ScreenViewport; 
 	D3D12_RECT     ScissorRect;
-	float          fNearClipPlaneValue      = 0.4f; // change with caution, may cause z-fighting
-	float          fFarClipPlaneValue       = 1000.0f; // change with caution, may cause z-fighting
-	float          fTheta                   = 1.5f * DirectX::XM_PI;
-	float          fPhi                     = DirectX::XM_PIDIV4;
-	float          fRadius                  = 6.0f;
+	SCamera        camera;
 
 	
 	// Windows stuff.
@@ -1319,6 +1229,7 @@ private:
 	std::mutex     mtxTexture;
 	std::mutex     mtxShader;
 	std::mutex     mtxDraw;
+	std::mutex     mtxUpdateCurrentCamera;
 	std::mutex     mtxFenceUpdate;
 
 
@@ -1339,6 +1250,7 @@ private:
 	bool           bExitCalled              = false;
 
 	bool           bCallTick                = false;
+	bool           bDisableKeyboardRepeat   = true;
 
 	bool           bD3DDebugLayerEnabled    = true;
 };

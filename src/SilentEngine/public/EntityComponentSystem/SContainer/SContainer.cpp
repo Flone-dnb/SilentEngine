@@ -66,7 +66,7 @@ void SContainer::setLocation(const SVector& vNewLocation, bool bLocationInWorldC
 
 	for (size_t i = 0; i < vComponents.size(); i++)
 	{
-		vComponents[i]->updateMyAndChildsLocationRotationScale();
+		vComponents[i]->updateMyAndChildsLocationRotationScale(false);
 	}
 }
 
@@ -117,7 +117,7 @@ void SContainer::setRotation(const SVector& vNewRotation)
 
 	for (size_t i = 0; i < vComponents.size(); i++)
 	{
-		vComponents[i]->updateMyAndChildsLocationRotationScale();
+		vComponents[i]->updateMyAndChildsLocationRotationScale(false);
 	}
 }
 
@@ -127,7 +127,7 @@ void SContainer::setScale(const SVector& vNewScale)
 
 	for (size_t i = 0; i < vComponents.size(); i++)
 	{
-		vComponents[i]->updateMyAndChildsLocationRotationScale();
+		vComponents[i]->updateMyAndChildsLocationRotationScale(false);
 	}
 }
 

@@ -134,26 +134,6 @@ bool SVideoSettings::getAvailableScreenResolutionsOfCurrentOutputDisplay(std::ve
 	return pApp->getAvailableScreenResolutionsOfCurrentOutputDisplay(vResolutions);
 }
 
-bool SVideoSettings::setCameraNearClipPlane(float fNearClipPlaneValue)
-{
-	return pApp->setNearClipPlane(fNearClipPlaneValue);
-}
-
-bool SVideoSettings::setCameraFarClipPlane(float fFarClipPlaneValue)
-{
-	return pApp->setFarClipPlane(fFarClipPlaneValue);
-}
-
-float SVideoSettings::getCameraNearClipPlaneValue()
-{
-	return pApp->getNearClipPlaneValue();
-}
-
-float SVideoSettings::getCameraFarClipPlaneValue()
-{
-	return pApp->getFarClipPlaneValue();
-}
-
 bool SVideoSettings::setInitPreferredDisplayAdapter(std::wstring sPreferredDisplayAdapter)
 {
 	return pApp->setInitPreferredDisplayAdapter(sPreferredDisplayAdapter);

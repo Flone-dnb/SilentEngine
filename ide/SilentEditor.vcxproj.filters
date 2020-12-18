@@ -133,6 +133,9 @@
     <Filter Include="SilentEngine\Private\SMiscHelpers">
       <UniqueIdentifier>{0544a124-f7c4-4007-9160-87d7e303cd18}</UniqueIdentifier>
     </Filter>
+    <Filter Include="SilentEngine\Private\SCamera">
+      <UniqueIdentifier>{6d5ad124-082a-4886-bfb4-19ae5001e81a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\SilentEngine\public\SApplication\SApplication.cpp">
@@ -227,6 +230,9 @@
     </ClCompile>
     <ClCompile Include="..\src\SilentEngine\Private\SMiscHelpers\SMiscHelpers.cpp">
       <Filter>SilentEngine\Private\SMiscHelpers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SilentEngine\Private\SCamera\SCamera.cpp">
+      <Filter>SilentEngine\Private\SCamera</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -328,6 +334,9 @@
     </ClInclude>
     <ClInclude Include="..\src\SilentEngine\Private\SMiscHelpers\SMiscHelpers.h">
       <Filter>SilentEngine\Private\SMiscHelpers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SilentEngine\Private\SCamera\SCamera.h">
+      <Filter>SilentEngine\Private\SCamera</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

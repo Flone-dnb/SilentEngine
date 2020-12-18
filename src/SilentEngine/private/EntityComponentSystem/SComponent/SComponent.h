@@ -12,6 +12,7 @@
 #include <vector>
 #include <memory>
 #include <mutex>
+#include <functional>
 
 // Custom
 #include "SilentEngine/Public/SVector/SVector.h"
@@ -23,7 +24,8 @@ enum SComponentType
 	SCT_NONE = 0,
 	SCT_MESH = 1,
 	SCT_RUNTIME_MESH = 2,
-	SCT_LIGHT = 3
+	SCT_LIGHT = 3,
+	SCT_CAMERA = 4
 };
 
 class SContainer;
@@ -106,12 +108,19 @@ public:
 
 	//@@Function
 	/*
+	* desc: called when one of the parents (container/components) updates its location/rotation/scale.
+	* remarks: this function called when this component's location/rotation/scale (in world) is already updated according to the parent's new location.
+	*/
+	void setBindOnParentLocationRotationScaleChangedCallback(std::function<void(SComponent* pComponent)> function);
+
+	//@@Function
+	/*
 	* desc: returns the name of the component.
 	*/
 	std::string getComponentName               () const;
 	//@@Function
 	/*
-	* desc: returns the pointer to the parent component (nullptr if there is no parent).
+	* desc: returns the pointer to the parent component (nullptr if there is no parent component).
 	*/
 	SComponent* getParentComponent             () const;
 	//@@Function
@@ -141,17 +150,17 @@ public:
 	/*
 	* desc: returns the local location.
 	*/
-	SVector     getLocation                                         () const;
+	SVector     getLocalLocation                                    () const;
 	//@@Function
 	/*
 	* desc: returns the local scale.
 	*/
-	SVector     getScale                                            () const;
+	SVector     getLocalScale                                       () const;
 	//@@Function
 	/*
 	* desc: returns the local rotation.
 	*/
-	SVector     getRotation                                         () const;
+	SVector     getLocalRotation                                    () const;
 	//@@Function
 	/*
 	* desc: returns the local axis vectors of the component.
@@ -240,7 +249,7 @@ protected:
 	/*
 	* desc: called when parent's location/rotation/scale are changed.
 	*/
-	virtual void updateMyAndChildsLocationRotationScale () = 0;
+	virtual void updateMyAndChildsLocationRotationScale (bool bCalledOnSelf) = 0;
 	//@@Function
 	/*
 	* desc: returns the world matrix (that includes parents).
@@ -265,7 +274,9 @@ protected:
 	friend class SContainer;
 	friend class SMeshComponent;
 	friend class SRuntimeMeshComponent;
+	friend class STargetComponent;
 	friend class SComputeShader;
+	friend class SLightComponent;
 
 
 	SComponent* pParentComponent;
@@ -273,6 +284,9 @@ protected:
 
 
 	std::vector<SComponent*> vChildComponents;
+
+
+	std::function<void(SComponent* pComponent)> onParentLocationRotationScaleChangedCallback;
 
 
 	SVector     vLocation;

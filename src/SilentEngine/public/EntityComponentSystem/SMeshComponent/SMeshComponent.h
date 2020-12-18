@@ -214,7 +214,7 @@ private:
 	/*
 	* desc: called when parent's location/rotation/scale are changed.
 	*/
-	void updateMyAndChildsLocationRotationScale();
+	virtual void updateMyAndChildsLocationRotationScale(bool bCalledOnSelf) override;
 
 
 	// ------------------------------------------------------------------------------------

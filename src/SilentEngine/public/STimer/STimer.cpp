@@ -8,6 +8,7 @@
 
 #include "STimer.h"
 
+#include <windows.h>
 
 STimer::STimer()
 {
@@ -22,7 +23,33 @@ STimer::STimer()
 
 void STimer::setCallbackOnTimeout(std::function<void(void)> function, float fTimeInSecToTimeout, bool bLooping, float fTimerAccuracyInSec)
 {
+	bUsingCustomData = false;
+
 	timeoutFunction = function;
+
+	this->fTimeInSecToTimeout = fTimeInSecToTimeout;
+	this->bLooping = bLooping;
+
+	if (fTimerAccuracyInSec > 0.1f)
+	{
+		this->fTimerAccuracyInSec = 0.1f;
+	}
+	else
+	{
+		this->fTimerAccuracyInSec = fTimerAccuracyInSec;
+	}
+
+	bTimeoutEnabled = true;
+}
+
+void STimer::setCallbackOnTimeout(std::function<void(char[64])> function, char customData[64], float fTimeInSecToTimeout, bool bLooping, float fTimerAccuracyInSec)
+{
+	bUsingCustomData = true;
+
+	memset(this->customData, 0, 64);
+	std::memcpy(this->customData, customData, 64);
+
+	timeoutFunctionWithCustomData = function;
 
 	this->fTimeInSecToTimeout = fTimeInSecToTimeout;
 	this->bLooping = bLooping;
@@ -45,7 +72,9 @@ void STimer::start()
 
 	startTime = std::chrono::steady_clock::now();
 
+	mtxStop.lock();
 	bRunning = true;
+	mtxStop.unlock();
 
 	if (bTimeoutEnabled)
 	{
@@ -58,12 +87,21 @@ void STimer::start()
 
 void STimer::stop()
 {
-	bTimeoutEnabled = false;
+	if (bTimeoutEnabled)
+	{
+		bTimeoutEnabled = false;
+	}
+
+	mtxStop.lock();
 
 	if (bRunning)
 	{
 		bRunning = false;
+
+		Sleep(fTimerAccuracyInSec + 1); // not good
 	}
+
+	mtxStop.unlock();
 }
 
 double STimer::getElapsedTimeInMS()
@@ -78,6 +116,15 @@ double STimer::getElapsedTimeInMS()
 	{
 		return 0.0f;
 	}
+}
+
+bool STimer::isTimerRunning()
+{
+	mtxStop.lock();
+	bool bRet = bRunning;
+	mtxStop.unlock();
+
+	return bRet;
 }
 
 void STimer::timerTimeoutFunction(size_t iCurrentCallbackTimerIndex)
@@ -101,7 +148,14 @@ void STimer::timerTimeoutFunction(size_t iCurrentCallbackTimerIndex)
 
 		if (bRunning)
 		{
-			timeoutFunction();
+			if (bUsingCustomData)
+			{
+				timeoutFunctionWithCustomData(customData);
+			}
+			else
+			{
+				timeoutFunction();
+			}
 		}
 
 	}while(bLooping && bRunning);

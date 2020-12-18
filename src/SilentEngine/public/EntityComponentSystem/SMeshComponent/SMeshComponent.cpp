@@ -348,15 +348,22 @@ void SMeshComponent::createGeometryBuffers(bool bAddedRemovedIndices)
 	}
 }
 
-void SMeshComponent::updateMyAndChildsLocationRotationScale()
+void SMeshComponent::updateMyAndChildsLocationRotationScale(bool bCalledOnSelf)
 {
 	updateWorldMatrix();
 
 	renderData.iUpdateCBInFrameResourceCount = SFRAME_RES_COUNT;
 
+
+	if ((bCalledOnSelf == false) && onParentLocationRotationScaleChangedCallback)
+	{
+		onParentLocationRotationScaleChangedCallback(this);
+	}
+
+
 	for (size_t i = 0; i < vChildComponents.size(); i++)
 	{
-		vChildComponents[i]->updateMyAndChildsLocationRotationScale();
+		vChildComponents[i]->updateMyAndChildsLocationRotationScale(false);
 	}
 }
 

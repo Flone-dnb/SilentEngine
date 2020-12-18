@@ -189,6 +189,7 @@
     <ClCompile Include="..\src\SilentEngine\Private\EntityComponentSystem\SComponent\SComponent.cpp" />
     <ClCompile Include="..\src\SilentEngine\Private\EntityComponentSystem\SLightComponent\SLightComponent.cpp" />
     <ClCompile Include="..\src\SilentEngine\Private\SBlurEffect\SBlurEffect.cpp" />
+    <ClCompile Include="..\src\SilentEngine\Private\SCamera\SCamera.cpp" />
     <ClCompile Include="..\src\SilentEngine\Private\SComputeShader\SComputeShader.cpp" />
     <ClCompile Include="..\src\SilentEngine\private\SError\SError.cpp" />
     <ClCompile Include="..\src\SilentEngine\private\SFrameResource\SFrameResource.cpp" />
@@ -221,6 +222,7 @@
     <ClInclude Include="..\src\SilentEngine\Private\EntityComponentSystem\SComponent\SComponent.h" />
     <ClInclude Include="..\src\SilentEngine\Private\EntityComponentSystem\SLightComponent\SLightComponent.h" />
     <ClInclude Include="..\src\SilentEngine\Private\SBlurEffect\SBlurEffect.h" />
+    <ClInclude Include="..\src\SilentEngine\Private\SCamera\SCamera.h" />
     <ClInclude Include="..\src\SilentEngine\Private\SComputeShader\SComputeShader.h" />
     <ClInclude Include="..\src\SilentEngine\private\SError\SError.h" />
     <ClInclude Include="..\src\SilentEngine\private\SFrameResource\SFrameResource.h" />

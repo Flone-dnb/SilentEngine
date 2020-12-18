@@ -68,12 +68,19 @@ bool SComponent::addChildComponent(SComponent* pComponent)
 
 	if (bSpawnedInLevel)
 	{
+		SError::showErrorMessageBox(L"SComponent::addChildComponent()", L"cannot add a component when the parent component is already spawned.");
 		return true;
 	}
 	else
 	{
 		if (pContainer)
 		{
+			if (pComponent->pContainer)
+			{
+				SError::showErrorMessageBox(L"SComponent::addChildComponent()", L"component already added to other container/component.");
+				return true;
+			}
+
 			SComponent* pComponentWithSameName = nullptr;
 			pComponentWithSameName = pContainer->getComponentByName(pComponent->getComponentName());
 
@@ -147,7 +154,7 @@ void SComponent::setLocalLocation(const SVector& location)
 
 	if (pParentComponent)
 	{
-		vParentOriginLocation = pParentComponent->getLocation();
+		vParentOriginLocation = pParentComponent->getLocalLocation();
 		pParentComponent->getComponentLocalAxis(&vParentXAxisVector, &vParentYAxisVector, &vParentZAxisVector);
 	}
 	else
@@ -157,11 +164,9 @@ void SComponent::setLocalLocation(const SVector& location)
 	}
 
 
-	SVector vLocationBefore = vLocation;
-
 	vLocation = vParentXAxisVector * location + vParentYAxisVector * location + vParentZAxisVector * location;
 
-	updateMyAndChildsLocationRotationScale();
+	updateMyAndChildsLocationRotationScale(true);
 }
 
 void SComponent::setLocalRotation(const SVector& rotation)
@@ -193,7 +198,7 @@ void SComponent::setLocalRotation(const SVector& rotation)
 	vLocalYAxisVector = SVector(rotMat._21, rotMat._22, rotMat._23);
 	vLocalZAxisVector = SVector(rotMat._31, rotMat._32, rotMat._33);
 
-	updateMyAndChildsLocationRotationScale();
+	updateMyAndChildsLocationRotationScale(true);
 }
 
 void SComponent::setLocalScale(const SVector& scale)
@@ -207,7 +212,7 @@ void SComponent::setLocalScale(const SVector& scale)
 	SVector vScaleBefore = vScale;
 	vScale = scale;
 
-	updateMyAndChildsLocationRotationScale();
+	updateMyAndChildsLocationRotationScale(true);
 }
 
 bool SComponent::setComponentName(const std::string& sComponentName)
@@ -479,7 +484,7 @@ void SComponent::getAllMeshComponents(std::vector<SComponent*>* pvOpaqueComponen
 
 	for (size_t i = 0; i < vChildComponents.size(); i++)
 	{
-		getAllMeshComponents(pvOpaqueComponents, pvTransparentComponents);
+		vChildComponents[i]->getAllMeshComponents(pvOpaqueComponents, pvTransparentComponents);
 	}
 }
 
@@ -550,6 +555,11 @@ void SComponent::removeLightComponentsFromVector(std::vector<class SLightCompone
 	}
 }
 
+void SComponent::setBindOnParentLocationRotationScaleChangedCallback(std::function<void(SComponent* pComponent)> function)
+{
+	onParentLocationRotationScaleChangedCallback = function;
+}
+
 std::string SComponent::getComponentName() const
 {
     return sComponentName;
@@ -607,17 +617,17 @@ SVector SComponent::getLocationInWorld()
 	return vLocationInWorld;
 }
 
-SVector SComponent::getLocation() const
+SVector SComponent::getLocalLocation() const
 {
 	return vLocation;
 }
 
-SVector SComponent::getScale() const
+SVector SComponent::getLocalScale() const
 {
     return vScale;
 }
 
-SVector SComponent::getRotation() const
+SVector SComponent::getLocalRotation() const
 {
 	return vRotation;
 }

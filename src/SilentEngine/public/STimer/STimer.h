@@ -11,6 +11,7 @@
 #include <chrono>
 #include <functional>
 #include <thread>
+#include <mutex>
 
 //@@Class
 /*
@@ -38,6 +39,7 @@ public:
 	"std::function<void(void)> f = std::bind(&Foo::func, this);".
 	*/
 	void setCallbackOnTimeout(std::function<void(void)> function, float fTimeInSecToTimeout, bool bLooping, float fTimerAccuracyInSec);
+	void setCallbackOnTimeout(std::function<void(char[64])> function, char customData[64], float fTimeInSecToTimeout, bool bLooping, float fTimerAccuracyInSec);
 
 	//@@Function
 	/*
@@ -48,7 +50,9 @@ public:
 	//@@Function
 	/*
 	* desc: stops the timer and callback timer if the setCallbackOnTimeout() and setTime() was called. After
-	calling this function getElapsedTimeInSec() and getElapsedTimeInMS() will always return 0.0f.
+	calling this function getElapsedTimeInSec() and getElapsedTimeInMS() will always return 0.
+	* remarks: if you've called setCallbackOnTimeout(), this function will block current thread
+	until the callback timer stopped (this wait (block) will take fTimerAccuracyInSec).
 	*/
 	void stop();
 
@@ -56,6 +60,7 @@ public:
 	/*
 	* desc: pauses the timer, but getElapsedTimeInSec() and getElapsedTimeInMS() will exclude paused time only after the
 	unpause() call.
+	* remarks: if you've used setCallbackOnTimeout(), calling pause() will stop callback timer causing callback function to be called.
 	*/
 	void pause();
 
@@ -81,6 +86,8 @@ public:
 	*/
 	double getElapsedTimeInMS();
 
+	bool isTimerRunning();
+
 private:
 
 	//@@Function
@@ -97,9 +104,12 @@ private:
 	/* holds the time when the pause() was called. */
 	std::chrono::time_point<std::chrono::steady_clock> pauseTime;
 
-	//@@Variable
-	/* function which will be called after the timeout. */
+	std::mutex mtxStop;
+
 	std::function<void(void)> timeoutFunction;
+	std::function<void(char[64])> timeoutFunctionWithCustomData;
+	char customData[64];
+	bool bUsingCustomData = false;
 
 	//@@Variable
 	/* after each start() with callback enabled will be increased. */

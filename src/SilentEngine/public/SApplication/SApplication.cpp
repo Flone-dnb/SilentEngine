@@ -780,6 +780,11 @@ SLevel* SApplication::getCurrentLevel() const
 	return pCurrentLevel;
 }
 
+void SApplication::setDisableKeyboardRepeat(bool bDisable)
+{
+	bDisableKeyboardRepeat = bDisable;
+}
+
 bool SApplication::spawnContainerInLevel(SContainer* pContainer)
 {
 	if (pContainer->bSpawnedInLevel)
@@ -1340,111 +1345,6 @@ bool SApplication::setScreenResolution(SScreenResolution screenResolution)
 	}
 }
 
-bool SApplication::setCameraFOV(float fFOVInDeg)
-{
-	if (fFOVInDeg > 200 || fFOVInDeg < 1)
-	{
-		MessageBox(0, L"An error occurred at SApplication::setFOV(). Error: the FOV value should be in the range [1; 200].", L"Error", 0);
-		return true;
-	}
-	else
-	{
-		this->fFOVInDeg = fFOVInDeg;
-
-		if (bInitCalled)
-		{
-			mtxDraw.lock();
-
-			flushCommandQueue();
-
-			// Apply FOV.
-			onResize();
-
-			mtxDraw.unlock();
-		}
-		
-		return false;
-	}
-}
-
-bool SApplication::setNearClipPlane(float fNearClipPlaneValue)
-{
-	if ( (fNearClipPlaneValue < 0.0f) || (bInitCalled == false) )
-	{
-		MessageBox(0, L"An error occurred at SApplication::setNearClipPlane(). Error: the fNearClipPlaneValue value should be"
-			" more than 0 and the init() function should be called first.", L"Error", 0);
-		return true;
-	}
-	else
-	{
-		this->fNearClipPlaneValue = fNearClipPlaneValue;
-
-		if (bInitCalled)
-		{
-			mtxDraw.lock();
-
-			onResize();
-
-			mtxDraw.unlock();
-		}
-
-		return false;
-	}
-}
-
-bool SApplication::setFarClipPlane(float fFarClipPlaneValue)
-{
-	if ( (fFarClipPlaneValue < 0.0f) || (bInitCalled == false) )
-	{
-		MessageBox(0, L"An error occurred at SApplication::setFarClipPlane(). Error: the fFarClipPlaneValue value should be"
-			" more than 0 and the init() function should be called first.", L"Error", 0);
-		return true;
-	}
-	else
-	{
-		this->fFarClipPlaneValue = fFarClipPlaneValue;
-
-		if (bInitCalled)
-		{
-			mtxDraw.lock();
-
-			onResize();
-
-			mtxDraw.unlock();
-		}
-
-		return false;
-	}
-}
-
-void SApplication::setFixedCameraRotationShift(float fHorizontalShift, float fVerticalShift)
-{
-	// Make each pixel correspond to a quarter of a degree.
-	float dx = DirectX::XMConvertToRadians(0.25f * fHorizontalShift);
-	float dy = DirectX::XMConvertToRadians(0.25f * fVerticalShift);
-
-	// Update angles based on input to orbit camera around box.
-	fTheta += dx;
-	fPhi += -dy;
-
-	// Restrict the angle mPhi.
-	fPhi = SMath::clamp(fPhi, 0.1f, SMath::fPi - 0.1f);
-}
-
-void SApplication::setFixedCameraZoom(float fZoom)
-{
-	if (fZoom > 0.0f)
-	{
-		fRadius = fZoom;
-	}
-}
-
-void SApplication::setFixedCameraRotation(float fPhi, float fTheta)
-{
-	this->fPhi = fPhi;
-	this->fTheta = fTheta;
-}
-
 void SApplication::setCallTick(bool bTickCanBeCalled)
 {
 	bCallTick = bTickCanBeCalled;
@@ -1878,54 +1778,9 @@ bool SApplication::isFullscreen() const
 	return bFullscreen;
 }
 
-float SApplication::getNearClipPlaneValue() const
+SCamera* SApplication::getCamera()
 {
-	return fNearClipPlaneValue;
-}
-
-float SApplication::getFarClipPlaneValue() const
-{
-	return fFarClipPlaneValue;
-}
-
-SVector SApplication::getCameraLocation() const
-{
-	return SVector(vCameraPos.x, vCameraPos.y, vCameraPos.z);
-}
-
-void SApplication::getFixedCameraLocalAxisVector(SVector* pvXAxis, SVector* pvYAxis, SVector* pvZAxis) const
-{
-	if (pvXAxis)
-	{
-		pvXAxis->setX(vView._11);
-		pvXAxis->setY(vView._12);
-		pvXAxis->setZ(vView._13);
-	}
-
-	if (pvYAxis)
-	{
-		pvYAxis->setX(vView._21);
-		pvYAxis->setY(vView._22);
-		pvYAxis->setZ(vView._23);
-	}
-
-	if (pvZAxis)
-	{
-		pvZAxis->setX(vView._31);
-		pvZAxis->setY(vView._32);
-		pvZAxis->setZ(vView._33);
-	}
-}
-
-void SApplication::getFixedCameraRotation(float* fPhi, float* fTheta) const
-{
-	*fPhi = this->fPhi;
-	*fTheta = this->fTheta;
-}
-
-float SApplication::getFixedCameraZoom() const
-{
-	return fRadius;
+	return &camera;
 }
 
 SVector SApplication::getBackBufferFillColor() const
@@ -2253,11 +2108,8 @@ bool SApplication::onResize()
 
 
 
-		// Update aspect ratio and recompute the projection matrix.
-
-		DirectX::XMMATRIX P = DirectX::XMMatrixPerspectiveFovLH(DirectX::XMConvertToRadians(fFOVInDeg), getScreenAspectRatio(),
-			fNearClipPlaneValue, fFarClipPlaneValue);
-		XMStoreFloat4x4(&vProj, P);
+		camera.setCameraAspectRatio(static_cast<double>(iMainWindowWidth) / iMainWindowHeight);
+		camera.updateViewMatrix();
 
 
 
@@ -2281,8 +2133,6 @@ bool SApplication::onResize()
 
 void SApplication::update()
 {
-	updateCamera();
-
 	if (iCurrentFrameResourceIndex + 1 == iFrameResourcesCount)
 	{
 		iCurrentFrameResourceIndex = 0;
@@ -2311,22 +2161,6 @@ void SApplication::update()
 
 	updateObjectCBs();
 	updateMainPassCB();
-}
-
-void SApplication::updateCamera()
-{
-	// Convert Spherical to Cartesian coordinates.
-	vCameraPos.x = fRadius * sinf(fPhi) * cosf(fTheta);
-	vCameraPos.y = fRadius * sinf(fPhi) * sinf(fTheta);
-	vCameraPos.z = fRadius * cosf(fPhi);
-
-	// Build the view matrix.
-	DirectX::XMVECTOR pos    = DirectX::XMVectorSet(vCameraPos.x, vCameraPos.y, vCameraPos.z, 1.0f);
-	DirectX::XMVECTOR target = DirectX::XMVectorSet(vCameraTargetPos.x, vCameraTargetPos.y, vCameraTargetPos.z, 1.0f);
-	DirectX::XMVECTOR up     = DirectX::XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
-
-	DirectX::XMMATRIX view = DirectX::XMMatrixLookAtLH(pos, target, up);
-	DirectX::XMStoreFloat4x4(&vView, view);
 }
 
 void SApplication::updateObjectCBs()
@@ -2473,8 +2307,10 @@ void SApplication::updateComponentAndChilds(SComponent* pComponent, SUploadBuffe
 
 void SApplication::updateMainPassCB()
 {
-	DirectX::XMMATRIX view = DirectX::XMLoadFloat4x4(&vView);
-	DirectX::XMMATRIX proj = DirectX::XMLoadFloat4x4(&vProj);
+	camera.updateViewMatrix();
+
+	DirectX::XMMATRIX view = camera.getViewMatrix();
+	DirectX::XMMATRIX proj = camera.getProjMatrix();
 
 	DirectX::XMMATRIX viewProj    = DirectX::XMMatrixMultiply(view, proj);
 	DirectX::XMMATRIX invView     = DirectX::XMMatrixInverse(&DirectX::XMMatrixDeterminant(view), view);
@@ -2487,11 +2323,12 @@ void SApplication::updateMainPassCB()
 	DirectX::XMStoreFloat4x4(&mainRenderPassCB.vInvProj, XMMatrixTranspose(invProj));
 	DirectX::XMStoreFloat4x4(&mainRenderPassCB.vViewProj, XMMatrixTranspose(viewProj));
 	DirectX::XMStoreFloat4x4(&mainRenderPassCB.vInvViewProj, XMMatrixTranspose(invViewProj));
-	mainRenderPassCB.vCameraPos = vCameraPos;
+	SVector cameraLoc = camera.getCameraLocationInWorld();
+	mainRenderPassCB.vCameraPos = { cameraLoc.getX(), cameraLoc.getY(), cameraLoc.getZ() };
 	mainRenderPassCB.vRenderTargetSize = DirectX::XMFLOAT2(static_cast<float>(iMainWindowWidth), static_cast<float>(iMainWindowHeight));
 	mainRenderPassCB.vInvRenderTargetSize = DirectX::XMFLOAT2(1.0f / iMainWindowWidth, 1.0f / iMainWindowHeight);
-	mainRenderPassCB.fNearZ = fNearClipPlaneValue;
-	mainRenderPassCB.fFarZ = fFarClipPlaneValue;
+	mainRenderPassCB.fNearZ = camera.getCameraNearClipPlane();
+	mainRenderPassCB.fFarZ = camera.getCameraFarClipPlane();
 	mainRenderPassCB.fTotalTime = gameTimer.getTimeElapsedInSec();
 	mainRenderPassCB.fDeltaTime = gameTimer.getDeltaTimeBetweenFramesInSec();
 	mainRenderPassCB.iDirectionalLightCount = 0;
@@ -2509,10 +2346,13 @@ void SApplication::updateMainPassCB()
 		renderPassVisualSettings.distantFog.vDistantFogColorRGBA.getW()};
 	mainRenderPassCB.fFogStart = renderPassVisualSettings.distantFog.fDistantFogStart;
 	mainRenderPassCB.fFogRange = renderPassVisualSettings.distantFog.fDistantFogRange;
-	mainRenderPassCB.vCameraMultiplyColor = { renderPassVisualSettings.vCameraMultiplyColor.getX(),
-		renderPassVisualSettings.vCameraMultiplyColor.getY(), renderPassVisualSettings.vCameraMultiplyColor.getZ() };
-	mainRenderPassCB.fGamma = renderPassVisualSettings.fGamma;
-	mainRenderPassCB.fSaturation = renderPassVisualSettings.fSaturation;
+
+	SCameraEffects cameraEffects = camera.getCameraEffects();
+
+	mainRenderPassCB.vCameraMultiplyColor = { cameraEffects.vCameraMultiplyColor.getX(), cameraEffects.vCameraMultiplyColor.getY(),
+		cameraEffects.vCameraMultiplyColor.getZ() };
+	mainRenderPassCB.fGamma = cameraEffects.fGamma;
+	mainRenderPassCB.fSaturation = cameraEffects.fSaturation;
 
 	mainRenderPassCB.iMainWindowHeight = iMainWindowHeight;
 	mainRenderPassCB.iMainWindowWidth = iMainWindowWidth;
@@ -2716,10 +2556,11 @@ void SApplication::draw()
 		pCommandList->ResourceBarrier(2, barriers2);
 	}
 	
-	if (getGlobalVisualSettings().screenBlurEffect.bEnableScreenBlur)
+
+	if (getCamera()->getCameraEffects().screenBlurEffect.bEnableScreenBlur)
 	{
 		pBlurEffect->addBlurToTexture(pCommandList.Get(), pBlurRootSignature.Get(), pBlurHorizontalPSO.Get(), pBlurVerticalPSO.Get(),
-			getCurrentBackBufferResource(true), getGlobalVisualSettings().screenBlurEffect.iBlurStrength);
+			getCurrentBackBufferResource(true), getCamera()->getCameraEffects().screenBlurEffect.iBlurStrength);
 
 		// Prepare to copy blurred output to the back buffer.
 		// back buffer resource is in copy_source state.
@@ -5555,6 +5396,13 @@ LRESULT SApplication::msgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	case WM_KEYDOWN:
 	case WM_SYSKEYDOWN:
 	{
+		// From the winapi docs:
+		// "One flag that might be useful is bit 30, the "previous key state" flag, which is set to 1 for repeated key-down messages."
+		if ((lParam & (1 << 30)) && bDisableKeyboardRepeat)
+		{
+			return 0;
+		}
+
 		SKeyboardKey key(wParam, lParam);
 		if (key.getButton() != SKB_NONE)
 		{
@@ -5581,6 +5429,7 @@ LRESULT SApplication::msgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 				}
 			}
 		}
+
 		return 0;
 	}
 	case WM_KEYUP:

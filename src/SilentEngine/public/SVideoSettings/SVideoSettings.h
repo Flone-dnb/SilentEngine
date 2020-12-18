@@ -274,37 +274,6 @@ public:
 	*/
 	bool                       getAvailableScreenResolutionsOfCurrentOutputDisplay(std::vector<SScreenResolution>* vResolutions);
 
-
-	// Camera
-
-	//@@Function
-	/*
-	* desc: used to set the camera's near clip plane value.
-	* param "fNearClipPlaneValue": near clip plane value.
-	* return: false if successful, true otherwise.
-	*/
-	bool      setCameraNearClipPlane               (float fNearClipPlaneValue);
-	//@@Function
-	/*
-	* desc: used to set the camera's far clip plane value.
-	* param "fFarClipPlaneValue": far clip plane value.
-	* return: false if successful, true otherwise.
-	*/
-	bool      setCameraFarClipPlane                (float fFarClipPlaneValue);
-
-	//@@Function
-	/*
-	* desc: used to retrieve the camera's near clip plane value.
-	* return: near clip plane value.
-	*/
-	float     getCameraNearClipPlaneValue          ();
-	//@@Function
-	/*
-	* desc: used to retrieve the camera's far clip plane value.
-	* return: far clip plane value.
-	*/
-	float     getCameraFarClipPlaneValue           ();
-
 private:
 
 	//@@Variable

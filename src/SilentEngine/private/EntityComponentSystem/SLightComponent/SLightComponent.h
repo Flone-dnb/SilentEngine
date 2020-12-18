@@ -61,7 +61,7 @@ protected:
 	friend class SApplication;
 	friend class SComponent;
 
-	void updateMyAndChildsLocationRotationScale() {};
+	virtual void updateMyAndChildsLocationRotationScale(bool bCalledOnSelf) override;
 
 	SLightProps lightProps;
 

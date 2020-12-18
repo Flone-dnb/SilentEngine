@@ -318,15 +318,22 @@ void SRuntimeMeshComponent::updateWorldMatrix()
 	mtxComponentProps.unlock();
 }
 
-void SRuntimeMeshComponent::updateMyAndChildsLocationRotationScale()
+void SRuntimeMeshComponent::updateMyAndChildsLocationRotationScale(bool bCalledOnSelf)
 {
 	updateWorldMatrix();
 
 	renderData.iUpdateCBInFrameResourceCount = SFRAME_RES_COUNT;
 
+
+	if ((bCalledOnSelf == false) && onParentLocationRotationScaleChangedCallback)
+	{
+		onParentLocationRotationScaleChangedCallback(this);
+	}
+
+
 	for (size_t i = 0; i < vChildComponents.size(); i++)
 	{
-		vChildComponents[i]->updateMyAndChildsLocationRotationScale();
+		vChildComponents[i]->updateMyAndChildsLocationRotationScale(false);
 	}
 }
 
