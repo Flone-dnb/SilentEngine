@@ -50,6 +50,8 @@ struct SMaterialConstants
 
 	int bHasDiffuseTexture = 0;
 	int bHasNormalTexture = 0;
+
+	int pad1;
 };
 
 enum TEX_FILTER_MODE
@@ -132,7 +134,7 @@ class SFrameResource
 {
 public:
 
-	SFrameResource(ID3D12Device* pDevice, UINT iPassCount, UINT iObjectCount);
+	SFrameResource(ID3D12Device* pDevice, UINT iObjectCount);
 
 	SFrameResource(const SFrameResource&) = delete;
 	SFrameResource& operator = (const SFrameResource&) = delete;
@@ -159,6 +161,7 @@ public:
 
 	Microsoft::WRL::ComPtr<ID3D12CommandAllocator>   pCommandListAllocator;
 
+	// We cannot update a buffer until the GPU is done processing the commands that reference it. So each frame needs their own buffers.
 	std::unique_ptr<SUploadBuffer<SRenderPassConstants>> pRenderPassCB = nullptr;
 	std::unique_ptr<SUploadBuffer<SObjectConstants>>     pObjectsCB    = nullptr;
 	std::unique_ptr<SUploadBuffer<SMaterialConstants>>   pMaterialCB   = nullptr;
@@ -171,13 +174,13 @@ public:
 private:
 
 	UINT roundUp                   (UINT iNum, UINT iMultiple);
-	void createRenderObjectBuffers (UINT iRenderPassCBCount, UINT iObjectCBCount);
+	void createRenderObjectBuffers (UINT iObjectCBCount);
 	void createMaterialBuffer      (UINT iMaterialCBCount);
 
 
 	size_t iObjectsCBActualElementCount = 0;
 	size_t iMaterialCBActualElementCount = 0;
-	size_t iRenderPassCBCount = 0;
+	size_t iRenderPassCBCount = 1;
 	int    iCBResizeMultiple = OBJECT_CB_RESIZE_MULTIPLE;
 };
 

@@ -687,13 +687,19 @@ void SComponent::setCBIndexForMeshComponents(size_t* iIndex, bool bCreateBuffers
 		if (componentType == SCT_MESH)
 		{
 			SMeshComponent* pMeshComponent = dynamic_cast<SMeshComponent*>(this);
-			if (bCreateBuffers && pMeshComponent->getMeshData().getIndicesCount() > 0) pMeshComponent->createGeometryBuffers(true);
+
+			if (bCreateBuffers && pMeshComponent->getMeshData().getIndicesCount() > 0)
+			{
+				pMeshComponent->createGeometryBuffers(true);
+			}
+
 			pMeshComponent->renderData.iObjCBIndex = *iIndex;
 			(*iIndex)++;
 		}
-		else if (componentType == SCT_RUNTIME_MESH)
+		else
 		{
 			SRuntimeMeshComponent* pRuntimeMeshComponent = dynamic_cast<SRuntimeMeshComponent*>(this);
+
 			if (bCreateBuffers)
 			{
 				if (pRuntimeMeshComponent->meshData.getVerticesCount() > 0)

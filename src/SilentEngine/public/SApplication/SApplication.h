@@ -1044,6 +1044,7 @@ private:
 		void copyUserComputeResults(SComputeShader* pComputeShader);
 		bool doesComponentExists(SComponent* pComponent);
 		bool doesComputeShaderExists(SComputeShader* pShader);
+		bool nanosleep(long long ns);
 
 
 	// -----------------------------------------------------------------
@@ -1120,7 +1121,7 @@ private:
 
 	// CB constants.
 	SRenderPassConstants mainRenderPassCB;
-	size_t iRenderPassCBVOffset = 0;
+	size_t iPerFrameResEndOffset = 0;
 	size_t iActualObjectCBCount = 0;
 
 

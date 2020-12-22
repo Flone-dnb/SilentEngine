@@ -75,7 +75,9 @@ cbuffer cbMaterial : register(b2)
 
     int bHasDiffuseTexture;
     int bHasNormalTexture;
-}
+	
+	int pad1;
+};
 
 struct VertexIn
 {
@@ -91,6 +93,7 @@ struct VertexOut
     float3 vNormal : NORMAL;
     float2 vUV     : UV;
 };
+
 
 VertexOut VS(VertexIn vin)
 {
@@ -112,6 +115,7 @@ VertexOut VS(VertexIn vin)
     
     return vout;
 }
+
 
 float4 PS(VertexOut pin) : SV_Target
 {

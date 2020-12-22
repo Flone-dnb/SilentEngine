@@ -10,7 +10,7 @@
 // Custom
 #include "SilentEngine/Private/SError/SError.h"
 
-SFrameResource::SFrameResource(ID3D12Device* pDevice, UINT iRenderPassCBCount, UINT iObjectCBCount)
+SFrameResource::SFrameResource(ID3D12Device* pDevice, UINT iObjectCBCount)
 {
 	this->pDevice = pDevice;
 
@@ -24,13 +24,12 @@ SFrameResource::SFrameResource(ID3D12Device* pDevice, UINT iRenderPassCBCount, U
 	}
 	else
 	{
-		createRenderObjectBuffers(iRenderPassCBCount, iObjectCBCount);
+		createRenderObjectBuffers(iObjectCBCount);
 		createMaterialBuffer(iCBResizeMultiple);
-		this->iRenderPassCBCount = iRenderPassCBCount;
 	}
 }
 
-void SFrameResource::createRenderObjectBuffers(UINT iRenderPassCBCount, UINT iObjectCBCount)
+void SFrameResource::createRenderObjectBuffers(UINT iObjectCBCount)
 {
 	iObjectCBCount = roundUp(iObjectCBCount, iCBResizeMultiple);
 
@@ -53,7 +52,7 @@ size_t SFrameResource::addNewObjectCB(size_t iNewCBCount, bool* pbCBWasExpanded)
 	{
 		// Need to expand.
 
-		createRenderObjectBuffers(iRenderPassCBCount, iObjectsCBActualElementCount + iNewCBCount); // recreating new buffers.
+		createRenderObjectBuffers(iObjectsCBActualElementCount + iNewCBCount); // recreating new buffers.
 
 		*pbCBWasExpanded = true; // all objects will again copy their data to frame resources.
 	}
@@ -80,7 +79,7 @@ void SFrameResource::removeObjectCB(size_t iCBStartIndex, size_t iCBCount, bool*
 			// Resize.
 			*pbCBWasResized = true; // all objects will again copy their data to frame resources.
 			
-			createRenderObjectBuffers(iRenderPassCBCount, iObjectsCBActualElementCount - iCBCount); // recreating new buffers.
+			createRenderObjectBuffers(iObjectsCBActualElementCount - iCBCount); // recreating new buffers.
 		}
 		else
 		{

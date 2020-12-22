@@ -22,9 +22,9 @@ class SUploadBuffer
 {
 public:
 
-	SUploadBuffer(ID3D12Device* pDevice, UINT64 iElementCount, bool bIsConstantBuffer)
+	SUploadBuffer(ID3D12Device* pDevice, UINT64 iElementCount, bool bIsCBUFFER)
 	{
-		this->bIsConstantBuffer = bIsConstantBuffer;
+		this->bIsConstantBuffer = bIsCBUFFER;
 
 		iElementSizeInBytes = sizeof(T);
 
@@ -72,6 +72,11 @@ public:
 	UINT getElementCount() const
 	{
 		return iElementCount;
+	}
+
+	UINT64 getElementSize() const
+	{
+		return iElementSizeInBytes;
 	}
 
 	ID3D12Resource* getResource() const

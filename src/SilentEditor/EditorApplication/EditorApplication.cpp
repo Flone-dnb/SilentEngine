@@ -23,7 +23,14 @@ void EditorApplication::onRun()
 
 	// If you will use camera roll (roll axis), use setDontFlipCamera() to false.
 
+	SGlobalVisualSettings s = getGlobalVisualSettings();
+	s.vAmbientLightRGB = SVector(1.0f, 1.0f, 1.0f);
+	setGlobalVisualSettings(s);
 
+
+	MyContainer* pMyContainer = new MyContainer("MyContainer");
+
+	getCurrentLevel()->spawnContainerInLevel(pMyContainer);
 }
 
 void EditorApplication::onMouseMove(int iMouseXMove, int iMouseYMove)

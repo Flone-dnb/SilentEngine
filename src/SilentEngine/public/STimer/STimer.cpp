@@ -108,7 +108,7 @@ double STimer::getElapsedTimeInMS()
 {
 	if (bRunning)
 	{
-		double dTimeElapsedInMS = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now() - startTime).count() / 1000000.0;
+		double dTimeElapsedInMS = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - startTime).count();
 
 		return dTimeElapsedInMS - dTimeInPauseInMS;
 	}
@@ -177,7 +177,7 @@ void STimer::unpause()
 	{
 		std::chrono::time_point<std::chrono::steady_clock> unpauseTime = std::chrono::steady_clock::now();
 
-		dTimeInPauseInMS += std::chrono::duration_cast<std::chrono::nanoseconds>(unpauseTime - pauseTime).count() / 1000000.0;
+		dTimeInPauseInMS += std::chrono::duration_cast<std::chrono::milliseconds>(unpauseTime - pauseTime).count();
 
 		bRunning = true;
 	}

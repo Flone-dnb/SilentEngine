@@ -88,7 +88,7 @@ float SGameTimer::getTimeElapsedInSec() const
 
 		__int64 iPassedCounts = (iCurrentTime - iPausedTime) - iResetTime;
 
-		return static_cast<float>(iPassedCounts * dSecondsPerCount);
+		return static_cast<double>(iPassedCounts * dSecondsPerCount);
 	}
 }
 

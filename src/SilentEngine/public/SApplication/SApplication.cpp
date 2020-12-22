@@ -23,7 +23,7 @@ namespace fs = std::filesystem;
 #pragma comment(lib, "dxguid.lib")
 #endif
 
-#include "SilentEngine/Private/DDSTextureLoader.h"
+#pragma comment(lib, "Winmm.lib")
 
 // Custom
 #include "SilentEngine/Private/SError/SError.h"
@@ -35,6 +35,7 @@ namespace fs = std::filesystem;
 #include "SilentEngine/Public/EntityComponentSystem/SRuntimeMeshComponent/SRuntimeMeshComponent.h"
 #include "SilentEngine/Private/SShader/SShader.h"
 #include "SilentEngine/Private/SMiscHelpers/SMiscHelpers.h"
+#include "SilentEngine/Private/DDSTextureLoader.h"
 
 
 SApplication* SApplication::pApp = nullptr;
@@ -349,7 +350,6 @@ STextureHandle SApplication::loadTextureFromDiskToGPU(std::string sTextureName, 
 
 	// See if the file format is .dds.
 
-	// (use ISO C++17 Standard for no errors on MSVC 2019 toolset)
 	if (fs::path(sPathToTexture).extension().string() != ".dds")
 	{
 		bErrorOccurred = true;
@@ -640,7 +640,6 @@ SShader* SApplication::compileCustomShader(const std::wstring& sPathToShaderFile
 
 	// See if the file format is .dds.
 
-	// (use ISO C++17 Standard for no errors on MSVC 2019 toolset)
 	if (fs::path(sPathToShaderFile).extension().string() != ".hlsl")
 	{
 		return nullptr;
@@ -2490,11 +2489,7 @@ void SApplication::draw()
 
 	// Render pass cb.
 
-	int iRenderPassCBVIndex = iRenderPassCBVOffset + iCurrentFrameResourceIndex;
-	auto renderPassCBVHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(pCBVSRVUAVHeap->GetGPUDescriptorHandleForHeapStart());
-	renderPassCBVHandle.Offset(iRenderPassCBVIndex, iCBVSRVUAVDescriptorSize);
-
-	pCommandList->SetGraphicsRootDescriptorTable(0, renderPassCBVHandle);
+	pCommandList->SetGraphicsRootConstantBufferView(0, pCurrentFrameResource->pRenderPassCB.get()->getResource()->GetGPUVirtualAddress());
 
 
 
@@ -2775,7 +2770,6 @@ void SApplication::drawComponent(SComponent* pComponent)
 		pCommandList->IASetPrimitiveTopology(pComponent->getRenderData()->primitiveTopologyType);
 
 
-		size_t iObjCount = roundUp(iActualObjectCBCount, OBJECT_CB_RESIZE_MULTIPLE);
 		size_t iMaterialCount = roundUp(vRegisteredMaterials.size(), OBJECT_CB_RESIZE_MULTIPLE);
 		size_t iTextureCount = vLoadedTextures.size();
 
@@ -2815,7 +2809,7 @@ void SApplication::drawComponent(SComponent* pComponent)
 
 		if (bHasTexture)
 		{
-			heapHandle.Offset(iRenderPassCBVOffset + iFrameResourcesCount + tex.pRefToTexture->iTexSRVHeapIndex, iCBVSRVUAVDescriptorSize);
+			heapHandle.Offset(iPerFrameResEndOffset + tex.pRefToTexture->iTexSRVHeapIndex, iCBVSRVUAVDescriptorSize);
 			pCommandList->SetGraphicsRootDescriptorTable(3, heapHandle);
 		}
 
@@ -2823,11 +2817,9 @@ void SApplication::drawComponent(SComponent* pComponent)
 
 		// Object descriptor table.
 
-		UINT iCBVIndex = iCurrentFrameResourceIndex * (iObjCount + iMaterialCount) + pComponent->getRenderData()->iObjCBIndex;
-		auto cbvHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(pCBVSRVUAVHeap->GetGPUDescriptorHandleForHeapStart());
-		cbvHandle.Offset(iCBVIndex, iCBVSRVUAVDescriptorSize);
-
-		pCommandList->SetGraphicsRootDescriptorTable(1, cbvHandle);
+		pCommandList->SetGraphicsRootConstantBufferView(1,
+			pCurrentFrameResource->pObjectsCB.get()->getResource()->GetGPUVirtualAddress() +
+			pComponent->getRenderData()->iObjCBIndex * pCurrentFrameResource->pObjectsCB->getElementSize());
 
 
 
@@ -2840,11 +2832,13 @@ void SApplication::drawComponent(SComponent* pComponent)
 			iMatCBIndex = pComponent->meshData.getMeshMaterial()->iMatCBIndex;
 		}
 
-		iCBVIndex = iObjCount + iCurrentFrameResourceIndex * (iObjCount + iMaterialCount) + iMatCBIndex;
-		cbvHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(pCBVSRVUAVHeap->GetGPUDescriptorHandleForHeapStart());
-		cbvHandle.Offset(iCBVIndex, iCBVSRVUAVDescriptorSize);
+		/*UINT iCBVIndex = iCurrentFrameResourceIndex * iMaterialCount + iMatCBIndex;
+		auto cbvHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(pCBVSRVUAVHeap->GetGPUDescriptorHandleForHeapStart());
+		cbvHandle.Offset(iCBVIndex, iCBVSRVUAVDescriptorSize);*/
 
-		pCommandList->SetGraphicsRootDescriptorTable(2, cbvHandle);
+		pCommandList->SetGraphicsRootConstantBufferView(2,
+			pCurrentFrameResource->pMaterialCB.get()->getResource()->GetGPUVirtualAddress()
+			+ iMatCBIndex * pCurrentFrameResource->pMaterialCB->getElementSize());
 
 
 
@@ -3640,19 +3634,16 @@ bool SApplication::createRTVAndDSVDescriptorHeaps()
 
 bool SApplication::createCBVSRVUAVHeap()
 {
-	size_t iObjCount = roundUp(iActualObjectCBCount, OBJECT_CB_RESIZE_MULTIPLE); // for SObjectConstants
-	iObjCount += roundUp(vRegisteredMaterials.size(), OBJECT_CB_RESIZE_MULTIPLE); // for SMaterialConstants
-
+	//size_t iDescCount = roundUp(vRegisteredMaterials.size(), OBJECT_CB_RESIZE_MULTIPLE); // for SMaterialConstants
 
 	// new stuff per frame resource goes here
 
 
-	// Each frame resource contains N objects, so we need (iFrameResourcesCount * N)
-	// + 1 for SRenderPassConstants per frame resource.
-	UINT iDescriptorCount = (iObjCount + 1) * iFrameResourcesCount;
+	//UINT iDescriptorCount = iDescCount * iFrameResourcesCount;
+	UINT iDescriptorCount = 0;
 
-	// Save an offset to the start of the render pass CBVs.
-	iRenderPassCBVOffset = iObjCount * iFrameResourcesCount;
+
+	iPerFrameResEndOffset = iDescriptorCount;
 
 
 	iDescriptorCount += vLoadedTextures.size(); // one SRV per texture
@@ -3680,93 +3671,42 @@ bool SApplication::createCBVSRVUAVHeap()
 
 void SApplication::createViews()
 {
-	UINT iObjectConstantBufferSizeInBytes = SMath::makeMultipleOf256(sizeof(SObjectConstants));
+	//size_t iMaterialCount = roundUp(vRegisteredMaterials.size(), OBJECT_CB_RESIZE_MULTIPLE);
 
-	size_t iObjectCount   = roundUp(iActualObjectCBCount, OBJECT_CB_RESIZE_MULTIPLE);
-	size_t iMaterialCount = roundUp(vRegisteredMaterials.size(), OBJECT_CB_RESIZE_MULTIPLE);
-	size_t iTextureCount  = vLoadedTextures.size();
-
-	// Need (iFrameResourcesCount * iObjectCount) CBVs.
-	for (int iFrameIndex = 0; iFrameIndex < iFrameResourcesCount; iFrameIndex++)
-	{
-		ID3D12Resource* pObjectsCB = vFrameResources[iFrameIndex]->pObjectsCB->getResource();
-
-		for (int i = 0; i < iObjectCount; i++)
-		{
-			D3D12_GPU_VIRTUAL_ADDRESS currentObjectConstantBufferAddress = pObjectsCB->GetGPUVirtualAddress();
-
-			// Offset to the ith object constant buffer in the buffer.
-			currentObjectConstantBufferAddress += i * iObjectConstantBufferSizeInBytes;
-
-			// Offset to the object CBV in the descriptor heap.
-			int iIndexInHeap = iFrameIndex * (iObjectCount + iMaterialCount) + i;
-			auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(pCBVSRVUAVHeap->GetCPUDescriptorHandleForHeapStart());
-			handle.Offset(iIndexInHeap, iCBVSRVUAVDescriptorSize);
-
-			D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc;
-			cbvDesc.BufferLocation = currentObjectConstantBufferAddress;
-			cbvDesc.SizeInBytes = iObjectConstantBufferSizeInBytes;
-
-			pDevice->CreateConstantBufferView(&cbvDesc, handle);
-		}
-	}
+	//UINT iMaterialCBSizeInBytes = SMath::makeMultipleOf256(sizeof(SMaterialConstants));
 
 
+	//for (int iFrameIndex = 0; iFrameIndex < iFrameResourcesCount; iFrameIndex++)
+	//{
+	//	ID3D12Resource* pMaterialCB = vFrameResources[iFrameIndex]->pMaterialCB->getResource();
 
-	UINT iMaterialCBSizeInBytes = SMath::makeMultipleOf256(sizeof(SMaterialConstants));
+	//	for (int i = 0; i < iMaterialCount; i++)
+	//	{
+	//		D3D12_GPU_VIRTUAL_ADDRESS currentMaterialConstantBufferAddress = pMaterialCB->GetGPUVirtualAddress();
 
-	// Need (iFrameResourcesCount * iMaterialCount) CBVs.
-	for (int iFrameIndex = 0; iFrameIndex < iFrameResourcesCount; iFrameIndex++)
-	{
-		ID3D12Resource* pMaterialCB = vFrameResources[iFrameIndex]->pMaterialCB->getResource();
+	//		// Offset to the ith material constant buffer in the buffer.
+	//		currentMaterialConstantBufferAddress += i * iMaterialCBSizeInBytes;
 
-		for (int i = 0; i < iMaterialCount; i++)
-		{
-			D3D12_GPU_VIRTUAL_ADDRESS currentMaterialConstantBufferAddress = pMaterialCB->GetGPUVirtualAddress();
+	//		// Offset to the material CBV in the descriptor heap.
+	//		int iIndexInHeap = iFrameIndex * iMaterialCount + i;
+	//		auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(pCBVSRVUAVHeap->GetCPUDescriptorHandleForHeapStart());
+	//		handle.Offset(iIndexInHeap, iCBVSRVUAVDescriptorSize);
 
-			// Offset to the ith material constant buffer in the buffer.
-			currentMaterialConstantBufferAddress += i * iMaterialCBSizeInBytes;
+	//		D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc;
+	//		cbvDesc.BufferLocation = currentMaterialConstantBufferAddress;
+	//		cbvDesc.SizeInBytes = iMaterialCBSizeInBytes;
 
-			// Offset to the material CBV in the descriptor heap.
-			int iIndexInHeap = iObjectCount + iFrameIndex * (iObjectCount + iMaterialCount) + i;
-			auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(pCBVSRVUAVHeap->GetCPUDescriptorHandleForHeapStart());
-			handle.Offset(iIndexInHeap, iCBVSRVUAVDescriptorSize);
-
-			D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc;
-			cbvDesc.BufferLocation = currentMaterialConstantBufferAddress;
-			cbvDesc.SizeInBytes = iMaterialCBSizeInBytes;
-
-			pDevice->CreateConstantBufferView(&cbvDesc, handle);
-		}
-	}
+	//		pDevice->CreateConstantBufferView(&cbvDesc, handle);
+	//	}
+	//}
 
 
-	UINT iRenderPassCBSizeInBytes = SMath::makeMultipleOf256(sizeof(SRenderPassConstants));
-
-	// Need one descriptor for render pass constants per frame resource.
-	for (int iFrameIndex = 0; iFrameIndex < iFrameResourcesCount; iFrameIndex++)
-	{
-		ID3D12Resource* pRenderPassCB = vFrameResources[iFrameIndex]->pRenderPassCB->getResource();
-
-		D3D12_GPU_VIRTUAL_ADDRESS renderPassCBAddress = pRenderPassCB->GetGPUVirtualAddress();
-
-		// Offset in the descriptor heap.
-		int iIndexInHeap = iRenderPassCBVOffset + iFrameIndex;
-		auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(pCBVSRVUAVHeap->GetCPUDescriptorHandleForHeapStart());
-		handle.Offset(iIndexInHeap, iCBVSRVUAVDescriptorSize);
-
-		D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc;
-		cbvDesc.BufferLocation = renderPassCBAddress;
-		cbvDesc.SizeInBytes = iRenderPassCBSizeInBytes;
-
-		pDevice->CreateConstantBufferView(&cbvDesc, handle);
-	}
-
+	size_t iTextureCount = vLoadedTextures.size();
 
 	// Need one SRV per loaded texture.
 	for (size_t i = 0; i < vLoadedTextures.size(); i++)
 	{
-		int iIndexInHeap = iRenderPassCBVOffset + iFrameResourcesCount + i;
+		int iIndexInHeap = iPerFrameResEndOffset + i;
 		auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(pCBVSRVUAVHeap->GetCPUDescriptorHandleForHeapStart());
 
 		handle.Offset(iIndexInHeap, iCBVSRVUAVDescriptorSize);
@@ -3789,7 +3729,7 @@ void SApplication::createViews()
 	{
 		// Need 2 SRV & 2 UAV for blur.
 
-		int iIndexInHeap = iRenderPassCBVOffset + iFrameResourcesCount + iTextureCount;
+		int iIndexInHeap = iPerFrameResEndOffset + iTextureCount;
 
 		auto cpuHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(pCBVSRVUAVHeap->GetCPUDescriptorHandleForHeapStart());
 		cpuHandle.Offset(iIndexInHeap, iCBVSRVUAVDescriptorSize);
@@ -3805,7 +3745,7 @@ void SApplication::createFrameResources()
 {
 	for (int i = 0; i < iFrameResourcesCount; i++)
 	{
-		vFrameResources.push_back(std::make_unique<SFrameResource>(pDevice.Get(), 1, 0));
+		vFrameResources.push_back(std::make_unique<SFrameResource>(pDevice.Get(), 0));
 	}
 }
 
@@ -3813,26 +3753,17 @@ bool SApplication::createRootSignature()
 {
 	// The root signature defines the resources the shader programs expect.
 
-	CD3DX12_DESCRIPTOR_RANGE cbvTable0;
-	cbvTable0.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0); // cbRenderPass
-
-	CD3DX12_DESCRIPTOR_RANGE cbvTable1;
-	cbvTable1.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1); // cbObject
-
-	CD3DX12_DESCRIPTOR_RANGE cbvTable2;
-	cbvTable2.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 2); // cbMaterial
-
-	CD3DX12_DESCRIPTOR_RANGE srvTable0;
-	srvTable0.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0); // srv
+	CD3DX12_DESCRIPTOR_RANGE texTable;
+	texTable.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
 
 	// Root parameter can be a table, root descriptor or root constants.
 	CD3DX12_ROOT_PARAMETER slotRootParameter[4];
 
 	// Perfomance TIP: Order from most frequent to least frequent.
-	slotRootParameter[0].InitAsDescriptorTable(1, &cbvTable0); // cbRenderPass
-	slotRootParameter[1].InitAsDescriptorTable(1, &cbvTable1); // cbObject
-	slotRootParameter[2].InitAsDescriptorTable(1, &cbvTable2); // cbMaterial
-	slotRootParameter[3].InitAsDescriptorTable(1, &srvTable0, D3D12_SHADER_VISIBILITY_PIXEL); // srv
+	slotRootParameter[0].InitAsConstantBufferView(0); // cbRenderPass
+	slotRootParameter[1].InitAsConstantBufferView(1); // cbObject
+	slotRootParameter[2].InitAsConstantBufferView(2); // cbMaterial
+	slotRootParameter[3].InitAsDescriptorTable(1, &texTable, D3D12_SHADER_VISIBILITY_PIXEL); // textures
 
 	// Static samples don't need a heap.
 	auto staticSamples = getStaticSamples();
@@ -4889,6 +4820,33 @@ bool SApplication::doesComputeShaderExists(SComputeShader* pShader)
 	return false;
 }
 
+bool SApplication::nanosleep(long long ns)
+{
+	ns /= 100;
+
+	HANDLE timer;
+	LARGE_INTEGER li;
+
+	if (!(timer = CreateWaitableTimer(NULL, TRUE, NULL)))
+	{
+		return true;
+	}
+		
+
+	li.QuadPart = -ns;
+	if (!SetWaitableTimer(timer, &li, 0, NULL, NULL, FALSE))
+	{
+		CloseHandle(timer);
+		return true;
+	}
+
+	WaitForSingleObject(timer, INFINITE);
+
+	CloseHandle(timer);
+
+	return false;
+}
+
 SApplication::SApplication(HINSTANCE hInstance)
 {
 	hApplicationInstance = hInstance;
@@ -5491,13 +5449,15 @@ int SApplication::run()
 		bRunCalled = true;
 
 		STimer frameTimer;
-		frameTimer.start();
 		gameTimer.tick();
 
 		update(); // so pCurrentFrameResource will be assigned before onTick()
 		draw();
 
 		onRun();
+
+
+		frameTimer.start();
 
 		while(msg.message != WM_QUIT)
 		{
@@ -5550,7 +5510,10 @@ int SApplication::run()
 
 					if (dDelayBetweenFramesInMS > dTimeToRenderFrameInMS)
 					{
-						Sleep(static_cast<unsigned long>(dDelayBetweenFramesInMS - dTimeToRenderFrameInMS));
+						timeBeginPeriod(5);
+						//Sleep(static_cast<unsigned long>(round(dDelayBetweenFramesInMS - dTimeToRenderFrameInMS)));
+						nanosleep(static_cast<long long>(round((dDelayBetweenFramesInMS - dTimeToRenderFrameInMS) * 1000000)));
+						timeEndPeriod(5);
 					}
 
 					frameTimer.start();
