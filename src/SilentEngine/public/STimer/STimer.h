@@ -86,6 +86,14 @@ public:
 	*/
 	double getElapsedTimeInMS();
 
+	//@@Function
+	/*
+	* desc: returns the time in nanoseconds that has passed since the start() call was made.
+	* return: time in milliseconds that has passed since the start() call was made.
+	* remarks: note that elapsed time will exclude paused time only after the unpause() was called.
+	*/
+	double getElapsedTimeInNS();
+
 	bool isTimerRunning();
 
 private:

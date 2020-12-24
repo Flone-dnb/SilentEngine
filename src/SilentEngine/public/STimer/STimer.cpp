@@ -118,6 +118,20 @@ double STimer::getElapsedTimeInMS()
 	}
 }
 
+double STimer::getElapsedTimeInNS()
+{
+	if (bRunning)
+	{
+		double dTimeElapsedInMS = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now() - startTime).count();
+
+		return dTimeElapsedInMS - dTimeInPauseInMS * 1000000;
+	}
+	else
+	{
+		return 0.0f;
+	}
+}
+
 bool STimer::isTimerRunning()
 {
 	mtxStop.lock();
