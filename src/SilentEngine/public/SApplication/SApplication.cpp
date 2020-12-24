@@ -1332,6 +1332,19 @@ bool SApplication::setScreenResolution(SScreenResolution screenResolution)
 			// Resize the buffers.
 			onResize();
 
+			if (bFullscreen == false)
+			{
+				// Set window to center.
+				RECT rc;
+
+				GetWindowRect(hMainWindow, &rc);
+
+				int xPos = (GetSystemMetrics(SM_CXSCREEN) - rc.right) / 2;
+				int yPos = (GetSystemMetrics(SM_CYSCREEN) - rc.bottom) / 2;
+
+				SetWindowPos(hMainWindow, 0, xPos, yPos, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
+			}
+
 			mtxDraw.unlock();
 		}
 		
