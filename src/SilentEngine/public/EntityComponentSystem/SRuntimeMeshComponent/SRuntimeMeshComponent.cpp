@@ -210,6 +210,13 @@ void SRuntimeMeshComponent::setTextureUVRotation(float fRotation)
 	mtxComponentProps.unlock();
 }
 
+void SRuntimeMeshComponent::setCustomShaderProperty(unsigned int iCustomProperty)
+{
+	renderData.iCustomShaderProperty = iCustomProperty;
+
+	renderData.iUpdateCBInFrameResourceCount = SFRAME_RES_COUNT;
+}
+
 SVector SRuntimeMeshComponent::getTextureUVOffset() const
 {
 	return renderData.getTextureUVOffset();

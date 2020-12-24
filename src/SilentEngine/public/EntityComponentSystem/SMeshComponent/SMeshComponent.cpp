@@ -198,6 +198,13 @@ void SMeshComponent::setTextureUVRotation(float fRotation)
 	mtxComponentProps.unlock();
 }
 
+void SMeshComponent::setCustomShaderProperty(unsigned int iCustomProperty)
+{
+	renderData.iCustomShaderProperty = iCustomProperty;
+
+	renderData.iUpdateCBInFrameResourceCount = SFRAME_RES_COUNT;
+}
+
 SVector SMeshComponent::getTextureUVOffset() const
 {
 	return renderData.getTextureUVOffset();

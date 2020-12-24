@@ -165,6 +165,8 @@ struct SRenderItem
 
 	DirectX::XMFLOAT4X4 vTexTransform = SMath::getIdentityMatrix4x4();
 
+	unsigned int iCustomShaderProperty = 0;
+
 	int iUpdateCBInFrameResourceCount = SFRAME_RES_COUNT;
 
 	size_t iObjCBIndex = 0;

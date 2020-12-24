@@ -2221,6 +2221,7 @@ void SApplication::updateComponentAndChilds(SComponent* pComponent, SUploadBuffe
 			SObjectConstants objConstants;
 			DirectX::XMStoreFloat4x4(&objConstants.vWorld, DirectX::XMMatrixTranspose(world));
 			DirectX::XMStoreFloat4x4(&objConstants.vTexTransform, DirectX::XMMatrixTranspose(texTransform));
+			objConstants.iCustomProperty = pMeshComponent->renderData.iCustomShaderProperty;
 
 			pCurrentObjectCB->copyDataToElement(pMeshComponent->renderData.iObjCBIndex, objConstants);
 
@@ -2269,6 +2270,7 @@ void SApplication::updateComponentAndChilds(SComponent* pComponent, SUploadBuffe
 			SObjectConstants objConstants;
 			DirectX::XMStoreFloat4x4(&objConstants.vWorld, DirectX::XMMatrixTranspose(world));
 			DirectX::XMStoreFloat4x4(&objConstants.vTexTransform, DirectX::XMMatrixTranspose(texTransform));
+			objConstants.iCustomProperty = pRuntimeMeshComponent->renderData.iCustomShaderProperty;
 
 			pCurrentObjectCB->copyDataToElement(pRuntimeMeshComponent->renderData.iObjCBIndex, objConstants);
 

@@ -57,6 +57,11 @@ cbuffer cbObject : register(b1)
 {
     float4x4 vWorld; 
     float4x4 vTexTransform;
+	uint iCustomProperty;
+	
+	float pad1obj;
+	float pad2obj;
+	float pad3obj;
 };
 
 cbuffer cbMaterial : register(b2)
@@ -76,7 +81,7 @@ cbuffer cbMaterial : register(b2)
     int bHasDiffuseTexture;
     int bHasNormalTexture;
 	
-	int pad1;
+	int pad1mat;
 };
 
 struct VertexIn

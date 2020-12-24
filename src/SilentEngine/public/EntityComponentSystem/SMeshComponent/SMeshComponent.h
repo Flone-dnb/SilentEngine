@@ -121,6 +121,12 @@ public:
 
 	//@@Function
 	/*
+	* desc: used to set the iCustomProperty member of the object's constant buffer (in HLSL).
+	*/
+	void      setCustomShaderProperty(unsigned int iCustomProperty);
+
+	//@@Function
+	/*
 	* desc: used to retrieve the material of the mesh.
 	* return: valid pointer if the material was assigned before, nullptr otherwise.
 	*/

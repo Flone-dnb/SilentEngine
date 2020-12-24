@@ -25,12 +25,17 @@
 #include "SilentEngine/Public/SVector/SVector.h"
 
 /*
-* remarks: per-object constant buffer data. Every SComponentType::SCT_MESH, SCT_RUNTIME_MESH component has this.
+* remarks: per-object constant buffer data. Every mesh component has this.
 */
 struct SObjectConstants
 {
 	DirectX::XMFLOAT4X4 vWorld = SMath::getIdentityMatrix4x4();
 	DirectX::XMFLOAT4X4 vTexTransform = SMath::getIdentityMatrix4x4();
+	unsigned int iCustomProperty = 0;
+
+	float pad1;
+	float pad2;
+	float pad3;
 };
 
 struct SMaterialConstants
