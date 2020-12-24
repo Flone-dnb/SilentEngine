@@ -1439,6 +1439,14 @@ void SApplication::setWindowTitleText(const std::wstring& sTitleText)
 	}
 }
 
+void SApplication::setInitShowWindowTitleBar(bool bShowTitleBar)
+{
+	if (bInitCalled == false)
+	{
+		bHideTitleBar = !bShowTitleBar;
+	}
+}
+
 SApplication* SApplication::getApp()
 {
 	return pApp;
@@ -3002,9 +3010,8 @@ bool SApplication::createMainWindow()
 	int iWidth  = R.right - R.left;
 	int iHeight = R.bottom - R.top;
 
-
 	hMainWindow = CreateWindow(L"MainWindow", sMainWindowTitle.c_str(), 
-		WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, iWidth, iHeight, 0, 0, hApplicationInstance, 0); 
+		bHideTitleBar ? WS_POPUP : WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, iWidth, iHeight, 0, 0, hApplicationInstance, 0);
 	if( !hMainWindow )
 	{
 		std::wstring sOutputText = L"An error occurred at SApplication::createMainWindow::CreateWindow(). Error code: " + std::to_wstring(GetLastError());
@@ -5578,7 +5585,7 @@ bool SApplication::restoreWindow()
 {
 	if (pApp)
 	{
-		if (pApp->bRunCalled)
+		if (pApp->bInitCalled)
 		{
 			//PostMessage(pApp->hMainWindow, WM_SYSCOMMAND, SC_RESTORE, 0);
 			ShowWindow(pApp->hMainWindow, SW_RESTORE);

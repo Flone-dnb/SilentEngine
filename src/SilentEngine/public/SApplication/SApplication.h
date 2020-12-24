@@ -376,6 +376,12 @@ public:
 		* param "sTitleText": text to set in the window title.
 		*/
 		void            setWindowTitleText                     (const std::wstring& sTitleText);
+		//@@Function
+		/*
+		* desc: used to show/hide window title bar (only visible when fullscreen is disabled).
+		* remarks: title bar is hidden by default. Should be called before init().
+		*/
+		void            setInitShowWindowTitleBar(bool bShowTitleBar);
 
 
 
@@ -1196,6 +1202,7 @@ private:
 	SMouseKey      pressedMouseKey = SMB_NONE;
 	bool           bMouseCursorShown        = true;
 	bool           bRawInputReady           = false;
+	bool           bHideTitleBar            = true;
 	float          fWindowCenterX           = 0;
 	float          fWindowCenterY           = 0;
 

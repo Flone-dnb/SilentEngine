@@ -20,6 +20,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE prevInstance, PSTR cmdLine, in
 	//app.initDisableD3DDebugLayer(); // not recommended, but uncomment for more fps in debug build
 
 	app.setWindowTitleText(L"Silent Editor");
+	app.setInitShowWindowTitleBar(true);
 
 	if (app.init())
 	{
