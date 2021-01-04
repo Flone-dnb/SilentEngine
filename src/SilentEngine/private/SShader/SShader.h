@@ -15,9 +15,13 @@
 #include <wrl.h> // smart pointers
 #include <d3d12.h>
 
+class SCustomShaderResources;
+
 class SShader
 {
 public:
+
+	SCustomShaderResources* getCustomShaderResources();
 
 private:
 
@@ -27,6 +31,13 @@ private:
 	SShader(const std::wstring& sPathToShaderFile);
 	SShader(const SShader&) = delete;
 	SShader& operator= (const SShader&) = delete;
+
+
+	void setCustomShaderResources(SCustomShaderResources* pCustomShaderResources);
+
+
+	SCustomShaderResources* pCustomShaderResources = nullptr;
+
 
 	std::wstring sPathToShaderFile;
 

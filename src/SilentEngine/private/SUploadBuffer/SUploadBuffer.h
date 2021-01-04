@@ -37,6 +37,8 @@ public:
 			iElementSizeInBytes = SMath::makeMultipleOf256(sizeof(T));
 		}
 
+		this->iElementCount = iElementCount;
+
 		HRESULT hresult = pDevice->CreateCommittedResource(
 			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
 			D3D12_HEAP_FLAG_NONE,

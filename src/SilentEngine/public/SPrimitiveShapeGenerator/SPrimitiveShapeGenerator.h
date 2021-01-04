@@ -26,9 +26,10 @@ The struct represents the vertex structure used by the shaders.
 */
 struct SVertex
 {
-	DirectX::XMFLOAT3 vPos; // 3 float values
-	DirectX::XMFLOAT3 vNormal; // 3 float values
-	DirectX::XMFLOAT2 vUV; // 2 float values
+	DirectX::XMFLOAT3 vPos;
+	DirectX::XMFLOAT3 vNormal;
+	DirectX::XMFLOAT2 vUV;
+	DirectX::XMFLOAT4 vCustomVec4;
 };
 
 //@@Struct
@@ -90,6 +91,64 @@ struct SMeshVertex
 		this->vUV       = {fU, fV};
 	}
 
+	void setPosition(const SVector& vPosition)
+	{
+		this->vPosition = { vPosition.getX(), vPosition.getY(), vPosition.getZ() };
+	}
+
+	void setNormal(const SVector& vNormal)
+	{
+		this->vNormal = { vNormal.getX(), vNormal.getY(), vNormal.getZ() };
+	}
+
+	void setTangent(const SVector& vTangent)
+	{
+		this->vTangent = { vTangent.getX(), vTangent.getY(), vTangent.getZ() };
+	}
+
+	void setUV(const SVector& vUV)
+	{
+		this->vUV = { vUV.getX(), vUV.getY()};
+	}
+
+	//@@Function
+	/*
+	* desc: used to set the custom array of 4 floats that can be used in HLSL.
+	*/
+	void setCustomVec4(const SVector& vVec4)
+	{
+		vCustomVec4 = { vVec4.getX(), vVec4.getY(), vVec4.getZ(), vVec4.getW() };
+	}
+
+	SVector getPosition()
+	{
+		return SVector(vPosition.x, vPosition.y, vPosition.z);
+	}
+
+	SVector getNormal()
+	{
+		return SVector(vNormal.x, vNormal.y, vNormal.z);
+	}
+
+	SVector getTangent()
+	{
+		return SVector(vTangent.x, vTangent.y, vTangent.z);
+	}
+
+	SVector getUV()
+	{
+		return SVector(vUV.x, vUV.y);
+	}
+
+	//@@Function
+	/*
+	* desc: used to get the custom array of 4 floats that can be used in HLSL.
+	*/
+	SVector getCustomVec4() const
+	{
+		return SVector(vCustomVec4.x, vCustomVec4.y, vCustomVec4.z, vCustomVec4.w);
+	}
+
 private:
 
 	friend class SMeshData;
@@ -99,6 +158,7 @@ private:
 	DirectX::XMFLOAT3 vNormal;
 	DirectX::XMFLOAT3 vTangent;
 	DirectX::XMFLOAT2 vUV;
+	DirectX::XMFLOAT4 vCustomVec4;
 };
 
 
@@ -268,6 +328,7 @@ struct SMeshData
 			vertex.vPos = vVertices[i].vPosition;
 			vertex.vNormal = vVertices[i].vNormal;
 			vertex.vUV = vVertices[i].vUV;
+			vertex.vCustomVec4 = vVertices[i].vCustomVec4;
 
 			vShaderVertices.push_back(vertex);
 		}

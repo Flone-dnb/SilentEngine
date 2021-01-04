@@ -158,9 +158,18 @@ bool SRuntimeMeshComponent::setMeshMaterial(SMaterial* pMaterial)
 {
 	if (pMaterial->bRegistered)
 	{
-		meshData.setMeshMaterial(pMaterial);
+		if (pMaterial->bUsedInBundle)
+		{
+			SError::showErrorMessageBox(L"SRuntimeMeshComponent::setMeshMaterial", L"The given material is used in a bundle. It cannot be used here.");
 
-		return false;
+			return true;
+		}
+		else
+		{
+			meshData.setMeshMaterial(pMaterial);
+
+			return false;
+		}
 	}
 	else
 	{
@@ -212,9 +221,13 @@ void SRuntimeMeshComponent::setTextureUVRotation(float fRotation)
 
 void SRuntimeMeshComponent::setCustomShaderProperty(unsigned int iCustomProperty)
 {
+	mtxComponentProps.lock();
+
 	renderData.iCustomShaderProperty = iCustomProperty;
 
 	renderData.iUpdateCBInFrameResourceCount = SFRAME_RES_COUNT;
+
+	mtxComponentProps.unlock();
 }
 
 SVector SRuntimeMeshComponent::getTextureUVOffset() const
@@ -285,7 +298,8 @@ void SRuntimeMeshComponent::createIndexBuffer()
 		pApp->resetCommandList();
 	}
 
-	renderData.iUpdateCBInFrameResourceCount = SFRAME_RES_COUNT;
+	// ?
+	//renderData.iUpdateCBInFrameResourceCount = SFRAME_RES_COUNT;
 
 	renderData.pGeometry->freeUploaders();
 

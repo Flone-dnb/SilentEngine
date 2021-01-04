@@ -5,17 +5,11 @@
 // Refer to the LICENSE file included.
 // ******************************************************************
 
-#pragma once
+#include "SCustomShaderResources.h"
 
+#include "SilentEngine/Public/SApplication/SApplication.h"
 
-// Custom
-#include "SilentEngine/Public/EntityComponentSystem/SContainer/SContainer.h"
-
-class MyContainer : public SContainer
+std::vector<SMaterial*>* SCustomShaderResources::getMaterialBundle()
 {
-public:
-
-	MyContainer(const std::string& sContainerName);
-	virtual ~MyContainer() override;
-};
-
+	return &vMaterials;
+}

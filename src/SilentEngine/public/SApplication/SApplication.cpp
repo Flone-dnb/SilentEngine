@@ -196,8 +196,11 @@ bool SApplication::unregisterMaterial(const std::string& sMaterialName)
 	{
 		if (vRegisteredMaterials[i]->getMaterialName() == sMaterialName)
 		{
-			bRegistered = true;
-			break;
+			if (vRegisteredMaterials[i]->bUsedInBundle == false)
+			{
+				bRegistered = true;
+				break;
+			}
 		}
 	}
 
@@ -621,7 +624,8 @@ bool SApplication::unloadTextureFromGPU(STextureHandle& textureHandle)
 	return false;
 }
 
-SShader* SApplication::compileCustomShader(const std::wstring& sPathToShaderFile)
+SShader* SApplication::compileCustomShader(const std::wstring& sPathToShaderFile, const std::vector<std::string>& vCustomMaterialNames,
+	bool bWillUseTextures, SCustomShaderResources** pOutCustomResources)
 {
 	// See if the file exists.
 
@@ -638,11 +642,39 @@ SShader* SApplication::compileCustomShader(const std::wstring& sPathToShaderFile
 
 
 
-	// See if the file format is .dds.
+	// See if the file format is .hlsl.
 
 	if (fs::path(sPathToShaderFile).extension().string() != ".hlsl")
 	{
 		return nullptr;
+	}
+
+
+	std::vector<SMaterial*> vCustomMaterials;
+	if (vCustomMaterialNames.size() > 0)
+	{
+		bool bError = false;
+
+		for (size_t i = 0; i < vCustomMaterialNames.size(); i++)
+		{
+			vCustomMaterials.push_back(registerMaterialBundleElement(vCustomMaterialNames[i], bError));
+
+			if (bError)
+			{
+				// last vMaterial element is nullptr
+				if (vCustomMaterials.size() > 1)
+				{
+					for (size_t i = 0; i < vCustomMaterials.size() - 1; i++)
+					{
+						delete vCustomMaterials[i];
+					}
+				}
+
+				vCustomMaterials.clear();
+
+				return nullptr;
+			}
+		}
 	}
 
 
@@ -654,6 +686,20 @@ SShader* SApplication::compileCustomShader(const std::wstring& sPathToShaderFile
 
 
 	SShader* pNewShader = new SShader(sPathToShaderFile);
+	if (vCustomMaterials.size() > 0)
+	{
+		pNewShader->pCustomShaderResources = new SCustomShaderResources();
+		pNewShader->pCustomShaderResources->vMaterials = vCustomMaterials;
+
+		createRootSignature(pNewShader->pCustomShaderResources, bWillUseTextures);
+
+		mtxMaterial.lock();
+		pNewShader->pCustomShaderResources->vFrameResourceBundles =
+			createBundledMaterialResource(pNewShader, pNewShader->pCustomShaderResources->vMaterials.size());
+		mtxMaterial.unlock();
+
+		*pOutCustomResources = pNewShader->pCustomShaderResources;
+	}
 
 	pNewShader->pVS = SMiscHelpers::compileShader(sPathToShaderFile, nullptr, "VS", "vs_5_1", bCompileShadersInRelease);
 	pNewShader->pPS = SMiscHelpers::compileShader(sPathToShaderFile, nullptr, "PS", "ps_5_1", bCompileShadersInRelease);
@@ -2179,14 +2225,66 @@ void SApplication::update()
 		CloseHandle(eventHandle);
 	}
 
+	updateMaterials();
 	updateObjectCBs();
 	updateMainPassCB();
+}
+
+void SApplication::updateMaterials()
+{
+	mtxMaterial.lock();
+
+	for (size_t i = 0; i < vRegisteredMaterials.size(); i++)
+	{
+		SMaterial* pMaterial = vRegisteredMaterials[i];
+
+		pMaterial->mtxUpdateMat.lock();
+
+		if (pMaterial->iUpdateCBInFrameResourceCount > 0)
+		{
+			updateMaterialInFrameResource(pMaterial);
+		}
+
+		pMaterial->mtxUpdateMat.unlock();
+	}
+
+
+	// Update material bundles.
+	if (vFrameResources[iCurrentFrameResourceIndex]->vMaterialBundles.size() > 0)
+	{
+		mtxShader.lock();
+
+		for (size_t i = 0; i < vFrameResources[iCurrentFrameResourceIndex]->vMaterialBundles.size(); i++)
+		{
+			for (size_t j = 0; j <
+			vFrameResources[iCurrentFrameResourceIndex]->vMaterialBundles[i]->pShaderUsingThisResource->pCustomShaderResources->vMaterials.size(); j++)
+			{
+				SMaterial* pMaterial =
+					vFrameResources[iCurrentFrameResourceIndex]->vMaterialBundles[i]->pShaderUsingThisResource->pCustomShaderResources->vMaterials[j];
+
+				pMaterial->mtxUpdateMat.lock();
+
+				if (pMaterial->iUpdateCBInFrameResourceCount > 0)
+				{
+					updateMaterialInFrameResource(pMaterial,
+					vFrameResources[iCurrentFrameResourceIndex]->vMaterialBundles[i]->
+						pShaderUsingThisResource->pCustomShaderResources->vFrameResourceBundles[iCurrentFrameResourceIndex],
+						j);
+				}
+
+				pMaterial->mtxUpdateMat.unlock();
+			}
+		}
+
+		mtxShader.unlock();
+	}
+
+	mtxMaterial.unlock();
 }
 
 void SApplication::updateObjectCBs()
 {
 	SUploadBuffer<SObjectConstants>* pCurrentObjectCB  = pCurrentFrameResource->pObjectsCB.get();
-	SUploadBuffer<SMaterialConstants>* pCurrentMaterialCB = pCurrentFrameResource->pMaterialCB.get();
 
 	mtxSpawnDespawn.lock();
 
@@ -2197,15 +2295,14 @@ void SApplication::updateObjectCBs()
 	{
 		for (size_t j = 0; j < pvRenderableContainers->operator[](i)->vComponents.size(); j++)
 		{
-			updateComponentAndChilds(pvRenderableContainers->operator[](i)->vComponents[j], pCurrentObjectCB, pCurrentMaterialCB);
+			updateComponentAndChilds(pvRenderableContainers->operator[](i)->vComponents[j], pCurrentObjectCB);
 		}
 	}
 
 	mtxSpawnDespawn.unlock();
 }
 
-void SApplication::updateComponentAndChilds(SComponent* pComponent, SUploadBuffer<SObjectConstants>* pCurrentObjectCB,
-	SUploadBuffer<SMaterialConstants>* pCurrentMaterialCB)
+void SApplication::updateComponentAndChilds(SComponent* pComponent, SUploadBuffer<SObjectConstants>* pCurrentObjectCB)
 {
 	if (pComponent->componentType == SCT_MESH)
 	{
@@ -2282,48 +2379,11 @@ void SApplication::updateComponentAndChilds(SComponent* pComponent, SUploadBuffe
 	}
 
 
-	if (pComponent->componentType == SCT_MESH || pComponent->componentType == SCT_RUNTIME_MESH)
-	{
-		mtxMaterial.lock();
-
-		pComponent->mtxComponentProps.lock();
-		mtxUpdateMat.lock();
-
-		SMaterial* pMaterial = pComponent->meshData.getMeshMaterial();
-
-		if(pMaterial == nullptr)
-		{
-			pMaterial = vRegisteredMaterials[0];
-		}
-
-		if (pMaterial->iUpdateCBInFrameResourceCount > 0)
-		{
-			if (pMaterial->bLastFrameResourceIndexValid)
-			{
-				if (pMaterial->iFrameResourceIndexLastUpdated != iCurrentFrameResourceIndex)
-				{
-					updateMaterialInFrameResource(pMaterial, pCurrentMaterialCB);
-				}
-				// else: Already updated for this frame resource. Don't do that again.
-			}
-			else
-			{
-				updateMaterialInFrameResource(pMaterial, pCurrentMaterialCB);
-			}
-		}
-
-		mtxUpdateMat.unlock();
-		pComponent->mtxComponentProps.unlock();
-
-		mtxMaterial.unlock();
-	}
-
-
 	std::vector<SComponent*> vChilds = pComponent->getChildComponents();
 
 	for (size_t i = 0; i < vChilds.size(); i++)
 	{
-		updateComponentAndChilds(pComponent->getChildComponents()[i], pCurrentObjectCB, pCurrentMaterialCB);
+		updateComponentAndChilds(pComponent->getChildComponents()[i], pCurrentObjectCB);
 	}
 }
 
@@ -2706,10 +2766,21 @@ void SApplication::draw()
 
 void SApplication::drawOpaqueComponents()
 {
+	bool bUsingCustomResources = false;
+
 	for (size_t i = 0; i < vOpaqueMeshesByCustomShader.size(); i++)
 	{
 		if (i != 0)
 		{
+			if (vOpaqueMeshesByCustomShader[i].pShader->pCustomShaderResources)
+			{
+				pCommandList->SetGraphicsRootSignature(vOpaqueMeshesByCustomShader[i].pShader->pCustomShaderResources->pCustomRootSignature.Get());
+
+				pCommandList->SetGraphicsRootConstantBufferView(0, pCurrentFrameResource->pRenderPassCB.get()->getResource()->GetGPUVirtualAddress());
+
+				bUsingCustomResources = true;
+			}
+
 			if (bUseFillModeWireframe)
 			{
 				pCommandList->SetPipelineState(vOpaqueMeshesByCustomShader[i].pShader->pOpaqueWireframePSO.Get());
@@ -2724,7 +2795,18 @@ void SApplication::drawOpaqueComponents()
 		{
 			if (vOpaqueMeshesByCustomShader[i].vMeshComponentsWithThisShader[j]->getContainer()->isVisible())
 			{
-				drawComponent(vOpaqueMeshesByCustomShader[i].vMeshComponentsWithThisShader[j]);
+				drawComponent(vOpaqueMeshesByCustomShader[i].vMeshComponentsWithThisShader[j], bUsingCustomResources);
+			}
+		}
+
+		if (i != 0)
+		{
+			if (vOpaqueMeshesByCustomShader[i].pShader->pCustomShaderResources)
+			{
+				pCommandList->SetGraphicsRootSignature(pRootSignature.Get());
+				pCommandList->SetGraphicsRootConstantBufferView(0, pCurrentFrameResource->pRenderPassCB.get()->getResource()->GetGPUVirtualAddress());
+
+				bUsingCustomResources = false;
 			}
 		}
 	}
@@ -2732,10 +2814,21 @@ void SApplication::drawOpaqueComponents()
 
 void SApplication::drawTransparentComponents()
 {
+	bool bUsingCustomResources = false;
+
 	for (size_t i = 0; i < vTransparentMeshesByCustomShader.size(); i++)
 	{
 		if (i != 0)
 		{
+			if (vTransparentMeshesByCustomShader[i].pShader->pCustomShaderResources)
+			{
+				pCommandList->SetGraphicsRootSignature(vTransparentMeshesByCustomShader[i].pShader->pCustomShaderResources->pCustomRootSignature.Get());
+
+				pCommandList->SetGraphicsRootConstantBufferView(0, pCurrentFrameResource->pRenderPassCB.get()->getResource()->GetGPUVirtualAddress());
+
+				bUsingCustomResources = true;
+			}
+
 			if (bUseFillModeWireframe)
 			{
 				pCommandList->SetPipelineState(vTransparentMeshesByCustomShader[i].pShader->pTransparentWireframePSO.Get());
@@ -2757,13 +2850,24 @@ void SApplication::drawTransparentComponents()
 		{
 			if (vTransparentMeshesByCustomShader[i].vMeshComponentsWithThisShader[j]->getContainer()->isVisible())
 			{
-				drawComponent(vTransparentMeshesByCustomShader[i].vMeshComponentsWithThisShader[j]);
+				drawComponent(vTransparentMeshesByCustomShader[i].vMeshComponentsWithThisShader[j], bUsingCustomResources);
+			}
+		}
+
+		if (i != 0)
+		{
+			if (vTransparentMeshesByCustomShader[i].pShader->pCustomShaderResources)
+			{
+				pCommandList->SetGraphicsRootSignature(pRootSignature.Get());
+				pCommandList->SetGraphicsRootConstantBufferView(0, pCurrentFrameResource->pRenderPassCB.get()->getResource()->GetGPUVirtualAddress());
+
+				bUsingCustomResources = false;
 			}
 		}
 	}
 }
 
-void SApplication::drawComponent(SComponent* pComponent)
+void SApplication::drawComponent(SComponent* pComponent, bool bUsingCustomResources)
 {
 	bool bDrawThisComponent = false;
 
@@ -2804,6 +2908,19 @@ void SApplication::drawComponent(SComponent* pComponent)
 
 		STextureHandle tex;
 		bool bHasTexture = false;
+
+		size_t iMatCBIndex = 0;
+
+		if (pComponent->pCustomShader)
+		{
+			if (pComponent->pCustomShader->pCustomShaderResources)
+			{
+				if (pComponent->pCustomShader->pCustomShaderResources->vMaterials[0]->getMaterialProperties().getDiffuseTexture(&tex) == false)
+				{
+					bHasTexture = true;
+				}
+			}
+		}
 
 		if (pComponent->componentType == SCT_MESH)
 		{
@@ -2848,8 +2965,6 @@ void SApplication::drawComponent(SComponent* pComponent)
 
 		// Material descriptor table.
 
-		size_t iMatCBIndex = 0;
-
 		if (pComponent->meshData.getMeshMaterial())
 		{
 			iMatCBIndex = pComponent->meshData.getMeshMaterial()->iMatCBIndex;
@@ -2857,11 +2972,21 @@ void SApplication::drawComponent(SComponent* pComponent)
 
 		/*UINT iCBVIndex = iCurrentFrameResourceIndex * iMaterialCount + iMatCBIndex;
 		auto cbvHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(pCBVSRVUAVHeap->GetGPUDescriptorHandleForHeapStart());
-		cbvHandle.Offset(iCBVIndex, iCBVSRVUAVDescriptorSize);*/
+		cbvHandle.Offset(iCBVIndex, iCBVSRVUAVDescriptorSize);
 
-		pCommandList->SetGraphicsRootConstantBufferView(2,
-			pCurrentFrameResource->pMaterialCB.get()->getResource()->GetGPUVirtualAddress()
-			+ iMatCBIndex * pCurrentFrameResource->pMaterialCB->getElementSize());
+		pCommandList->SetGraphicsRootDescriptorTable(2, cbvHandle);*/
+
+		if (bUsingCustomResources)
+		{
+			pCommandList->SetGraphicsRootShaderResourceView(2,
+				pComponent->pCustomShader->pCustomShaderResources->vFrameResourceBundles[iCurrentFrameResourceIndex]->getResource()->GetGPUVirtualAddress());
+		}
+		else
+		{
+			pCommandList->SetGraphicsRootConstantBufferView(2,
+				pCurrentFrameResource->pMaterialCB.get()->getResource()->GetGPUVirtualAddress()
+				+ iMatCBIndex * pCurrentFrameResource->pMaterialCB->getElementSize());
+		}
 
 
 
@@ -3656,13 +3781,12 @@ bool SApplication::createRTVAndDSVDescriptorHeaps()
 
 bool SApplication::createCBVSRVUAVHeap()
 {
-	//size_t iDescCount = roundUp(vRegisteredMaterials.size(), OBJECT_CB_RESIZE_MULTIPLE); // for SMaterialConstants
+	size_t iDescCount = roundUp(vRegisteredMaterials.size(), OBJECT_CB_RESIZE_MULTIPLE); // for SMaterialConstants
 
 	// new stuff per frame resource goes here
 
 
-	//UINT iDescriptorCount = iDescCount * iFrameResourcesCount;
-	UINT iDescriptorCount = 0;
+	UINT iDescriptorCount = iDescCount * iFrameResourcesCount;
 
 
 	iPerFrameResEndOffset = iDescriptorCount;
@@ -3693,34 +3817,34 @@ bool SApplication::createCBVSRVUAVHeap()
 
 void SApplication::createViews()
 {
-	//size_t iMaterialCount = roundUp(vRegisteredMaterials.size(), OBJECT_CB_RESIZE_MULTIPLE);
+	size_t iMaterialCount = roundUp(vRegisteredMaterials.size(), OBJECT_CB_RESIZE_MULTIPLE);
 
-	//UINT iMaterialCBSizeInBytes = SMath::makeMultipleOf256(sizeof(SMaterialConstants));
+	UINT iMaterialCBSizeInBytes = SMath::makeMultipleOf256(sizeof(SMaterialConstants));
 
 
-	//for (int iFrameIndex = 0; iFrameIndex < iFrameResourcesCount; iFrameIndex++)
-	//{
-	//	ID3D12Resource* pMaterialCB = vFrameResources[iFrameIndex]->pMaterialCB->getResource();
+	for (int iFrameIndex = 0; iFrameIndex < iFrameResourcesCount; iFrameIndex++)
+	{
+		ID3D12Resource* pMaterialCB = vFrameResources[iFrameIndex]->pMaterialCB->getResource();
 
-	//	for (int i = 0; i < iMaterialCount; i++)
-	//	{
-	//		D3D12_GPU_VIRTUAL_ADDRESS currentMaterialConstantBufferAddress = pMaterialCB->GetGPUVirtualAddress();
+		for (int i = 0; i < iMaterialCount; i++)
+		{
+			D3D12_GPU_VIRTUAL_ADDRESS currentMaterialConstantBufferAddress = pMaterialCB->GetGPUVirtualAddress();
 
-	//		// Offset to the ith material constant buffer in the buffer.
-	//		currentMaterialConstantBufferAddress += i * iMaterialCBSizeInBytes;
+			// Offset to the ith material constant buffer in the buffer.
+			currentMaterialConstantBufferAddress += i * iMaterialCBSizeInBytes;
 
-	//		// Offset to the material CBV in the descriptor heap.
-	//		int iIndexInHeap = iFrameIndex * iMaterialCount + i;
-	//		auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(pCBVSRVUAVHeap->GetCPUDescriptorHandleForHeapStart());
-	//		handle.Offset(iIndexInHeap, iCBVSRVUAVDescriptorSize);
+			// Offset to the material CBV in the descriptor heap.
+			int iIndexInHeap = iFrameIndex * iMaterialCount + i;
+			auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(pCBVSRVUAVHeap->GetCPUDescriptorHandleForHeapStart());
+			handle.Offset(iIndexInHeap, iCBVSRVUAVDescriptorSize);
 
-	//		D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc;
-	//		cbvDesc.BufferLocation = currentMaterialConstantBufferAddress;
-	//		cbvDesc.SizeInBytes = iMaterialCBSizeInBytes;
+			D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc;
+			cbvDesc.BufferLocation = currentMaterialConstantBufferAddress;
+			cbvDesc.SizeInBytes = iMaterialCBSizeInBytes;
 
-	//		pDevice->CreateConstantBufferView(&cbvDesc, handle);
-	//	}
-	//}
+			pDevice->CreateConstantBufferView(&cbvDesc, handle);
+		}
+	}
 
 
 	size_t iTextureCount = vLoadedTextures.size();
@@ -3771,12 +3895,19 @@ void SApplication::createFrameResources()
 	}
 }
 
-bool SApplication::createRootSignature()
+bool SApplication::createRootSignature(SCustomShaderResources* pCustomShaderResources, bool bUseTextures)
 {
 	// The root signature defines the resources the shader programs expect.
 
 	CD3DX12_DESCRIPTOR_RANGE texTable;
-	texTable.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+	if (pCustomShaderResources && bUseTextures)
+	{
+		texTable.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, pCustomShaderResources->vMaterials.size(), 0);
+	}
+	else
+	{
+		texTable.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+	}
 
 	// Root parameter can be a table, root descriptor or root constants.
 	CD3DX12_ROOT_PARAMETER slotRootParameter[4];
@@ -3784,7 +3915,16 @@ bool SApplication::createRootSignature()
 	// Perfomance TIP: Order from most frequent to least frequent.
 	slotRootParameter[0].InitAsConstantBufferView(0); // cbRenderPass
 	slotRootParameter[1].InitAsConstantBufferView(1); // cbObject
-	slotRootParameter[2].InitAsConstantBufferView(2); // cbMaterial
+
+	if (pCustomShaderResources)
+	{
+		slotRootParameter[2].InitAsShaderResourceView(0, 1); // materials
+	}
+	else
+	{
+		slotRootParameter[2].InitAsConstantBufferView(2); // cbMaterial
+	}
+
 	slotRootParameter[3].InitAsDescriptorTable(1, &texTable, D3D12_SHADER_VISIBILITY_PIXEL); // textures
 
 	// Static samples don't need a heap.
@@ -3814,12 +3954,25 @@ bool SApplication::createRootSignature()
 	}
 
 
-	hresult = pDevice->CreateRootSignature(
-		0,
-		serializedRootSignature->GetBufferPointer(),
-		serializedRootSignature->GetBufferSize(),
-		IID_PPV_ARGS(&pRootSignature)
-	);
+	if (pCustomShaderResources)
+	{
+		hresult = pDevice->CreateRootSignature(
+			0,
+			serializedRootSignature->GetBufferPointer(),
+			serializedRootSignature->GetBufferSize(),
+			IID_PPV_ARGS(&pCustomShaderResources->pCustomRootSignature)
+		);
+	}
+	else
+	{
+		hresult = pDevice->CreateRootSignature(
+			0,
+			serializedRootSignature->GetBufferPointer(),
+			serializedRootSignature->GetBufferSize(),
+			IID_PPV_ARGS(&pRootSignature)
+		);
+	}
+	
 	if (FAILED(hresult))
 	{
 		SError::showErrorMessageBox(hresult, L"SApplication::createRootSignature::ID3D12Device::CreateRootSignature()");
@@ -3914,7 +4067,8 @@ bool SApplication::createShadersAndInputLayout()
 	{
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "UV", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
+		{ "UV", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+		{ "CUSTOM", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 32, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
 	};
 
 	return false;
@@ -3927,7 +4081,17 @@ bool SApplication::createPSO(SShader* pPSOsForCustomShader)
 	memset(&psoDesc, 0, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
 
 	psoDesc.InputLayout = { vInputLayout.data(), static_cast<UINT>(vInputLayout.size()) };
-	psoDesc.pRootSignature = pRootSignature.Get();
+	if (pPSOsForCustomShader)
+	{
+		if (pPSOsForCustomShader->pCustomShaderResources)
+		{
+			psoDesc.pRootSignature = pPSOsForCustomShader->pCustomShaderResources->pCustomRootSignature.Get();
+		}
+	}
+	else
+	{
+		psoDesc.pRootSignature = pRootSignature.Get();
+	}
 
 	if (pPSOsForCustomShader)
 	{
@@ -4212,7 +4376,9 @@ bool SApplication::executeCommandList()
 	return false;
 }
 
-void SApplication::updateMaterialInFrameResource(SMaterial * pMaterial, SUploadBuffer<SMaterialConstants>* pMaterialCB)
+void SApplication::updateMaterialInFrameResource(SMaterial * pMaterial,
+	SUploadBuffer<SMaterialConstants>* pCustomResource,
+	size_t iElementIndexInResource)
 {
 	SMaterialConstants matConstants;
 
@@ -4234,22 +4400,17 @@ void SApplication::updateMaterialInFrameResource(SMaterial * pMaterial, SUploadB
 	DirectX::XMMATRIX vMatTransform = DirectX::XMLoadFloat4x4(&pMaterial->vMatTransform);
 	DirectX::XMStoreFloat4x4(&matConstants.vMatTransform, DirectX::XMMatrixTranspose(vMatTransform));
 
-
-	pMaterialCB->copyDataToElement(pMaterial->iMatCBIndex, matConstants);
-
-	// Next FrameResource need to be updated too.
-	pMaterial->iUpdateCBInFrameResourceCount--;
-
-	pMaterial->iFrameResourceIndexLastUpdated = iCurrentFrameResourceIndex;
-
-	if (pMaterial->iUpdateCBInFrameResourceCount == 0)
+	if (pCustomResource)
 	{
-		pMaterial->bLastFrameResourceIndexValid = false;
+		pCustomResource->copyDataToElement(iElementIndexInResource, matConstants);
 	}
 	else
 	{
-		pMaterial->bLastFrameResourceIndexValid = true;
+		pCurrentFrameResource->pMaterialCB->copyDataToElement(pMaterial->iMatCBIndex, matConstants);
 	}
+
+	// Next FrameResource need to be updated too.
+	pMaterial->iUpdateCBInFrameResourceCount--;
 }
 
 ID3D12Resource* SApplication::getCurrentBackBufferResource(bool bNonMSAAResource) const
@@ -4416,6 +4577,33 @@ void SApplication::releaseShader(SShader* pShader)
 	if (iLeft != 0)
 	{
 		showMessageBox(L"Error", L"SApplication::releaseShader() error: transparent wireframe pso ref count is not 0.");
+	}
+
+	if (pShader->pCustomShaderResources)
+	{
+		iLeft = pShader->pCustomShaderResources->pCustomRootSignature.Reset();
+
+		if (iLeft != 0)
+		{
+			showMessageBox(L"Error", L"SApplication::releaseShader() error: custom shader resources root signature ref count is not 0.");
+		}
+
+		mtxMaterial.lock();
+
+
+		for (size_t i = 0; i < vFrameResources.size(); i++)
+		{
+			vFrameResources[i]->removeMaterialBundle(pShader);
+		}
+
+		for (size_t i = 0; i < pShader->pCustomShaderResources->vMaterials.size(); i++)
+		{
+			delete pShader->pCustomShaderResources->vMaterials[i];
+		}
+
+		mtxMaterial.unlock();
+
+		delete pShader->pCustomShaderResources;
 	}
 
 	delete pShader;
@@ -4867,6 +5055,40 @@ bool SApplication::nanosleep(long long ns)
 	CloseHandle(timer);
 
 	return false;
+}
+
+std::vector<SUploadBuffer<SMaterialConstants>*> SApplication::createBundledMaterialResource(SShader* pShader, size_t iMaterialsCount)
+{
+	std::vector<SUploadBuffer<SMaterialConstants>*> vResources;
+
+	for (size_t i = 0; i < vFrameResources.size(); i++)
+	{
+		vResources.push_back(vFrameResources[i]->addNewMaterialBundleResource(pShader, iMaterialsCount));
+	}
+
+	return vResources;
+}
+
+SMaterial* SApplication::registerMaterialBundleElement(const std::string& sMaterialName, bool& bErrorOccurred)
+{
+	bErrorOccurred = false;
+
+	if (sMaterialName == "")
+	{
+		SError::showErrorMessageBox(L"SApplication::registerMaterialBundleElement()", L"material name cannot be empty.");
+
+		bErrorOccurred = true;
+
+		return nullptr;
+	}
+
+	SMaterial* pMat = new SMaterial();
+	pMat->sMaterialName = sMaterialName;
+	pMat->bRegistered = true;
+	pMat->bUsedInBundle = true;
+	pMat->iUpdateCBInFrameResourceCount = SFRAME_RES_COUNT;
+
+	return pMat;
 }
 
 SApplication::SApplication(HINSTANCE hInstance)

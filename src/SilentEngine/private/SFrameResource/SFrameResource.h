@@ -135,6 +135,21 @@ struct SGlobalVisualSettings
 	SDistantFog distantFog;
 };
 
+class SShader;
+
+struct SMaterialBundle
+{
+	SMaterialBundle(SShader* pShader, ID3D12Device* pDevice, UINT64 iElementCount, bool bIsCBUFFER)
+	{
+		pResource = std::make_unique<SUploadBuffer<SMaterialConstants>>(pDevice, iElementCount, bIsCBUFFER);
+		this->pShaderUsingThisResource = pShader;
+	}
+
+	std::unique_ptr<SUploadBuffer<SMaterialConstants>> pResource;
+
+	SShader* pShaderUsingThisResource;
+};
+
 class SFrameResource
 {
 public:
@@ -155,6 +170,9 @@ public:
 	size_t addNewMaterialCB     (bool* pbCBWasExpanded);
 	void   removeMaterialCB     (size_t iCBIndex, bool* pbCBWasResized);
 
+	SUploadBuffer<SMaterialConstants>* addNewMaterialBundleResource(SShader* pShader, size_t iResourceCount);
+	void                               removeMaterialBundle(SShader* pShader);
+
 	// returns index of new buffer in vRuntimeMeshVertexBuffers
 	size_t addRuntimeMeshVertexBuffer      (size_t iVertexCount);
 	void   removeRuntimeMeshVertexBuffer   (size_t iVertexBufferIndex);
@@ -170,6 +188,7 @@ public:
 	std::unique_ptr<SUploadBuffer<SRenderPassConstants>> pRenderPassCB = nullptr;
 	std::unique_ptr<SUploadBuffer<SObjectConstants>>     pObjectsCB    = nullptr;
 	std::unique_ptr<SUploadBuffer<SMaterialConstants>>   pMaterialCB   = nullptr;
+	std::vector<std::unique_ptr<SMaterialBundle>>        vMaterialBundles;
 	std::vector<std::unique_ptr<SUploadBuffer<SVertex>>> vRuntimeMeshVertexBuffers;
 
 	ID3D12Device* pDevice = nullptr;

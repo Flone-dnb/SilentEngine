@@ -144,6 +144,26 @@ void SFrameResource::removeMaterialCB(size_t iCBIndex, bool * pbCBWasResized)
 	iMaterialCBActualElementCount--;
 }
 
+SUploadBuffer<SMaterialConstants>* SFrameResource::addNewMaterialBundleResource(SShader* pShader, size_t iResourceCount)
+{
+	vMaterialBundles.push_back(std::make_unique<SMaterialBundle>(pShader, pDevice, iResourceCount, false));
+
+	return vMaterialBundles.back().get()->pResource.get();
+}
+
+void SFrameResource::removeMaterialBundle(SShader* pShader)
+{
+	for (size_t i = 0; i < vMaterialBundles.size(); i++)
+	{
+		if (vMaterialBundles[i]->pShaderUsingThisResource == pShader)
+		{
+			vMaterialBundles.erase(vMaterialBundles.begin() + i);
+
+			break;
+		}
+	}
+}
+
 size_t SFrameResource::addRuntimeMeshVertexBuffer(size_t iVertexCount)
 {
 	vRuntimeMeshVertexBuffers.push_back(std::make_unique<SUploadBuffer<SVertex>> (pDevice, iVertexCount, false));

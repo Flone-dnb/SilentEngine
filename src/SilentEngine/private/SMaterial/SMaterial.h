@@ -9,6 +9,7 @@
 
 // STL
 #include <string>
+#include <mutex>
 
 // Custom
 #include "SilentEngine/Public/SVector/SVector.h"
@@ -52,7 +53,7 @@ private:
 
 	STextureInternal* pRefToTexture = nullptr;
 
-	bool bRegistered  = false;
+	bool bRegistered = false;
 };
 
 struct STextureInternal
@@ -86,7 +87,7 @@ struct SMaterialProperties
 	*/
 	void    setAddDiffuseMultiplierToFinalColor(const SVector& vRGBAMultiplier);
 
-	void    setRoughness     (float fRoughness);
+	void    setRoughness(float fRoughness);
 
 	//@@Function
 	/*
@@ -94,8 +95,8 @@ struct SMaterialProperties
 	* remarks: changing the diffuse color (if the material has a texture (setDiffuseTexture()) will affect
 	the final look of the material as texture and color will blend.
 	*/
-	void    setDiffuseColor  (const SVector& vRGBA);
-	void    setSpecularColor (const SVector& vRGB);
+	void    setDiffuseColor(const SVector& vRGBA);
+	void    setSpecularColor(const SVector& vRGB);
 
 	//@@Function
 	/*
@@ -110,7 +111,7 @@ struct SMaterialProperties
 	/*
 	* desc: unbinds the texture from the material if the texture with the given name exists.
 	*/
-	void    unbindTexture    (STextureHandle textureHandle);
+	void    unbindTexture(STextureHandle textureHandle);
 
 	//@@Function
 	/*
@@ -132,14 +133,14 @@ struct SMaterialProperties
 	*/
 	bool    getDiffuseTexture(STextureHandle* pTextureHandle);
 
-	float   getRoughness     () const;
+	float   getRoughness() const;
 
 	//@@Function
 	/*
 	* desc: used to retrieve the diffuse color of the material.
 	*/
-	SVector getDiffuseColor  () const;
-	SVector getSpecularColor () const;
+	SVector getDiffuseColor() const;
+	SVector getSpecularColor() const;
 
 private:
 
@@ -251,14 +252,15 @@ private:
 
 	void updateMatTransform();
 
+
+	std::mutex mtxUpdateMat;
+
 	std::string sMaterialName;
 
 
 	size_t iMatCBIndex;
 
 	int iUpdateCBInFrameResourceCount;
-	int iFrameResourceIndexLastUpdated;
-	bool bLastFrameResourceIndexValid;
 
 
 	SMaterialProperties matProps;
@@ -273,5 +275,6 @@ private:
 
 
 	bool               bRegistered;
+	bool               bUsedInBundle;
 };
 

@@ -11,3 +11,13 @@ SShader::SShader(const std::wstring& sPathToShaderFile)
 {
 	this->sPathToShaderFile = sPathToShaderFile;
 }
+
+void SShader::setCustomShaderResources(SCustomShaderResources* pCustomShaderResources)
+{
+	this->pCustomShaderResources = pCustomShaderResources;
+}
+
+SCustomShaderResources* SShader::getCustomShaderResources()
+{
+    return nullptr;
+}

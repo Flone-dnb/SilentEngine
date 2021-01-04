@@ -89,6 +89,7 @@ struct VertexIn
     float3 vPos   : POSITION;
     float3 vNormal: NORMAL;
     float2 vUV    : UV;
+	float4 vCustomVec4 : CUSTOM;
 };
 
 struct VertexOut
@@ -97,12 +98,14 @@ struct VertexOut
 	float3 vPosWorldSpace : POSITION;
     float3 vNormal : NORMAL;
     float2 vUV     : UV;
+	float4 vCustomVec4 : CUSTOM;
 };
 
 
 VertexOut VS(VertexIn vin)
 {
     VertexOut vout;
+	vout.vCustomVec4 = vin.vCustomVec4;
 	
     // Apply world matrix.
     float4 vPos = mul(float4(vin.vPos, 1.0f), vWorld);
@@ -124,6 +127,8 @@ VertexOut VS(VertexIn vin)
 
 float4 PS(VertexOut pin) : SV_Target
 {
+	// All VertexOut params are linearly interpolated now.
+	
     float4 vDiffuse = float4(1.0f, 1.0f, 1.0f, 1.0f);
 
 

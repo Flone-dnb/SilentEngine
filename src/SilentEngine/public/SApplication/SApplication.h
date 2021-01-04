@@ -38,6 +38,7 @@
 #include "SilentEngine/Private/SBlurEffect/SBlurEffect.h"
 #include "SilentEngine/Private/SComputeShader/SComputeShader.h"
 #include "SilentEngine/Private/SCamera/SCamera.h"
+#include "SilentEngine/Private/SCustomShaderResources/SCustomShaderResources.h"
 
 // Other
 #include <Windows.h>
@@ -272,13 +273,20 @@ public:
 		//@@Function
 		/*
 		* desc: used to compile and prepare the custom shader (VS and PS, see basic.hlsl for reference).
+		* param "vCustomMaterialNames": (optional) pass the names of the new custom materials to create a material bundle.
+		* param "bWillUseTextures": (optional) use 'true' if ALL created materials will use textures.
+		You can either have textures for all materials or don't have textures for all materials.
+		You can't have some material with textures and some without textures.
+		Textures should be loaded sequentially (don't have any other textures in between).
+		* param "pOutCreatedMaterials": (optional) pass an empty pointer to get a reference to the created resources (if successful).
 		* return: valid pointer if the shader was found and compiled, nullptr otherwise.
 		* remarks: You will need to call unloadCompiledShaderFromGPU() later when you don't need this shader anymore -
 		this will not happen automatically, but all shaders will be unloaded in the SApplication destructor function.
 		It's recommended to use this function in loading moments of your application (ex. loading screen)
 		as this function may drop the framerate a little.
 		*/
-		SShader*        compileCustomShader                   (const std::wstring& sPathToShaderFile);
+		SShader*        compileCustomShader                   (const std::wstring& sPathToShaderFile,
+			const std::vector<std::string>& vCustomMaterialNames = {}, bool bWillUseTextures = true, SCustomShaderResources** pOutCustomResources = nullptr);
 
 		//@@Function
 		/*
@@ -654,7 +662,7 @@ private:
 		* desc: creates root signature.
 		* return: false if successful, true otherwise.
 		*/
-		bool createRootSignature             ();
+		bool createRootSignature             (SCustomShaderResources* pCustomShaderResources = nullptr, bool bUseTextures = false);
 		bool createBlurRootSignature         ();
 		//@@Function
 		/*
@@ -686,7 +694,8 @@ private:
 		*/
 		bool executeCommandList              ();
 
-		void updateMaterialInFrameResource   (SMaterial* pMaterial, SUploadBuffer<SMaterialConstants>* pMaterialCB);
+		void updateMaterialInFrameResource   (SMaterial* pMaterial, SUploadBuffer<SMaterialConstants>* pCustomResource = nullptr,
+			size_t iElementIndexInResource = 0);
 
 
 	// Window
@@ -706,6 +715,7 @@ private:
 		* desc: updates the camera and buffers.
 		*/
 		void update                          ();
+		void updateMaterials                 ();
 		//@@Function
 		/*
 		* desc: updates the constant buffers.
@@ -715,8 +725,7 @@ private:
 		/*
 		* desc: updates the objects' constant buffers.
 		*/
-		void updateComponentAndChilds        (SComponent* pComponent, SUploadBuffer<SObjectConstants>* pCurrentObjectCB,
-																	  SUploadBuffer<SMaterialConstants>* pCurrentMaterialCB);
+		void updateComponentAndChilds        (SComponent* pComponent, SUploadBuffer<SObjectConstants>* pCurrentObjectCB);
 		//@@Function
 		/*
 		* desc: updates the main pass constant buffer.
@@ -729,7 +738,7 @@ private:
 		void draw                            ();
 		void drawOpaqueComponents            ();
 		void drawTransparentComponents       ();
-		void drawComponent                   (SComponent* pComponent);
+		void drawComponent                   (SComponent* pComponent, bool bUsingCustomResources = false);
 		//@@Function
 		/*
 		* desc: used to set the FPS limit (FPS cap).
@@ -1051,6 +1060,8 @@ private:
 		bool doesComponentExists(SComponent* pComponent);
 		bool doesComputeShaderExists(SComputeShader* pShader);
 		bool nanosleep(long long ns);
+		std::vector<SUploadBuffer<SMaterialConstants>*> createBundledMaterialResource(SShader* pShader, size_t iMaterialsCount);
+		SMaterial* registerMaterialBundleElement(const std::string& sMaterialName, bool& bErrorOccurred);
 
 
 	// -----------------------------------------------------------------
@@ -1063,6 +1074,7 @@ private:
 	friend class SMaterial;
 	friend class SLevel;
 	friend class SError;
+	friend class SCustomShaderResources;
 
 
 	static SApplication* pApp;
@@ -1075,6 +1087,8 @@ private:
 	Microsoft::WRL::ComPtr<IDXGIOutput>     pOutput;
 	Microsoft::WRL::ComPtr<IDXGISwapChain1> pSwapChain;
 
+
+	// PSOs
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> pOpaquePSO;
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> pTransparentPSO;
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> pTransparentAlphaToCoveragePSO;

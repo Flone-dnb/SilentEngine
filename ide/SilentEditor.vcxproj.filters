@@ -136,6 +136,9 @@
     <Filter Include="SilentEngine\Private\SCamera">
       <UniqueIdentifier>{6d5ad124-082a-4886-bfb4-19ae5001e81a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="SilentEngine\Private\SCustomShaderResources">
+      <UniqueIdentifier>{caae7e99-ada4-41dd-95ae-4cb5a560491a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\SilentEngine\public\SApplication\SApplication.cpp">
@@ -233,6 +236,9 @@
     </ClCompile>
     <ClCompile Include="..\src\SilentEngine\Private\SCamera\SCamera.cpp">
       <Filter>SilentEngine\Private\SCamera</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SilentEngine\Private\SCustomShaderResources\SCustomShaderResources.cpp">
+      <Filter>SilentEngine\Private\SCustomShaderResources</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -337,6 +343,9 @@
     </ClInclude>
     <ClInclude Include="..\src\SilentEngine\Private\SCamera\SCamera.h">
       <Filter>SilentEngine\Private\SCamera</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SilentEngine\Private\SCustomShaderResources\SCustomShaderResources.h">
+      <Filter>SilentEngine\Private\SCustomShaderResources</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -17,17 +17,16 @@ SMaterial::SMaterial()
 	sMaterialName = "";
 
 	bRegistered = false;
-	bLastFrameResourceIndexValid = false;
+	bUsedInBundle = false;
 
 	iMatCBIndex = 0;
 
 	iUpdateCBInFrameResourceCount = SFRAME_RES_COUNT;
-	iFrameResourceIndexLastUpdated = 0;
 
 	vMatTransform = SMath::getIdentityMatrix4x4();
 
 	vMatUVOffset = SVector(1.0f, 1.0f, 1.0f);
-	vMatUVScale  = SVector(1.0f, 1.0f, 1.0f);
+	vMatUVScale = SVector(1.0f, 1.0f, 1.0f);
 	fMatRotation = 0.0f;
 }
 
@@ -49,6 +48,8 @@ SMaterial::SMaterial(const SMaterial& mat) : SMaterial()
 
 SMaterial& SMaterial::operator=(const SMaterial& mat)
 {
+	mtxUpdateMat.lock();
+
 	matProps = mat.matProps;
 
 	vMatUVOffset = mat.vMatUVOffset;
@@ -57,20 +58,22 @@ SMaterial& SMaterial::operator=(const SMaterial& mat)
 
 	vMatTransform = mat.vMatTransform;
 
+	mtxUpdateMat.unlock();
+
 	return *this;
 }
 
-void SMaterial::setMaterialProperties(const SMaterialProperties & matProps)
+void SMaterial::setMaterialProperties(const SMaterialProperties& matProps)
 {
 	if (bRegistered)
 	{
-		SApplication::getApp()->mtxUpdateMat.lock();
+		mtxUpdateMat.lock();
 
 		this->matProps = matProps;
 
 		iUpdateCBInFrameResourceCount = SFRAME_RES_COUNT;
 
-		SApplication::getApp()->mtxUpdateMat.unlock();
+		mtxUpdateMat.unlock();
 	}
 }
 
@@ -88,11 +91,15 @@ bool SMaterial::setMaterialUVOffset(const SVector& vMaterialUVOffset)
 			return true;
 		}
 
+		mtxUpdateMat.lock();
+
 		vMatUVOffset = vMaterialUVOffset;
 
 		updateMatTransform();
 
 		iUpdateCBInFrameResourceCount = SFRAME_RES_COUNT;
+
+		mtxUpdateMat.unlock();
 
 		return false;
 	}
@@ -104,11 +111,15 @@ void SMaterial::setMaterialUVScale(const SVector& vMaterialUVScale)
 {
 	if (bRegistered)
 	{
+		mtxUpdateMat.lock();
+
 		vMatUVScale = vMaterialUVScale;
 
 		updateMatTransform();
 
 		iUpdateCBInFrameResourceCount = SFRAME_RES_COUNT;
+
+		mtxUpdateMat.unlock();
 	}
 }
 
@@ -116,11 +127,15 @@ void SMaterial::setMaterialUVRotation(float fRotation)
 {
 	if (bRegistered)
 	{
+		mtxUpdateMat.lock();
+
 		fMatRotation = fRotation;
 
 		updateMatTransform();
 
 		iUpdateCBInFrameResourceCount = SFRAME_RES_COUNT;
+
+		mtxUpdateMat.unlock();
 	}
 }
 
@@ -179,8 +194,6 @@ SMaterialProperties SMaterial::getMaterialProperties() const
 
 void SMaterial::updateMatTransform()
 {
-	SApplication::getApp()->mtxUpdateMat.lock();
-
 	DirectX::XMMATRIX transform = DirectX::XMMatrixIdentity() *
 		DirectX::XMMatrixTranslation(-0.5f, -0.5f, 0.0f) * // move center to the origin point
 		DirectX::XMMatrixScaling(vMatUVScale.getX(), vMatUVScale.getY(), vMatUVScale.getZ()) *
@@ -189,8 +202,6 @@ void SMaterial::updateMatTransform()
 		DirectX::XMMatrixTranslation(0.5f, 0.5f, 0.0f); // move center back.
 
 	DirectX::XMStoreFloat4x4(&vMatTransform, transform);
-
-	SApplication::getApp()->mtxUpdateMat.unlock();
 }
 
 void SMaterialProperties::setCustomTransparency(float fCustomTransparency)
@@ -251,7 +262,7 @@ SVector SMaterialProperties::getSpecularColor() const
 	return vRGB;
 }
 
-void SMaterialProperties::setDiffuseColor(const SVector & vRGBA)
+void SMaterialProperties::setDiffuseColor(const SVector& vRGBA)
 {
 	vDiffuseColor.x = vRGBA.getX();
 	vDiffuseColor.y = vRGBA.getY();
@@ -259,7 +270,7 @@ void SMaterialProperties::setDiffuseColor(const SVector & vRGBA)
 	vDiffuseColor.w = vRGBA.getW();
 }
 
-void SMaterialProperties::setSpecularColor(const SVector & vRGB)
+void SMaterialProperties::setSpecularColor(const SVector& vRGB)
 {
 	vSpecularColor.x = vRGB.getX();
 	vSpecularColor.y = vRGB.getY();

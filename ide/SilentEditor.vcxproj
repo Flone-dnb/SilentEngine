@@ -193,6 +193,7 @@
     <ClCompile Include="..\src\SilentEngine\Private\SBlurEffect\SBlurEffect.cpp" />
     <ClCompile Include="..\src\SilentEngine\Private\SCamera\SCamera.cpp" />
     <ClCompile Include="..\src\SilentEngine\Private\SComputeShader\SComputeShader.cpp" />
+    <ClCompile Include="..\src\SilentEngine\Private\SCustomShaderResources\SCustomShaderResources.cpp" />
     <ClCompile Include="..\src\SilentEngine\private\SError\SError.cpp" />
     <ClCompile Include="..\src\SilentEngine\private\SFrameResource\SFrameResource.cpp" />
     <ClCompile Include="..\src\SilentEngine\private\SGameTimer\SGameTimer.cpp" />
@@ -226,6 +227,7 @@
     <ClInclude Include="..\src\SilentEngine\Private\SBlurEffect\SBlurEffect.h" />
     <ClInclude Include="..\src\SilentEngine\Private\SCamera\SCamera.h" />
     <ClInclude Include="..\src\SilentEngine\Private\SComputeShader\SComputeShader.h" />
+    <ClInclude Include="..\src\SilentEngine\Private\SCustomShaderResources\SCustomShaderResources.h" />
     <ClInclude Include="..\src\SilentEngine\private\SError\SError.h" />
     <ClInclude Include="..\src\SilentEngine\private\SFrameResource\SFrameResource.h" />
     <ClInclude Include="..\src\SilentEngine\private\SGameTimer\SGameTimer.h" />

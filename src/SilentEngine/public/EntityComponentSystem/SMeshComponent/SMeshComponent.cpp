@@ -102,6 +102,7 @@ void SMeshComponent::setMeshData(const SMeshData& meshData, bool bAddedRemovedIn
 	}
 
 	mtxResourceUsed.lock();
+	// if used in compute shader
 	for (size_t i = 0; i < vResourceUsed.size(); i++)
 	{
 		vResourceUsed[i].pShader->updateMeshResource(vResourceUsed[i].sResource);
@@ -146,9 +147,18 @@ bool SMeshComponent::setMeshMaterial(SMaterial* pMaterial)
 {
 	if (pMaterial->bRegistered)
 	{
-		meshData.setMeshMaterial(pMaterial);
+		if (pMaterial->bUsedInBundle)
+		{
+			SError::showErrorMessageBox(L"SMeshComponent::setMeshMaterial", L"The given material is used in a bundle. It cannot be used here.");
 
-		return false;
+			return true;
+		}
+		else
+		{
+			meshData.setMeshMaterial(pMaterial);
+
+			return false;
+		}
 	}
 	else
 	{
@@ -200,9 +210,13 @@ void SMeshComponent::setTextureUVRotation(float fRotation)
 
 void SMeshComponent::setCustomShaderProperty(unsigned int iCustomProperty)
 {
+	mtxComponentProps.lock();
+
 	renderData.iCustomShaderProperty = iCustomProperty;
 
 	renderData.iUpdateCBInFrameResourceCount = SFRAME_RES_COUNT;
+
+	mtxComponentProps.unlock();
 }
 
 SVector SMeshComponent::getTextureUVOffset() const
@@ -316,7 +330,8 @@ void SMeshComponent::createGeometryBuffers(bool bAddedRemovedIndices)
 		pApp->resetCommandList();
 	}
 
-	renderData.iUpdateCBInFrameResourceCount = SFRAME_RES_COUNT;
+	// ?
+	//renderData.iUpdateCBInFrameResourceCount = SFRAME_RES_COUNT;
 
 	renderData.pGeometry->freeUploaders();
 
