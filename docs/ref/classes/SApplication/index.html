@@ -71,7 +71,7 @@
 				<br>
 				<code class="cpp_function"> bool   <code class="cpp_func_name"><a class="cpp_link" href="unloadTextureFromGPU_func_1.html">unloadTextureFromGPU</a></code>(STextureHandle&amp; textureHandle); </code>
 				<br>
-				<code class="cpp_function"> SShader*  <code class="cpp_func_name"><a class="cpp_link" href="compileCustomShader_func_1.html">compileCustomShader</a></code>(const std::wstring&amp; sPathToShaderFile); </code>
+				<code class="cpp_function"> SShader*  <code class="cpp_func_name"><a class="cpp_link" href="compileCustomShader_func_1.html">compileCustomShader</a></code>(const std::wstring&amp; sPathToShaderFile,      const std::vector&lt;std::string&gt;&amp; vCustomMaterialNames =; </code>
 				<br>
 				<code class="cpp_function"> void   <code class="cpp_func_name"><a class="cpp_link" href="getCompiledCustomShaders_func_1.html">getCompiledCustomShaders</a></code>(std::vector&lt;SShader*&gt;* pvShaders); </code>
 				<br>
@@ -85,13 +85,7 @@
 				<br>
 				<code class="cpp_function"> <a class="cpp_link_ref" href="../SLevel/index.html">SLevel</a>*   <code class="cpp_func_name"><a class="cpp_link" href="getCurrentLevel_func_1.html">getCurrentLevel</a></code>() const; </code>
 				<br>
-				<code class="cpp_function"> bool   <code class="cpp_func_name"><a class="cpp_link" href="setCameraFOV_func_1.html">setCameraFOV</a></code>(float fFOVInDeg); </code>
-				<br>
-				<code class="cpp_function"> void   <code class="cpp_func_name"><a class="cpp_link" href="setFixedCameraZoom_func_1.html">setFixedCameraZoom</a></code>(float fZoom); </code>
-				<br>
-				<code class="cpp_function"> void   <code class="cpp_func_name"><a class="cpp_link" href="setFixedCameraRotation_func_1.html">setFixedCameraRotation</a></code>(float fPhi, float fTheta); </code>
-				<br>
-				<code class="cpp_function"> void   <code class="cpp_func_name"><a class="cpp_link" href="setFixedCameraRotationShift_func_1.html">setFixedCameraRotationShift</a></code>(float fHorizontalShift, float fVerticalShift); </code>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="setDisableKeyboardRepeat_func_1.html">setDisableKeyboardRepeat</a></code>(bool bDisable); </code>
 				<br>
 				<code class="cpp_function"> void   <code class="cpp_func_name"><a class="cpp_link" href="setCallTick_func_1.html">setCallTick</a></code>(bool bTickCanBeCalled); </code>
 				<br>
@@ -103,13 +97,9 @@
 				<br>
 				<code class="cpp_function"> void   <code class="cpp_func_name"><a class="cpp_link" href="setWindowTitleText_func_1.html">setWindowTitleText</a></code>(const std::wstring&amp; sTitleText); </code>
 				<br>
-				<code class="cpp_function"> <a class="cpp_link_ref" href="../SVector/index.html">SVector</a>    <code class="cpp_func_name"><a class="cpp_link" href="getCameraLocation_func_1.html">getCameraLocation</a></code>() const; </code>
+				<code class="cpp_function"> void   <code class="cpp_func_name"><a class="cpp_link" href="setInitShowWindowTitleBar_func_1.html">setInitShowWindowTitleBar</a></code>(bool bShowTitleBar); </code>
 				<br>
-				<code class="cpp_function"> void     <code class="cpp_func_name"><a class="cpp_link" href="getFixedCameraLocalAxisVector_func_1.html">getFixedCameraLocalAxisVector</a></code>(<a class="cpp_link_ref" href="../SVector/index.html">SVector</a>* pvXAxis, <a class="cpp_link_ref" href="../SVector/index.html">SVector</a>* pvYAxis, <a class="cpp_link_ref" href="../SVector/index.html">SVector</a>* pvZAxis) const; </code>
-				<br>
-				<code class="cpp_function"> void     <code class="cpp_func_name"><a class="cpp_link" href="getFixedCameraRotation_func_1.html">getFixedCameraRotation</a></code>(float* fPhi, float* fTheta) const; </code>
-				<br>
-				<code class="cpp_function"> float     <code class="cpp_func_name"><a class="cpp_link" href="getFixedCameraZoom_func_1.html">getFixedCameraZoom</a></code>() const; </code>
+				<code class="cpp_function"> SCamera*    <code class="cpp_func_name"><a class="cpp_link" href="getCamera_func_1.html">getCamera</a></code>(); </code>
 				<br>
 				<code class="cpp_function"> static SApplication* <code class="cpp_func_name"><a class="cpp_link" href="getApp_func_1.html">getApp</a></code>(); </code>
 				<br>
@@ -195,7 +185,7 @@
 				<br>
 				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="createFrameResources_func_1.html">createFrameResources</a></code>(); </code>
 				<br>
-				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="createRootSignature_func_1.html">createRootSignature</a></code>(); </code>
+				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="createRootSignature_func_1.html">createRootSignature</a></code>(SCustomShaderResources* pCustomShaderResources = nullptr, bool bUseTextures = false); </code>
 				<br>
 				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="createShadersAndInputLayout_func_1.html">createShadersAndInputLayout</a></code>(); </code>
 				<br>
@@ -211,11 +201,9 @@
 				<br>
 				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="update_func_1.html">update</a></code>(); </code>
 				<br>
-				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="updateCamera_func_1.html">updateCamera</a></code>(); </code>
-				<br>
 				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="updateObjectCBs_func_1.html">updateObjectCBs</a></code>(); </code>
 				<br>
-				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="updateComponentAndChilds_func_1.html">updateComponentAndChilds</a></code>(SComponent* pComponent, SUploadBuffer&lt;SObjectConstants&gt;* pCurrentObjectCB,                     SUploadBuffer&lt;SMaterialConstants&gt;* pCurrentMaterialCB); </code>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="updateComponentAndChilds_func_1.html">updateComponentAndChilds</a></code>(SComponent* pComponent, SUploadBuffer&lt;SObjectConstants&gt;* pCurrentObjectCB); </code>
 				<br>
 				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="updateMainPassCB_func_1.html">updateMainPassCB</a></code>(); </code>
 				<br>
@@ -280,14 +268,6 @@
 				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="setInitFullscreen_func_1.html">setInitFullscreen</a></code>(bool bFullscreen); </code>
 				<br>
 				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="setInitEnableVSync_func_1.html">setInitEnableVSync</a></code>(bool bEnable); </code>
-				<br>
-				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="setNearClipPlane_func_1.html">setNearClipPlane</a></code>(float fNearClipPlaneValue); </code>
-				<br>
-				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="setFarClipPlane_func_1.html">setFarClipPlane</a></code>(float fFarClipPlaneValue); </code>
-				<br>
-				<code class="cpp_function"> float <code class="cpp_func_name"><a class="cpp_link" href="getNearClipPlaneValue_func_1.html">getNearClipPlaneValue</a></code>() const; </code>
-				<br>
-				<code class="cpp_function"> float <code class="cpp_func_name"><a class="cpp_link" href="getFarClipPlaneValue_func_1.html">getFarClipPlaneValue</a></code>() const; </code>
 				<br>
 				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="spawnContainerInLevel_func_1.html">spawnContainerInLevel</a></code>(<a class="cpp_link_ref" href="../SContainer/index.html">SContainer</a>* pContainer); </code>
 				<br>

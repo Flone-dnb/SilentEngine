@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../../doc.css">
-    <title>getFixedCameraZoom - Silent Engine Documentation</title>
+    <title>updateMyAndChildsLocationRotationScale - Silent Engine Documentation</title>
 </head>
 <body>
     <div class="nav_panel">
@@ -16,10 +16,10 @@
     </div>
     
 	<div class="cpp_doc">
-		<h3 class="cpp_object"> getFixedCameraZoom </h3>
-		<div class="cpp_codeobject_desc"> returns the fixed camera's zoom.    	 </div>
+		<h3 class="cpp_object"> updateMyAndChildsLocationRotationScale </h3>
+		<div class="cpp_codeobject_desc"> called when parent's location/rotation/scale are changed. </div>
 		<br>
-		<code class="cpp_func_line_code"> float     getFixedCameraZoom() const; </code>
+		<code class="cpp_func_line_code"> virtual void updateMyAndChildsLocationRotationScale(bool bCalledOnSelf) override; </code>
 		<br>
 		<br>
 		

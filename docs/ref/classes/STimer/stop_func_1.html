@@ -17,10 +17,17 @@
     
 	<div class="cpp_doc">
 		<h3 class="cpp_object"> stop </h3>
-		<div class="cpp_codeobject_desc"> stops the timer and callback timer if the setCallbackOnTimeout() and setTime() was called. After    calling this function getElapsedTimeInSec() and getElapsedTimeInMS() will always return 0.0f. </div>
+		<div class="cpp_codeobject_desc"> stops the timer and callback timer if the setCallbackOnTimeout() and setTime() was called. After    calling this function getElapsedTimeInSec() and getElapsedTimeInMS() will always return 0. </div>
 		<br>
 		<code class="cpp_func_line_code"> void stop(); </code>
 		<br>
+		<br>
+		----------------------------------------------
+		<br>
+		<br>
+		<div class="cpp_func_param"> Remarks </div>
+		<br>
+		<div class="cpp_func_param_desc"> if you've called setCallbackOnTimeout(), this function will block current thread    until the callback timer stopped (this wait (block) will take fTimerAccuracyInSec). </div>
 		<br>
 		
 	</div>

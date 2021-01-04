@@ -19,21 +19,33 @@
 		<h3 class="cpp_object"> compileCustomShader </h3>
 		<div class="cpp_codeobject_desc"> used to compile and prepare the custom shader (VS and PS, see basic.hlsl for reference).    	 </div>
 		<br>
-		<code class="cpp_func_line_code"> SShader*  compileCustomShader(const std::wstring&amp; sPathToShaderFile); </code>
+		<code class="cpp_func_line_code"> SShader*  compileCustomShader<br>(<br>&nbsp;&nbsp;&nbsp;const std::wstring&amp; sPathToShaderFile,<br>&nbsp;&nbsp;&nbsp;     const std::vector&lt;std::string&gt;&amp; vCustomMaterialNames =; </code>
 		<br>
 		<br>
-		----------------------------------------------
+		<div class="cpp_func_param">vCustomMaterialNames</div>
 		<br>
+		<div class="cpp_func_param_desc">(optional) pass the names of the new custom materials to create a material bundle.    	</div>
 		<br>
-		<div class="cpp_func_param"> Return Value </div>
+		<div class="cpp_func_param">bWillUseTextures</div>
 		<br>
-		<div class="cpp_func_param_desc"> valid pointer if the shader was found and compiled, nullptr otherwise.    	 </div>
+		<div class="cpp_func_param_desc">(optional) use 'true' if ALL created materials will use textures.     You can either have textures for all materials or don't have textures for all materials.     You can't have some material with textures and some without textures.     Textures should be loaded sequentially (don't have any other textures in between).    	</div>
 		<br>
-		<div class="cpp_func_param"> Remarks </div>
+		<div class="cpp_func_param">pOutCreatedMaterials</div>
 		<br>
-		<div class="cpp_func_param_desc"> You will need to call unloadCompiledShaderFromGPU() later when you don't need this shader anymore -     this will not happen automatically, but all shaders will be unloaded in the SApplication destructor function.     It's recommended to use this function in loading moments of your application (ex. loading screen)     as this function may drop the framerate a little.    	 </div>
+		<div class="cpp_func_param_desc">(optional) pass an empty pointer to get a reference to the created resources (if successful).    	</div>
 		<br>
-		
-	</div>
+	----------------------------------------------
+	<br>
+	<br>
+	<div class="cpp_func_param"> Return Value </div>
+	<br>
+	<div class="cpp_func_param_desc"> valid pointer if the shader was found and compiled, nullptr otherwise.    	 </div>
+	<br>
+	<div class="cpp_func_param"> Remarks </div>
+	<br>
+	<div class="cpp_func_param_desc"> You will need to call unloadCompiledShaderFromGPU() later when you don't need this shader anymore -     this will not happen automatically, but all shaders will be unloaded in the SApplication destructor function.     It's recommended to use this function in loading moments of your application (ex. loading screen)     as this function may drop the framerate a little.    	 </div>
+	<br>
+	
+</div>
 </body>
 </html>

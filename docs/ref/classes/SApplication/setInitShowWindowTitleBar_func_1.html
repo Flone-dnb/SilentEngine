@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../../doc.css">
-    <title>createRootSignature - Silent Engine Documentation</title>
+    <title>setInitShowWindowTitleBar - Silent Engine Documentation</title>
 </head>
 <body>
     <div class="nav_panel">
@@ -16,18 +16,18 @@
     </div>
     
 	<div class="cpp_doc">
-		<h3 class="cpp_object"> createRootSignature </h3>
-		<div class="cpp_codeobject_desc"> creates root signature.    	 </div>
+		<h3 class="cpp_object"> setInitShowWindowTitleBar </h3>
+		<div class="cpp_codeobject_desc"> used to show/hide window title bar (only visible when fullscreen is disabled).    	 </div>
 		<br>
-		<code class="cpp_func_line_code"> bool createRootSignature(SCustomShaderResources* pCustomShaderResources = nullptr, bool bUseTextures = false); </code>
+		<code class="cpp_func_line_code"> void   setInitShowWindowTitleBar(bool bShowTitleBar); </code>
 		<br>
 		<br>
 		----------------------------------------------
 		<br>
 		<br>
-		<div class="cpp_func_param"> Return Value </div>
+		<div class="cpp_func_param"> Remarks </div>
 		<br>
-		<div class="cpp_func_param_desc"> false if successful, true otherwise.    	 </div>
+		<div class="cpp_func_param_desc"> title bar is hidden by default. Should be called before init().    	 </div>
 		<br>
 		
 	</div>
