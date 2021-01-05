@@ -51,6 +51,10 @@ struct SCameraEffects
 	STextureBlur screenBlurEffect;
 };
 
+//@@Class
+/*
+The class is used to control the virtual camera.
+*/
 class SCamera
 {
 public:
@@ -65,21 +69,27 @@ public:
 	*/
 	void setCameraMode               (SCAMERA_MODE mode);
 
+	//@@Function
 	void moveCameraForward           (float fValue);
+	//@@Function
 	void moveCameraRight             (float fValue);
+	//@@Function
 	void moveCameraUp                (float fValue);
 	//@@Function
 	/*
 	* desc: if using roll, use setDontFlipCamera() to false.
 	*/
 	void rotateCamera                (float fPitch, float fYaw, float fRoll);
+	//@@Function
 	void rotateCameraPitch           (float fAngleInDeg);
+	//@@Function
 	void rotateCameraYaw             (float fAngleInDeg);
 	//@@Function
 	/*
 	* desc: use setDontFlipCamera() to false.
 	*/
 	void rotateCameraRoll            (float fAngleInDeg);
+	//@@Function
 	void makeCameraLookAt            (const SVector& vTargetLocation);
 
 	//@@Function
@@ -95,7 +105,7 @@ public:
 	* remarks: true by default.
 	*/
 	void setDontFlipCamera           (bool bDontFlipCamera);
-
+	//@@Function
 	void setCameraLocationInWorld    (const SVector& vLocation);
 	//@@Function
 	/*
@@ -103,7 +113,9 @@ public:
 	* remarks: default is 90.
 	*/
 	void setCameraVerticalFOV        (float fFOV);
+	//@@Function
 	void setCameraNearClipPlane      (float fNearClipPlane);
+	//@@Function
 	void setCameraFarClipPlane       (float fFarClipPlane);
 
 	//@@Function
@@ -127,22 +139,36 @@ public:
 	*/
 	void    setFixedCameraRotationShift(float fHorizontalShift, float fVerticalShift);
 
+	//@@Function
 	void    getFixedCameraRotation(float* fPhi, float* fTheta) const;
+	//@@Function
 	float   getFixedCameraZoom() const;
+	//@@Function
 	void    getFixedCameraLocalAxisVector(SVector* pvXAxis, SVector* pvYAxis, SVector* pvZAxis) const;
 
+	//@@Function
 	SVector getCameraLocationInWorld ();
+	//@@Function
 	float   getCameraVerticalFOV     () const;
+	//@@Function
 	float   getCameraHorizontalFOV   () const;
+	//@@Function
 	float   getCameraNearClipPlane   () const;
+	//@@Function
 	float   getCameraFarClipPlane    () const;
+	//@@Function
 	float   getCameraAspectRatio     () const;
+	//@@Function
 	float   getCameraNearClipWindowWidth () const;
+	//@@Function
 	float   getCameraNearClipWindowHeight() const;
+	//@@Function
 	float   getCameraFarClipWindowWidth  () const;
+	//@@Function
 	float   getCameraFarClipWindowHeight () const;
+	//@@Function
 	void    getCameraBasicVectors        (SVector* pvForward, SVector* pvLeft, SVector* pvZAxis);
-
+	//@@Function
 	SCameraEffects getCameraEffects();
 
 private:

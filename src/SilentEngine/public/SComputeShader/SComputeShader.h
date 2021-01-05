@@ -44,7 +44,10 @@ struct SComputeShaderConstant
 	UINT iRootParamIndex;
 };
 
-
+//@@Class
+/*
+The class represents a compute shader.
+*/
 class SComputeShader
 {
 public:
@@ -59,7 +62,7 @@ public:
 	(you need to delete[] this data manually), the second param is the size of the copied data in bytes (should be equal to iDataSizeInBytes
 	passed to setAddData()).
 	An example of std::function pointing to a member
-	function of a class - "using namespace std::placeholders; std::function<void(char*, size_t)> f = std::bind(&Foo::foo, this, _1, _2);".
+	function of a class - "using namespace std::placeholders; std::function<void(char_ptr, size_t)> f = std::bind(&Foo::foo, this, _1, _2);".
 	* return: returns true if the resource with the specified name was not found, or startShaderExecution() was not called.
 	If you call stopShaderExecution() after the copyComputeResults() call then even if the shader worked at least 1 time,
 	the callback function will not be called.
@@ -97,7 +100,7 @@ public:
 	* param "bReadOnlyData": true for read-only resource.
 	* param "sResourceName": unique name of the resource.
 	* param "iDataSizeInBytes": the size of buffer we need to allocate. For example, if you need to have 4 float values in the buffer,
-	then pass: sizeof(float) * 4, or if you need to allocate space for your struct: sizeof(MyStruct) * N.
+	then pass: sizeof(float) x 4, or if you need to allocate space for your struct: sizeof(MyStruct) x N.
 	* param "iShaderRegister": shader register (in hlsl), note that read-only and read-write data can use the same register
 	as they are bound to the different shader registers (read-only to 't', read-write to 'u').
 	* param "pInitData": initial data of the buffer (optional).
@@ -113,10 +116,10 @@ public:
 	* param "sResourceName": unique name of the resource.
 	* param "iShaderRegister": shader register (in hlsl).
 	* param "iOutDataSizeInBytes": the size of the passed resource that you can use,
-	for vertex buffer will be 'meshData.getVerticesCount() * sizeof(SVertex)'
-	see SPrimitiveShapeGenerator.h to see SVertex struct, for index buffer size will be 'meshData.getIndicesCount() * sizeof(std::uint32_t)' (if
+	for vertex buffer will be 'meshData.getVerticesCount() x sizeof(SVertex)'
+	see SPrimitiveShapeGenerator.h to see SVertex struct, for index buffer size will be 'meshData.getIndicesCount() x sizeof(std::uint32_t)' (if
 	meshData.hasIndicesMoreThan16Bits() == true) or
-	'meshData.getIndicesCount() * sizeof(std::uint16_t)' (if meshData.hasIndicesMoreThan16Bits() == false).
+	'meshData.getIndicesCount() x sizeof(std::uint16_t)' (if meshData.hasIndicesMoreThan16Bits() == false).
 	* return: returns true if something went wrong or if the passed resource name is not unique, or if you reached max. amount of added resources
 	(we have 64 free slots, each resource takes 2 slots, each 32 bit constant 1 slot).
 	* remarks: if using vertex buffer, don't forget to create SVertex struct in hlsl.

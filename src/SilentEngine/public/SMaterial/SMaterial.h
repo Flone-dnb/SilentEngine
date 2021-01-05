@@ -69,6 +69,10 @@ struct STextureInternal
 	int iTexSRVHeapIndex = -1;
 };
 
+//@@Struct
+/*
+The class represents material properties.
+*/
 struct SMaterialProperties
 {
 	//@@Function
@@ -82,11 +86,12 @@ struct SMaterialProperties
 
 	//@@Function
 	/*
-	* desc: adds 'diffuse (texture) color * vRGBAMultiplier' to the final color of the pixel fragment.
+	* desc: adds 'diffuse (texture) color x vRGBAMultiplier' to the final color of the pixel fragment.
 	* remarks: this can be used to make the skybox not black when there is no light sources.
 	*/
 	void    setAddDiffuseMultiplierToFinalColor(const SVector& vRGBAMultiplier);
 
+	//@@Function
 	void    setRoughness(float fRoughness);
 
 	//@@Function
@@ -96,6 +101,7 @@ struct SMaterialProperties
 	the final look of the material as texture and color will blend.
 	*/
 	void    setDiffuseColor(const SVector& vRGBA);
+	//@@Function
 	void    setSpecularColor(const SVector& vRGB);
 
 	//@@Function
@@ -133,6 +139,7 @@ struct SMaterialProperties
 	*/
 	bool    getDiffuseTexture(STextureHandle* pTextureHandle);
 
+	//@@Function
 	float   getRoughness() const;
 
 	//@@Function
@@ -140,6 +147,7 @@ struct SMaterialProperties
 	* desc: used to retrieve the diffuse color of the material.
 	*/
 	SVector getDiffuseColor() const;
+	//@@Function
 	SVector getSpecularColor() const;
 
 private:
@@ -165,6 +173,10 @@ private:
 	// and in SApplication::unloadTextureFromGPU where it says "// ADD OTHER TEXTURES HERE".
 };
 
+//@@Class
+/*
+The class represents a material.
+*/
 class SMaterial
 {
 public:
