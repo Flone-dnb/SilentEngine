@@ -28,17 +28,6 @@ public:
 	SCustomShaderResources(const SCustomShaderResources&) = delete;
 	SCustomShaderResources& operator= (const SCustomShaderResources&) = delete;
 
-	//@@Function
-	/*
-	* desc: used to create a bundle of custom materials.
-	* param "vMaterialNames": pass the names of the new materials.
-	* param "pOutCreatedMaterials": pass an empty pointer to get a reference to the created material vector (if successful).
-	* return: false if successful, true otherwise.
-	* remarks: (important!) note that if the first material will use textures then we assume that all other materials do too,
-	if some materials don't use textures use dummy textures or don't use textures for all materials.
-	*/
-	bool createMaterialBundle(const std::vector<std::string>& vMaterialNames, std::vector<SMaterial*>*& pvOutCreatedMaterials);
-
 	std::vector<SMaterial*>* getMaterialBundle();
 
 private:
