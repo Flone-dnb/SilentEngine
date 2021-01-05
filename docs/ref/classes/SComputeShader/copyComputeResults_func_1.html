@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../../doc.css">
+    <title>copyComputeResults - Silent Engine Documentation</title>
+</head>
+<body>
+    <div class="nav_panel">
+        <a class="cpp_link_title" href="../../classes/index.html"> Classes </a>
+		<br>
+		<a class="cpp_link_title" href="../../structs/index.html"> Structs </a>
+		<br>
+		<a class="cpp_link_title" href="../../enums/index.html"> Enums </a>
+    </div>
+    
+	<div class="cpp_doc">
+		<h3 class="cpp_object"> copyComputeResults </h3>
+		<div class="cpp_codeobject_desc"> use to query copy of the results of the compute shader for the next frame only. </div>
+		<br>
+		<code class="cpp_func_line_code"> bool copyComputeResults<br>(<br>&nbsp;&nbsp;&nbsp;const std::string&amp; sResourceNameToCopyFrom,<br>&nbsp;&nbsp;&nbsp;bool bBlockDraw,<br>&nbsp;&nbsp;&nbsp;std::function&lt;void(char*, size_t)&gt; callback<br>); </code>
+		<br>
+		<br>
+		<div class="cpp_func_param">sResourceNameToCopyFrom</div>
+		<br>
+		<div class="cpp_func_param_desc">the name of the resource (added through setAddData()), which will be copied after the compute shader finished work.</div>
+		<br>
+		<div class="cpp_func_param">bBlockDraw</div>
+		<br>
+		<div class="cpp_func_param_desc">determines if we should block the frame drawing process right after we started executing our compute shader (will cause    fps drop), or pass 'false' if you don't need this data right away (the data may be copied after 2-3 frames).</div>
+		<br>
+		<div class="cpp_func_param">callback</div>
+		<br>
+		<div class="cpp_func_param_desc">function which will be called after the data was copied, the first param is a pointer to the copied data    (you need to delete[] this data manually), the second param is the size of the copied data in bytes (should be equal to iDataSizeInBytes    passed to setAddData()).    An example of std::function pointing to a member    function of a class - "using namespace std::placeholders; std::function<void(char_ptr, size_t)> f = std::bind(&Foo::foo, this, _1, _2);".</div>
+		<br>
+	----------------------------------------------
+	<br>
+	<br>
+	<div class="cpp_func_param"> Return Value </div>
+	<br>
+	<div class="cpp_func_param_desc"> returns true if the resource with the specified name was not found, or startShaderExecution() was not called.    If you call stopShaderExecution() after the copyComputeResults() call then even if the shader worked at least 1 time,    the callback function will not be called. </div>
+	<br>
+	
+</div>
+</body>
+</html>

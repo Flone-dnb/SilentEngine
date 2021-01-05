@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../../doc.css">
+    <title>SCamera - Silent Engine Documentation</title>
+</head>
+<body>
+    <div class="nav_panel">
+        <a class="cpp_link_title" href="../../classes/index.html"> Classes </a>
+		<br>
+		<a class="cpp_link_title" href="../../structs/index.html"> Structs </a>
+		<br>
+		<a class="cpp_link_title" href="../../enums/index.html"> Enums </a>
+    </div>
+    
+	<div class="cpp_doc">
+		<h3 class="cpp_object"> SCamera </h3>
+		<code class="cpp_codeobject"> class SCamera </code>
+		<br>
+		<br>
+		<div class="cpp_codeobject_desc">   The class is used to control the virtual camera.  </div>
+		<br>
+		<div class="cpp_codeobject_path"> #include "Public/SCamera/SCamera.h" </div>
+		<br>
+		<br>
+		<details open class="cpp_details">
+			<br>
+			<summary class="cpp_summary"> Public: </summary>
+			<div class="cpp_func_container">
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="setCameraMode_func_1.html">setCameraMode</a></code>(<a class="cpp_link_ref" href="../../enums/SCAMERA_MODE/index.html">SCAMERA_MODE</a> mode); </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="moveCameraForward_func_1.html">moveCameraForward</a></code>(float fValue); </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="moveCameraRight_func_1.html">moveCameraRight</a></code>(float fValue); </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="moveCameraUp_func_1.html">moveCameraUp</a></code>(float fValue); </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="rotateCamera_func_1.html">rotateCamera</a></code>(float fPitch, float fYaw, float fRoll); </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="rotateCameraPitch_func_1.html">rotateCameraPitch</a></code>(float fAngleInDeg); </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="rotateCameraYaw_func_1.html">rotateCameraYaw</a></code>(float fAngleInDeg); </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="rotateCameraRoll_func_1.html">rotateCameraRoll</a></code>(float fAngleInDeg); </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="makeCameraLookAt_func_1.html">makeCameraLookAt</a></code>(const <a class="cpp_link_ref" href="../SVector/index.html">SVector</a>&amp; vTargetLocation); </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="setCameraEffects_func_1.html">setCameraEffects</a></code>(SCameraEffects cameraEffects); </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="setDontFlipCamera_func_1.html">setDontFlipCamera</a></code>(bool bDontFlipCamera); </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="setCameraLocationInWorld_func_1.html">setCameraLocationInWorld</a></code>(const <a class="cpp_link_ref" href="../SVector/index.html">SVector</a>&amp; vLocation); </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="setCameraVerticalFOV_func_1.html">setCameraVerticalFOV</a></code>(float fFOV); </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="setCameraNearClipPlane_func_1.html">setCameraNearClipPlane</a></code>(float fNearClipPlane); </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="setCameraFarClipPlane_func_1.html">setCameraFarClipPlane</a></code>(float fFarClipPlane); </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="setFixedCameraZoom_func_1.html">setFixedCameraZoom</a></code>(float fZoom); </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="setFixedCameraRotation_func_1.html">setFixedCameraRotation</a></code>(float fPhi, float fTheta); </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="setFixedCameraRotationShift_func_1.html">setFixedCameraRotationShift</a></code>(float fHorizontalShift, float fVerticalShift); </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="getFixedCameraRotation_func_1.html">getFixedCameraRotation</a></code>(float* fPhi, float* fTheta) const; </code>
+				<br>
+				<code class="cpp_function"> float <code class="cpp_func_name"><a class="cpp_link" href="getFixedCameraZoom_func_1.html">getFixedCameraZoom</a></code>() const; </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="getFixedCameraLocalAxisVector_func_1.html">getFixedCameraLocalAxisVector</a></code>(<a class="cpp_link_ref" href="../SVector/index.html">SVector</a>* pvXAxis, <a class="cpp_link_ref" href="../SVector/index.html">SVector</a>* pvYAxis, <a class="cpp_link_ref" href="../SVector/index.html">SVector</a>* pvZAxis) const; </code>
+				<br>
+				<code class="cpp_function"> <a class="cpp_link_ref" href="../SVector/index.html">SVector</a> <code class="cpp_func_name"><a class="cpp_link" href="getCameraLocationInWorld_func_1.html">getCameraLocationInWorld</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> float <code class="cpp_func_name"><a class="cpp_link" href="getCameraVerticalFOV_func_1.html">getCameraVerticalFOV</a></code>() const; </code>
+				<br>
+				<code class="cpp_function"> float <code class="cpp_func_name"><a class="cpp_link" href="getCameraHorizontalFOV_func_1.html">getCameraHorizontalFOV</a></code>() const; </code>
+				<br>
+				<code class="cpp_function"> float <code class="cpp_func_name"><a class="cpp_link" href="getCameraNearClipPlane_func_1.html">getCameraNearClipPlane</a></code>() const; </code>
+				<br>
+				<code class="cpp_function"> float <code class="cpp_func_name"><a class="cpp_link" href="getCameraFarClipPlane_func_1.html">getCameraFarClipPlane</a></code>() const; </code>
+				<br>
+				<code class="cpp_function"> float <code class="cpp_func_name"><a class="cpp_link" href="getCameraAspectRatio_func_1.html">getCameraAspectRatio</a></code>() const; </code>
+				<br>
+				<code class="cpp_function"> float <code class="cpp_func_name"><a class="cpp_link" href="getCameraNearClipWindowWidth_func_1.html">getCameraNearClipWindowWidth</a></code>() const; </code>
+				<br>
+				<code class="cpp_function"> float <code class="cpp_func_name"><a class="cpp_link" href="getCameraNearClipWindowHeight_func_1.html">getCameraNearClipWindowHeight</a></code>() const; </code>
+				<br>
+				<code class="cpp_function"> float <code class="cpp_func_name"><a class="cpp_link" href="getCameraFarClipWindowWidth_func_1.html">getCameraFarClipWindowWidth</a></code>() const; </code>
+				<br>
+				<code class="cpp_function"> float <code class="cpp_func_name"><a class="cpp_link" href="getCameraFarClipWindowHeight_func_1.html">getCameraFarClipWindowHeight</a></code>() const; </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="getCameraBasicVectors_func_1.html">getCameraBasicVectors</a></code>(<a class="cpp_link_ref" href="../SVector/index.html">SVector</a>* pvForward, <a class="cpp_link_ref" href="../SVector/index.html">SVector</a>* pvLeft, <a class="cpp_link_ref" href="../SVector/index.html">SVector</a>* pvZAxis); </code>
+				<br>
+				<code class="cpp_function"> SCameraEffects <code class="cpp_func_name"><a class="cpp_link" href="getCameraEffects_func_1.html">getCameraEffects</a></code>(); </code>
+				<br>
+			</div>
+		</details>
+		
+	</div>
+</body>
+</html>

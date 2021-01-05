@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../../doc.css">
+    <title>startShaderExecution - Silent Engine Documentation</title>
+</head>
+<body>
+    <div class="nav_panel">
+        <a class="cpp_link_title" href="../../classes/index.html"> Classes </a>
+		<br>
+		<a class="cpp_link_title" href="../../structs/index.html"> Structs </a>
+		<br>
+		<a class="cpp_link_title" href="../../enums/index.html"> Enums </a>
+    </div>
+    
+	<div class="cpp_doc">
+		<h3 class="cpp_object"> startShaderExecution </h3>
+		<div class="cpp_codeobject_desc"> starts to execute shader on every draw call until stopShaderExecution() is called. </div>
+		<br>
+		<code class="cpp_func_line_code"> bool startShaderExecution<br>(<br>&nbsp;&nbsp;&nbsp;unsigned int iThreadGroupCountX,<br>&nbsp;&nbsp;&nbsp;unsigned int iThreadGroupCountY,<br>&nbsp;&nbsp;&nbsp;unsigned int iThreadGroupCountZ<br>); </code>
+		<br>
+		<br>
+		<div class="cpp_func_param">iThreadGroupCountX</div>
+		<br>
+		<div class="cpp_func_param_desc">defines the amount of thread groups that will be dispatched by X-axis. Must be at least 1.</div>
+		<br>
+		<div class="cpp_func_param">iThreadGroupCountY</div>
+		<br>
+		<div class="cpp_func_param_desc">defines the amount of thread groups that will be dispatched by Y-axis. Must be at least 1.</div>
+		<br>
+		<div class="cpp_func_param">iThreadGroupCountZ</div>
+		<br>
+		<div class="cpp_func_param_desc">defines the amount of thread groups that will be dispatched by Z-axis. Must be at least 1.</div>
+		<br>
+	----------------------------------------------
+	<br>
+	<br>
+	<div class="cpp_func_param"> Return Value </div>
+	<br>
+	<div class="cpp_func_param_desc"> returns true if the compute shader (hlsl) was not specified (see SComputeShader::compileShader()) or no shader data is added. </div>
+	<br>
+	
+</div>
+</body>
+</html>

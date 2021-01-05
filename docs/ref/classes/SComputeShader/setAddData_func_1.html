@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../../doc.css">
+    <title>setAddData - Silent Engine Documentation</title>
+</head>
+<body>
+    <div class="nav_panel">
+        <a class="cpp_link_title" href="../../classes/index.html"> Classes </a>
+		<br>
+		<a class="cpp_link_title" href="../../structs/index.html"> Structs </a>
+		<br>
+		<a class="cpp_link_title" href="../../enums/index.html"> Enums </a>
+    </div>
+    
+	<div class="cpp_doc">
+		<h3 class="cpp_object"> setAddData </h3>
+		<div class="cpp_codeobject_desc"> creates a resource for shader use, read-only data is passed as a 'StructuredBuffer' to 't' shader register (in hlsl),    read-write data is passed as a 'RWStructuredBuffer' to 'u' shader register (in hlsl). </div>
+		<br>
+		<code class="cpp_func_line_code"> bool setAddData<br>(<br>&nbsp;&nbsp;&nbsp;bool bReadOnlyData,<br>&nbsp;&nbsp;&nbsp;const std::string&amp; sResourceName,<br>&nbsp;&nbsp;&nbsp;unsigned long long iDataSizeInBytes,<br>&nbsp;&nbsp;&nbsp;unsigned int iShaderRegister,<br>&nbsp;&nbsp;&nbsp;const void* pInitData = nullptr<br>); </code>
+		<br>
+		<br>
+		<div class="cpp_func_param">bReadOnlyData</div>
+		<br>
+		<div class="cpp_func_param_desc">true for read-only resource.</div>
+		<br>
+		<div class="cpp_func_param">sResourceName</div>
+		<br>
+		<div class="cpp_func_param_desc">unique name of the resource.</div>
+		<br>
+		<div class="cpp_func_param">iDataSizeInBytes</div>
+		<br>
+		<div class="cpp_func_param_desc">the size of buffer we need to allocate. For example, if you need to have 4 float values in the buffer,    then pass: sizeof(float) x 4, or if you need to allocate space for your struct: sizeof(MyStruct) x N.</div>
+		<br>
+		<div class="cpp_func_param">iShaderRegister</div>
+		<br>
+		<div class="cpp_func_param_desc">shader register (in hlsl), note that read-only and read-write data can use the same register    as they are bound to the different shader registers (read-only to 't', read-write to 'u').</div>
+		<br>
+		<div class="cpp_func_param">pInitData</div>
+		<br>
+		<div class="cpp_func_param_desc">initial data of the buffer (optional).</div>
+		<br>
+	----------------------------------------------
+	<br>
+	<br>
+	<div class="cpp_func_param"> Return Value </div>
+	<br>
+	<div class="cpp_func_param_desc"> returns true if something went wrong or if the passed resource name is not unique, or if you reached max. amount of added resources    (we have 64 free slots, each resource takes 2 slots, each 32 bit constant 1 slot). </div>
+	<br>
+	<div class="cpp_func_param"> Remarks </div>
+	<br>
+	<div class="cpp_func_param_desc"> calling this function after startShaderExecution() call, will always return true.  </div>
+	<br>
+	
+</div>
+</body>
+</html>

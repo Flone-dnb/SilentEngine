@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../../doc.css">
+    <title>setAddMeshResource - Silent Engine Documentation</title>
+</head>
+<body>
+    <div class="nav_panel">
+        <a class="cpp_link_title" href="../../classes/index.html"> Classes </a>
+		<br>
+		<a class="cpp_link_title" href="../../structs/index.html"> Structs </a>
+		<br>
+		<a class="cpp_link_title" href="../../enums/index.html"> Enums </a>
+    </div>
+    
+	<div class="cpp_doc">
+		<h3 class="cpp_object"> setAddMeshResource </h3>
+		<div class="cpp_codeobject_desc"> adds a mesh resource for shader use, it will be a 'RWStructuredBuffer' to 'u' shader register (in hlsl). </div>
+		<br>
+		<code class="cpp_func_line_code"> bool setAddMeshResource<br>(<br>&nbsp;&nbsp;&nbsp;<a class="cpp_link_ref" href="../../structs/SMeshData/index.html">SMeshData</a>ComputeResource* pResource,<br>&nbsp;&nbsp;&nbsp;const std::string&amp; sResourceName,<br>&nbsp;&nbsp;&nbsp;unsigned int iShaderRegister,<br>&nbsp;&nbsp;&nbsp;unsigned long long&amp; iOutDataSizeInBytes<br>); </code>
+		<br>
+		<br>
+		<div class="cpp_func_param">pResource</div>
+		<br>
+		<div class="cpp_func_param_desc">resource to vertex/index buffer of the mesh (use getMeshDataAsComputeResource() in component).</div>
+		<br>
+		<div class="cpp_func_param">sResourceName</div>
+		<br>
+		<div class="cpp_func_param_desc">unique name of the resource.</div>
+		<br>
+		<div class="cpp_func_param">iShaderRegister</div>
+		<br>
+		<div class="cpp_func_param_desc">shader register (in hlsl).</div>
+		<br>
+		<div class="cpp_func_param">iOutDataSizeInBytes</div>
+		<br>
+		<div class="cpp_func_param_desc">the size of the passed resource that you can use,    for vertex buffer will be 'meshData.getVerticesCount() x sizeof(SVertex)'    see SPrimitiveShapeGenerator.h to see SVertex struct, for index buffer size will be 'meshData.getIndicesCount() x sizeof(std::uint32_t)' (if    meshData.hasIndicesMoreThan16Bits() == true) or    'meshData.getIndicesCount() x sizeof(std::uint16_t)' (if meshData.hasIndicesMoreThan16Bits() == false).</div>
+		<br>
+	----------------------------------------------
+	<br>
+	<br>
+	<div class="cpp_func_param"> Return Value </div>
+	<br>
+	<div class="cpp_func_param_desc"> returns true if something went wrong or if the passed resource name is not unique, or if you reached max. amount of added resources    (we have 64 free slots, each resource takes 2 slots, each 32 bit constant 1 slot). </div>
+	<br>
+	<div class="cpp_func_param"> Remarks </div>
+	<br>
+	<div class="cpp_func_param_desc"> if using vertex buffer, don't forget to create SVertex struct in hlsl.    Calling this function after startShaderExecution() call, will always return true. </div>
+	<br>
+	
+</div>
+</body>
+</html>

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../../doc.css">
+    <title>SComputeShader - Silent Engine Documentation</title>
+</head>
+<body>
+    <div class="nav_panel">
+        <a class="cpp_link_title" href="../../classes/index.html"> Classes </a>
+		<br>
+		<a class="cpp_link_title" href="../../structs/index.html"> Structs </a>
+		<br>
+		<a class="cpp_link_title" href="../../enums/index.html"> Enums </a>
+    </div>
+    
+	<div class="cpp_doc">
+		<h3 class="cpp_object"> SComputeShader </h3>
+		<code class="cpp_codeobject"> class SComputeShader </code>
+		<br>
+		<br>
+		<div class="cpp_codeobject_desc">   The class represents a compute shader.  </div>
+		<br>
+		<div class="cpp_codeobject_path"> #include "Public/SComputeShader/SComputeShader.h" </div>
+		<br>
+		<br>
+		<details open class="cpp_details">
+			<br>
+			<summary class="cpp_summary"> Public: </summary>
+			<div class="cpp_func_container">
+				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="copyComputeResults_func_1.html">copyComputeResults</a></code>(const std::string&amp; sResourceNameToCopyFrom, bool bBlockDraw, std::function&lt;void(char*, size_t)&gt; callback); </code>
+				<br>
+				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="startShaderExecution_func_1.html">startShaderExecution</a></code>(unsigned int iThreadGroupCountX, unsigned int iThreadGroupCountY, unsigned int iThreadGroupCountZ); </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="stopShaderExecution_func_1.html">stopShaderExecution</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="compileShader_func_1.html">compileShader</a></code>(const std::wstring&amp; sPathToShaderFile, const std::string&amp; sShaderEntryFunctionName); </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="setSettingExecuteShaderBeforeDraw_func_1.html">setSettingExecuteShaderBeforeDraw</a></code>(bool bExecuteShaderBeforeDraw); </code>
+				<br>
+				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="setAddData_func_1.html">setAddData</a></code>(bool bReadOnlyData, const std::string&amp; sResourceName, unsigned long long iDataSizeInBytes, unsigned int iShaderRegister, const void* pInitData = nullptr); </code>
+				<br>
+				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="setAddMeshResource_func_1.html">setAddMeshResource</a></code>(<a class="cpp_link_ref" href="../../structs/SMeshData/index.html">SMeshData</a>ComputeResource* pResource, const std::string&amp; sResourceName, unsigned int iShaderRegister, unsigned long long&amp; iOutDataSizeInBytes); </code>
+				<br>
+				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="setAdd32BitConstant_func_1.html">setAdd32BitConstant</a></code>(float _32BitConstant, const std::string&amp; sConstantName, unsigned int iShaderRegister); </code>
+				<br>
+				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="setUpdate32BitConstant_func_1.html">setUpdate32BitConstant</a></code>(float _32BitConstant, const std::string&amp; sContantName); </code>
+				<br>
+			</div>
+		</details>
+		
+	</div>
+</body>
+</html>
