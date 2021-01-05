@@ -222,7 +222,14 @@ void SMeshComponent::setDrawAsLines(bool bDrawAsLines)
 {
 	if (bDrawAsLines)
 	{
-		renderData.primitiveTopologyType = D3D_PRIMITIVE_TOPOLOGY_LINELIST;
+		if (bEnableTransparency)
+		{
+			SError::showErrorMessageBox(L"SMeshComponent::setDrawAsLines()", L"cannot draw as lines because the mesh is using transparency.");
+		}
+		else
+		{
+			renderData.primitiveTopologyType = D3D_PRIMITIVE_TOPOLOGY_LINELIST;
+		}
 	}
 	else
 	{
