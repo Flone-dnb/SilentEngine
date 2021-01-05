@@ -2585,21 +2585,7 @@ void SApplication::draw()
 
 	drawOpaqueComponents();
 
-	if (bUseFillModeWireframe)
-	{
-		pCommandList->SetPipelineState(pTransparentWireframePSO.Get());
-	}
-	else
-	{
-		if (MSAA_Enabled)
-		{
-			pCommandList->SetPipelineState(pTransparentAlphaToCoveragePSO.Get());
-		}
-		else
-		{
-			pCommandList->SetPipelineState(pTransparentPSO.Get());
-		}
-	}
+	setTransparentPSO();
 
 	drawTransparentComponents();
 
@@ -2892,6 +2878,11 @@ void SApplication::drawComponent(SComponent* pComponent, bool bUsingCustomResour
 
 	if (bDrawThisComponent)
 	{
+		if (pComponent->getRenderData()->primitiveTopologyType == D3D_PRIMITIVE_TOPOLOGY_LINELIST)
+		{
+			pCommandList->SetPipelineState(pOpaqueLineTopologyPSO.Get());
+		}
+
 		pCommandList->IASetVertexBuffers(0, 1, &pComponent->getRenderData()->pGeometry->getVertexBufferView());
 		pCommandList->IASetIndexBuffer(&pComponent->getRenderData()->pGeometry->getIndexBufferView());
 		pCommandList->IASetPrimitiveTopology(pComponent->getRenderData()->primitiveTopologyType);
@@ -2996,6 +2987,19 @@ void SApplication::drawComponent(SComponent* pComponent, bool bUsingCustomResour
 			pComponent->getRenderData()->iStartVertexLocation, 0);
 
 		iLastFrameDrawCallCount++;
+
+
+		if (pComponent->getRenderData()->primitiveTopologyType == D3D_PRIMITIVE_TOPOLOGY_LINELIST)
+		{
+			if (bUseFillModeWireframe)
+			{
+				pCommandList->SetPipelineState(pOpaqueWireframePSO.Get());
+			}
+			else
+			{
+				pCommandList->SetPipelineState(pOpaquePSO.Get());
+			}
+		}
 	}
 }
 
@@ -4167,6 +4171,15 @@ bool SApplication::createPSO(SShader* pPSOsForCustomShader)
 			SError::showErrorMessageBox(hresult, L"SApplication::createPSO::ID3D12Device::CreateGraphicsPipelineState()");
 			return true;
 		}
+
+		D3D12_GRAPHICS_PIPELINE_STATE_DESC psoLineDesc = psoDesc;
+		psoLineDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE;
+		hresult = pDevice->CreateGraphicsPipelineState(&psoLineDesc, IID_PPV_ARGS(&pOpaqueLineTopologyPSO));
+		if (FAILED(hresult))
+		{
+			SError::showErrorMessageBox(hresult, L"SApplication::createPSO::ID3D12Device::CreateGraphicsPipelineState()");
+			return true;
+		}
 	}
 
 
@@ -5089,6 +5102,25 @@ SMaterial* SApplication::registerMaterialBundleElement(const std::string& sMater
 	pMat->iUpdateCBInFrameResourceCount = SFRAME_RES_COUNT;
 
 	return pMat;
+}
+
+void SApplication::setTransparentPSO()
+{
+	if (bUseFillModeWireframe)
+	{
+		pCommandList->SetPipelineState(pTransparentWireframePSO.Get());
+	}
+	else
+	{
+		if (MSAA_Enabled)
+		{
+			pCommandList->SetPipelineState(pTransparentAlphaToCoveragePSO.Get());
+		}
+		else
+		{
+			pCommandList->SetPipelineState(pTransparentPSO.Get());
+		}
+	}
 }
 
 SApplication::SApplication(HINSTANCE hInstance)

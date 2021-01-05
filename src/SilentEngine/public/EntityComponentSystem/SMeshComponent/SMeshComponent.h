@@ -127,6 +127,12 @@ public:
 
 	//@@Function
 	/*
+	* desc: every 2 indices will be considered as a line.
+	*/
+	void      setDrawAsLines(bool bDrawAsLines);
+
+	//@@Function
+	/*
 	* desc: used to retrieve the material of the mesh.
 	* return: valid pointer if the material was assigned before, nullptr otherwise.
 	*/

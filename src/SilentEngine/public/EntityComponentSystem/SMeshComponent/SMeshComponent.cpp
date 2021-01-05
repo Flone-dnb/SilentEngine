@@ -218,6 +218,18 @@ void SMeshComponent::setCustomShaderProperty(unsigned int iCustomProperty)
 	mtxComponentProps.unlock();
 }
 
+void SMeshComponent::setDrawAsLines(bool bDrawAsLines)
+{
+	if (bDrawAsLines)
+	{
+		renderData.primitiveTopologyType = D3D_PRIMITIVE_TOPOLOGY_LINELIST;
+	}
+	else
+	{
+		renderData.primitiveTopologyType = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+	}
+}
+
 SVector SMeshComponent::getTextureUVOffset() const
 {
 	return renderData.getTextureUVOffset();

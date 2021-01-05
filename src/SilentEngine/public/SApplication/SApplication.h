@@ -1062,6 +1062,7 @@ private:
 		bool nanosleep(long long ns);
 		std::vector<SUploadBuffer<SMaterialConstants>*> createBundledMaterialResource(SShader* pShader, size_t iMaterialsCount);
 		SMaterial* registerMaterialBundleElement(const std::string& sMaterialName, bool& bErrorOccurred);
+		void setTransparentPSO();
 
 
 	// -----------------------------------------------------------------
@@ -1090,6 +1091,7 @@ private:
 
 	// PSOs
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> pOpaquePSO;
+	Microsoft::WRL::ComPtr<ID3D12PipelineState> pOpaqueLineTopologyPSO;
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> pTransparentPSO;
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> pTransparentAlphaToCoveragePSO;
 
