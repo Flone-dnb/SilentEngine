@@ -121,9 +121,6 @@
     <Filter Include="SilentEngine\Private\SBlurEffect">
       <UniqueIdentifier>{319fe186-96a5-46c1-899e-7fe09cd82e2b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="SilentEngine\Private\SComputeShader">
-      <UniqueIdentifier>{bdde6cb1-19a4-4428-a76e-643701c205da}</UniqueIdentifier>
-    </Filter>
     <Filter Include="SilentEngine\Private\SRenderItem">
       <UniqueIdentifier>{baaead86-85c4-414a-97cc-f95a753cf7ea}</UniqueIdentifier>
     </Filter>
@@ -138,6 +135,9 @@
     </Filter>
     <Filter Include="SilentEngine\Public\SMaterial">
       <UniqueIdentifier>{1a031b46-f8f4-4729-b815-9869a5690898}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SilentEngine\Public\SComputeShader">
+      <UniqueIdentifier>{a5c793dc-964d-456a-9325-de6ce3ee316c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -222,9 +222,6 @@
     <ClCompile Include="..\src\SilentEngine\Private\SBlurEffect\SBlurEffect.cpp">
       <Filter>SilentEngine\Private\SBlurEffect</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\SilentEngine\Private\SComputeShader\SComputeShader.cpp">
-      <Filter>SilentEngine\Private\SComputeShader</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\SilentEngine\Private\SRenderItem\SRenderItem.cpp">
       <Filter>SilentEngine\Private\SRenderItem</Filter>
     </ClCompile>
@@ -239,6 +236,9 @@
     </ClCompile>
     <ClCompile Include="..\src\SilentEngine\Public\SMaterial\SMaterial.cpp">
       <Filter>SilentEngine\Public\SMaterial</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SilentEngine\Public\SComputeShader\SComputeShader.cpp">
+      <Filter>SilentEngine\Public\SComputeShader</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -329,9 +329,6 @@
     <ClInclude Include="..\src\SilentEngine\Private\SBlurEffect\SBlurEffect.h">
       <Filter>SilentEngine\Private\SBlurEffect</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\SilentEngine\Private\SComputeShader\SComputeShader.h">
-      <Filter>SilentEngine\Private\SComputeShader</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\SilentEngine\Private\SRenderItem\SRenderItem.h">
       <Filter>SilentEngine\Private\SRenderItem</Filter>
     </ClInclude>
@@ -346,6 +343,9 @@
     </ClInclude>
     <ClInclude Include="..\src\SilentEngine\Public\SMaterial\SMaterial.h">
       <Filter>SilentEngine\Public\SMaterial</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SilentEngine\Public\SComputeShader\SComputeShader.h">
+      <Filter>SilentEngine\Public\SComputeShader</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
