@@ -37,7 +37,7 @@
 #include "SilentEngine/Private/SMaterial/SMaterial.h"
 #include "SilentEngine/Private/SBlurEffect/SBlurEffect.h"
 #include "SilentEngine/Private/SComputeShader/SComputeShader.h"
-#include "SilentEngine/Private/SCamera/SCamera.h"
+#include "SilentEngine/Public/SCamera/SCamera.h"
 #include "SilentEngine/Private/SCustomShaderResources/SCustomShaderResources.h"
 
 // Other

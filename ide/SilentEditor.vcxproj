@@ -191,7 +191,6 @@
     <ClCompile Include="..\src\SilentEngine\Private\EntityComponentSystem\SComponent\SComponent.cpp" />
     <ClCompile Include="..\src\SilentEngine\Private\EntityComponentSystem\SLightComponent\SLightComponent.cpp" />
     <ClCompile Include="..\src\SilentEngine\Private\SBlurEffect\SBlurEffect.cpp" />
-    <ClCompile Include="..\src\SilentEngine\Private\SCamera\SCamera.cpp" />
     <ClCompile Include="..\src\SilentEngine\Private\SComputeShader\SComputeShader.cpp" />
     <ClCompile Include="..\src\SilentEngine\Private\SCustomShaderResources\SCustomShaderResources.cpp" />
     <ClCompile Include="..\src\SilentEngine\private\SError\SError.cpp" />
@@ -211,6 +210,7 @@
     <ClCompile Include="..\src\SilentEngine\Public\EntityComponentSystem\STargetComponent\STargetComponent.cpp" />
     <ClCompile Include="..\src\SilentEngine\Public\FileImport\SFormatOBJImporter\SFormatOBJImporter.cpp" />
     <ClCompile Include="..\src\SilentEngine\public\SApplication\SApplication.cpp" />
+    <ClCompile Include="..\src\SilentEngine\Public\SCamera\SCamera.cpp" />
     <ClCompile Include="..\src\SilentEngine\Public\SLevel\SLevel.cpp" />
     <ClCompile Include="..\src\SilentEngine\public\SPrimitiveShapeGenerator\SPrimitiveShapeGenerator.cpp" />
     <ClCompile Include="..\src\SilentEngine\Public\SProfiler\SProfiler.cpp" />
@@ -225,7 +225,6 @@
     <ClInclude Include="..\src\SilentEngine\Private\EntityComponentSystem\SComponent\SComponent.h" />
     <ClInclude Include="..\src\SilentEngine\Private\EntityComponentSystem\SLightComponent\SLightComponent.h" />
     <ClInclude Include="..\src\SilentEngine\Private\SBlurEffect\SBlurEffect.h" />
-    <ClInclude Include="..\src\SilentEngine\Private\SCamera\SCamera.h" />
     <ClInclude Include="..\src\SilentEngine\Private\SComputeShader\SComputeShader.h" />
     <ClInclude Include="..\src\SilentEngine\Private\SCustomShaderResources\SCustomShaderResources.h" />
     <ClInclude Include="..\src\SilentEngine\private\SError\SError.h" />
@@ -246,6 +245,7 @@
     <ClInclude Include="..\src\SilentEngine\Public\EntityComponentSystem\STargetComponent\STargetComponent.h" />
     <ClInclude Include="..\src\SilentEngine\Public\FileImport\SFormatOBJImporter\SFormatOBJImporter.h" />
     <ClInclude Include="..\src\SilentEngine\public\SApplication\SApplication.h" />
+    <ClInclude Include="..\src\SilentEngine\Public\SCamera\SCamera.h" />
     <ClInclude Include="..\src\SilentEngine\public\SKeyboardKey\SKeyboardKey.h" />
     <ClInclude Include="..\src\SilentEngine\Public\SLevel\SLevel.h" />
     <ClInclude Include="..\src\SilentEngine\public\SMouseKey\SMouseKey.h" />
