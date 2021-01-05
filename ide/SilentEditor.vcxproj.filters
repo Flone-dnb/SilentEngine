@@ -88,9 +88,6 @@
     <Filter Include="SilentEngine\Public\EntityComponentSystem\STargetComponent">
       <UniqueIdentifier>{6cdb74cb-2f2f-4b1d-9dcb-d244d98bfc4d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="SilentEngine\Private\SMaterial">
-      <UniqueIdentifier>{d95e930e-d9b8-4057-acaa-f28ee7f2ac72}</UniqueIdentifier>
-    </Filter>
     <Filter Include="SilentEngine\Private\EntityComponentSystem">
       <UniqueIdentifier>{95531138-3c6b-4f44-95c7-0c892d9d9b3d}</UniqueIdentifier>
     </Filter>
@@ -138,6 +135,9 @@
     </Filter>
     <Filter Include="SilentEngine\Public\SCamera">
       <UniqueIdentifier>{d800ca07-24fd-45d3-ba56-dadcad192903}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SilentEngine\Public\SMaterial">
+      <UniqueIdentifier>{1a031b46-f8f4-4729-b815-9869a5690898}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -195,9 +195,6 @@
     <ClCompile Include="..\src\SilentEngine\Public\EntityComponentSystem\STargetComponent\STargetComponent.cpp">
       <Filter>SilentEngine\Public\EntityComponentSystem\STargetComponent</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\SilentEngine\Private\SMaterial\SMaterial.cpp">
-      <Filter>SilentEngine\Private\SMaterial</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\SilentEngine\Private\EntityComponentSystem\SComponent\SComponent.cpp">
       <Filter>SilentEngine\Private\EntityComponentSystem\SComponent</Filter>
     </ClCompile>
@@ -239,6 +236,9 @@
     </ClCompile>
     <ClCompile Include="..\src\SilentEngine\Public\SCamera\SCamera.cpp">
       <Filter>SilentEngine\Public\SCamera</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SilentEngine\Public\SMaterial\SMaterial.cpp">
+      <Filter>SilentEngine\Public\SMaterial</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -302,9 +302,6 @@
     <ClInclude Include="..\src\SilentEngine\Public\EntityComponentSystem\STargetComponent\STargetComponent.h">
       <Filter>SilentEngine\Public\EntityComponentSystem\STargetComponent</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\SilentEngine\Private\SMaterial\SMaterial.h">
-      <Filter>SilentEngine\Private\SMaterial</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\SilentEngine\Private\EntityComponentSystem\SComponent\SComponent.h">
       <Filter>SilentEngine\Private\EntityComponentSystem\SComponent</Filter>
     </ClInclude>
@@ -346,6 +343,9 @@
     </ClInclude>
     <ClInclude Include="..\src\SilentEngine\Public\SCamera\SCamera.h">
       <Filter>SilentEngine\Public\SCamera</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SilentEngine\Public\SMaterial\SMaterial.h">
+      <Filter>SilentEngine\Public\SMaterial</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

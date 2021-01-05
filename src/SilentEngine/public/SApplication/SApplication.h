@@ -34,7 +34,7 @@
 #include "SilentEngine/Public/SVideoSettings/SVideoSettings.h"
 #include "SilentEngine/Public/SProfiler/SProfiler.h"
 #include "SilentEngine/Public/SLevel/SLevel.h"
-#include "SilentEngine/Private/SMaterial/SMaterial.h"
+#include "SilentEngine/Public/SMaterial/SMaterial.h"
 #include "SilentEngine/Private/SBlurEffect/SBlurEffect.h"
 #include "SilentEngine/Private/SComputeShader/SComputeShader.h"
 #include "SilentEngine/Public/SCamera/SCamera.h"

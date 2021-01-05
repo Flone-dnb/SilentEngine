@@ -18,7 +18,7 @@
 
 // Custom
 #include "SilentEngine/Public/SVector/SVector.h"
-#include "SilentEngine/Private/SMaterial/SMaterial.h"
+#include "SilentEngine/Public/SMaterial/SMaterial.h"
 
 //@@Struct
 /*
