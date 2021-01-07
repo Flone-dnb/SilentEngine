@@ -261,7 +261,8 @@ public:
 		by using SMaterial::unbindTexture() or SComponent::unbindMaterial().
 		If you want to clear all textures and material, the right way is to
 		call SContainer::unbindMaterialsFromAllComponents() (or unbindMaterial() on all components and child components), and then use
-		unloadTexture() and unregisterMaterial() (no matter in what order).
+		unloadTexture() and unregisterMaterial() (no matter in what order). Make sure that this texture is not used by a custom shader
+		(unloadCompiledShaderFromGPU() first).
 		It's recommended to use this function in loading moments of your application (ex. loading screen)
 		as this function may drop the framerate a little.
 		*/
