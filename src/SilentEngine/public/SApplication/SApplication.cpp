@@ -1580,6 +1580,11 @@ void SApplication::showMessageBox(const std::wstring& sMessageBoxTitle, const st
 	MessageBox(0, sMessageText.c_str(), sMessageBoxTitle.c_str(), 0);
 }
 
+void SApplication::openInternetURL(const std::wstring& sURL)
+{
+	ShellExecute(NULL, L"open", sURL.c_str(), NULL, NULL, SW_SHOWNORMAL);
+}
+
 void SApplication::makeOneCopyOfScreenPixelsToCustomBuffer(unsigned char* pPixels)
 {
 	bSaveBackBufferPixelsForUser = true;

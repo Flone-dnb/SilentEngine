@@ -457,6 +457,13 @@ public:
 
 		//@@Function
 		/*
+		* desc: used to open a URL in the default browser.
+		* remarks: example "https://www.google.com/".
+		*/
+		void                   openInternetURL                  (const std::wstring& sURL);
+
+		//@@Function
+		/*
 		* desc: enabling this will copy screen pixels, for next frame only, to specified pPixels buffer.
 		* param "pPixels": unsigned char array with the size equal to (width x height x 4), use getWindowSize() to get width and height.
 		* remarks: you can access the pixels in onTick() function, each pixel is in 'rgba' format where each component is 'unsigned char'.
