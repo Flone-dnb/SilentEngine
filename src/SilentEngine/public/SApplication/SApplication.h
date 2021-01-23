@@ -576,6 +576,16 @@ protected:
 		* desc: an overridable function, called after the SApplication::showWindow() call.
 		*/
 		virtual void onShowEvent    () {};
+		//@@Function
+		/*
+		* desc: an overridable function, called just before the window loses focus.
+		*/
+		virtual void onLoseFocus    () {};
+		//@@Function
+		/*
+		* desc: an overridable function, called after the window gains focus.
+		*/
+		virtual void onGainFocus    () {};
 
 private:
 

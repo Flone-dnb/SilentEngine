@@ -5375,6 +5375,22 @@ LRESULT SApplication::msgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 		return 0;
 	}
+	case WM_KILLFOCUS:
+	{
+		// Lost focus.
+
+		onLoseFocus();
+
+		return 0;
+	}
+	case WM_SETFOCUS:
+	{
+		// Gain focus.
+
+		onGainFocus();
+
+		return 0;
+	}
 	case WM_ENTERSIZEMOVE:
 	{
 		// The user grabs the resize bars.
