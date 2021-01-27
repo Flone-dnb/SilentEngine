@@ -899,8 +899,6 @@ bool SApplication::spawnContainerInLevel(SContainer* pContainer)
 
 	mtxDraw.lock();
 
-	flushCommandQueue();
-
 	if (iCBCount == 0)
 	{
 		// No renderable components inside.
@@ -914,6 +912,8 @@ bool SApplication::spawnContainerInLevel(SContainer* pContainer)
 	}
 	else
 	{
+		flushCommandQueue();
+
 		iActualObjectCBCount += iCBCount;
 
 		bool bExpanded = false;
@@ -983,8 +983,9 @@ bool SApplication::spawnContainerInLevel(SContainer* pContainer)
 
 
 			// Recreate cbv heap.
-			createCBVSRVUAVHeap();
-			createViews();
+			// (not using cbv for SObjectConstants - don't recreate heap)
+			//createCBVSRVUAVHeap();
+			//createViews();
 		}
 	}
 
@@ -1133,8 +1134,9 @@ void SApplication::despawnContainerFromLevel(SContainer* pContainer)
 			}
 
 			// Recreate cbv heap.
-			createCBVSRVUAVHeap();
-			createViews();
+			// (not using cbv for SObjectConstants - don't recreate heap)
+			//createCBVSRVUAVHeap();
+			//createViews();
 		}
 	}
 
@@ -2953,10 +2955,13 @@ void SApplication::drawComponent(SComponent* pComponent, bool bUsingCustomResour
 
 		// Object descriptor table.
 
+		// (uncomment 'recreate cbv heap' in spawn/despawnContainer if
+		// will use views)
 		pCommandList->SetGraphicsRootConstantBufferView(1,
 			pCurrentFrameResource->pObjectsCB.get()->getResource()->GetGPUVirtualAddress() +
 			pComponent->getRenderData()->iObjCBIndex * pCurrentFrameResource->pObjectsCB->getElementSize());
-
+		// (uncomment 'recreate cbv heap' in spawn/despawnContainer if
+		// will use views)
 
 
 		// Material descriptor table.
@@ -3793,6 +3798,7 @@ bool SApplication::createCBVSRVUAVHeap()
 	size_t iDescCount = roundUp(vRegisteredMaterials.size(), OBJECT_CB_RESIZE_MULTIPLE); // for SMaterialConstants
 
 	// new stuff per frame resource goes here
+	// make sure to recreate cbv heap (like in the end of the spawnContainerInLevel())
 
 
 	UINT iDescriptorCount = iDescCount * iFrameResourcesCount;
