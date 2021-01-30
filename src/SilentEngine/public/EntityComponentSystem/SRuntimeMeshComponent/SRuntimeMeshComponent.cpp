@@ -18,7 +18,7 @@
 #include "SilentEngine/Private/SMiscHelpers/SMiscHelpers.h"
 
 
-SRuntimeMeshComponent::SRuntimeMeshComponent(std::string sComponentName) : SComponent()
+SRuntimeMeshComponent::SRuntimeMeshComponent(std::string sComponentName, bool bDisableFrustumCulling) : SComponent()
 {
 	componentType = SCT_RUNTIME_MESH;
 
@@ -32,6 +32,8 @@ SRuntimeMeshComponent::SRuntimeMeshComponent(std::string sComponentName) : SComp
 	bIndexOfVertexBufferValid = false;
 	bNoMeshDataOnSpawn = false;
 	bNewMeshData = false;
+
+	this->bDisableFrustumCulling = bDisableFrustumCulling;
 }
 
 SRuntimeMeshComponent::~SRuntimeMeshComponent()
@@ -42,6 +44,23 @@ SRuntimeMeshComponent::~SRuntimeMeshComponent()
 void SRuntimeMeshComponent::setVisibility(bool bVisible)
 {
 	this->bVisible = bVisible;
+}
+
+void SRuntimeMeshComponent::setDisableFrustumCulling(bool bDisable)
+{
+	this->bDisableFrustumCulling = bDisable;
+
+	if (bDisableFrustumCulling == false)
+	{
+		mtxDrawComponent.lock();
+
+		if (meshData.getVerticesCount() > 0)
+		{
+			updateBoundsForFrustumCulling();
+		}
+
+		mtxDrawComponent.unlock();
+	}
 }
 
 bool SRuntimeMeshComponent::setEnableTransparency(bool bEnable)
@@ -96,13 +115,20 @@ bool SRuntimeMeshComponent::setUseDefaultShader(bool bForceUseDefaultEvenIfSpawn
 	return true;
 }
 
-void SRuntimeMeshComponent::setMeshData(const SMeshData& meshData, bool bAddedRemovedVerticesOrAddedRemovedIndices, bool bUpdateBoundingBox)
+void SRuntimeMeshComponent::setMeshData(const SMeshData& meshData, bool bAddedRemovedVerticesOrAddedRemovedIndices)
 {
 	mtxComponentProps.lock();
 
 	mtxDrawComponent.lock();
+
 	this->meshData = meshData;
 	bNewMeshData = true;
+
+	if (bDisableFrustumCulling == false)
+	{
+		updateBoundsForFrustumCulling();
+	}
+
 	mtxDrawComponent.unlock();
 
 	if (bAddedRemovedVerticesOrAddedRemovedIndices)
@@ -143,6 +169,29 @@ void SRuntimeMeshComponent::setMeshData(const SMeshData& meshData, bool bAddedRe
 	}
 
 	mtxComponentProps.unlock();
+}
+
+void SRuntimeMeshComponent::updateBoundsForFrustumCulling()
+{
+	DirectX::XMFLOAT3 vMinf3(FLT_MAX, FLT_MAX, FLT_MAX);
+	DirectX::XMFLOAT3 vMaxf3(-FLT_MAX, -FLT_MAX, -FLT_MAX);
+
+	DirectX::XMVECTOR vMin = XMLoadFloat3(&vMinf3);
+	DirectX::XMVECTOR vMax = XMLoadFloat3(&vMaxf3);
+
+	std::vector<SMeshVertex> vVerts = meshData.getVertices();
+
+	for (size_t i = 0; vVerts.size(); i++)
+	{
+		DirectX::XMVECTOR P = DirectX::XMLoadFloat3(&vVerts[i].vPosition);
+
+		vMin = DirectX::XMVectorMin(vMin, P);
+		vMax = DirectX::XMVectorMax(vMax, P);
+	}
+
+	using namespace DirectX; // for easy + and - operators
+	XMStoreFloat3(&bounds.Center, 0.5f * (vMin + vMax));
+	XMStoreFloat3(&bounds.Extents, 0.5f * (vMax - vMin));
 }
 
 void SRuntimeMeshComponent::unbindMaterial()

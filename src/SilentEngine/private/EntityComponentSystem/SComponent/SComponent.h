@@ -308,6 +308,9 @@ protected:
 
 	SRenderItem renderData; // will be null for components that doesn't have mesh data
 	SMeshData   meshData; // will be null for components that doesn't have mesh data
+
+	DirectX::BoundingBox bounds;
+
 	SShader*    pCustomShader;
 
 

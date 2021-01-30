@@ -385,6 +385,8 @@ void SCamera::updateProjectionAndClipWindows()
 
 	DirectX::XMMATRIX P = DirectX::XMMatrixPerspectiveFovLH(DirectX::XMConvertToRadians(fVerticalFOV), fAspectRatio, fNearClipPlane, fFarClipPlane);
 	XMStoreFloat4x4(&mProj, P);
+
+	DirectX::BoundingFrustum::CreateFromMatrix(cameraBoundingFrustum, P);
 }
 
 DirectX::XMMATRIX SCamera::getViewMatrix()

@@ -2401,6 +2401,8 @@ void SApplication::updateMainPassCB()
 	DirectX::XMMATRIX view = camera.getViewMatrix();
 	DirectX::XMMATRIX proj = camera.getProjMatrix();
 
+	cameraBoundingFrustumOnLastMainPassUpdate = camera.cameraBoundingFrustum;
+
 	DirectX::XMMATRIX viewProj    = DirectX::XMMatrixMultiply(view, proj);
 	DirectX::XMMATRIX invView     = DirectX::XMMatrixInverse(&DirectX::XMMatrixDeterminant(view), view);
 	DirectX::XMMATRIX invProj     = DirectX::XMMatrixInverse(&DirectX::XMMatrixDeterminant(proj), proj);
@@ -2863,14 +2865,20 @@ void SApplication::drawTransparentComponents()
 void SApplication::drawComponent(SComponent* pComponent, bool bUsingCustomResources)
 {
 	bool bDrawThisComponent = false;
+	bool bUseFrustumCulling = true;
 
 	if (pComponent->componentType == SCT_MESH)
 	{
 		SMeshComponent* pMeshComponent = dynamic_cast<SMeshComponent*>(pComponent);
 
-		if (pMeshComponent->isVisible() && pMeshComponent->getMeshData().getVerticesCount() > 0)
+		if (pMeshComponent->isVisible() && (pMeshComponent->getMeshData().getVerticesCount() > 0))
 		{
 			bDrawThisComponent = true;
+
+			if (pMeshComponent->bVertexBufferUsedInComputeShader)
+			{
+				bUseFrustumCulling = false;
+			}
 		}
 	}
 	else if (pComponent->componentType == SCT_RUNTIME_MESH)
@@ -2880,135 +2888,152 @@ void SApplication::drawComponent(SComponent* pComponent, bool bUsingCustomResour
 		if (pRuntimeMeshComponent->isVisible() && pRuntimeMeshComponent->getMeshData().getVerticesCount() > 0)
 		{
 			bDrawThisComponent = true;
+
+			if (pRuntimeMeshComponent->bDisableFrustumCulling)
+			{
+				bUseFrustumCulling = false;
+			}
 		}
 	}
 
-	if (bDrawThisComponent)
+	if (bDrawThisComponent == false)
 	{
-		if (pComponent->getRenderData()->primitiveTopologyType == D3D_PRIMITIVE_TOPOLOGY_LINELIST)
+		return;
+	}
+
+	if (bUseFrustumCulling)
+	{
+		if (doFrustumCulling(pComponent) == false)
 		{
-			pCommandList->SetPipelineState(pOpaqueLineTopologyPSO.Get());
+			return; // mesh is outside of the view frustum
 		}
-
-		pCommandList->IASetVertexBuffers(0, 1, &pComponent->getRenderData()->pGeometry->getVertexBufferView());
-		pCommandList->IASetIndexBuffer(&pComponent->getRenderData()->pGeometry->getIndexBufferView());
-		pCommandList->IASetPrimitiveTopology(pComponent->getRenderData()->primitiveTopologyType);
-
-
-		size_t iMaterialCount = roundUp(vRegisteredMaterials.size(), OBJECT_CB_RESIZE_MULTIPLE);
-		size_t iTextureCount = vLoadedTextures.size();
+	}
 
 
 
-		// Texture descriptor table.
+	if (pComponent->getRenderData()->primitiveTopologyType == D3D_PRIMITIVE_TOPOLOGY_LINELIST)
+	{
+		pCommandList->SetPipelineState(pOpaqueLineTopologyPSO.Get());
+	}
 
-		auto heapHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(pCBVSRVUAVHeap->GetGPUDescriptorHandleForHeapStart());
+	pCommandList->IASetVertexBuffers(0, 1, &pComponent->getRenderData()->pGeometry->getVertexBufferView());
+	pCommandList->IASetIndexBuffer(&pComponent->getRenderData()->pGeometry->getIndexBufferView());
+	pCommandList->IASetPrimitiveTopology(pComponent->getRenderData()->primitiveTopologyType);
 
-		STextureHandle tex;
-		bool bHasTexture = false;
 
-		size_t iMatCBIndex = 0;
+	size_t iMaterialCount = roundUp(vRegisteredMaterials.size(), OBJECT_CB_RESIZE_MULTIPLE);
+	size_t iTextureCount = vLoadedTextures.size();
 
-		if (pComponent->pCustomShader)
+
+
+	// Texture descriptor table.
+
+	auto heapHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(pCBVSRVUAVHeap->GetGPUDescriptorHandleForHeapStart());
+
+	STextureHandle tex;
+	bool bHasTexture = false;
+
+	size_t iMatCBIndex = 0;
+
+	if (pComponent->pCustomShader)
+	{
+		if (pComponent->pCustomShader->pCustomShaderResources)
 		{
-			if (pComponent->pCustomShader->pCustomShaderResources)
+			if (pComponent->pCustomShader->pCustomShaderResources->vMaterials[0]->getMaterialProperties().getDiffuseTexture(&tex) == false)
 			{
-				if (pComponent->pCustomShader->pCustomShaderResources->vMaterials[0]->getMaterialProperties().getDiffuseTexture(&tex) == false)
-				{
-					bHasTexture = true;
-				}
+				bHasTexture = true;
 			}
 		}
+	}
 
-		if (pComponent->componentType == SCT_MESH)
+	if (pComponent->componentType == SCT_MESH)
+	{
+		SMeshComponent* pMeshComponent = dynamic_cast<SMeshComponent*>(pComponent);
+
+		if (pMeshComponent->getMeshMaterial())
 		{
-			SMeshComponent* pMeshComponent = dynamic_cast<SMeshComponent*>(pComponent);
-
-			if (pMeshComponent->getMeshMaterial())
+			if (pMeshComponent->getMeshMaterial()->getMaterialProperties().getDiffuseTexture(&tex) == false)
 			{
-				if (pMeshComponent->getMeshMaterial()->getMaterialProperties().getDiffuseTexture(&tex) == false)
-				{
-					bHasTexture = true;
-				}
+				bHasTexture = true;
 			}
+		}
+	}
+	else
+	{
+		SRuntimeMeshComponent* pRuntimeMeshComponent = dynamic_cast<SRuntimeMeshComponent*>(pComponent);
+
+		if (pRuntimeMeshComponent->getMeshMaterial())
+		{
+			if (pRuntimeMeshComponent->getMeshMaterial()->getMaterialProperties().getDiffuseTexture(&tex) == false)
+			{
+				bHasTexture = true;
+			}
+		}
+	}
+
+	if (bHasTexture)
+	{
+		heapHandle.Offset(iPerFrameResEndOffset + tex.pRefToTexture->iTexSRVHeapIndex, iCBVSRVUAVDescriptorSize);
+		pCommandList->SetGraphicsRootDescriptorTable(3, heapHandle);
+	}
+
+
+
+	// Object descriptor table.
+
+	// (uncomment 'recreate cbv heap' in spawn/despawnContainer if
+	// will use views)
+	pCommandList->SetGraphicsRootConstantBufferView(1,
+		pCurrentFrameResource->pObjectsCB.get()->getResource()->GetGPUVirtualAddress() +
+		pComponent->getRenderData()->iObjCBIndex * pCurrentFrameResource->pObjectsCB->getElementSize());
+	// (uncomment 'recreate cbv heap' in spawn/despawnContainer if
+	// will use views)
+
+
+	// Material descriptor table.
+
+	if (pComponent->meshData.getMeshMaterial())
+	{
+		iMatCBIndex = pComponent->meshData.getMeshMaterial()->iMatCBIndex;
+	}
+
+	/*UINT iCBVIndex = iCurrentFrameResourceIndex * iMaterialCount + iMatCBIndex;
+	auto cbvHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(pCBVSRVUAVHeap->GetGPUDescriptorHandleForHeapStart());
+	cbvHandle.Offset(iCBVIndex, iCBVSRVUAVDescriptorSize);
+
+	pCommandList->SetGraphicsRootDescriptorTable(2, cbvHandle);*/
+
+	if (bUsingCustomResources)
+	{
+		pCommandList->SetGraphicsRootShaderResourceView(2,
+			pComponent->pCustomShader->pCustomShaderResources->vFrameResourceBundles[iCurrentFrameResourceIndex]->getResource()->GetGPUVirtualAddress());
+	}
+	else
+	{
+		pCommandList->SetGraphicsRootConstantBufferView(2,
+			pCurrentFrameResource->pMaterialCB.get()->getResource()->GetGPUVirtualAddress()
+			+ iMatCBIndex * pCurrentFrameResource->pMaterialCB->getElementSize());
+	}
+
+
+
+	// Draw.
+
+	pCommandList->DrawIndexedInstanced(pComponent->getRenderData()->iIndexCount, 1, pComponent->getRenderData()->iStartIndexLocation,
+		pComponent->getRenderData()->iStartVertexLocation, 0);
+
+	iLastFrameDrawCallCount++;
+
+
+	if (pComponent->getRenderData()->primitiveTopologyType == D3D_PRIMITIVE_TOPOLOGY_LINELIST)
+	{
+		if (bUseFillModeWireframe)
+		{
+			pCommandList->SetPipelineState(pOpaqueWireframePSO.Get());
 		}
 		else
 		{
-			SRuntimeMeshComponent* pRuntimeMeshComponent = dynamic_cast<SRuntimeMeshComponent*>(pComponent);
-
-			if (pRuntimeMeshComponent->getMeshMaterial())
-			{
-				if (pRuntimeMeshComponent->getMeshMaterial()->getMaterialProperties().getDiffuseTexture(&tex) == false)
-				{
-					bHasTexture = true;
-				}
-			}
-		}
-
-		if (bHasTexture)
-		{
-			heapHandle.Offset(iPerFrameResEndOffset + tex.pRefToTexture->iTexSRVHeapIndex, iCBVSRVUAVDescriptorSize);
-			pCommandList->SetGraphicsRootDescriptorTable(3, heapHandle);
-		}
-
-
-
-		// Object descriptor table.
-
-		// (uncomment 'recreate cbv heap' in spawn/despawnContainer if
-		// will use views)
-		pCommandList->SetGraphicsRootConstantBufferView(1,
-			pCurrentFrameResource->pObjectsCB.get()->getResource()->GetGPUVirtualAddress() +
-			pComponent->getRenderData()->iObjCBIndex * pCurrentFrameResource->pObjectsCB->getElementSize());
-		// (uncomment 'recreate cbv heap' in spawn/despawnContainer if
-		// will use views)
-
-
-		// Material descriptor table.
-
-		if (pComponent->meshData.getMeshMaterial())
-		{
-			iMatCBIndex = pComponent->meshData.getMeshMaterial()->iMatCBIndex;
-		}
-
-		/*UINT iCBVIndex = iCurrentFrameResourceIndex * iMaterialCount + iMatCBIndex;
-		auto cbvHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(pCBVSRVUAVHeap->GetGPUDescriptorHandleForHeapStart());
-		cbvHandle.Offset(iCBVIndex, iCBVSRVUAVDescriptorSize);
-
-		pCommandList->SetGraphicsRootDescriptorTable(2, cbvHandle);*/
-
-		if (bUsingCustomResources)
-		{
-			pCommandList->SetGraphicsRootShaderResourceView(2,
-				pComponent->pCustomShader->pCustomShaderResources->vFrameResourceBundles[iCurrentFrameResourceIndex]->getResource()->GetGPUVirtualAddress());
-		}
-		else
-		{
-			pCommandList->SetGraphicsRootConstantBufferView(2,
-				pCurrentFrameResource->pMaterialCB.get()->getResource()->GetGPUVirtualAddress()
-				+ iMatCBIndex * pCurrentFrameResource->pMaterialCB->getElementSize());
-		}
-
-
-
-		// Draw.
-
-		pCommandList->DrawIndexedInstanced(pComponent->getRenderData()->iIndexCount, 1, pComponent->getRenderData()->iStartIndexLocation,
-			pComponent->getRenderData()->iStartVertexLocation, 0);
-
-		iLastFrameDrawCallCount++;
-
-
-		if (pComponent->getRenderData()->primitiveTopologyType == D3D_PRIMITIVE_TOPOLOGY_LINELIST)
-		{
-			if (bUseFillModeWireframe)
-			{
-				pCommandList->SetPipelineState(pOpaqueWireframePSO.Get());
-			}
-			else
-			{
-				pCommandList->SetPipelineState(pOpaquePSO.Get());
-			}
+			pCommandList->SetPipelineState(pOpaquePSO.Get());
 		}
 	}
 }
@@ -5132,6 +5157,31 @@ void SApplication::setTransparentPSO()
 			pCommandList->SetPipelineState(pTransparentPSO.Get());
 		}
 	}
+}
+
+bool SApplication::doFrustumCulling(SComponent* pComponent)
+{
+	DirectX::XMMATRIX world    = DirectX::XMLoadFloat4x4(&pComponent->renderData.vWorld);
+	DirectX::XMMATRIX invWorld = DirectX::XMMatrixInverse(&XMMatrixDeterminant(world), world);
+
+	DirectX::XMMATRIX view = DirectX::XMMatrixTranspose(DirectX::XMLoadFloat4x4(&mainRenderPassCB.vView)); // transpose back (see updateMainPassCB()).
+	DirectX::XMMATRIX invView = DirectX::XMMatrixInverse(&XMMatrixDeterminant(view), view);
+
+	// View space to the object's local space.
+	DirectX::XMMATRIX viewToObjectLocal = XMMatrixMultiply(invView, invWorld);
+
+	// Transform the camera frustum from view space to the object's local space.
+	DirectX::BoundingFrustum localSpaceFrustum;
+	cameraBoundingFrustumOnLastMainPassUpdate.Transform(localSpaceFrustum, viewToObjectLocal);
+
+	// Perform the box/frustum intersection test in local space.
+	if (localSpaceFrustum.Contains(pComponent->bounds) != DirectX::DISJOINT)
+	{
+		// Draw this component.
+		return true;
+	}
+
+	return false;
 }
 
 SApplication::SApplication(HINSTANCE hInstance)

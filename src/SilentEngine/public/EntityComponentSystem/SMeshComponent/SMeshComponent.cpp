@@ -26,6 +26,7 @@ SMeshComponent::SMeshComponent(std::string sComponentName) : SComponent()
 	renderData.pGeometry = new SMeshGeometry();
 
 	bVisible = true;
+	bVertexBufferUsedInComputeShader = false;
 }
 
 SMeshComponent::~SMeshComponent()
@@ -68,13 +69,18 @@ void SMeshComponent::setUseCustomShader(SShader* pCustomShader, bool bForceChang
 	}
 }
 
-void SMeshComponent::setMeshData(const SMeshData& meshData, bool bAddedRemovedIndices, bool bUpdateBoundingBox)
+void SMeshComponent::setMeshData(const SMeshData& meshData, bool bAddedRemovedIndices)
 {
+	std::lock_guard<std::mutex> lock(mtxComponentProps);
+
 	SMaterial* pOldMat = this->meshData.pMeshMaterial;
 	this->meshData = meshData;
 	this->meshData.pMeshMaterial = pOldMat;
 
-	mtxComponentProps.lock();
+
+	updateBoundsForFrustumCulling();
+
+
 
 	if (bAddedRemovedIndices)
 	{
@@ -107,17 +113,13 @@ void SMeshComponent::setMeshData(const SMeshData& meshData, bool bAddedRemovedIn
 		vResourceUsed[i].pShader->updateMeshResource(vResourceUsed[i].sResource);
 	}
 	mtxResourceUsed.unlock();
-
-	mtxComponentProps.unlock();
 }
 
 void SMeshComponent::unbindMaterial()
 {
-	mtxComponentProps.lock();
+	std::lock_guard<std::mutex> lock(mtxComponentProps);
 
 	meshData.setMeshMaterial(nullptr);
-
-	mtxComponentProps.unlock();
 }
 
 bool SMeshComponent::setUseDefaultShader(bool bForceUseDefaultEvenIfSpawned)
@@ -268,6 +270,12 @@ SMeshDataComputeResource* SMeshComponent::getMeshDataAsComputeResource(bool bGet
 	pMeshDataResource->pResourceOwner = this;
 	pMeshDataResource->bVertexBuffer = bGetVertexBuffer;
 
+	if (bGetVertexBuffer)
+	{
+		// compute shader in destructor will set this to 'false'
+		bVertexBufferUsedInComputeShader = true;
+	}
+
 	return pMeshDataResource;
 }
 
@@ -405,6 +413,29 @@ void SMeshComponent::updateMyAndChildsLocationRotationScale(bool bCalledOnSelf)
 	{
 		vChildComponents[i]->updateMyAndChildsLocationRotationScale(false);
 	}
+}
+
+void SMeshComponent::updateBoundsForFrustumCulling()
+{
+	DirectX::XMFLOAT3 vMinf3(FLT_MAX, FLT_MAX, FLT_MAX);
+	DirectX::XMFLOAT3 vMaxf3(-FLT_MAX, -FLT_MAX, -FLT_MAX);
+
+	DirectX::XMVECTOR vMin = XMLoadFloat3(&vMinf3);
+	DirectX::XMVECTOR vMax = XMLoadFloat3(&vMaxf3);
+
+	std::vector<SMeshVertex> vVerts = meshData.getVertices();
+
+	for (size_t i = 0; i < vVerts.size(); i++)
+	{
+		DirectX::XMVECTOR P = DirectX::XMLoadFloat3(&vVerts[i].vPosition);
+
+		vMin = DirectX::XMVectorMin(vMin, P);
+		vMax = DirectX::XMVectorMax(vMax, P);
+	}
+
+	using namespace DirectX; // for easy + and - operators
+	XMStoreFloat3(&bounds.Center, 0.5f * (vMin + vMax));
+	XMStoreFloat3(&bounds.Extents, 0.5f * (vMax - vMin));
 }
 
 void SMeshComponent::updateWorldMatrix()

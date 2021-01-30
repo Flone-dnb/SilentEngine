@@ -12,6 +12,7 @@
 
 // DirectX
 #include <DirectXMath.h>
+#include <DirectXCollision.h>
 
 // Custom
 #include "SilentEngine/Public/SVector/SVector.h"
@@ -197,6 +198,8 @@ private:
 	SCAMERA_MODE cameraMode = CM_FREE;
 
 	SCameraEffects cameraEffects;
+
+	DirectX::BoundingFrustum cameraBoundingFrustum;
 
 	std::mutex mtxLocRotView;
 	std::mutex mtxCameraEffects;

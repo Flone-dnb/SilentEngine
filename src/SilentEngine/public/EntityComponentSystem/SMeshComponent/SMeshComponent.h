@@ -69,10 +69,9 @@ public:
 	indices but they have different values then of course this value should be false.
 	This is just an optimization not to create a new index buffer on every setMeshData() call. You can just set this value to true every time, but it's
 	recommended to consider this optimization. Here we don't care about vertices because we create a new vertex buffer anyway (unlike SRuntimeMeshComponent).
-	* param "bUpdateBoundingBox": TODO.
 	* remarks: this function is thread-safe (you can call it from any thread).
 	*/
-	void setMeshData           (const SMeshData& meshData, bool bAddedRemovedIndices, bool bUpdateBoundingBox = false);
+	void setMeshData           (const SMeshData& meshData, bool bAddedRemovedIndices);
 
 	//@@Function
 	/*
@@ -179,7 +178,8 @@ public:
 	//@@Function
 	/*
 	* desc: used to retrieve the mesh data as a resource for SComputeShader.
-	* param "bGetVertexBuffer": set true to get vertex buffer as a resource for SComputeShader, false for index buffer.
+	* param "bGetVertexBuffer": set true to get vertex buffer as a resource for SComputeShader, false for index buffer. 'True' will also
+	disable the frustum culling.
 	* return: nullptr if the component is not spawned (i.e. no buffer was created), valid pointer otherwise.
 	* remarks: pass this pointer to your compute shader in setAddMeshResource(), do not 'delete' this pointer (compute shader needs
 	this pointer for some time, it will delete it for you in its destructor). You can delete this mesh even if the compute shader is working,
@@ -228,11 +228,12 @@ private:
 	*/
 	virtual void updateMyAndChildsLocationRotationScale(bool bCalledOnSelf) override;
 
+	void updateBoundsForFrustumCulling();
+
 
 	// ------------------------------------------------------------------------------------
 
-	DirectX::BoundingBox bounds;
-
 	bool        bVisible;
+	bool        bVertexBufferUsedInComputeShader;
 };
 

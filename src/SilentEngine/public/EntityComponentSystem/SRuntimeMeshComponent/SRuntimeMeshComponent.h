@@ -31,7 +31,14 @@ class SRuntimeMeshComponent : public SComponent
 public:
 
 	//@@Function
-	SRuntimeMeshComponent(std::string sComponentName);
+	/*
+	* desc: constructor function.
+	* param "bDisableFrustumCulling": set to true if the mesh data of this component will be changing very rapidly (like moving particles for example),
+	and so we won't recalculate the object's bounds on every setMeshData() call for frustum culling (which will disable the frustum culling
+	for this component only, but slightly reduce the CPU load and... well... increase the GPU load - you should probably benchmark
+	this and see what's better for your game). You can change this setting using the setDisableFrustumCulling() function.
+	*/
+	SRuntimeMeshComponent(std::string sComponentName, bool bDisableFrustumCulling);
 
 	SRuntimeMeshComponent() = delete;
 	SRuntimeMeshComponent(const SRuntimeMeshComponent&) = delete;
@@ -46,6 +53,15 @@ public:
 	* param "bVisible": true by default.
 	*/
 	void setVisibility         (bool bVisible);
+
+	//@@Function
+	/*
+	* desc: set to true if the mesh data of this component will be changing very rapidly (like moving particles for example),
+	and so we won't recalculate the object's bounds on every setMeshData() call for frustum culling (which will disable the frustum culling
+	for this component only, but slightly reduce the CPU load and... well... increase the GPU load - you should probably benchmark
+	this and see what's better for your game). Passing the 'false' will recalculate mesh bounds if there are any mesh data.
+	*/
+	void setDisableFrustumCulling(bool bDisable);
 
 	//@@Function
 	/*
@@ -74,10 +90,9 @@ public:
 	vertices but they have different positions in space then of course this value should be false. If you have a
 	SRuntimeMeshComponent with a plane terrain and you want to only change the positions of the vertices then
 	this value should be false. Setting this value to true all the time will almost fully nullify all optimizations that SRuntimeMeshComponent has.
-	* param "bUpdateBoundingBox": TODO.
 	* remarks: this function is thread-safe (you can call it from any thread).
 	*/
-	void setMeshData           (const SMeshData& meshData, bool bAddedRemovedVerticesOrAddedRemovedIndices, bool bUpdateBoundingBox = false);
+	void setMeshData           (const SMeshData& meshData, bool bAddedRemovedVerticesOrAddedRemovedIndices);
 
 	//@@Function
 	/*
@@ -236,9 +251,9 @@ private:
 	*/
 	void updateVertexBufferMaxIndex(size_t& iCurrentIndex);
 
-	// ------------------------------------------
+	void updateBoundsForFrustumCulling();
 
-	DirectX::BoundingBox bounds;
+	// ------------------------------------------
 
 	std::mutex  mtxDrawComponent;
 
@@ -248,5 +263,6 @@ private:
 	bool        bNoMeshDataOnSpawn;
 	bool        bNewMeshData;
 	bool        bVisible;
+	bool        bDisableFrustumCulling;
 };
 

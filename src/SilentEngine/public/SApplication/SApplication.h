@@ -1066,21 +1066,31 @@ private:
 
 
 		void showDeviceRemovedReason();
+
 		void removeComponentsFromGlobalVectors(SContainer* pContainer);
+
 		void releaseShader(SShader* pShader);
 		void removeShaderFromObjects(SShader* pShader, std::vector<SShaderObjects>* pObjectsByShader);
 		void forceChangeMeshShader(SShader* pOldShader, SShader* pNewShader, SComponent* pComponent, bool bUsesTransparency);
+
 		void saveBackBufferPixels();
+
 		void executeCustomComputeShaders(bool bBeforeDraw);
 		void executeCustomComputeShader(SComputeShader* pComputeShader);
 		void doOptionalPauseForUserComputeShaders();
 		void copyUserComputeResults(SComputeShader* pComputeShader);
+
 		bool doesComponentExists(SComponent* pComponent);
 		bool doesComputeShaderExists(SComputeShader* pShader);
+
 		bool nanosleep(long long ns);
+
 		std::vector<SUploadBuffer<SMaterialConstants>*> createBundledMaterialResource(SShader* pShader, size_t iMaterialsCount);
 		SMaterial* registerMaterialBundleElement(const std::string& sMaterialName, bool& bErrorOccurred);
+
 		void setTransparentPSO();
+
+		bool doFrustumCulling(SComponent* pComponent);
 
 
 	// -----------------------------------------------------------------
@@ -1224,10 +1234,11 @@ private:
 	DXGI_MODE_SCALING        iScaling       = DXGI_MODE_SCALING_UNSPECIFIED;
 
 
-	// Viewport
+	// Viewport / Camera
 	D3D12_VIEWPORT ScreenViewport; 
 	D3D12_RECT     ScissorRect;
 	SCamera        camera;
+	DirectX::BoundingFrustum cameraBoundingFrustumOnLastMainPassUpdate;
 
 	
 	// Windows stuff.

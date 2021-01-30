@@ -307,6 +307,7 @@ SComputeShader::~SComputeShader()
 			if (SApplication::getApp()->doesComponentExists(vShaderResources[i]->pMeshComputeResource->pResourceOwner))
 			{
 				vShaderResources[i]->pMeshComputeResource->pResourceOwner->unbindResourceUpdates(this);
+				dynamic_cast<SMeshComponent*>(vShaderResources[i]->pMeshComputeResource->pResourceOwner)->bVertexBufferUsedInComputeShader = false;
 			}
 			
 			delete vShaderResources[i]->pMeshComputeResource;
