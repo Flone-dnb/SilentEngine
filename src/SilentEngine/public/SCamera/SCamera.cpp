@@ -27,7 +27,7 @@ void SCamera::setCameraMode(SCAMERA_MODE mode)
 
 void SCamera::moveCameraForward(float fValue)
 {
-	mtxLocRotView.lock();
+	std::lock_guard<std::mutex> lock(mtxLocRotView);
 
 	DirectX::XMVECTOR vMoveValue = DirectX::XMVectorReplicate(fValue);
 	DirectX::XMVECTOR vForward = DirectX::XMLoadFloat3(&vForwardVector);
@@ -35,13 +35,11 @@ void SCamera::moveCameraForward(float fValue)
 	DirectX::XMStoreFloat3(&vLocation, DirectX::XMVectorMultiplyAdd(vMoveValue, vForward, vPos));
 
 	bNeedToUpdateViewMatrix = true;
-
-	mtxLocRotView.unlock();
 }
 
 void SCamera::moveCameraRight(float fValue)
 {
-	mtxLocRotView.lock();
+	std::lock_guard<std::mutex> lock(mtxLocRotView);
 
 	fValue = -fValue;
 	
@@ -51,13 +49,11 @@ void SCamera::moveCameraRight(float fValue)
 	DirectX::XMStoreFloat3(&vLocation, DirectX::XMVectorMultiplyAdd(vMoveValue, vRight, vPos));
 
 	bNeedToUpdateViewMatrix = true;
-
-	mtxLocRotView.unlock();
 }
 
 void SCamera::moveCameraUp(float fValue)
 {
-	mtxLocRotView.lock();
+	std::lock_guard<std::mutex> lock(mtxLocRotView);
 
 	DirectX::XMVECTOR vMoveValue = DirectX::XMVectorReplicate(fValue);
 	DirectX::XMVECTOR vUp = DirectX::XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
@@ -65,8 +61,6 @@ void SCamera::moveCameraUp(float fValue)
 	DirectX::XMStoreFloat3(&vLocation, DirectX::XMVectorMultiplyAdd(vMoveValue, vUp, vPos));
 
 	bNeedToUpdateViewMatrix = true;
-
-	mtxLocRotView.unlock();
 }
 
 void SCamera::rotateCamera(float fPitch, float fYaw, float fRoll)
@@ -78,7 +72,7 @@ void SCamera::rotateCamera(float fPitch, float fYaw, float fRoll)
 
 void SCamera::rotateCameraPitch(float fAngleInDeg)
 {
-	mtxLocRotView.lock();
+	std::lock_guard<std::mutex> lock(mtxLocRotView);
 
 	// make counterclockwise
 	fAngleInDeg = -fAngleInDeg;
@@ -119,13 +113,11 @@ void SCamera::rotateCameraPitch(float fAngleInDeg)
 	DirectX::XMStoreFloat3(&vForwardVector, DirectX::XMVector3TransformNormal(DirectX::XMLoadFloat3(&vForwardVector), R));
 
 	bNeedToUpdateViewMatrix = true;
-
-	mtxLocRotView.unlock();
 }
 
 void SCamera::rotateCameraYaw(float fAngleInDeg)
 {
-	mtxLocRotView.lock();
+	std::lock_guard<std::mutex> lock(mtxLocRotView);
 
 	// Rotate the basis vectors around the world up vector.
 
@@ -136,13 +128,11 @@ void SCamera::rotateCameraYaw(float fAngleInDeg)
 	DirectX::XMStoreFloat3(&vForwardVector, DirectX::XMVector3TransformNormal(DirectX::XMLoadFloat3(&vForwardVector), R));
 
 	bNeedToUpdateViewMatrix = true;
-
-	mtxLocRotView.unlock();
 }
 
 void SCamera::rotateCameraRoll(float fAngleInDeg)
 {
-	mtxLocRotView.lock();
+	std::lock_guard<std::mutex> lock(mtxLocRotView);
 
 	// make counterclockwise
 	fAngleInDeg = -fAngleInDeg;
@@ -155,13 +145,11 @@ void SCamera::rotateCameraRoll(float fAngleInDeg)
 	DirectX::XMStoreFloat3(&vRightVector, DirectX::XMVector3TransformNormal(DirectX::XMLoadFloat3(&vRightVector), R));
 
 	bNeedToUpdateViewMatrix = true;
-
-	mtxLocRotView.unlock();
 }
 
 void SCamera::setFixedCameraRotationShift(float fHorizontalShift, float fVerticalShift)
 {
-	mtxLocRotView.lock();
+	std::lock_guard<std::mutex> lock(mtxLocRotView);
 
 	// Make each pixel correspond to a quarter of a degree.
 	float dx = DirectX::XMConvertToRadians(0.25f * fHorizontalShift);
@@ -175,8 +163,6 @@ void SCamera::setFixedCameraRotationShift(float fHorizontalShift, float fVertica
 	fPhi = SMath::clamp(fPhi, 0.1f, SMath::fPi - 0.1f);
 
 	bNeedToUpdateViewMatrix = true;
-
-	mtxLocRotView.unlock();
 }
 
 void SCamera::getFixedCameraRotation(float* fPhi, float* fTheta) const
@@ -306,7 +292,7 @@ void SCamera::updateViewMatrix()
 {
 	if (bNeedToUpdateViewMatrix)
 	{
-		mtxLocRotView.lock();
+		std::lock_guard<std::mutex> lock(mtxLocRotView);
 
 		if (cameraMode == CM_FREE)
 		{
@@ -371,14 +357,12 @@ void SCamera::updateViewMatrix()
 		updateProjectionAndClipWindows();
 
 		bNeedToUpdateViewMatrix = false;
-
-		mtxLocRotView.unlock();
 	}
 }
 
 void SCamera::resetCameraLocationSettings()
 {
-	mtxLocRotView.lock();
+	std::lock_guard<std::mutex> lock(mtxLocRotView);
 
 	vLocation = { 0.0f, 0.0f, 1.0f };
 	vUpVector = { 0.0f, 0.0f, 1.0f };
@@ -390,12 +374,12 @@ void SCamera::resetCameraLocationSettings()
 	mProj = SMath::getIdentityMatrix4x4();
 
 	bNeedToUpdateViewMatrix = true;
-
-	mtxLocRotView.unlock();
 }
 
 void SCamera::updateProjectionAndClipWindows()
 {
+	// called in lock mtxLocRotView
+
 	fNearClipWindowHeight = 2.0f * fNearClipPlane * tanf(0.5f * DirectX::XMConvertToRadians(fVerticalFOV));
 	fFarClipWindowHeight = 2.0f * fFarClipPlane * tanf(0.5f * DirectX::XMConvertToRadians(fVerticalFOV));
 
@@ -427,7 +411,7 @@ DirectX::XMMATRIX SCamera::getProjMatrix()
 
 void SCamera::makeCameraLookAt(const SVector& vTargetLocation)
 {
-	mtxLocRotView.lock();
+	std::lock_guard<std::mutex> lock(mtxLocRotView);
 
 	DirectX::XMVECTOR target = DirectX::XMVectorSet(vTargetLocation.getX(), vTargetLocation.getY(), vTargetLocation.getZ(), 0.0f);
 	DirectX::XMVECTOR pos = DirectX::XMLoadFloat3(&vLocation);
@@ -442,8 +426,6 @@ void SCamera::makeCameraLookAt(const SVector& vTargetLocation)
 	DirectX::XMStoreFloat3(&vUpVector, U);
 
 	bNeedToUpdateViewMatrix = true;
-
-	mtxLocRotView.unlock();
 }
 
 void SCamera::setCameraEffects(SCameraEffects cameraEffects)
@@ -460,86 +442,72 @@ void SCamera::setDontFlipCamera(bool bDontFlipCamera)
 
 void SCamera::setCameraLocationInWorld(const SVector& vLocation)
 {
-	mtxLocRotView.lock();
+	std::lock_guard<std::mutex> lock(mtxLocRotView);
 
 	this->vLocation.x = vLocation.getX();
 	this->vLocation.y = vLocation.getY();
 	this->vLocation.z = vLocation.getZ();
 
 	bNeedToUpdateViewMatrix = true;
-
-	mtxLocRotView.unlock();
 }
 
 void SCamera::setCameraVerticalFOV(float fFOV)
 {
 	if (fFOV >= 60.0f && fFOV <= 120.0f)
 	{
-		mtxLocRotView.lock();
+		std::lock_guard<std::mutex> lock(mtxLocRotView);
 
 		fVerticalFOV = fFOV;
 
 		updateProjectionAndClipWindows();
-
-		mtxLocRotView.unlock();
 	}
 }
 
 void SCamera::setCameraNearClipPlane(float fNearClipPlane)
 {
-	mtxLocRotView.lock();
+	std::lock_guard<std::mutex> lock(mtxLocRotView);
 
 	this->fNearClipPlane = fNearClipPlane;
 
 	updateProjectionAndClipWindows();
-
-	mtxLocRotView.unlock();
 }
 
 void SCamera::setCameraFarClipPlane(float fFarClipPlane)
 {
-	mtxLocRotView.lock();
+	std::lock_guard<std::mutex> lock(mtxLocRotView);
 
 	this->fFarClipPlane = fFarClipPlane;
 
 	updateProjectionAndClipWindows();
-
-	mtxLocRotView.unlock();
 }
 
 void SCamera::setFixedCameraZoom(float fZoom)
 {
 	if (fZoom > 0.0f)
 	{
-		mtxLocRotView.lock();
+		std::lock_guard<std::mutex> lock(mtxLocRotView);
 
 		fRadius = fZoom;
 
 		bNeedToUpdateViewMatrix = true;
-
-		mtxLocRotView.unlock();
 	}
 }
 
 void SCamera::setFixedCameraRotation(float fPhi, float fTheta)
 {
-	mtxLocRotView.lock();
+	std::lock_guard<std::mutex> lock(mtxLocRotView);
 
 	this->fPhi = fPhi;
 	this->fTheta = fTheta;
 
 	bNeedToUpdateViewMatrix = true;
-
-	mtxLocRotView.unlock();
 }
 
 void SCamera::setCameraAspectRatio(float fAspectRatio)
 {
-	mtxLocRotView.lock();
+	std::lock_guard<std::mutex> lock(mtxLocRotView);
 
 	this->fAspectRatio = fAspectRatio;
 
 	updateProjectionAndClipWindows();
-
-	mtxLocRotView.unlock();
 }
