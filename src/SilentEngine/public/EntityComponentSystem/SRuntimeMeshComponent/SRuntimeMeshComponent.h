@@ -251,8 +251,6 @@ private:
 	*/
 	void updateVertexBufferMaxIndex(size_t& iCurrentIndex);
 
-	void updateBoundsForFrustumCulling();
-
 	// ------------------------------------------
 
 	std::mutex  mtxDrawComponent;

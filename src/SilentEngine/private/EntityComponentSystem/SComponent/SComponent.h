@@ -269,6 +269,8 @@ protected:
 	void bindResourceUpdates(SComputeShader* pShader, const std::string& sResourceName);
 	void unbindResourceUpdates(SComputeShader* pShader);
 
+	void updateBoundsForFrustumCulling();
+
 
 	friend class SApplication;
 	friend class SContainer;

@@ -228,8 +228,6 @@ private:
 	*/
 	virtual void updateMyAndChildsLocationRotationScale(bool bCalledOnSelf) override;
 
-	void updateBoundsForFrustumCulling();
-
 
 	// ------------------------------------------------------------------------------------
 

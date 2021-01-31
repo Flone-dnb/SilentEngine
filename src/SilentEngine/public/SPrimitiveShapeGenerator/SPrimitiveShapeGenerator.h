@@ -153,8 +153,7 @@ private:
 
 	friend class SMeshData;
 	friend class SPrimitiveShapeGenerator;
-	friend class SMeshComponent;
-	friend class SRuntimeMeshComponent;
+	friend class SComponent;
 
 	DirectX::XMFLOAT3 vPosition;
 	DirectX::XMFLOAT3 vNormal;
