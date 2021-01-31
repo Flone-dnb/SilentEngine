@@ -2291,9 +2291,9 @@ void SApplication::updateMaterials()
 
 void SApplication::updateObjectCBs()
 {
-	SUploadBuffer<SObjectConstants>* pCurrentObjectCB  = pCurrentFrameResource->pObjectsCB.get();
-
 	mtxSpawnDespawn.lock();
+
+	SUploadBuffer<SObjectConstants>* pCurrentObjectCB = pCurrentFrameResource->pObjectsCB.get();
 
 	std::vector<SContainer*>* pvRenderableContainers = nullptr;
 	pCurrentLevel->getRenderableContainers(pvRenderableContainers);
