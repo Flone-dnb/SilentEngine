@@ -419,7 +419,11 @@ void SMeshComponent::updateWorldMatrix()
 {
 	mtxComponentProps.lock();
 
-	XMStoreFloat4x4(&renderData.vWorld, getWorldMatrix());
+	DirectX::XMMATRIX world = getWorldMatrix();
+
+	mtxWorldMatrixUpdate.lock();
+	XMStoreFloat4x4(&renderData.vWorld, world);
+	mtxWorldMatrixUpdate.unlock();
 
 	mtxComponentProps.unlock();
 }

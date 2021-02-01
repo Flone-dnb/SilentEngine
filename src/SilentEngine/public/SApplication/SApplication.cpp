@@ -2910,7 +2910,6 @@ void SApplication::drawComponent(SComponent* pComponent, bool bUsingCustomResour
 	}
 
 
-
 	if (pComponent->getRenderData()->primitiveTopologyType == D3D_PRIMITIVE_TOPOLOGY_LINELIST)
 	{
 		pCommandList->SetPipelineState(pOpaqueLineTopologyPSO.Get());
@@ -5161,7 +5160,10 @@ void SApplication::setTransparentPSO()
 
 bool SApplication::doFrustumCulling(SComponent* pComponent)
 {
+	pComponent->mtxWorldMatrixUpdate.lock();
 	DirectX::XMMATRIX world    = DirectX::XMLoadFloat4x4(&pComponent->renderData.vWorld);
+	pComponent->mtxWorldMatrixUpdate.unlock();
+
 	DirectX::XMMATRIX invWorld = DirectX::XMMatrixInverse(&XMMatrixDeterminant(world), world);
 
 	DirectX::XMMATRIX view = DirectX::XMMatrixTranspose(DirectX::XMLoadFloat4x4(&mainRenderPassCB.vView)); // transpose back (see updateMainPassCB()).

@@ -304,6 +304,7 @@ protected:
 
 	std::mutex  mtxComponentProps;
 	std::mutex  mtxResourceUsed;
+	std::mutex  mtxWorldMatrixUpdate;
 
 	std::vector<SComputeResourceBind> vResourceUsed;
 
