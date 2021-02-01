@@ -181,7 +181,7 @@ public:
 	/*
 	* desc: used to retrieve the mesh data.
 	*/
-	SMeshData getMeshData      () const;
+	SMeshData* getMeshData();
 
 	//@@Function
 	/*

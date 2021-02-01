@@ -712,9 +712,17 @@ void SComponent::setCBIndexForMeshComponents(size_t* iIndex, bool bCreateBuffers
 		{
 			SMeshComponent* pMeshComponent = dynamic_cast<SMeshComponent*>(this);
 
-			if (bCreateBuffers && pMeshComponent->getMeshData().getIndicesCount() > 0)
+			pMeshComponent->mtxComponentProps.lock();
+
+			if (bCreateBuffers && pMeshComponent->getMeshData()->getIndicesCount() > 0)
 			{
+				pMeshComponent->mtxComponentProps.unlock();
+
 				pMeshComponent->createGeometryBuffers(true);
+			}
+			else
+			{
+				pMeshComponent->mtxComponentProps.unlock();
 			}
 
 			pMeshComponent->renderData.iObjCBIndex = *iIndex;
@@ -726,9 +734,16 @@ void SComponent::setCBIndexForMeshComponents(size_t* iIndex, bool bCreateBuffers
 
 			if (bCreateBuffers)
 			{
-				if (pRuntimeMeshComponent->meshData.getVerticesCount() > 0)
+				pRuntimeMeshComponent->mtxComponentProps.lock();
+
+				if (pRuntimeMeshComponent->getMeshData()->getVerticesCount() > 0)
 				{
+					pRuntimeMeshComponent->mtxComponentProps.unlock();
 					pRuntimeMeshComponent->createIndexBuffer();
+				}
+				else
+				{
+					pRuntimeMeshComponent->mtxComponentProps.unlock();
 				}
 			}
 			pRuntimeMeshComponent->renderData.iObjCBIndex = *iIndex;

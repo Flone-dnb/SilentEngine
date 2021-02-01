@@ -1884,12 +1884,18 @@ unsigned long long SApplication::getTriangleCountInWorld()
 				if (pvRenderableContainers->operator[](i)->vComponents[j]->componentType == SCT_MESH)
 				{
 					SMeshComponent* pMesh = dynamic_cast<SMeshComponent*>(pvRenderableContainers->operator[](i)->vComponents[j]);
-					iTrisCount += pMesh->getMeshData().getIndicesCount() / 3;
+					
+					pMesh->mtxComponentProps.lock();
+					iTrisCount += pMesh->getMeshData()->getIndicesCount() / 3;
+					pMesh->mtxComponentProps.unlock();
 				}
 				else if (pvRenderableContainers->operator[](i)->vComponents[j]->componentType == SCT_RUNTIME_MESH)
 				{
 					SRuntimeMeshComponent* pRuntimeMesh = dynamic_cast<SRuntimeMeshComponent*>(pvRenderableContainers->operator[](i)->vComponents[j]);
-					iTrisCount += pRuntimeMesh->getMeshData().getIndicesCount() / 3;
+					
+					pRuntimeMesh->mtxComponentProps.lock();
+					iTrisCount += pRuntimeMesh->getMeshData()->getIndicesCount() / 3;
+					pRuntimeMesh->mtxComponentProps.unlock();
 				}
 			}
 		}
@@ -2871,7 +2877,8 @@ void SApplication::drawComponent(SComponent* pComponent, bool bUsingCustomResour
 	{
 		SMeshComponent* pMeshComponent = dynamic_cast<SMeshComponent*>(pComponent);
 
-		if (pMeshComponent->isVisible() && (pMeshComponent->getMeshData().getVerticesCount() > 0))
+		pMeshComponent->mtxComponentProps.lock();
+		if (pMeshComponent->isVisible() && (pMeshComponent->getMeshData()->getVerticesCount() > 0))
 		{
 			bDrawThisComponent = true;
 
@@ -2880,12 +2887,14 @@ void SApplication::drawComponent(SComponent* pComponent, bool bUsingCustomResour
 				bUseFrustumCulling = false;
 			}
 		}
+		pMeshComponent->mtxComponentProps.unlock();
 	}
 	else if (pComponent->componentType == SCT_RUNTIME_MESH)
 	{
 		SRuntimeMeshComponent* pRuntimeMeshComponent = dynamic_cast<SRuntimeMeshComponent*>(pComponent);
 
-		if (pRuntimeMeshComponent->isVisible() && pRuntimeMeshComponent->getMeshData().getVerticesCount() > 0)
+		pRuntimeMeshComponent->mtxComponentProps.lock();
+		if (pRuntimeMeshComponent->isVisible() && pRuntimeMeshComponent->getMeshData()->getVerticesCount() > 0)
 		{
 			bDrawThisComponent = true;
 
@@ -2894,6 +2903,7 @@ void SApplication::drawComponent(SComponent* pComponent, bool bUsingCustomResour
 				bUseFrustumCulling = false;
 			}
 		}
+		pRuntimeMeshComponent->mtxComponentProps.unlock();
 	}
 
 	if (bDrawThisComponent == false)

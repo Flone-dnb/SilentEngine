@@ -271,9 +271,9 @@ float SRuntimeMeshComponent::getTextureUVRotation() const
 	return renderData.getTextureUVRotation();
 }
 
-SMeshData SRuntimeMeshComponent::getMeshData() const
+SMeshData* SRuntimeMeshComponent::getMeshData()
 {
-	return meshData;
+	return &meshData;
 }
 
 SShader* SRuntimeMeshComponent::getCustomShader() const

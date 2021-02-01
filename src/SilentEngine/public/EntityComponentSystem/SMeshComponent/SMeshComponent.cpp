@@ -254,9 +254,9 @@ float SMeshComponent::getTextureUVRotation() const
 	return renderData.getTextureUVRotation();
 }
 
-SMeshData SMeshComponent::getMeshData() const
+SMeshData* SMeshComponent::getMeshData()
 {
-    return meshData;
+    return &meshData;
 }
 
 SShader* SMeshComponent::getCustomShader() const
