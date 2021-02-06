@@ -87,9 +87,10 @@ public:
 	* param "meshData": 3D-geometry data.
 	* param "bAddedRemovedVerticesOrAddedRemovedIndices": this should be set to false if the new mesh data
 	contains the SAME AMOUNT of indices and vertices as the previous one. So if the new mesh data contains the same amount of
-	vertices but they have different positions in space then of course this value should be false. If you have a
-	SRuntimeMeshComponent with a plane terrain and you want to only change the positions of the vertices then
+	vertices but they have different positions in space then of course this value should be false. Example: if you have a
+	SRuntimeMeshComponent with a terrain plane mesh and you want to only change the positions of the vertices then
 	this value should be false. Setting this value to true all the time will almost fully nullify all optimizations that SRuntimeMeshComponent has.
+	Passing the 'true' will pause frame drawing as we need to recreate some GPU buffers (and so will cause small fps drops).
 	* remarks: this function is thread-safe (you can call it from any thread).
 	*/
 	void setMeshData           (const SMeshData& meshData, bool bAddedRemovedVerticesOrAddedRemovedIndices);

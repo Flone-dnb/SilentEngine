@@ -63,7 +63,8 @@ public:
 		* desc: returns all renderable containers (containers that have components with
 		geometry in it, for example, SMeshComponent) in level.
 		* param "pvRenderableContainers": the pointer to your std::vector that will be filled with
-		pointers to the renderable containers in level.
+		pointers to the renderable containers in level. You should not spawn/despawn containers while working with
+		the returned vector as the vector length will change. Use synchronization techniques.
 		*/
 		void getRenderableContainers    (std::vector<SContainer*>*& pvRenderableContainers);
 
@@ -72,7 +73,8 @@ public:
 		* desc: returns all non-renderable containers (containers that don't have components with
 		geometry in it, for example, STargetComponent) in level.
 		* param "pvNotRenderableContainers": the pointer to your std::vector that will be filled with
-		pointers to the non-renderable containers in level.
+		pointers to the non-renderable containers in level. You should not spawn/despawn containers while working with
+		the returned vector as the vector length will change. Use synchronization techniques.
 		*/
 		void getNotRenderableContainers (std::vector<SContainer*>*& pvNotRenderableContainers);
 

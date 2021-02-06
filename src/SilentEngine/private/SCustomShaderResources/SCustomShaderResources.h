@@ -39,5 +39,7 @@ private:
 	std::vector<SUploadBuffer<SMaterialConstants>*> vFrameResourceBundles;
 
 	Microsoft::WRL::ComPtr<ID3D12RootSignature> pCustomRootSignature;
+
+	bool bUsingInstancing;
 };
 

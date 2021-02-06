@@ -9,12 +9,27 @@
 
 // STL
 #include <string>
+#include <mutex>
 
 // Custom
 #include "SilentEngine/Private/EntityComponentSystem/SComponent/SComponent.h"
 #include "SilentEngine/Public/SPrimitiveShapeGenerator/SPrimitiveShapeGenerator.h"
+#include "SilentEngine/Private/SFrameResource/SFrameResource.h"
 
 class SShader;
+
+struct SInstanceProps
+{
+	SVector vLocalLocation = SVector(0.0f, 0.0f, 0.0f);
+	SVector vLocalRotation = SVector(0.0f, 0.0f, 0.0f);
+	SVector vLocalScale = SVector(1.0f, 1.0f, 1.0f);
+
+	SVector vTextureUVOffset = SVector(0.0f, 0.0f);
+	SVector vTextureUVScale = SVector(1.0f, 1.0f);
+	float   fTextureRotation = 0.0f;
+
+	int     iCustomProperty = 0;
+};
 
 //@@Class
 /*
@@ -25,7 +40,12 @@ class SMeshComponent : public SComponent
 public:
 
 	//@@Function
-	SMeshComponent(std::string sComponentName);
+	/*
+	* desc: mesh constructor function.
+	* param "bUseInstancing": set to 'true' if you will use mesh instancing (requires to use a custom shader, see setUseCustomShader()).
+	* param "bVisible": true by default.
+	*/
+	SMeshComponent(std::string sComponentName, bool bUseInstancing = false);
 
 	SMeshComponent() = delete;
 	SMeshComponent(const SMeshComponent&) = delete;
@@ -59,6 +79,33 @@ public:
 	* remarks: use SApplication::compileCustomShader() to compile custom shaders first.
 	*/
 	void setUseCustomShader   (SShader* pCustomShader, bool bForceChangeEvenIfSpawned = false);
+
+	//@@Function
+	/*
+	* desc: used to add mesh instance.
+	* param "instanceData": parameters of the instance, location/rotation/scale is specified relative to the component props.
+	* remarks: if the mesh is spawned pauses the frame drawing to add a new instance so may lead to small fps drops.
+	Does nothing if instancing is disabled.
+	*/
+	void addInstance          (const SInstanceProps& instanceData);
+
+	//@@Function
+	/*
+	* desc: used to update mesh instance.
+	* param "iInstanceIndex": index of the instance, valid values range between 0 and getInstanceCount() minus 1.
+	* param "instanceData": parameters of the instance, location/rotation/scale is specified relative to the component props.
+	* remarks: does nothing if instancing is disabled.
+	*/
+	void updateInstanceData   (unsigned int iInstanceIndex, const SInstanceProps& instanceData);
+
+	//@@Function
+	/*
+	* desc: used to clear all instance data and remove all instances.
+	* remarks: if the mesh is spawned pauses the frame drawing to remove all instances so may lead to small fps drops.
+	All instance data will be deleted automatically after the component is deleted.
+	Does nothing if instancing is disabled.
+	*/
+	void clearAllInstances    ();
 
 	//@@Function
 	/*
@@ -136,6 +183,13 @@ public:
 	* return: valid pointer if the material was assigned before, nullptr otherwise.
 	*/
 	SMaterial* getMeshMaterial();
+
+	//@@Function
+	/*
+	* desc: used to retrieve the number of instances.
+	* return: 0 if this mesh is not using instancing, valid number otherwise.
+	*/
+	unsigned int getInstanceCount();
 
 	//@@Function
 	/*
@@ -229,9 +283,18 @@ private:
 	virtual void updateMyAndChildsLocationRotationScale(bool bCalledOnSelf) override;
 
 
+	SObjectConstants convertInstancePropsToConstants(const SInstanceProps& instanceData);
+
+
 	// ------------------------------------------------------------------------------------
+	
+	std::vector<SObjectConstants> vInstanceData; // "local" instance data, does not represent the actual instance data (if changed updating the frame resources)
+	std::vector<SUploadBuffer<SObjectConstants>*> vFrameResourcesInstancedData; // vector size == SFRAME_RES_COUNT if using instancing (after spawn())
+
+	std::mutex  mtxInstancing;
 
 	bool        bVisible;
 	bool        bVertexBufferUsedInComputeShader;
+	bool        bUseInstancing;
 };
 

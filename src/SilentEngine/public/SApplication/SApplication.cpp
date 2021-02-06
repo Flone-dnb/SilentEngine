@@ -228,23 +228,16 @@ bool SApplication::unregisterMaterial(const std::string& sMaterialName)
 
 	for (size_t i = 0; i < vAllSpawnedMeshComponents.size(); i++)
 	{
-		if (vAllSpawnedMeshComponents[i]->componentType == SCT_MESH)
+		if (vAllSpawnedMeshComponents[i]->meshData.getMeshMaterial())
 		{
-			if (dynamic_cast<SMeshComponent*>(vAllSpawnedMeshComponents[i])->getMeshMaterial())
+			// Not the default material.
+			if (vAllSpawnedMeshComponents[i]->meshData.getMeshMaterial()->getMaterialName() == sMaterialName)
 			{
-				// Not the default material.
-				if (dynamic_cast<SMeshComponent*>(vAllSpawnedMeshComponents[i])->getMeshMaterial()->getMaterialName() == sMaterialName)
+				if (vAllSpawnedMeshComponents[i]->componentType == SCT_MESH)
 				{
 					dynamic_cast<SMeshComponent*>(vAllSpawnedMeshComponents[i])->unbindMaterial();
 				}
-			}
-		}
-		else if (vAllSpawnedMeshComponents[i]->componentType == SCT_RUNTIME_MESH)
-		{
-			if (dynamic_cast<SRuntimeMeshComponent*>(vAllSpawnedMeshComponents[i])->getMeshMaterial())
-			{
-				// Not the default material.
-				if (dynamic_cast<SRuntimeMeshComponent*>(vAllSpawnedMeshComponents[i])->getMeshMaterial()->getMaterialName() == sMaterialName)
+				else if (vAllSpawnedMeshComponents[i]->componentType == SCT_RUNTIME_MESH)
 				{
 					dynamic_cast<SRuntimeMeshComponent*>(vAllSpawnedMeshComponents[i])->unbindMaterial();
 				}
@@ -548,41 +541,27 @@ bool SApplication::unloadTextureFromGPU(STextureHandle& textureHandle)
 
 	for (size_t i = 0; i < vAllSpawnedMeshComponents.size(); i++)
 	{
-		if (vAllSpawnedMeshComponents[i]->componentType == SCT_MESH)
+		if (vAllSpawnedMeshComponents[i]->meshData.getMeshMaterial())
 		{
-			if (dynamic_cast<SMeshComponent*>(vAllSpawnedMeshComponents[i])->getMeshMaterial())
+			// Not the default material.
+			SMaterialProperties matProps = vAllSpawnedMeshComponents[i]->meshData.getMeshMaterial()->getMaterialProperties();
+			STextureHandle texHandle;
+			if (matProps.getDiffuseTexture(&texHandle) == false)
 			{
-				// Not the default material.
-				SMaterialProperties matProps = dynamic_cast<SMeshComponent*>(vAllSpawnedMeshComponents[i])->getMeshMaterial()->getMaterialProperties();
-				STextureHandle texHandle;
-				if (matProps.getDiffuseTexture(&texHandle) == false)
+				if (texHandle.getTextureName() == textureHandle.getTextureName())
 				{
-					if (texHandle.getTextureName() == textureHandle.getTextureName())
+					if (vAllSpawnedMeshComponents[i]->componentType == SCT_MESH)
 					{
 						dynamic_cast<SMeshComponent*>(vAllSpawnedMeshComponents[i])->unbindMaterial();
 					}
-				}
-
-				// ADD OTHER TEXTURES HERE
-			}
-		}
-		else if (vAllSpawnedMeshComponents[i]->componentType == SCT_RUNTIME_MESH)
-		{
-			if (dynamic_cast<SRuntimeMeshComponent*>(vAllSpawnedMeshComponents[i])->getMeshMaterial())
-			{
-				// Not the default material.
-				SMaterialProperties matProps = dynamic_cast<SRuntimeMeshComponent*>(vAllSpawnedMeshComponents[i])->getMeshMaterial()->getMaterialProperties();
-				STextureHandle texHandle;
-				if (matProps.getDiffuseTexture(&texHandle) == false)
-				{
-					if (texHandle.getTextureName() == textureHandle.getTextureName())
+					else if (vAllSpawnedMeshComponents[i]->componentType == SCT_RUNTIME_MESH)
 					{
 						dynamic_cast<SRuntimeMeshComponent*>(vAllSpawnedMeshComponents[i])->unbindMaterial();
 					}
 				}
-
-				// ADD OTHER TEXTURES HERE
 			}
+
+			// ADD OTHER TEXTURES HERE
 		}
 	}
 
@@ -624,8 +603,8 @@ bool SApplication::unloadTextureFromGPU(STextureHandle& textureHandle)
 	return false;
 }
 
-SShader* SApplication::compileCustomShader(const std::wstring& sPathToShaderFile, const std::vector<std::string>& vCustomMaterialNames,
-	bool bWillUseTextures, SCustomShaderResources** pOutCustomResources)
+SShader* SApplication::compileCustomShader(const std::wstring& sPathToShaderFile, 
+	const SCustomShaderProperties& customProps, SCustomShaderResources** pOutCustomResources)
 {
 	// See if the file exists.
 
@@ -633,6 +612,7 @@ SShader* SApplication::compileCustomShader(const std::wstring& sPathToShaderFile
 
 	if (shaderFile.is_open() == false)
 	{
+		SError::showErrorMessageBox(L"SApplication::compileCustomShader()", L"could not open the shader file.");
 		return nullptr;
 	}
 	else
@@ -651,13 +631,13 @@ SShader* SApplication::compileCustomShader(const std::wstring& sPathToShaderFile
 
 
 	std::vector<SMaterial*> vCustomMaterials;
-	if (vCustomMaterialNames.size() > 0)
+	if (customProps.customMaterials.vCustomMaterialNames.size() > 0)
 	{
 		bool bError = false;
 
-		for (size_t i = 0; i < vCustomMaterialNames.size(); i++)
+		for (size_t i = 0; i < customProps.customMaterials.vCustomMaterialNames.size(); i++)
 		{
-			vCustomMaterials.push_back(registerMaterialBundleElement(vCustomMaterialNames[i], bError));
+			vCustomMaterials.push_back(registerMaterialBundleElement(customProps.customMaterials.vCustomMaterialNames[i], bError));
 
 			if (bError)
 			{
@@ -686,19 +666,36 @@ SShader* SApplication::compileCustomShader(const std::wstring& sPathToShaderFile
 
 
 	SShader* pNewShader = new SShader(sPathToShaderFile);
+	
 	if (vCustomMaterials.size() > 0)
 	{
 		pNewShader->pCustomShaderResources = new SCustomShaderResources();
 		pNewShader->pCustomShaderResources->vMaterials = vCustomMaterials;
+		pNewShader->pCustomShaderResources->bUsingInstancing = customProps.bWillUseInstancing;
 
-		createRootSignature(pNewShader->pCustomShaderResources, bWillUseTextures);
+		createRootSignature(pNewShader->pCustomShaderResources, customProps.customMaterials.bWillUseTextures, customProps.bWillUseInstancing);
 
 		mtxMaterial.lock();
 		pNewShader->pCustomShaderResources->vFrameResourceBundles =
 			createBundledMaterialResource(pNewShader, pNewShader->pCustomShaderResources->vMaterials.size());
 		mtxMaterial.unlock();
 
-		*pOutCustomResources = pNewShader->pCustomShaderResources;
+		if (pOutCustomResources)
+		{
+			*pOutCustomResources = pNewShader->pCustomShaderResources;
+		}
+	}
+	else if (customProps.bWillUseInstancing)
+	{
+		pNewShader->pCustomShaderResources = new SCustomShaderResources();
+		pNewShader->pCustomShaderResources->bUsingInstancing = customProps.bWillUseInstancing;
+
+		createRootSignature(pNewShader->pCustomShaderResources, customProps.customMaterials.bWillUseTextures, customProps.bWillUseInstancing);
+
+		if (pOutCustomResources)
+		{
+			*pOutCustomResources = pNewShader->pCustomShaderResources;
+		}
 	}
 
 	pNewShader->pVS = SMiscHelpers::compileShader(sPathToShaderFile, nullptr, "VS", "vs_5_1", bCompileShadersInRelease);
@@ -733,6 +730,8 @@ bool SApplication::unloadCompiledShaderFromGPU(SShader* pShader)
 
 	mtxDraw.lock();
 	mtxSpawnDespawn.lock();
+
+	flushCommandQueue();
 
 
 	removeShaderFromObjects(pShader, &vOpaqueMeshesByCustomShader);
@@ -926,8 +925,12 @@ bool SApplication::spawnContainerInLevel(SContainer* pContainer)
 			pContainer->createVertexBufferForRuntimeMeshComponents(vFrameResources[i].get());
 		}
 
-
 		pContainer->setStartIndexInCB(iNewObjectsCBIndex);
+
+
+
+		// Allocate instanced data (if using instancing)
+		pContainer->createInstancingDataForFrameResource(&vFrameResources);
 
 
 
@@ -1061,6 +1064,9 @@ void SApplication::despawnContainerFromLevel(SContainer* pContainer)
 
 		size_t iRemovedCount = 0;
 		pContainer->removeVertexBufferForRuntimeMeshComponents(&vFrameResources, iRemovedCount);
+
+		// Deallocate instanced data (if using instancing)
+		pContainer->removeInstancingDataForFrameResources(&vFrameResources);
 
 		
 		std::vector<SContainer*>* pvRenderableContainers = nullptr;
@@ -1881,22 +1887,11 @@ unsigned long long SApplication::getTriangleCountInWorld()
 		{
 			for (size_t j = 0; j < pvRenderableContainers->operator[](i)->vComponents.size(); j++)
 			{
-				if (pvRenderableContainers->operator[](i)->vComponents[j]->componentType == SCT_MESH)
-				{
-					SMeshComponent* pMesh = dynamic_cast<SMeshComponent*>(pvRenderableContainers->operator[](i)->vComponents[j]);
-					
-					pMesh->mtxComponentProps.lock();
-					iTrisCount += pMesh->getMeshData()->getIndicesCount() / 3;
-					pMesh->mtxComponentProps.unlock();
-				}
-				else if (pvRenderableContainers->operator[](i)->vComponents[j]->componentType == SCT_RUNTIME_MESH)
-				{
-					SRuntimeMeshComponent* pRuntimeMesh = dynamic_cast<SRuntimeMeshComponent*>(pvRenderableContainers->operator[](i)->vComponents[j]);
-					
-					pRuntimeMesh->mtxComponentProps.lock();
-					iTrisCount += pRuntimeMesh->getMeshData()->getIndicesCount() / 3;
-					pRuntimeMesh->mtxComponentProps.unlock();
-				}
+				pvRenderableContainers->operator[](i)->vComponents[j]->mtxComponentProps.lock();
+
+				iTrisCount += pvRenderableContainers->operator[](i)->vComponents[j]->meshData.getIndicesCount() / 3;
+
+				pvRenderableContainers->operator[](i)->vComponents[j]->mtxComponentProps.unlock();
 			}
 		}
 
@@ -2595,7 +2590,7 @@ void SApplication::draw()
 
 	iLastFrameDrawCallCount = 0;
 
-	mtxSpawnDespawn.lock();
+	//mtxSpawnDespawn.lock();
 	mtxShader.lock();
 
 	drawOpaqueComponents();
@@ -2605,7 +2600,7 @@ void SApplication::draw()
 	drawTransparentComponents();
 
 	mtxShader.unlock();
-	mtxSpawnDespawn.unlock();
+	//mtxSpawnDespawn.unlock();
 
 	pCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(getCurrentBackBufferResource(),
 		D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
@@ -2873,6 +2868,8 @@ void SApplication::drawComponent(SComponent* pComponent, bool bUsingCustomResour
 	bool bDrawThisComponent = false;
 	bool bUseFrustumCulling = true;
 
+	bool bUsingInstancing = false;
+
 	if (pComponent->componentType == SCT_MESH)
 	{
 		SMeshComponent* pMeshComponent = dynamic_cast<SMeshComponent*>(pComponent);
@@ -2881,6 +2878,27 @@ void SApplication::drawComponent(SComponent* pComponent, bool bUsingCustomResour
 		if (pMeshComponent->isVisible() && (pMeshComponent->getMeshData()->getVerticesCount() > 0))
 		{
 			bDrawThisComponent = true;
+
+
+
+			bUsingInstancing = pMeshComponent->bUseInstancing;
+
+			if (pMeshComponent->bUseInstancing)
+			{
+				if (pMeshComponent->vFrameResourcesInstancedData.size() > 0)
+				{
+					if (pMeshComponent->vFrameResourcesInstancedData[0]->getElementCount() == 0)
+					{
+						bDrawThisComponent = false;
+					}
+				}
+				else
+				{
+					bDrawThisComponent = false;
+				}
+			}
+
+
 
 			if (pMeshComponent->bVertexBufferUsedInComputeShader)
 			{
@@ -2911,7 +2929,7 @@ void SApplication::drawComponent(SComponent* pComponent, bool bUsingCustomResour
 		return;
 	}
 
-	if (bUseFrustumCulling)
+	if (bUseFrustumCulling && bUsingInstancing == false)
 	{
 		if (doFrustumCulling(pComponent) == false)
 		{
@@ -2944,13 +2962,16 @@ void SApplication::drawComponent(SComponent* pComponent, bool bUsingCustomResour
 
 	size_t iMatCBIndex = 0;
 
-	if (pComponent->pCustomShader)
+	if (pComponent->pCustomShader) // can be nullptr
 	{
-		if (pComponent->pCustomShader->pCustomShaderResources)
+		if (pComponent->pCustomShader->pCustomShaderResources) // can be nullptr
 		{
-			if (pComponent->pCustomShader->pCustomShaderResources->vMaterials[0]->getMaterialProperties().getDiffuseTexture(&tex) == false)
+			if (pComponent->pCustomShader->pCustomShaderResources->vMaterials.size() > 0)
 			{
-				bHasTexture = true;
+				if (pComponent->pCustomShader->pCustomShaderResources->vMaterials[0]->getMaterialProperties().getDiffuseTexture(&tex) == false)
+				{
+					bHasTexture = true;
+				}
 			}
 		}
 	}
@@ -2999,6 +3020,23 @@ void SApplication::drawComponent(SComponent* pComponent, bool bUsingCustomResour
 	// will use views)
 
 
+
+	// Instancing data.
+	UINT iDrawInstanceCount = 1;
+
+	if (bUsingInstancing)
+	{
+		// Do frustum culling anyway.
+
+		doFrustumCullingOnInstancedMesh(dynamic_cast<SMeshComponent*>(pComponent), iDrawInstanceCount);
+
+		pCommandList->SetGraphicsRootShaderResourceView(4,
+			dynamic_cast<SMeshComponent*>(pComponent)->vFrameResourcesInstancedData[iCurrentFrameResourceIndex]->getResource()->GetGPUVirtualAddress());
+	}
+
+
+
+
 	// Material descriptor table.
 
 	if (pComponent->meshData.getMeshMaterial())
@@ -3012,7 +3050,17 @@ void SApplication::drawComponent(SComponent* pComponent, bool bUsingCustomResour
 
 	pCommandList->SetGraphicsRootDescriptorTable(2, cbvHandle);*/
 
+	bool bUsingMaterialBundle = false;
+
 	if (bUsingCustomResources)
+	{
+		if (pComponent->pCustomShader->pCustomShaderResources->vFrameResourceBundles.size() > 0)
+		{
+			bUsingMaterialBundle = true;
+		}
+	}
+
+	if (bUsingMaterialBundle)
 	{
 		pCommandList->SetGraphicsRootShaderResourceView(2,
 			pComponent->pCustomShader->pCustomShaderResources->vFrameResourceBundles[iCurrentFrameResourceIndex]->getResource()->GetGPUVirtualAddress());
@@ -3028,10 +3076,13 @@ void SApplication::drawComponent(SComponent* pComponent, bool bUsingCustomResour
 
 	// Draw.
 
-	pCommandList->DrawIndexedInstanced(pComponent->getRenderData()->iIndexCount, 1, pComponent->getRenderData()->iStartIndexLocation,
-		pComponent->getRenderData()->iStartVertexLocation, 0);
+	if (iDrawInstanceCount != 0)
+	{
+		pCommandList->DrawIndexedInstanced(pComponent->getRenderData()->iIndexCount, iDrawInstanceCount, pComponent->getRenderData()->iStartIndexLocation,
+			pComponent->getRenderData()->iStartVertexLocation, 0);
 
-	iLastFrameDrawCallCount++;
+		iLastFrameDrawCallCount++;
+	}
 
 
 	if (pComponent->getRenderData()->primitiveTopologyType == D3D_PRIMITIVE_TOPOLOGY_LINELIST)
@@ -3944,7 +3995,7 @@ void SApplication::createFrameResources()
 	}
 }
 
-bool SApplication::createRootSignature(SCustomShaderResources* pCustomShaderResources, bool bUseTextures)
+bool SApplication::createRootSignature(SCustomShaderResources* pCustomShaderResources, bool bUseTextures, bool bUseInstancing)
 {
 	// The root signature defines the resources the shader programs expect.
 
@@ -3959,28 +4010,44 @@ bool SApplication::createRootSignature(SCustomShaderResources* pCustomShaderReso
 	}
 
 	// Root parameter can be a table, root descriptor or root constants.
-	CD3DX12_ROOT_PARAMETER slotRootParameter[4];
+	std::vector<CD3DX12_ROOT_PARAMETER> vRootParameters(bUseInstancing ? 5 : 4);
 
 	// Perfomance TIP: Order from most frequent to least frequent.
-	slotRootParameter[0].InitAsConstantBufferView(0); // cbRenderPass
-	slotRootParameter[1].InitAsConstantBufferView(1); // cbObject
+	vRootParameters[0].InitAsConstantBufferView(0); // cbRenderPass
+	vRootParameters[1].InitAsConstantBufferView(1); // cbObject
 
+	bool bCustomMaterials = false;
 	if (pCustomShaderResources)
 	{
-		slotRootParameter[2].InitAsShaderResourceView(0, 1); // materials
+		if (pCustomShaderResources->vMaterials.size() > 0)
+		{
+			bCustomMaterials = true;
+			
+		}
+	}
+
+	if (bCustomMaterials)
+	{
+		vRootParameters[2].InitAsShaderResourceView(0, 1); // materials
 	}
 	else
 	{
-		slotRootParameter[2].InitAsConstantBufferView(2); // cbMaterial
+		vRootParameters[2].InitAsConstantBufferView(2); // cbMaterial
 	}
 
-	slotRootParameter[3].InitAsDescriptorTable(1, &texTable, D3D12_SHADER_VISIBILITY_PIXEL); // textures
+
+	vRootParameters[3].InitAsDescriptorTable(1, &texTable, D3D12_SHADER_VISIBILITY_PIXEL); // textures
+
+	if (bUseInstancing)
+	{
+		vRootParameters[4].InitAsShaderResourceView(1, 1);
+	}
 
 	// Static samples don't need a heap.
 	auto staticSamples = getStaticSamples();
 
 	// A root signature is an array of root parameters.
-	CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc(4, slotRootParameter, static_cast<UINT>(staticSamples.size()), staticSamples.data(),
+	CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc(bUseInstancing ? 5 : 4, &vRootParameters[0], static_cast<UINT>(staticSamples.size()), staticSamples.data(),
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
 
@@ -5194,6 +5261,49 @@ bool SApplication::doFrustumCulling(SComponent* pComponent)
 	}
 
 	return false;
+}
+
+void SApplication::doFrustumCullingOnInstancedMesh(SMeshComponent* pMeshComponent, UINT& iOutVisibleInstanceCount)
+{
+	std::lock_guard<std::mutex> lock(pMeshComponent->mtxInstancing);
+
+
+	pMeshComponent->mtxWorldMatrixUpdate.lock();
+	DirectX::XMMATRIX componentWorld = DirectX::XMLoadFloat4x4(&pMeshComponent->renderData.vWorld);
+	pMeshComponent->mtxWorldMatrixUpdate.unlock();
+
+	UINT64 iVisibleInstanceCount = 0;
+
+	for (size_t i = 0; i < pMeshComponent->vInstanceData.size(); i++)
+	{
+		DirectX::XMMATRIX instanceWorld =
+			// because instance world is relative to the component's world
+			DirectX::XMMatrixMultiply(DirectX::XMLoadFloat4x4(&pMeshComponent->vInstanceData[i].vWorld), componentWorld);
+
+		DirectX::XMMATRIX invWorld = DirectX::XMMatrixInverse(&XMMatrixDeterminant(instanceWorld), instanceWorld);
+
+		DirectX::XMMATRIX view = DirectX::XMMatrixTranspose(DirectX::XMLoadFloat4x4(&mainRenderPassCB.vView)); // transpose back (see updateMainPassCB()).
+		DirectX::XMMATRIX invView = DirectX::XMMatrixInverse(&XMMatrixDeterminant(view), view);
+
+		// View space to the object's local space.
+		DirectX::XMMATRIX viewToObjectLocal = XMMatrixMultiply(invView, invWorld);
+
+		// Transform the camera frustum from view space to the object's local space.
+		DirectX::BoundingFrustum localSpaceFrustum;
+		cameraBoundingFrustumOnLastMainPassUpdate.Transform(localSpaceFrustum, viewToObjectLocal);
+
+		// Perform the box/frustum intersection test in local space.
+		if (localSpaceFrustum.Contains(pMeshComponent->bounds) != DirectX::DISJOINT)
+		{
+			// Draw this instance.
+			pMeshComponent->vFrameResourcesInstancedData[iCurrentFrameResourceIndex]->
+				copyDataToElement(iVisibleInstanceCount, pMeshComponent->vInstanceData[i]);
+
+			iVisibleInstanceCount++;
+		}
+	}
+
+	iOutVisibleInstanceCount = iVisibleInstanceCount;
 }
 
 SApplication::SApplication(HINSTANCE hInstance)

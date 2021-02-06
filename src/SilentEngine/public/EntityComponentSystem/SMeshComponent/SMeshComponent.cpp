@@ -17,7 +17,7 @@
 #include "SilentEngine/Public/EntityComponentSystem/SContainer/SContainer.h"
 #include "SilentEngine/Private/SMiscHelpers/SMiscHelpers.h"
 
-SMeshComponent::SMeshComponent(std::string sComponentName) : SComponent()
+SMeshComponent::SMeshComponent(std::string sComponentName, bool bUseInstancing) : SComponent()
 {
 	componentType = SCT_MESH;
 
@@ -27,6 +27,8 @@ SMeshComponent::SMeshComponent(std::string sComponentName) : SComponent()
 
 	bVisible = true;
 	bVertexBufferUsedInComputeShader = false;
+
+	this->bUseInstancing = bUseInstancing;
 }
 
 SMeshComponent::~SMeshComponent()
@@ -66,6 +68,84 @@ void SMeshComponent::setUseCustomShader(SShader* pCustomShader, bool bForceChang
 		SApplication::getApp()->forceChangeMeshShader(this->pCustomShader, pCustomShader, this, bEnableTransparency);
 
 		this->pCustomShader = pCustomShader;
+	}
+}
+
+void SMeshComponent::addInstance(const SInstanceProps& instanceData)
+{
+	if (bUseInstancing)
+	{
+		std::lock_guard<std::mutex> lock(mtxInstancing);
+
+		vInstanceData.push_back(convertInstancePropsToConstants(instanceData));
+
+		if (bSpawnedInLevel)
+		{
+			SApplication* pApp = SApplication::getApp();
+
+			pApp->mtxDraw.lock();
+
+			if (vFrameResourcesInstancedData.size() == 0)
+			{
+				// was empty
+
+				for (size_t i = 0; i < pApp->vFrameResources.size(); i++)
+				{
+					vFrameResourcesInstancedData.push_back(pApp->vFrameResources[i]->addNewInstancedMesh(&vInstanceData));
+				}
+			}
+			else
+			{
+				// because we recreate the resource with SObjectConstants (instance data)
+				pApp->flushCommandQueue(); // and it may be still used by GPU, wait for the GPU to finish all work
+
+				for (size_t i = 0; i < pApp->vFrameResources.size(); i++)
+				{
+					vFrameResourcesInstancedData[i] = pApp->vFrameResources[i]->addNewInstanceToMesh(vFrameResourcesInstancedData[i], vInstanceData.back());
+				}
+			}
+
+			pApp->mtxDraw.unlock();
+		}
+	}
+}
+
+void SMeshComponent::updateInstanceData(unsigned int iInstanceIndex, const SInstanceProps& instanceData)
+{
+	if (bUseInstancing)
+	{
+		std::lock_guard<std::mutex> lock(mtxInstancing);
+
+		vInstanceData[iInstanceIndex] = convertInstancePropsToConstants(instanceData);
+	}
+}
+
+void SMeshComponent::clearAllInstances()
+{
+	if (bUseInstancing)
+	{
+		std::lock_guard<std::mutex> lock(mtxInstancing);
+
+		vInstanceData.clear();
+
+		if (bSpawnedInLevel)
+		{
+			SApplication* pApp = SApplication::getApp();
+
+			pApp->mtxDraw.lock();
+
+			// because we delete the resource with SObjectConstants (instance data)
+			pApp->flushCommandQueue(); // and it may be still used by GPU, wait for the GPU to finish all work
+
+			for (size_t i = 0; i < pApp->vFrameResources.size(); i++)
+			{
+				pApp->vFrameResources[i]->removeInstancedMesh(vFrameResourcesInstancedData[i]);
+			}
+
+			vFrameResourcesInstancedData.clear();
+
+			pApp->mtxDraw.unlock();
+		}
 	}
 }
 
@@ -156,7 +236,11 @@ bool SMeshComponent::setMeshMaterial(SMaterial* pMaterial)
 		}
 		else
 		{
+			mtxComponentProps.lock();
+
 			meshData.setMeshMaterial(pMaterial);
+
+			mtxComponentProps.unlock();
 
 			return false;
 		}
@@ -173,6 +257,20 @@ bool SMeshComponent::setMeshMaterial(SMaterial* pMaterial)
 SMaterial* SMeshComponent::getMeshMaterial()
 {
 	return meshData.getMeshMaterial();
+}
+
+unsigned int SMeshComponent::getInstanceCount()
+{
+	std::lock_guard<std::mutex> lock(mtxInstancing);
+
+	if (bUseInstancing)
+	{
+		return vInstanceData.size();
+	}
+	else
+	{
+		return 0;
+	}
 }
 
 bool SMeshComponent::getEnableTransparency() const
@@ -266,6 +364,15 @@ SShader* SMeshComponent::getCustomShader() const
 
 SMeshDataComputeResource* SMeshComponent::getMeshDataAsComputeResource(bool bGetVertexBuffer)
 {
+	if (bUseInstancing)
+	{
+		SError::showErrorMessageBox(L"SMeshComponent::getMeshDataAsComputeResource()",
+			L"cannot use this mesh in a compute shader because this mesh is using instancing.");
+		// because if we use instancing we should always do frustum culling
+		// as we fill vInstancedMeshes every frame
+		return nullptr;
+	}
+
 	SMeshDataComputeResource* pMeshDataResource = new SMeshDataComputeResource();
 	pMeshDataResource->pResourceOwner = this;
 	pMeshDataResource->bVertexBuffer = bGetVertexBuffer;
@@ -413,6 +520,44 @@ void SMeshComponent::updateMyAndChildsLocationRotationScale(bool bCalledOnSelf)
 	{
 		vChildComponents[i]->updateMyAndChildsLocationRotationScale(false);
 	}
+}
+
+SObjectConstants SMeshComponent::convertInstancePropsToConstants(const SInstanceProps& instanceData)
+{
+	SObjectConstants constants;
+
+
+	DirectX::XMVECTOR rot = DirectX::XMVectorSet(
+		DirectX::XMConvertToRadians(instanceData.vLocalRotation.getX()),
+		DirectX::XMConvertToRadians(instanceData.vLocalRotation.getY()),
+		DirectX::XMConvertToRadians(instanceData.vLocalRotation.getZ()), 0.0f);
+	DirectX::XMFLOAT3 rotationFloat;
+	DirectX::XMStoreFloat3(&rotationFloat, rot);
+
+	DirectX::XMMATRIX world = DirectX::XMMatrixIdentity() *
+		DirectX::XMMatrixScaling(instanceData.vLocalScale.getX(), instanceData.vLocalScale.getY(), instanceData.vLocalScale.getZ()) *
+		DirectX::XMMatrixRotationX(rotationFloat.x) *
+		DirectX::XMMatrixRotationY(rotationFloat.y) *
+		DirectX::XMMatrixRotationZ(rotationFloat.z) *
+		DirectX::XMMatrixTranslation(instanceData.vLocalLocation.getX(), instanceData.vLocalLocation.getY(), instanceData.vLocalLocation.getZ());
+
+	DirectX::XMStoreFloat4x4(&constants.vWorld, world);
+
+
+	DirectX::XMMATRIX texTransform = DirectX::XMMatrixIdentity() *
+		DirectX::XMMatrixTranslation(-0.5f, -0.5f, 0.0f) * // move center to the origin point
+		DirectX::XMMatrixScaling(instanceData.vLocalScale.getX(), instanceData.vLocalScale.getY(), instanceData.vLocalScale.getZ()) *
+		DirectX::XMMatrixRotationZ(DirectX::XMConvertToRadians(instanceData.fTextureRotation)) *
+		DirectX::XMMatrixTranslation(instanceData.vTextureUVOffset.getX(), instanceData.vTextureUVOffset.getY(), instanceData.vTextureUVOffset.getZ()) *
+		DirectX::XMMatrixTranslation(0.5f, 0.5f, 0.0f); // move center back.
+
+	DirectX::XMStoreFloat4x4(&constants.vTexTransform, texTransform);
+
+
+	constants.iCustomProperty = instanceData.iCustomProperty;
+
+
+	return constants;
 }
 
 void SMeshComponent::updateWorldMatrix()

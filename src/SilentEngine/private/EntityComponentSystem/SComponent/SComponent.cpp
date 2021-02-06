@@ -248,6 +248,31 @@ void SComponent::createVertexBufferForRuntimeMeshComponents(SFrameResource* pFra
 	}
 }
 
+void SComponent::createInstancingDataForFrameResource(std::vector<std::unique_ptr<SFrameResource>>* vFrameResources)
+{
+	if (componentType == SCT_MESH)
+	{
+		SMeshComponent* pMesh = dynamic_cast<SMeshComponent*>(this);
+		
+		if (pMesh->bUseInstancing)
+		{
+			pMesh->mtxInstancing.lock();
+
+			for (size_t i = 0; i < vFrameResources->size(); i++)
+			{
+				pMesh->vFrameResourcesInstancedData.push_back(vFrameResources->operator[](i)->addNewInstancedMesh(&pMesh->vInstanceData));
+			}
+			
+			pMesh->mtxInstancing.unlock();
+		}
+	}
+
+	for (size_t i = 0; i < vChildComponents.size(); i++)
+	{
+		vChildComponents[i]->createInstancingDataForFrameResource(vFrameResources);
+	}
+}
+
 void SComponent::removeVertexBufferForRuntimeMeshComponents(std::vector<std::unique_ptr<SFrameResource>>* vFrameResources, size_t& iRemovedCount)
 {
 	if (componentType == SCT_RUNTIME_MESH)
@@ -261,6 +286,31 @@ void SComponent::removeVertexBufferForRuntimeMeshComponents(std::vector<std::uni
 	for (size_t i = 0; i < vChildComponents.size(); i++)
 	{
 		vChildComponents[i]->removeVertexBufferForRuntimeMeshComponents(vFrameResources, iRemovedCount);
+	}
+}
+
+void SComponent::removeInstancingDataForFrameResources(std::vector<std::unique_ptr<SFrameResource>>* vFrameResources)
+{
+	if (componentType == SCT_MESH)
+	{
+		SMeshComponent* pMesh = dynamic_cast<SMeshComponent*>(this);
+
+		if (pMesh->bUseInstancing && pMesh->vFrameResourcesInstancedData.size() > 0)
+		{
+			pMesh->mtxInstancing.lock();
+
+			for (size_t i = 0; i < vFrameResources->size(); i++)
+			{
+				vFrameResources->operator[](i)->removeInstancedMesh(pMesh->vFrameResourcesInstancedData[i]);
+			}
+
+			pMesh->mtxInstancing.unlock();
+		}
+	}
+
+	for (size_t i = 0; i < vChildComponents.size(); i++)
+	{
+		vChildComponents[i]->removeInstancingDataForFrameResources(vFrameResources);
 	}
 }
 

@@ -33,6 +33,8 @@ struct SObjectConstants
 	DirectX::XMFLOAT4X4 vTexTransform = SMath::getIdentityMatrix4x4();
 	unsigned int iCustomProperty = 0;
 
+	// update SMeshComponent::convertInstancePropsToConstants() if this struct changed
+
 	float pad1;
 	float pad2;
 	float pad3;
@@ -166,12 +168,23 @@ public:
 	size_t addNewObjectCB       (size_t iNewCBCount, bool* pbCBWasExpanded);
 	void   removeObjectCB       (size_t iCBStartIndex, size_t iCBCount, bool* pbCBWasResized);
 
+
 	// returns new cb start index
 	size_t addNewMaterialCB     (bool* pbCBWasExpanded);
 	void   removeMaterialCB     (size_t iCBIndex, bool* pbCBWasResized);
 
+
+	// returns the pointer to the created bundle
 	SUploadBuffer<SMaterialConstants>* addNewMaterialBundleResource(SShader* pShader, size_t iResourceCount);
 	void                               removeMaterialBundle(SShader* pShader);
+
+
+	// instanced data
+	SUploadBuffer<SObjectConstants>*   addNewInstancedMesh(std::vector<SObjectConstants>* pInitData);
+	// returns the pointer to the new buffer with +1 instance
+	SUploadBuffer<SObjectConstants>*   addNewInstanceToMesh(SUploadBuffer<SObjectConstants>* pInstancedData, const SObjectConstants& newInstanceData);
+	void                               removeInstancedMesh(SUploadBuffer<SObjectConstants>* pInstancedDataToDelete);
+
 
 	// returns index of new buffer in vRuntimeMeshVertexBuffers
 	size_t addRuntimeMeshVertexBuffer      (size_t iVertexCount);
@@ -189,6 +202,7 @@ public:
 	std::unique_ptr<SUploadBuffer<SObjectConstants>>     pObjectsCB    = nullptr;
 	std::unique_ptr<SUploadBuffer<SMaterialConstants>>   pMaterialCB   = nullptr;
 	std::vector<std::unique_ptr<SMaterialBundle>>        vMaterialBundles;
+	std::vector<std::unique_ptr<SUploadBuffer<SObjectConstants>>> vInstancedMeshes;
 	std::vector<std::unique_ptr<SUploadBuffer<SVertex>>> vRuntimeMeshVertexBuffers;
 
 	ID3D12Device* pDevice = nullptr;

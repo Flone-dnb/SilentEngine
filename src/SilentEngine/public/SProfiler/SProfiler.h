@@ -58,7 +58,7 @@ public:
 	bool   getLastFrameDrawCallCount                         (unsigned long long* iDrawCallCount) const;
 	//@@Function
 	/*
-	* desc: returns the number of triangles in the world (current level).
+	* desc: returns the number of triangles in the world (current level), does not include instanced objects.
 	* return: 0 if there is no current level loaded or no objects in the scene, otherwise the triangle count in the world.
 	*/
 	unsigned long long getTriangleCountInWorld               ();

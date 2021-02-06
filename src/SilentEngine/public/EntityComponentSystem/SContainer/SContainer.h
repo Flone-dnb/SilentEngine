@@ -269,9 +269,19 @@ private:
 	void createVertexBufferForRuntimeMeshComponents (SFrameResource* pFrameResource);
 	//@@Function
 	/*
+	* desc: creates the instancing data.
+	*/
+	void createInstancingDataForFrameResource       (std::vector<std::unique_ptr<SFrameResource>>* vFrameResources);
+	//@@Function
+	/*
 	* desc: removes the vertex buffer for only runtime mesh components for given frame resources.
 	*/
 	void removeVertexBufferForRuntimeMeshComponents (std::vector<std::unique_ptr<SFrameResource>>* vFrameResources, size_t& iRemovedCount);
+	//@@Function
+	/*
+	* desc: removes the instancing data.
+	*/
+	void removeInstancingDataForFrameResources(std::vector<std::unique_ptr<SFrameResource>>* vFrameResources);
 	//@@Function
 	/*
 	* desc: cycles through all runtime mesh components and updates the iMaxIndex to be the maximum runtime mesh component CB index in this container.

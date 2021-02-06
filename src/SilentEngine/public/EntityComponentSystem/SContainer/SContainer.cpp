@@ -340,11 +340,27 @@ void SContainer::createVertexBufferForRuntimeMeshComponents(SFrameResource* pFra
 	}
 }
 
+void SContainer::createInstancingDataForFrameResource(std::vector<std::unique_ptr<SFrameResource>>* vFrameResources)
+{
+	for (size_t i = 0; i < vComponents.size(); i++)
+	{
+		vComponents[i]->createInstancingDataForFrameResource(vFrameResources);
+	}
+}
+
 void SContainer::removeVertexBufferForRuntimeMeshComponents(std::vector<std::unique_ptr<SFrameResource>>* vFrameResources, size_t& iRemovedCount)
 {
 	for (size_t i = 0; i < vComponents.size(); i++)
 	{
 		vComponents[i]->removeVertexBufferForRuntimeMeshComponents(vFrameResources, iRemovedCount);
+	}
+}
+
+void SContainer::removeInstancingDataForFrameResources(std::vector<std::unique_ptr<SFrameResource>>* vFrameResources)
+{
+	for (size_t i = 0; i < vComponents.size(); i++)
+	{
+		vComponents[i]->removeInstancingDataForFrameResources(vFrameResources);
 	}
 }
 

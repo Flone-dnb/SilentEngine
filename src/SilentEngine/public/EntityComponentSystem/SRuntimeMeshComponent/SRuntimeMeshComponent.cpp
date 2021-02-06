@@ -117,7 +117,7 @@ bool SRuntimeMeshComponent::setUseDefaultShader(bool bForceUseDefaultEvenIfSpawn
 
 void SRuntimeMeshComponent::setMeshData(const SMeshData& meshData, bool bAddedRemovedVerticesOrAddedRemovedIndices)
 {
-	mtxComponentProps.lock();
+	std::lock_guard<std::mutex> lock(mtxComponentProps);
 
 	mtxDrawComponent.lock();
 
@@ -158,17 +158,21 @@ void SRuntimeMeshComponent::setMeshData(const SMeshData& meshData, bool bAddedRe
 			pApp->mtxSpawnDespawn.lock();
 			mtxDrawComponent.lock();
 
+			pApp->mtxDraw.lock();
+
+			pApp->flushCommandQueue(); // because we recreate the buffer that may be still used by GPU
+
 			for (size_t i = 0; i < pApp->vFrameResources.size(); i++)
 			{
 				pApp->vFrameResources[i]->recreateRuntimeMeshVertexBuffer(iIndexInFrameResourceVertexBuffer, meshData.getVerticesCount());
 			}
 
+			pApp->mtxDraw.unlock();
+
 			mtxDrawComponent.unlock();
 			pApp->mtxSpawnDespawn.unlock();
 		}
 	}
-
-	mtxComponentProps.unlock();
 }
 
 void SRuntimeMeshComponent::unbindMaterial()

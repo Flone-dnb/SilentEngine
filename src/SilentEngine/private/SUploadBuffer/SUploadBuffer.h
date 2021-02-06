@@ -96,6 +96,13 @@ public:
 		std::memcpy(pMappedData, pData, iDataSizeInBytes);
 	}
 
+	unsigned char* getMappedData(size_t& iOutSizeInBytes) const
+	{
+		iOutSizeInBytes = iElementSizeInBytes * iElementCount;
+
+		return pMappedData;
+	}
+
 private:
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> pUploadBuffer;

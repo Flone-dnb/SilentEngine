@@ -164,6 +164,69 @@ void SFrameResource::removeMaterialBundle(SShader* pShader)
 	}
 }
 
+SUploadBuffer<SObjectConstants>* SFrameResource::addNewInstancedMesh(std::vector<SObjectConstants>* pInitData)
+{
+	vInstancedMeshes.push_back(std::make_unique<SUploadBuffer<SObjectConstants>>(pDevice, pInitData->size(), false));
+
+	// don't:
+	/*for (size_t i = 0; i < pInitData->size(); i++)
+	{
+		vInstancedMeshes.back()->copyDataToElement(i, pInitData->operator[](i));
+	}*/
+	// because we fill data on every frame during frustum culling
+
+	return vInstancedMeshes.back().get();
+}
+
+SUploadBuffer<SObjectConstants>* SFrameResource::addNewInstanceToMesh(SUploadBuffer<SObjectConstants>* pInstancedData, const SObjectConstants& newInstanceData)
+{
+	// Copy data to new temp buffer.
+
+	size_t iOldSize = pInstancedData->getElementCount();
+
+	size_t iMappedDataSizeInBytes = 0;
+	unsigned char* pMappedData = pInstancedData->getMappedData(iMappedDataSizeInBytes);
+
+	unsigned char* pTempData = new unsigned char[iMappedDataSizeInBytes];
+	std::memcpy(pTempData, pMappedData, iMappedDataSizeInBytes);
+
+
+	removeInstancedMesh(pInstancedData);
+
+
+	// Create new data.
+
+	vInstancedMeshes.push_back(std::make_unique<SUploadBuffer<SObjectConstants>>(pDevice, iOldSize + 1, false));
+
+	// don't: (see below)
+	//vInstancedMeshes.back()->copyData(pTempData, iMappedDataSizeInBytes);
+
+
+	delete[] pTempData;
+
+
+	// don't:
+	// Copy new instance data.
+	//vInstancedMeshes.back()->copyDataToElement(iOldSize, newInstanceData);
+	// because we fill data on every frame during frustum culling
+
+
+	return vInstancedMeshes.back().get();
+}
+
+void SFrameResource::removeInstancedMesh(SUploadBuffer<SObjectConstants>* pInstancedDataToDelete)
+{
+	for (size_t i = 0; i < vInstancedMeshes.size(); i++)
+	{
+		if (vInstancedMeshes[i].get() == pInstancedDataToDelete)
+		{
+			vInstancedMeshes.erase(vInstancedMeshes.begin() + i);
+
+			break;
+		}
+	}
+}
+
 size_t SFrameResource::addRuntimeMeshVertexBuffer(size_t iVertexCount)
 {
 	vRuntimeMeshVertexBuffers.push_back(std::make_unique<SUploadBuffer<SVertex>> (pDevice, iVertexCount, false));

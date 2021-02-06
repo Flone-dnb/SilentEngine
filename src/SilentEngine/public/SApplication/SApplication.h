@@ -63,6 +63,19 @@ class SCameraComponent;
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
 
+struct SCustomShaderMaterials
+{
+	std::vector<std::string> vCustomMaterialNames;
+	bool bWillUseTextures = false;
+};
+
+struct SCustomShaderProperties
+{
+	SCustomShaderMaterials customMaterials;
+	bool bWillUseInstancing = false;
+};
+
+
 //@@Class
 /*
 The class represents an application instance. It holds all main entities.
@@ -274,8 +287,9 @@ public:
 		//@@Function
 		/*
 		* desc: used to compile and prepare the custom shader (VS and PS, see basic.hlsl for reference).
-		* param "vCustomMaterialNames": (optional) pass the names of the new custom materials to create a material bundle.
-		* param "bWillUseTextures": (optional) use 'true' if ALL created materials will use textures.
+		* param "customProps": (optional) pass 'SCustomShaderProperties()' for defaults.
+		* param "customProps.vCustomMaterialNames": (optional) pass the names of the new custom materials to create a material bundle.
+		* param "customProps.bWillUseTextures": (optional) use 'true' if ALL created materials will use textures.
 		You can either have textures for all materials or don't have textures for all materials.
 		You can't have some material with textures and some without textures.
 		Textures should be loaded sequentially (don't have any other textures in between).
@@ -287,7 +301,7 @@ public:
 		as this function may drop the framerate a little.
 		*/
 		SShader*        compileCustomShader                   (const std::wstring& sPathToShaderFile,
-			const std::vector<std::string>& vCustomMaterialNames = {}, bool bWillUseTextures = true, SCustomShaderResources** pOutCustomResources = nullptr);
+			const SCustomShaderProperties& customProps, SCustomShaderResources** pOutCustomResources = nullptr);
 
 		//@@Function
 		/*
@@ -680,7 +694,7 @@ private:
 		* desc: creates root signature.
 		* return: false if successful, true otherwise.
 		*/
-		bool createRootSignature             (SCustomShaderResources* pCustomShaderResources = nullptr, bool bUseTextures = false);
+		bool createRootSignature             (SCustomShaderResources* pCustomShaderResources = nullptr, bool bUseTextures = false, bool bUseInstancing = false);
 		bool createBlurRootSignature         ();
 		//@@Function
 		/*
@@ -1091,6 +1105,7 @@ private:
 		void setTransparentPSO();
 
 		bool doFrustumCulling(SComponent* pComponent);
+		void doFrustumCullingOnInstancedMesh(SMeshComponent* pMeshComponent, UINT& iOutVisibleInstanceCount);
 
 
 	// -----------------------------------------------------------------
