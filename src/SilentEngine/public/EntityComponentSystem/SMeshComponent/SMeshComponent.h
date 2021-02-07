@@ -144,6 +144,16 @@ public:
 
 	//@@Function
 	/*
+	* desc: used to set the cull distance, if the distance between the camera and the mesh origin point will be
+	equal or more that this value then the mesh will not be drawn.
+	* remarks: if using instancing then the distance between the camera and the instance location is considered instead,
+	the cull distance test will be executed in the frustum culling, so if the frustum culling is disabled then the
+	cull distance is not gonna work too.
+	*/
+	void setCullDistance       (float fCullDistance);
+
+	//@@Function
+	/*
 	* desc: used to set the UV offset to the mesh texture. Only affects how the textures will look for THIS mesh.
 	This setting will affect material UV settings only for this mesh.
 	* return: true if the UVs are not in [0, 1] range, false otherwise.
@@ -183,6 +193,13 @@ public:
 	* return: valid pointer if the material was assigned before, nullptr otherwise.
 	*/
 	SMaterial* getMeshMaterial();
+
+	//@@Function
+	/*
+	* desc: used to retrieve the cull distance.
+	* return: returns a negative value if the cull distance was not set.
+	*/
+	float        getCullDistance() const;
 
 	//@@Function
 	/*

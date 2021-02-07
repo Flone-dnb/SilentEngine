@@ -210,9 +210,19 @@ bool SRuntimeMeshComponent::setMeshMaterial(SMaterial* pMaterial)
 	}
 }
 
+void SRuntimeMeshComponent::setCullDistance(float fCullDistance)
+{
+	this->fCullDistance = fCullDistance;
+}
+
 SMaterial* SRuntimeMeshComponent::getMeshMaterial()
 {
 	return meshData.getMeshMaterial();
+}
+
+float SRuntimeMeshComponent::getCullDistance() const
+{
+	return fCullDistance;
 }
 
 bool SRuntimeMeshComponent::getEnableTransparency() const

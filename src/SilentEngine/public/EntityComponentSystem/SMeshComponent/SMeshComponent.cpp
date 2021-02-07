@@ -254,9 +254,19 @@ bool SMeshComponent::setMeshMaterial(SMaterial* pMaterial)
 	}
 }
 
+void SMeshComponent::setCullDistance(float fCullDistance)
+{
+	this->fCullDistance = fCullDistance;
+}
+
 SMaterial* SMeshComponent::getMeshMaterial()
 {
 	return meshData.getMeshMaterial();
+}
+
+float SMeshComponent::getCullDistance() const
+{
+	return fCullDistance;
 }
 
 unsigned int SMeshComponent::getInstanceCount()

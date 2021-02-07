@@ -321,16 +321,13 @@ protected:
 
 	SRenderItem renderData; // will be null for components that doesn't have mesh data
 	SMeshData   meshData; // will be null for components that doesn't have mesh data
-
-	DirectX::BoundingBox bounds;
-
-	SShader*    pCustomShader;
+	DirectX::BoundingBox bounds; // will be null for components that doesn't have mesh data
+	float fCullDistance; // will be null for components that doesn't have mesh data
+	SShader*    pCustomShader; // will be null for components that doesn't have mesh data
+	size_t iMeshComponentsCount; // will be null for components that doesn't have mesh data
 
 
 	std::string sComponentName;
-
-
-	size_t iMeshComponentsCount;
 
 
 	bool bSpawnedInLevel;

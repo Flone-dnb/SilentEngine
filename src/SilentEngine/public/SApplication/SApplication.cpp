@@ -2929,6 +2929,15 @@ void SApplication::drawComponent(SComponent* pComponent, bool bUsingCustomResour
 		return;
 	}
 
+	if (bUsingInstancing == false && pComponent->fCullDistance > 0.0f)
+	{
+		SVector vToOrigin = pComponent->getLocationInWorld() - camera.getCameraLocationInWorld();
+		if (vToOrigin.length() >= pComponent->fCullDistance)
+		{
+			return; // culled by distance
+		}
+	}
+
 	if (bUseFrustumCulling && bUsingInstancing == false)
 	{
 		if (doFrustumCulling(pComponent) == false)
@@ -5274,11 +5283,24 @@ void SApplication::doFrustumCullingOnInstancedMesh(SMeshComponent* pMeshComponen
 
 	UINT64 iVisibleInstanceCount = 0;
 
+	float fCullDistance = pMeshComponent->fCullDistance;
+
 	for (size_t i = 0; i < pMeshComponent->vInstanceData.size(); i++)
 	{
 		DirectX::XMMATRIX instanceWorld =
 			// because instance world is relative to the component's world
 			DirectX::XMMatrixMultiply(DirectX::XMLoadFloat4x4(&pMeshComponent->vInstanceData[i].vWorld), componentWorld);
+
+
+		DirectX::XMFLOAT4X4 vInstanceWorldFloat4x4;
+		DirectX::XMStoreFloat4x4(&vInstanceWorldFloat4x4, instanceWorld);
+		SVector vInstanceLocationInWorld(vInstanceWorldFloat4x4._41, vInstanceWorldFloat4x4._42, vInstanceWorldFloat4x4._43);
+
+		if ((vInstanceLocationInWorld - camera.getCameraLocationInWorld()).length() >= fCullDistance)
+		{
+			continue;
+		}
+
 
 		DirectX::XMMATRIX invWorld = DirectX::XMMatrixInverse(&XMMatrixDeterminant(instanceWorld), instanceWorld);
 

@@ -29,7 +29,8 @@ SComponent::SComponent()
 	pContainer       = nullptr;
 	pCustomShader    = nullptr;
 
-	iMeshComponentsCount = 0;
+	iMeshComponentsCount  = 0;
+	fCullDistance         = -1.0f;
 
 	vLocation             = SVector(0.0f, 0.0f, 0.0f);
 	vRotation             = SVector(0.0f, 0.0f, 0.0f);
