@@ -2971,17 +2971,12 @@ void SApplication::drawComponent(SComponent* pComponent, bool bUsingCustomResour
 
 	size_t iMatCBIndex = 0;
 
-	if (pComponent->pCustomShader) // can be nullptr
+	if (pComponent->pCustomShader && pComponent->pCustomShader->pCustomShaderResources
+		&& pComponent->pCustomShader->pCustomShaderResources->vMaterials.size() > 0)
 	{
-		if (pComponent->pCustomShader->pCustomShaderResources) // can be nullptr
+		if (pComponent->pCustomShader->pCustomShaderResources->vMaterials[0]->getMaterialProperties().getDiffuseTexture(&tex) == false)
 		{
-			if (pComponent->pCustomShader->pCustomShaderResources->vMaterials.size() > 0)
-			{
-				if (pComponent->pCustomShader->pCustomShaderResources->vMaterials[0]->getMaterialProperties().getDiffuseTexture(&tex) == false)
-				{
-					bHasTexture = true;
-				}
-			}
+			bHasTexture = true;
 		}
 	}
 
