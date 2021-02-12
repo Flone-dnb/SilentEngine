@@ -161,6 +161,9 @@ void SMeshComponent::setMeshData(const SMeshData& meshData, bool bAddedRemovedIn
 	updateBoundsForFrustumCulling();
 
 
+	updateObjectCenter();
+
+
 
 	if (bAddedRemovedIndices)
 	{
@@ -473,9 +476,6 @@ void SMeshComponent::createGeometryBuffers(bool bAddedRemovedIndices)
 		pApp->resetCommandList();
 	}
 
-	// ?
-	//renderData.iUpdateCBInFrameResourceCount = SFRAME_RES_COUNT;
-
 	renderData.pGeometry->freeUploaders();
 
 
@@ -568,6 +568,11 @@ SObjectConstants SMeshComponent::convertInstancePropsToConstants(const SInstance
 
 
 	return constants;
+}
+
+void SMeshComponent::updateObjectCenter()
+{
+	vObjectCenter = SVector(bounds.Center.x, bounds.Center.y, bounds.Center.z);
 }
 
 void SMeshComponent::updateWorldMatrix()

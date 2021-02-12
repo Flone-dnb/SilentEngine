@@ -29,6 +29,8 @@ SComponent::SComponent()
 	pContainer       = nullptr;
 	pCustomShader    = nullptr;
 
+	vObjectCenter = SVector(0.0f, 0.0f, 0.0f);
+
 	iMeshComponentsCount  = 0;
 	fCullDistance         = -1.0f;
 

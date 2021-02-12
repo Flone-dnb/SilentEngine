@@ -325,6 +325,7 @@ protected:
 	float fCullDistance; // will be null for components that doesn't have mesh data
 	SShader*    pCustomShader; // will be null for components that doesn't have mesh data
 	size_t iMeshComponentsCount; // will be null for components that doesn't have mesh data
+	SVector vObjectCenter; // if updateBoundsForFrustumCulling() is enabled then this value is the center of the mesh, else mesh origin point is used.
 
 
 	std::string sComponentName;

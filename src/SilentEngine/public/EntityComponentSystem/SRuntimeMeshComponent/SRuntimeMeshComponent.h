@@ -266,6 +266,8 @@ private:
 	*/
 	void updateVertexBufferMaxIndex(size_t& iCurrentIndex);
 
+	void updateObjectCenter();
+
 	// ------------------------------------------
 
 	std::mutex  mtxDrawComponent;
