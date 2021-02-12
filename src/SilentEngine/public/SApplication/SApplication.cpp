@@ -1872,39 +1872,6 @@ bool SApplication::isWireframeModeEnabled() const
 	return bUseFillModeWireframe;
 }
 
-unsigned long long SApplication::getTriangleCountInWorld()
-{
-	if (pCurrentLevel)
-	{
-		unsigned long long iTrisCount = 0;
-
-		mtxSpawnDespawn.lock();
-
-		std::vector<SContainer*>* pvRenderableContainers = nullptr;
-		pCurrentLevel->getRenderableContainers(pvRenderableContainers);
-
-		for (size_t i = 0; i < pvRenderableContainers->size(); i++)
-		{
-			for (size_t j = 0; j < pvRenderableContainers->operator[](i)->vComponents.size(); j++)
-			{
-				pvRenderableContainers->operator[](i)->vComponents[j]->mtxComponentProps.lock();
-
-				iTrisCount += pvRenderableContainers->operator[](i)->vComponents[j]->meshData.getIndicesCount() / 3;
-
-				pvRenderableContainers->operator[](i)->vComponents[j]->mtxComponentProps.unlock();
-			}
-		}
-
-		mtxSpawnDespawn.unlock();
-
-		return iTrisCount;
-	}
-	else
-	{
-		return 0;
-	}
-}
-
 bool SApplication::getTimeElapsedFromStart(float* fTimeInSec) const
 {
 	if (bRunCalled)

@@ -35,11 +35,6 @@ bool SProfiler::getLastFrameDrawCallCount(unsigned long long* iDrawCallCount) co
 	return pApp->getLastFrameDrawCallCount(iDrawCallCount);
 }
 
-unsigned long long SProfiler::getTriangleCountInWorld()
-{
-    return pApp->getTriangleCountInWorld();
-}
-
 bool SProfiler::getVideoMemoryUsageInBytesOfCurrentDisplayAdapter(unsigned long long* pSizeInBytes)
 {
 	return pApp->getVideoMemoryUsageInBytesOfCurrentDisplayAdapter(pSizeInBytes);

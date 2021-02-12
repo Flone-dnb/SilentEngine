@@ -58,12 +58,6 @@ public:
 	bool   getLastFrameDrawCallCount                         (unsigned long long* iDrawCallCount) const;
 	//@@Function
 	/*
-	* desc: returns the number of triangles in the world (current level), does not include instanced objects.
-	* return: 0 if there is no current level loaded or no objects in the scene, otherwise the triangle count in the world.
-	*/
-	unsigned long long getTriangleCountInWorld               ();
-	//@@Function
-	/*
 	* desc: returns currently used memory space (i.e. how much of the VRAM is used) of the display adapter (i.e. "video card").
 	* param "pSizeInBytes": pointer to your unsigned long long value which will be used to set the memory value.
 	* return: false if successful, true otherwise.
