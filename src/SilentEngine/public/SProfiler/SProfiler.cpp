@@ -30,6 +30,20 @@ bool SProfiler::getTimeToRenderFrame(float* fTimeInMS) const
 	return pApp->getTimeToRenderFrame(fTimeInMS);
 }
 
+#if defined(DEBUG) || defined(_DEBUG)
+SFrameStats SProfiler::getFrameStats()
+{
+	std::lock_guard<std::mutex> lock(mtxFrameStats);
+
+	return lastFrameStats;
+}
+#endif
+
+float SProfiler::getTimeSpentWaitingForGPUBetweenFramesInMS()
+{
+	return fTimeSpentWaitingForGPUBetweenFramesInMS;
+}
+
 bool SProfiler::getLastFrameDrawCallCount(unsigned long long* iDrawCallCount) const
 {
 	return pApp->getLastFrameDrawCallCount(iDrawCallCount);
@@ -39,3 +53,12 @@ bool SProfiler::getVideoMemoryUsageInBytesOfCurrentDisplayAdapter(unsigned long 
 {
 	return pApp->getVideoMemoryUsageInBytesOfCurrentDisplayAdapter(pSizeInBytes);
 }
+
+#if defined(DEBUG) || defined(_DEBUG)
+void SProfiler::setFrameStats(const SFrameStats& frameStats)
+{
+	std::lock_guard<std::mutex> lock(mtxFrameStats);
+
+	lastFrameStats = frameStats;
+}
+#endif

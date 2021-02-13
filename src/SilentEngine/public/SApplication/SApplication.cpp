@@ -2185,6 +2185,11 @@ void SApplication::update()
 
 	pCurrentFrameResource = vFrameResources[iCurrentFrameResourceIndex].get();
 
+
+	std::chrono::time_point<std::chrono::steady_clock> timeInSleep = std::chrono::steady_clock::now();
+	bool bDontCount = false;
+
+
 	// Has the GPU finished processing the commands of the current frame resource?
 	// If not, wait until the GPU has completed commands up to this fence point.
 	if (pCurrentFrameResource->iFence != 0 && pFence->GetCompletedValue() < pCurrentFrameResource->iFence)
@@ -2199,10 +2204,39 @@ void SApplication::update()
 		WaitForSingleObject(eventHandle, INFINITE);
 		CloseHandle(eventHandle);
 	}
+	else
+	{
+#if defined(DEBUG) || defined(_DEBUG)
+		frameStats.fTimeSpentWaitingForGPUInUpdateInMS = 0.0f;
+#endif
+		pProfiler->fTimeSpentWaitingForGPUBetweenFramesInMS = 0.0f;
+		bDontCount = true;
+	}
+
+	if (bDontCount == false)
+	{
+		pProfiler->fTimeSpentWaitingForGPUBetweenFramesInMS
+			= std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now() - timeInSleep).count()
+			/ 1000000.0;
+
+#if defined(DEBUG) || defined(_DEBUG)
+		frameStats.fTimeSpentWaitingForGPUInUpdateInMS = pProfiler->fTimeSpentWaitingForGPUBetweenFramesInMS;
+#endif
+	}
+
+#if defined(DEBUG) || defined(_DEBUG)
+	std::chrono::time_point<std::chrono::steady_clock> timeOnUpdate = std::chrono::steady_clock::now();
+#endif
 
 	updateMaterials();
 	updateObjectCBs();
 	updateMainPassCB();
+
+#if defined(DEBUG) || defined(_DEBUG)
+	frameStats.fTimeSpentOnUpdateInMS
+		= std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now() - timeOnUpdate).count()
+		/ 1000000.0;
+#endif
 }
 
 void SApplication::updateMaterials()
@@ -5949,18 +5983,59 @@ int SApplication::run()
 
 		frameTimer.start();
 
+#if defined(DEBUG) || defined(_DEBUG)
+		std::chrono::time_point<std::chrono::steady_clock> timeWindowsMessage;
+		bool bTimeWindowsMessageStarted = false;
+
+		std::chrono::time_point<std::chrono::steady_clock> timeUserOnTick;
+		std::chrono::time_point<std::chrono::steady_clock> timeOnDraw;
+		std::chrono::time_point<std::chrono::steady_clock> timeOnCalcFPS;
+#endif
+
 		while(msg.message != WM_QUIT)
 		{
 			// don't use GetMessage() as it puts the thread to sleep until message.
 			if(PeekMessage( &msg, 0, 0, 0, PM_REMOVE ))
 			{
+#if defined(DEBUG) || defined(_DEBUG)
+
+				if (bTimeWindowsMessageStarted == false)
+				{
+					bTimeWindowsMessageStarted = true;
+
+					timeWindowsMessage = std::chrono::steady_clock::now();
+				}
+
+#endif
+
 				TranslateMessage( &msg );
 				DispatchMessage( &msg );
 			}
 			else
 			{
+#if defined(DEBUG) || defined(_DEBUG)
+
+				if (bTimeWindowsMessageStarted)
+				{
+					bTimeWindowsMessageStarted = false;
+
+					frameStats.fTimeSpentOnWindowsMessagesInMS
+						= std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now() - timeWindowsMessage).count()
+						/ 1000000.0;
+				}
+				else
+				{
+					frameStats.fTimeSpentOnWindowsMessagesInMS = 0.0f;
+				}
+
+#endif
+
 				gameTimer.tick();
 
+
+#if defined(DEBUG) || defined(_DEBUG)
+				timeUserOnTick = std::chrono::steady_clock::now();
+#endif
 				if (bCallTick)
 				{
 					onTick(gameTimer.getDeltaTimeBetweenFramesInSec());
@@ -5990,13 +6065,40 @@ int SApplication::run()
 					}
 				}
 
+#if defined(DEBUG) || defined(_DEBUG)
+				frameStats.fTimeSpentOnUserOnTickFunctionsInMS
+					= std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now() - timeUserOnTick).count()
+					/ 1000000.0;
+#endif
+
 				mtxSpawnDespawn.unlock();
 
 
 				update();
+
+#if defined(DEBUG) || defined(_DEBUG)
+				timeOnDraw = std::chrono::steady_clock::now();
+#endif
+
 				draw();
 
+#if defined(DEBUG) || defined(_DEBUG)
+				frameStats.fTimeSpentOnCPUDrawInMS
+					= std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now() - timeOnDraw).count()
+					/ 1000000.0;
+#endif
+
+#if defined(DEBUG) || defined(_DEBUG)
+				timeOnCalcFPS = std::chrono::steady_clock::now();
+#endif
+
 				calculateFrameStats();
+
+#if defined(DEBUG) || defined(_DEBUG)
+				frameStats.fTimeSpentOnFPSCalcInMS
+					= std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now() - timeOnCalcFPS).count()
+					/ 1000000.0;
+#endif
 
 
 				if (fFPSLimit >= 1.0f)
@@ -6006,13 +6108,29 @@ int SApplication::run()
 					if (dDelayBetweenFramesInNS > dTimeToRenderFrameInNS)
 					{
 						timeBeginPeriod(1);
-						//Sleep(static_cast<unsigned long>(round(dDelayBetweenFramesInMS - dTimeToRenderFrameInMS)));
-						nanosleep(static_cast<long long>(round((dDelayBetweenFramesInNS - dTimeToRenderFrameInNS))));
+
+						double dTimeInNS = round((dDelayBetweenFramesInNS - dTimeToRenderFrameInNS));
+						nanosleep(static_cast<long long>(dTimeInNS));
+
 						timeEndPeriod(1);
+
+#if defined(DEBUG) || defined(_DEBUG)
+						frameStats.fTimeSpentInSleepInMS = dTimeInNS / 1000000.0;
+#endif
 					}
 
 					frameTimer.start();
 				}
+#if defined(DEBUG) || defined(_DEBUG)
+				else
+				{
+					frameStats.fTimeSpentInSleepInMS = 0.0f;
+				}
+#endif
+
+#if defined(DEBUG) || defined(_DEBUG)
+				pProfiler->setFrameStats(frameStats);
+#endif
 			}
 		}
 

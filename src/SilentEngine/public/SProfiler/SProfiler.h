@@ -7,7 +7,47 @@
 
 #pragma once
 
+#include <mutex>
+
 class SApplication;
+
+#if defined(DEBUG) || defined(_DEBUG)
+// note that these values may be a little incorrect (~ 0.1 ms error)
+struct SFrameStats
+{
+	// we handle all messages before drawing a frame
+	// this includes user input handling, like onMouseMove() or onKeyboardButtonDown()
+	// this is the first thing that we will do before drawing a frame
+	float fTimeSpentOnWindowsMessagesInMS = 0.0f;
+	// on tick is called before drawing a frame
+	// this is the second thing that we will do before drawing a frame
+	float fTimeSpentOnUserOnTickFunctionsInMS = 0.0f;
+	// in update() we optionally might wait for the GPU to finish drawing a frame (so we might 'sleep' here)
+	// if this value is not 0, then this means that the CPU submitted SFRAME_RES_COUNT frames to the GPU but the GPU
+	// is still drawing the first frame (out of SFRAME_RES_COUNT frames) and because of this the CPU will wait (so CPU will be idle)
+	// until the GPU finishes drawing this frame to submit another frame
+	// if the CPU is too fast (or GPU has too much work) the CPU will need to wait for the GPU to catch up
+	// the more this value is the more likely that you have a GPU bottleneck
+	// if this value is always 0 then you may have a CPU bottleneck (because the GPU always finishes work really fast)
+	// this is the third thing that we will do before drawing a frame
+	// you can also get this value in release builds using SProfiler::getTimeSpentWaitingForGPUBetweenFramesInMS().
+	float fTimeSpentWaitingForGPUInUpdateInMS = 0.0f;
+	// update() will update all constant buffers (if they were changed)
+	// this value does not include fTimeSpentOnCPUSleepInUpdate they are separate values
+	// this is the third thing that we will do before drawing a frame
+	float fTimeSpentOnUpdateInMS = 0.0f;
+	// time spent on the CPU in the draw() function
+	// that submits a new frame to the GPU
+	float fTimeSpentOnCPUDrawInMS = 0.0f;
+	// time spent in calculateFrameStats() func that updates the FPS counter and
+	// optionally (if enabled) shows avr. time to render a frame in the window title.
+	// after the frame is drawn
+	float fTimeSpentOnFPSCalcInMS = 0.0f;
+	// when fps limit is set
+	// after the frame is drawn
+	float fTimeSpentInSleepInMS = 0.0f;
+};
+#endif
 
 //@@Class
 /*
@@ -47,6 +87,20 @@ public:
 	* remarks: should be called after calling the SApplication::run().
 	*/
 	bool   getTimeToRenderFrame                              (float* fTimeInMS)  const;
+#if defined(DEBUG) || defined(_DEBUG)
+	//@@Function
+	/*
+	* desc: returns the frame stats of the last drawn frame.
+	* remarks: this function is only available in the debug builds.
+	*/
+	SFrameStats getFrameStats                                ();
+#endif
+	//@@Function
+	/*
+	* desc: used to retrieve the member fTimeSpentWaitingForGPUInUpdateInMS of the SFrameStats struct (getFrameStats() in debug) in release builds.
+	* remarks: see comments of the member fTimeSpentWaitingForGPUInUpdateInMS for description.
+	*/
+	float    getTimeSpentWaitingForGPUBetweenFramesInMS        ();
 	//@@Function
 	/*
 	* desc: returns the number of the draw calls it was made to render the last frame.
@@ -67,6 +121,18 @@ public:
 
 
 private:
+
+	friend class SApplication;
+
+#if defined(DEBUG) || defined(_DEBUG)
+
+	void setFrameStats(const SFrameStats& frameStats);
+
+	SFrameStats lastFrameStats;
+	std::mutex mtxFrameStats;
+#endif
+
+	float fTimeSpentWaitingForGPUBetweenFramesInMS = 0.0f;
 
 	//@@Variable
 	/* pointer to the SApplication which will be profiled. */

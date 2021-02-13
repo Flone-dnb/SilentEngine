@@ -1272,6 +1272,9 @@ private:
 
 
 	// Performance
+#if defined(DEBUG) || defined(_DEBUG)
+	SFrameStats frameStats;
+#endif
 	unsigned long long iLastFrameDrawCallCount  = 0;
 	int            iFPS                     = 0;
 	float          fTimeToRenderFrame       = 0.0f;
