@@ -2591,7 +2591,6 @@ void SApplication::draw()
 
 	iLastFrameDrawCallCount = 0;
 
-	//mtxSpawnDespawn.lock();
 	mtxShader.lock();
 
 	drawOpaqueComponents();
@@ -2601,7 +2600,6 @@ void SApplication::draw()
 	drawTransparentComponents();
 
 	mtxShader.unlock();
-	//mtxSpawnDespawn.unlock();
 
 	pCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(getCurrentBackBufferResource(),
 		D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
@@ -5117,13 +5115,12 @@ void SApplication::copyUserComputeResults(SComputeShader* pComputeShader)
 
 bool SApplication::doesComponentExists(SComponent* pComponent)
 {
-	mtxSpawnDespawn.lock();
+	std::lock_guard<std::mutex> lock(mtxSpawnDespawn);
 
 	for (size_t i = 0; i < vAllRenderableSpawnedOpaqueComponents.size(); i++)
 	{
 		if (vAllRenderableSpawnedOpaqueComponents[i] == pComponent)
 		{
-			mtxSpawnDespawn.unlock();
 			return true;
 		}
 	}
@@ -5132,12 +5129,9 @@ bool SApplication::doesComponentExists(SComponent* pComponent)
 	{
 		if (vAllRenderableSpawnedTransparentComponents[i] == pComponent)
 		{
-			mtxSpawnDespawn.unlock();
 			return true;
 		}
 	}
-
-	mtxSpawnDespawn.unlock();
 
 	return false;
 }
@@ -5639,31 +5633,6 @@ LRESULT SApplication::msgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 		onMouseDown(mousekey, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
 
-		mtxSpawnDespawn.lock();
-
-		std::vector<SContainer*>* pvRenderableContainers = nullptr;
-		pCurrentLevel->getRenderableContainers(pvRenderableContainers);
-
-		for (size_t i = 0; i < pvRenderableContainers->size(); i++)
-		{
-			if (pvRenderableContainers->operator[](i)->isUserInputCallsEnabled())
-			{
-				pvRenderableContainers->operator[](i)->onMouseDown(mousekey, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
-			}
-		}
-
-		std::vector<SContainer*>* pvNotRenderableContainers = nullptr;
-		pCurrentLevel->getNotRenderableContainers(pvNotRenderableContainers);
-		for (size_t i = 0; i < pvNotRenderableContainers->size(); i++)
-		{
-			if (pvNotRenderableContainers->operator[](i)->isUserInputCallsEnabled())
-			{
-				pvNotRenderableContainers->operator[](i)->onMouseDown(mousekey, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
-			}
-		}
-
-		mtxSpawnDespawn.unlock();
-
 		return 0;
 	}
 	case WM_LBUTTONUP:
@@ -5677,61 +5646,11 @@ LRESULT SApplication::msgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		{
 			onMouseUp(pressedMouseKey, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
 
-			mtxSpawnDespawn.lock();
-
-			std::vector<SContainer*>* pvRenderableContainers = nullptr;
-			pCurrentLevel->getRenderableContainers(pvRenderableContainers);
-
-			for (size_t i = 0; i < pvRenderableContainers->size(); i++)
-			{
-				if (pvRenderableContainers->operator[](i)->isUserInputCallsEnabled())
-				{
-					pvRenderableContainers->operator[](i)->onMouseUp(pressedMouseKey, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
-				}
-			}
-
-			std::vector<SContainer*>* pvNotRenderableContainers = nullptr;
-			pCurrentLevel->getNotRenderableContainers(pvNotRenderableContainers);
-			for (size_t i = 0; i < pvNotRenderableContainers->size(); i++)
-			{
-				if (pvNotRenderableContainers->operator[](i)->isUserInputCallsEnabled())
-				{
-					pvNotRenderableContainers->operator[](i)->onMouseUp(pressedMouseKey, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
-				}
-			}
-
-			mtxSpawnDespawn.unlock();
-
 			pressedMouseKey.setKey(SMB_NONE);
 		}
 		else
 		{
 			onMouseUp(keyDownLeft, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
-
-			mtxSpawnDespawn.lock();
-
-			std::vector<SContainer*>* pvRenderableContainers = nullptr;
-			pCurrentLevel->getRenderableContainers(pvRenderableContainers);
-
-			for (size_t i = 0; i < pvRenderableContainers->size(); i++)
-			{
-				if (pvRenderableContainers->operator[](i)->isUserInputCallsEnabled())
-				{
-					pvRenderableContainers->operator[](i)->onMouseUp(keyDownLeft, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
-				}
-			}
-
-			std::vector<SContainer*>* pvNotRenderableContainers = nullptr;
-			pCurrentLevel->getNotRenderableContainers(pvNotRenderableContainers);
-			for (size_t i = 0; i < pvNotRenderableContainers->size(); i++)
-			{
-				if (pvNotRenderableContainers->operator[](i)->isUserInputCallsEnabled())
-				{
-					pvNotRenderableContainers->operator[](i)->onMouseUp(keyDownLeft, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
-				}
-			}
-
-			mtxSpawnDespawn.unlock();
 		}
 		
 		return 0;
@@ -5793,31 +5712,6 @@ LRESULT SApplication::msgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			if (raw->header.dwType == RIM_TYPEMOUSE) 
 			{
 				onMouseMove(raw->data.mouse.lLastX, raw->data.mouse.lLastY);
-
-				mtxSpawnDespawn.lock();
-
-				std::vector<SContainer*>* pvRenderableContainers = nullptr;
-				pCurrentLevel->getRenderableContainers(pvRenderableContainers);
-
-				for (size_t i = 0; i < pvRenderableContainers->size(); i++)
-				{
-					if (pvRenderableContainers->operator[](i)->isUserInputCallsEnabled())
-					{
-						pvRenderableContainers->operator[](i)->onMouseMove(raw->data.mouse.lLastX, raw->data.mouse.lLastY);
-					}
-				}
-
-				std::vector<SContainer*>* pvNotRenderableContainers = nullptr;
-				pCurrentLevel->getNotRenderableContainers(pvNotRenderableContainers);
-				for (size_t i = 0; i < pvNotRenderableContainers->size(); i++)
-				{
-					if (pvNotRenderableContainers->operator[](i)->isUserInputCallsEnabled())
-					{
-						pvNotRenderableContainers->operator[](i)->onMouseMove(raw->data.mouse.lLastX, raw->data.mouse.lLastY);
-					}
-				}
-
-				mtxSpawnDespawn.unlock();
 			} 
 
 
@@ -5840,31 +5734,6 @@ LRESULT SApplication::msgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 		onMouseWheelMove(bUp, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
 
-		mtxSpawnDespawn.lock();
-
-		std::vector<SContainer*>* pvRenderableContainers = nullptr;
-		pCurrentLevel->getRenderableContainers(pvRenderableContainers);
-
-		for (size_t i = 0; i < pvRenderableContainers->size(); i++)
-		{
-			if (pvRenderableContainers->operator[](i)->isUserInputCallsEnabled())
-			{
-				pvRenderableContainers->operator[](i)->onMouseWheelMove(bUp, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
-			}
-		}
-
-		std::vector<SContainer*>* pvNotRenderableContainers = nullptr;
-		pCurrentLevel->getNotRenderableContainers(pvNotRenderableContainers);
-		for (size_t i = 0; i < pvNotRenderableContainers->size(); i++)
-		{
-			if (pvNotRenderableContainers->operator[](i)->isUserInputCallsEnabled())
-			{
-				pvNotRenderableContainers->operator[](i)->onMouseWheelMove(bUp, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
-			}
-		}
-
-		mtxSpawnDespawn.unlock();
-
 		return 0;
 	}
 	case WM_KEYDOWN:
@@ -5881,31 +5750,6 @@ LRESULT SApplication::msgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		if (key.getButton() != SKB_NONE)
 		{
 			onKeyboardButtonDown(key);
-
-			mtxSpawnDespawn.lock();
-
-			std::vector<SContainer*>* pvRenderableContainers = nullptr;
-			pCurrentLevel->getRenderableContainers(pvRenderableContainers);
-
-			for (size_t i = 0; i < pvRenderableContainers->size(); i++)
-			{
-				if (pvRenderableContainers->operator[](i)->isUserInputCallsEnabled())
-				{
-					pvRenderableContainers->operator[](i)->onKeyboardButtonDown(key);
-				}
-			}
-
-			std::vector<SContainer*>* pvNotRenderableContainers = nullptr;
-			pCurrentLevel->getNotRenderableContainers(pvNotRenderableContainers);
-			for (size_t i = 0; i < pvNotRenderableContainers->size(); i++)
-			{
-				if (pvNotRenderableContainers->operator[](i)->isUserInputCallsEnabled())
-				{
-					pvNotRenderableContainers->operator[](i)->onKeyboardButtonDown(key);
-				}
-			}
-
-			mtxSpawnDespawn.unlock();
 		}
 
 		return 0;
@@ -5917,31 +5761,6 @@ LRESULT SApplication::msgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		if (key.getButton() != SKB_NONE)
 		{
 			onKeyboardButtonUp(key);
-
-			mtxSpawnDespawn.lock();
-
-			std::vector<SContainer*>* pvRenderableContainers = nullptr;
-			pCurrentLevel->getRenderableContainers(pvRenderableContainers);
-
-			for (size_t i = 0; i < pvRenderableContainers->size(); i++)
-			{
-				if (pvRenderableContainers->operator[](i)->isUserInputCallsEnabled())
-				{
-					pvRenderableContainers->operator[](i)->onKeyboardButtonUp(key);
-				}
-			}
-
-			std::vector<SContainer*>* pvNotRenderableContainers = nullptr;
-			pCurrentLevel->getNotRenderableContainers(pvNotRenderableContainers);
-			for (size_t i = 0; i < pvNotRenderableContainers->size(); i++)
-			{
-				if (pvNotRenderableContainers->operator[](i)->isUserInputCallsEnabled())
-				{
-					pvNotRenderableContainers->operator[](i)->onKeyboardButtonUp(key);
-				}
-			}
-
-			mtxSpawnDespawn.unlock();
 		}
 		return 0;
 	}
@@ -6041,37 +5860,11 @@ int SApplication::run()
 					onTick(gameTimer.getDeltaTimeBetweenFramesInSec());
 				}
 
-
-				mtxSpawnDespawn.lock();
-
-				std::vector<SContainer*>* pvRenderableContainers = nullptr;
-				pCurrentLevel->getRenderableContainers(pvRenderableContainers);
-
-				std::vector<SContainer*>* pvNotRenderableContainers = nullptr;
-				pCurrentLevel->getNotRenderableContainers(pvNotRenderableContainers);
-
-				for (size_t i = 0; i < pvRenderableContainers->size(); i++)
-				{
-					if (pvRenderableContainers->operator[](i)->getCallTick())
-					{
-						pvRenderableContainers->operator[](i)->onTick(gameTimer.getDeltaTimeBetweenFramesInSec());
-					}
-				}
-				for (size_t i = 0; i < pvNotRenderableContainers->size(); i++)
-				{
-					if (pvNotRenderableContainers->operator[](i)->getCallTick())
-					{
-						pvNotRenderableContainers->operator[](i)->onTick(gameTimer.getDeltaTimeBetweenFramesInSec());
-					}
-				}
-
 #if defined(DEBUG) || defined(_DEBUG)
 				frameStats.fTimeSpentOnUserOnTickFunctionsInMS
 					= std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now() - timeUserOnTick).count()
 					/ 1000000.0;
 #endif
-
-				mtxSpawnDespawn.unlock();
 
 
 				update();

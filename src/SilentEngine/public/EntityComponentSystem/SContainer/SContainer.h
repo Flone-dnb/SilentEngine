@@ -83,19 +83,6 @@ public:
 	Moreover, it's recommended to mark your SContainer's destructor as virtual and override.
 	*/
 	bool removeComponentFromContainer (SComponent* pComponent);
-
-	//@@Function
-	/*
-	* desc: determines if the overridable functions like onKeyboardButtonDown() will be called in the container.
-	* param "bEnableUserInputCalls": false by default. True to enable, false otherwise.
-	*/
-	void setEnableUserInputCalls (bool bEnableUserInputCalls);
-	//@@Function
-	/*
-	* desc: determines if the overridable function onTick() will be called in the container.
-	* param "bCallTick": false by default. True to enable, false otherwise.
-	*/
-	void setCallTick             (bool bCallTick);
 	//@@Function
 	/*
 	* desc: determines if the container and all of its components should be visible (i.e. drawn).
@@ -114,25 +101,12 @@ public:
 	* desc: unbinds used materials from all components and child components.
 	*/
 	void unbindMaterialsFromAllComponents();
-
-	//@@Function
-	/*
-	* desc: determines if the overridable functions like onKeyboardButtonDown() are called in the container.
-	* return: true if enabled, false otherwise.
-	*/
-	bool        isUserInputCallsEnabled() const;
 	//@@Function
 	/*
 	* desc: determines if the container and all of its components are visible (i.e. drawn).
 	* return: true if visible, false otherwise.
 	*/
 	bool        isVisible        () const;
-	//@@Function
-	/*
-	* desc: determines if the overridable function onTick() is called in the container.
-	* return: true if onTick() is called, false otherwise.
-	*/
-	bool        getCallTick      () const;
 	//@@Function
 	/*
 	* desc: returns the container name.
@@ -180,66 +154,6 @@ public:
 	* desc: returns true if this container was created using Silent Editor.
 	*/
 	bool        isEditorObject   () const;
-
-
-protected:
-
-	// Game
-
-		//@@Function
-		/*
-		* desc: an overridable function, called (if setCallTick() was set to true) every time before a frame is drawn.
-		* param "fDeltaTime": the time that has passed since the last onTick() call.
-		This value will be valid even if you just enabled onTick() calls.
-		*/
-		virtual void onTick(float fDeltaTime) {};
-
-	// Input
-
-		//@@Function
-		/*
-		* desc: an overridable function, called (if setEnableUserInputCalls() was set to true) when the user presses a mouse key.
-		* param "mouseKey": the mouse key that has been pressed.
-		* param "iMouseXPos": mouse X position in pixels.
-		* param "iMouseYPos": mouse Y position in pixels.
-		*/
-		virtual void onMouseDown(SMouseKey mouseKey, int iMouseXPos, int iMouseYPos) {};
-		//@@Function
-		/*
-		* desc: an overridable function, called (if setEnableUserInputCalls() was set to true) when the user unpresses a mouse key.
-		* param "mouseKey": the mouse key that has been unpressed.
-		* param "iMouseXPos": mouse X position in pixels.
-		* param "iMouseYPos": mouse Y position in pixels.
-		*/
-		virtual void onMouseUp  (SMouseKey mouseKey, int iMouseXPos, int iMouseYPos) {};
-		//@@Function
-		/*
-		* desc: an overridable function, called (if setEnableUserInputCalls() was set to true) when the user moves the mouse.
-		* param "iMouseXMove": the number in pixels by which the mouse was moved (by X-axis).
-		* param "iMouseYMove": the number in pixels by which the mouse was moved (by Y-axis).
-		*/
-		virtual void onMouseMove(int iMouseXMove, int iMouseYMove) {};
-		//@@Function
-		/*
-		* desc: an overridable function, called (if setEnableUserInputCalls() was set to true) when the user moves the mouse wheel.
-		* param "bUp": true if the mouse wheel was moved up (forward, away from the user), false otherwise.
-		* param "iMouseXPos": mouse X position in pixels.
-		* param "iMouseYPos": mouse Y position in pixels.
-		*/
-		virtual void onMouseWheelMove(bool bUp, int iMouseXPos, int iMouseYPos) {};
-
-		//@@Function
-		/*
-		* desc: an overridable function, called (if setEnableUserInputCalls() was set to true) when the user presses a keyboard key.
-		* param "keyboardKey": a keyboard key that was pressed.
-		*/
-		virtual void onKeyboardButtonDown  (SKeyboardKey keyboardKey) {};
-		//@@Function
-		/*
-		* desc: an overridable function, called (if setEnableUserInputCalls() was set to true) when the user unpresses a keyboard key.
-		* param "keyboardKey": a keyboard key that was unpressed.
-		*/
-		virtual void onKeyboardButtonUp    (SKeyboardKey keyboardKey) {};
 
 private:
 
@@ -337,9 +251,7 @@ private:
 	size_t iMeshComponentsCount;
 
 
-	bool bEnableUserInputCalls;
 	bool bVisible;
 	bool bSpawnedInLevel;
-	bool bCallTick;
 	bool bIsEditorObject;
 };

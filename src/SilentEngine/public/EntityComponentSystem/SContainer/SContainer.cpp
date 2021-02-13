@@ -14,10 +14,8 @@
 
 SContainer::SContainer(const std::string& sContainerName)
 {
-	bEnableUserInputCalls = false;
 	bVisible              = true;
 	bSpawnedInLevel       = false;
-	bCallTick             = false;
 	bIsEditorObject       = false;
 
 	this->sContainerName  = sContainerName;
@@ -188,16 +186,6 @@ bool SContainer::removeComponentFromContainer(SComponent* pComponent)
 	return false;
 }
 
-void SContainer::setEnableUserInputCalls(bool bEnableUserInputCalls)
-{
-	this->bEnableUserInputCalls = bEnableUserInputCalls;
-}
-
-void SContainer::setCallTick(bool bCallTick)
-{
-	this->bCallTick = bCallTick;
-}
-
 void SContainer::setVisibility(bool bVisible)
 {
 	this->bVisible = bVisible;
@@ -224,19 +212,9 @@ void SContainer::unbindMaterialsFromAllComponents()
 	}
 }
 
-bool SContainer::isUserInputCallsEnabled() const
-{
-	return bEnableUserInputCalls;
-}
-
 bool SContainer::isVisible() const
 {
 	return bVisible;
-}
-
-bool SContainer::getCallTick() const
-{
-	return bCallTick;
 }
 
 std::string SContainer::getContainerName() const
