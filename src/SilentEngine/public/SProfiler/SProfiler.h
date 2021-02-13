@@ -22,13 +22,15 @@ struct SFrameStats
 	// on tick is called before drawing a frame
 	// this is the second thing that we will do before drawing a frame
 	float fTimeSpentOnUserOnTickFunctionsInMS = 0.0f;
-	// in update() we optionally might wait for the GPU to finish drawing a frame (so we might 'sleep' here)
 	// if this value is not 0, then this means that the CPU submitted SFRAME_RES_COUNT frames to the GPU but the GPU
 	// is still drawing the first frame (out of SFRAME_RES_COUNT frames) and because of this the CPU will wait (so CPU will be idle)
 	// until the GPU finishes drawing this frame to submit another frame
 	// if the CPU is too fast (or GPU has too much work) the CPU will need to wait for the GPU to catch up
 	// the more this value is the more likely that you have a GPU bottleneck
-	// if this value is always 0 then you may have a CPU bottleneck (because the GPU always finishes work really fast)
+	// if this value is always 0 then you may have a CPU bottleneck
+	// NOTICE: if this value is 0 but you have an FPS limit set then this value should not be considered,
+	// because if the FPS limit is set the CPU will sleep to maintain the FPS limit,
+	// YOU SHOULD ONLY CONSIDER THIS VALUE IS THE FPS LIMIT IS DISABLED
 	// this is the third thing that we will do before drawing a frame
 	// you can also get this value in release builds using SProfiler::getTimeSpentWaitingForGPUBetweenFramesInMS().
 	float fTimeSpentWaitingForGPUInUpdateInMS = 0.0f;

@@ -28,8 +28,6 @@ public:
 	virtual void onKeyboardButtonDown (SKeyboardKey keyboardKey) override;
 	virtual void onKeyboardButtonUp   (SKeyboardKey keyboardKey) override;
 
-	virtual void onTick(float fDelta) override;
-
 	~EditorApplication() override;
 
 private:

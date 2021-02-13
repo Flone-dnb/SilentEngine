@@ -9,7 +9,6 @@
 
 EditorApplication::EditorApplication(HINSTANCE hInstance) : SApplication(hInstance)
 {
-	setCallTick(true);
 }
 
 void EditorApplication::onRun()
@@ -196,12 +195,6 @@ void EditorApplication::onKeyboardButtonUp(SKeyboardKey keyboardKey)
 	{
 		bShiftPressed = false;
 	}
-}
-
-void EditorApplication::onTick(float fDelta)
-{
-	setWindowTitleText(
-		+L"Silent Editor. CPU wait for GPU (ms): " + std::to_wstring(getProfiler()->getTimeSpentWaitingForGPUBetweenFramesInMS()));
 }
 
 EditorApplication::~EditorApplication()
