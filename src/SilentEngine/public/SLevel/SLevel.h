@@ -38,7 +38,7 @@ public:
 		/*
 		* desc: used to spawn container in level.
 		* param "pContainer": the pointer to a container that you want to spawn.
-		* return: false if successful, true otherwise.
+		* return: false if successful (container is spawned), true otherwise.
 		* remarks: this function is thread-safe.
 		It's recommended to use this function in loading moments of your application (ex. loading screen)
 		as this function may drop the framerate a little.
