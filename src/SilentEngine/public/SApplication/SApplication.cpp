@@ -796,6 +796,14 @@ void SApplication::getRegisteredComputeShaders(std::vector<SComputeShader*>* pvS
 
 void SApplication::unregisterCustomComputeShader(SComputeShader* pComputeShader)
 {
+	if (pComputeShader->bCopyingComputeResult)
+	{
+		// will cause deadlock (we are in the draw() right now)
+		SError::showErrorMessageBox(L"SApplication::unregisterCustomComputeShader()", L"cannot unregister "
+			L"the compute shader while we are in the copyComputeResults() function.");
+		return;
+	}
+
 	mtxComputeShader.lock();
 
 	for (size_t i = 0; i < vUserComputeShaders.size(); i++)

@@ -198,5 +198,6 @@ private:
 	bool bCompiledShader;
 	bool bWaitForComputeShaderRightAfterDraw;
 	bool bWaitForComputeShaderToFinish;
+	bool bCopyingComputeResult;
 };
 

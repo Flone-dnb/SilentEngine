@@ -275,6 +275,7 @@ SComputeShader::SComputeShader(ID3D12Device* pDevice, ID3D12GraphicsCommandList*
 
 	bExecuteShaderBeforeDraw = true;
 	bWaitForComputeShaderToFinish = false;
+	bCopyingComputeResult = false;
 
 	iThreadGroupCountX = 1;
 	iThreadGroupCountY = 1;
@@ -340,7 +341,9 @@ void SComputeShader::finishedCopyingComputeResults(char* pData, size_t iSizeInBy
 	bWaitForComputeShaderRightAfterDraw = false;
 	bWaitForComputeShaderToFinish = false;
 
+	bCopyingComputeResult = true;
 	callbackWhenResultsCopied(pData, iSizeInBytes);
+	bCopyingComputeResult = false;
 }
 
 void SComputeShader::updateMeshResource(const std::string& sResourceName)
