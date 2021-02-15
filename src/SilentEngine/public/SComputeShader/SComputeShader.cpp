@@ -213,6 +213,8 @@ bool SComputeShader::setAddMeshResource(SMeshDataComputeResource* pResource, con
 	pResource->pResourceOwner->bindResourceUpdates(this, sResourceName);
 
 	vShaderResources.push_back(pNewResource);
+
+	return false;
 }
 
 bool SComputeShader::setAdd32BitConstant(float _32BitConstant, const std::string& sConstantName, unsigned int iShaderRegister)
@@ -242,6 +244,8 @@ bool SComputeShader::setAdd32BitConstant(float _32BitConstant, const std::string
 	constant._32BitConstant = _32BitConstant;
 
 	v32BitConstants.push_back(constant);
+
+	return false;
 }
 
 bool SComputeShader::setUpdate32BitConstant(float _32BitConstant, const std::string& sContantName)
