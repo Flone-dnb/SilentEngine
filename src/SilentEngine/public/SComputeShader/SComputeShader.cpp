@@ -60,6 +60,12 @@ bool SComputeShader::startShaderExecution(unsigned int iThreadGroupCountX, unsig
 		return true;
 	}
 
+	if (iThreadGroupCountX < 1 || iThreadGroupCountY < 1 || iThreadGroupCountZ < 1)
+	{
+		SError::showErrorMessageBox(L"SComputeShader::startShaderExecution()", L"iThreadGroupCount must be at least 1.");
+		return true;
+	}
+
 	this->iThreadGroupCountX = iThreadGroupCountX;
 	this->iThreadGroupCountY = iThreadGroupCountY;
 	this->iThreadGroupCountZ = iThreadGroupCountZ;
