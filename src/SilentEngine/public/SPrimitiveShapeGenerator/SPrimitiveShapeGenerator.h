@@ -230,6 +230,29 @@ struct SMeshData
 
 	//@@Function
 	/*
+	* desc: replaces the vertex.
+	*/
+	void setVertexAt(size_t i, const SMeshVertex& vertex)
+	{
+		vVertices[i] = vertex;
+	}
+
+	//@@Function
+	/*
+	* desc: replaces the index.
+	*/
+	void setIndexAt(size_t i, std::uint32_t iIndex)
+	{
+		if (iIndex > UINT16_MAX)
+		{
+			bHasIndicesMoreThan16Bits = true;
+		}
+
+		vIndices32[i] = iIndex;
+	}
+
+	//@@Function
+	/*
 	* desc: clears (deletes) all the vertices of the mesh data.
 	*/
 	void clearVertices()
