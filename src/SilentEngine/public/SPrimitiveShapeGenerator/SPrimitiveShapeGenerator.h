@@ -260,6 +260,15 @@ struct SMeshData
 
 	//@@Function
 	/*
+	* desc: returns the vertex of the mesh data.
+	*/
+	SMeshVertex getVertexAt(size_t i)
+	{
+		return vVertices[i];
+	}
+
+	//@@Function
+	/*
 	* desc: returns the index of the mesh data.
 	*/
 	std::uint32_t getIndexAt(size_t i)
