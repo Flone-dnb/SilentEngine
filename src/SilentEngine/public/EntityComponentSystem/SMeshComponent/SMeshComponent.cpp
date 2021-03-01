@@ -386,6 +386,13 @@ SMeshDataComputeResource* SMeshComponent::getMeshDataAsComputeResource(bool bGet
 		return nullptr;
 	}
 
+	if (bSpawnedInLevel == false)
+	{
+		SError::showErrorMessageBox(L"SMeshComponent::getMeshDataAsComputeResource()",
+			L"cannot use this mesh in a compute shader because this mesh is not spawned (no buffer was created yet).");
+		return nullptr;
+	}
+
 	SMeshDataComputeResource* pMeshDataResource = new SMeshDataComputeResource();
 	pMeshDataResource->pResourceOwner = this;
 	pMeshDataResource->bVertexBuffer = bGetVertexBuffer;
