@@ -3400,6 +3400,8 @@ bool SApplication::initD3DFirstStage()
 
 	if (FAILED(hresult))
 	{
+		SError::showErrorMessageBox(hresult, L"SApplication::initD3DFirstStage::D3D12CreateDevice()");
+		
 		// Try to create device with WARP (software) adapter.
 
 		Microsoft::WRL::ComPtr<IDXGIAdapter> WarpAdapter;
