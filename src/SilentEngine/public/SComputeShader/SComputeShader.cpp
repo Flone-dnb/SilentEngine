@@ -431,11 +431,11 @@ void SComputeShader::createRootSignatureAndPSO()
 	{
 		pSlotRootParameter[iStartIndex].InitAsConstants(vConstantsByRegisters[i], vUsedCBRegisters[i]);
 
-		for (size_t i = 0; i < v32BitConstants.size(); i++)
+		for (size_t k = 0; k < v32BitConstants.size(); k++)
 		{
-			if (v32BitConstants[i].iShaderRegister == vUsedCBRegisters[i])
+			if (v32BitConstants[k].iShaderRegister == vUsedCBRegisters[i])
 			{
-				v32BitConstants[i].iRootParamIndex = iStartIndex;
+				v32BitConstants[k].iRootParamIndex = iStartIndex;
 			}
 		}
 
