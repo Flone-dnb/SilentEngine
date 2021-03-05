@@ -193,13 +193,31 @@ ATL::CComPtr<IDxcBlob> SMiscHelpers::compileShader(const std::wstring& sPathToSh
 	pUtils->CreateDefaultIncludeHandler(&pIncludeHandler);
 
 
-	LPCWSTR pszArgs[] =
+	/*LPCWSTR pszArgs[] =
 	{
 		sPathToShader.c_str(),
 		L"-E", sShaderEntryPoint.c_str(),
 		L"-T", sShaderModel.c_str(),
 		bBuildInDebug ? DXC_ARG_DEBUG : DXC_ARG_OPTIMIZATION_LEVEL3
-	};
+	};*/
+
+	std::vector<LPCWSTR> vArgs;
+	vArgs.push_back(sPathToShader.c_str());
+	vArgs.push_back(L"-E");
+	vArgs.push_back(sShaderEntryPoint.c_str());
+	vArgs.push_back(L"-T");
+	vArgs.push_back(sShaderModel.c_str());
+	if (bBuildInDebug)
+	{
+		vArgs.push_back(DXC_ARG_DEBUG);
+		vArgs.push_back(DXC_ARG_SKIP_OPTIMIZATIONS);
+		//vArgs.push_back(L"-Fd");
+		//vArgs.push_back((sPathToShader + L".pdb").c_str());
+	}
+	else
+	{
+		vArgs.push_back(DXC_ARG_OPTIMIZATION_LEVEL3);
+	}
 
 
 	// Open source file.  
@@ -214,8 +232,8 @@ ATL::CComPtr<IDxcBlob> SMiscHelpers::compileShader(const std::wstring& sPathToSh
 	CComPtr<IDxcResult> pResults;
 	pCompiler->Compile(
 		&Source,
-		pszArgs,
-		_countof(pszArgs),
+		vArgs.data(),
+		vArgs.size(),
 		pIncludeHandler,
 		IID_PPV_ARGS(&pResults)
 	);
@@ -270,6 +288,20 @@ ATL::CComPtr<IDxcBlob> SMiscHelpers::compileShader(const std::wstring& sPathToSh
 	fwrite(pShader->GetBufferPointer(), pShader->GetBufferSize(), 1, fp);
 	fclose(fp);*/
 
+	if (bBuildInDebug)
+	{
+		// Save pdb.
+		CComPtr<IDxcBlob> pPDB = nullptr;
+		CComPtr<IDxcBlobUtf16> pPDBName = nullptr;
+		pResults->GetOutput(DXC_OUT_PDB, IID_PPV_ARGS(&pPDB), &pPDBName);
+		{
+			FILE* fp = NULL;
+			// Note that if you don't specify -Fd, a pdb name will be automatically generated. Use this file name to save the pdb so that PIX can find it quickly.
+			_wfopen_s(&fp, pPDBName->GetStringPointer(), L"wb");
+			fwrite(pPDB->GetBufferPointer(), pPDB->GetBufferSize(), 1, fp);
+			fclose(fp);
+		}
+	}
 
 	return pShader;
 }

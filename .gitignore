@@ -1,3 +1,4 @@
 ide/.vs/
 ide/x64/
+ide/*.pdb
 *.user
