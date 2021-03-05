@@ -698,9 +698,9 @@ SShader* SApplication::compileCustomShader(const std::wstring& sPathToShaderFile
 		}
 	}
 
-	pNewShader->pVS = SMiscHelpers::compileShader(sPathToShaderFile, nullptr, "VS", "vs_5_1", bCompileShadersInRelease);
-	pNewShader->pPS = SMiscHelpers::compileShader(sPathToShaderFile, nullptr, "PS", "ps_5_1", bCompileShadersInRelease);
-	pNewShader->pAlphaPS = SMiscHelpers::compileShader(sPathToShaderFile, alphaTestDefines, "PS", "ps_5_1", bCompileShadersInRelease);
+	pNewShader->pVS = SMiscHelpers::compileShader(sPathToShaderFile, nullptr, "VS", SE_VS_SM, bCompileShadersInRelease);
+	pNewShader->pPS = SMiscHelpers::compileShader(sPathToShaderFile, nullptr, "PS", SE_PS_SM, bCompileShadersInRelease);
+	pNewShader->pAlphaPS = SMiscHelpers::compileShader(sPathToShaderFile, alphaTestDefines, "PS", SE_PS_SM, bCompileShadersInRelease);
 
 
 	if (createPSO(pNewShader))
@@ -4176,11 +4176,11 @@ bool SApplication::createShadersAndInputLayout()
 	};
 	// Also change in SApplication::compileCustomShader().
 
-	mShaders["basicVS"] = SMiscHelpers::compileShader(L"shaders/basic.hlsl", nullptr, "VS", "vs_5_1", bCompileShadersInRelease);
-	mShaders["basicPS"] = SMiscHelpers::compileShader(L"shaders/basic.hlsl", nullptr, "PS", "ps_5_1", bCompileShadersInRelease);
-	mShaders["basicAlphaPS"] = SMiscHelpers::compileShader(L"shaders/basic.hlsl", alphaTestDefines, "PS", "ps_5_1", bCompileShadersInRelease);
-	mShaders["horzBlurCS"] = SMiscHelpers::compileShader(L"shaders/compute_blur.hlsl", nullptr, "horzBlurCS", "cs_5_1", bCompileShadersInRelease);
-	mShaders["vertBlurCS"] = SMiscHelpers::compileShader(L"shaders/compute_blur.hlsl", nullptr, "vertBlurCS", "cs_5_1", bCompileShadersInRelease);
+	mShaders["basicVS"] = SMiscHelpers::compileShader(L"shaders/basic.hlsl", nullptr, "VS", SE_VS_SM, bCompileShadersInRelease);
+	mShaders["basicPS"] = SMiscHelpers::compileShader(L"shaders/basic.hlsl", nullptr, "PS", SE_PS_SM, bCompileShadersInRelease);
+	mShaders["basicAlphaPS"] = SMiscHelpers::compileShader(L"shaders/basic.hlsl", alphaTestDefines, "PS", SE_PS_SM, bCompileShadersInRelease);
+	mShaders["horzBlurCS"] = SMiscHelpers::compileShader(L"shaders/compute_blur.hlsl", nullptr, "horzBlurCS", SE_CS_SM, bCompileShadersInRelease);
+	mShaders["vertBlurCS"] = SMiscHelpers::compileShader(L"shaders/compute_blur.hlsl", nullptr, "vertBlurCS", SE_CS_SM, bCompileShadersInRelease);
 
 
 	// All meshes with default shader will be here.

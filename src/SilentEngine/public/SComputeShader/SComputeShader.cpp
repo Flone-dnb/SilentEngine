@@ -95,7 +95,7 @@ void SComputeShader::stopShaderExecution()
 
 void SComputeShader::compileShader(const std::wstring& sPathToShaderFile, const std::string& sShaderEntryFunctionName)
 {
-	pCompiledShader = SMiscHelpers::compileShader(sPathToShaderFile, nullptr, sShaderEntryFunctionName, "cs_5_1", bCompileShaderInReleaseMode);
+	pCompiledShader = SMiscHelpers::compileShader(sPathToShaderFile, nullptr, sShaderEntryFunctionName, SE_CS_SM, bCompileShaderInReleaseMode);
 
 	bCompiledShader = true;
 }

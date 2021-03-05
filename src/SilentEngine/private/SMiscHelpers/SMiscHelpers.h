@@ -17,6 +17,11 @@
 #include <d3d12.h>
 
 
+#define SE_VS_SM "vs_5_1"
+#define SE_PS_SM "ps_5_1"
+#define SE_CS_SM "cs_5_1"
+
+
 class SMiscHelpers
 {
 public:
