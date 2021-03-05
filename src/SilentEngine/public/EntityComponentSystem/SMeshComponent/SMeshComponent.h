@@ -250,7 +250,7 @@ public:
 	/*
 	* desc: used to retrieve the mesh data as a resource for SComputeShader.
 	* param "bGetVertexBuffer": set true to get vertex buffer as a resource for SComputeShader, false for index buffer. 'True' will also
-	disable the frustum culling.
+	disable the frustum culling for this component (even if you are not using compute shader anymore).
 	* return: nullptr if the component is not spawned (i.e. no buffer was created), valid pointer otherwise.
 	* remarks: pass this pointer to your compute shader in setAddMeshResource(), do not 'delete' this pointer (compute shader needs
 	this pointer for some time, it will delete it for you in its destructor). You can delete this mesh even if the compute shader is working,
