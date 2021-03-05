@@ -125,7 +125,8 @@
       </AssemblyDebug>
     </Link>
     <PostBuildEvent>
-      <Command>copy /Y "$(SolutionDir)..\ext\dxc\dxil.dll" "$(TargetDir)dxil.dll"</Command>
+      <Command>copy /Y "$(SolutionDir)..\ext\dxc\dxil.dll" "$(TargetDir)dxil.dll"
+copy /Y "$(SolutionDir)..\ext\dxc\dxcompiler.dll" "$(TargetDir)dxcompiler.dll"</Command>
     </PostBuildEvent>
     <PostBuildEvent>
       <Message>
@@ -178,7 +179,8 @@
       <AssemblyDebug>false</AssemblyDebug>
     </Link>
     <PostBuildEvent>
-      <Command>copy /Y "$(SolutionDir)..\ext\dxc\dxil.dll" "$(TargetDir)dxil.dll"</Command>
+      <Command>copy /Y "$(SolutionDir)..\ext\dxc\dxil.dll" "$(TargetDir)dxil.dll"
+copy /Y "$(SolutionDir)..\ext\dxc\dxcompiler.dll" "$(TargetDir)dxcompiler.dll"</Command>
     </PostBuildEvent>
     <PostBuildEvent>
       <Message>
