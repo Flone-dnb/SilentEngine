@@ -17,6 +17,10 @@
 #include <d3d12.h>
 #include <wrl.h> // smart pointers
 
+// DXC
+#include "dxc/dxcapi.h"
+#include <atlbase.h> // Common COM helpers.
+
 class SMeshDataComputeResource;
 
 struct SComputeShaderResource
@@ -86,7 +90,7 @@ public:
 	/*
 	* desc: compiles the specified compute shader for later use.
 	*/
-	void compileShader(const std::wstring& sPathToShaderFile, const std::string& sShaderEntryFunctionName);
+	void compileShader(const std::wstring& sPathToShaderFile, const std::wstring& sShaderEntryFunctionName);
 	//@@Function
 	/*
 	* desc: sets if shader should be executed before/after the frame is drawn.
@@ -175,7 +179,7 @@ private:
 
 	Microsoft::WRL::ComPtr<ID3D12RootSignature> pComputeRootSignature;
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> pComputePSO;
-	Microsoft::WRL::ComPtr<ID3DBlob> pCompiledShader;
+	ATL::CComPtr<IDxcBlob> pCompiledShader;
 
 
 	std::vector<SComputeShaderResource*> vShaderResources;

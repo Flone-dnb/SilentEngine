@@ -93,7 +93,7 @@ void SComputeShader::stopShaderExecution()
 	mtxFencesVector.unlock();
 }
 
-void SComputeShader::compileShader(const std::wstring& sPathToShaderFile, const std::string& sShaderEntryFunctionName)
+void SComputeShader::compileShader(const std::wstring& sPathToShaderFile, const std::wstring& sShaderEntryFunctionName)
 {
 	pCompiledShader = SMiscHelpers::compileShader(sPathToShaderFile, nullptr, sShaderEntryFunctionName, SE_CS_SM, bCompileShaderInReleaseMode);
 
@@ -340,11 +340,7 @@ SComputeShader::~SComputeShader()
 		SError::showErrorMessageBox(L"SComputeShader::~SComputeShader()", L"compute pso left ref. count is not 0.");
 	}
 
-	iLeftRef = pCompiledShader.Reset();
-	if (iLeftRef != 0)
-	{
-		SError::showErrorMessageBox(L"SComputeShader::~SComputeShader()", L"compiled shader left ref. count is not 0.");
-	}
+	pCompiledShader.Release();
 }
 
 void SComputeShader::finishedCopyingComputeResults(char* pData, size_t iSizeInBytes)

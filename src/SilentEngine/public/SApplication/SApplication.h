@@ -23,6 +23,10 @@
 #include <DirectXColors.h>
 #include <DirectXMath.h>
 
+// DXC
+#include "dxc/dxcapi.h"
+#include <atlbase.h> // Common COM helpers.
+
 // Custom
 #include "SilentEngine/Private/SGameTimer/SGameTimer.h"
 #include "SilentEngine/Private/SRenderItem/SRenderItem.h"
@@ -1175,7 +1179,7 @@ private:
 	std::vector<D3D12_INPUT_ELEMENT_DESC>        vInputLayout;
 	Microsoft::WRL::ComPtr<ID3D12RootSignature>  pRootSignature;
 	Microsoft::WRL::ComPtr<ID3D12RootSignature>  pBlurRootSignature;
-	std::unordered_map<std::string, Microsoft::WRL::ComPtr<ID3DBlob>> mShaders;
+	std::unordered_map<std::string, ATL::CComPtr<IDxcBlob>> mShaders;
 
 
 	// CB constants.

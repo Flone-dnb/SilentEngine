@@ -15,6 +15,10 @@
 #include <wrl.h> // smart pointers
 #include <d3d12.h>
 
+// DXC
+#include "dxc/dxcapi.h"
+#include <atlbase.h> // Common COM helpers.
+
 class SCustomShaderResources;
 
 class SShader
@@ -42,9 +46,9 @@ private:
 	std::wstring sPathToShaderFile;
 
 
-	Microsoft::WRL::ComPtr<ID3DBlob> pVS;
-	Microsoft::WRL::ComPtr<ID3DBlob> pPS;
-	Microsoft::WRL::ComPtr<ID3DBlob> pAlphaPS;
+	ATL::CComPtr<IDxcBlob> pVS;
+	ATL::CComPtr<IDxcBlob> pPS;
+	ATL::CComPtr<IDxcBlob> pAlphaPS;
 
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> pOpaquePSO;
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> pTransparentPSO;

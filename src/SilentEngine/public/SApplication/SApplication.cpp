@@ -698,9 +698,9 @@ SShader* SApplication::compileCustomShader(const std::wstring& sPathToShaderFile
 		}
 	}
 
-	pNewShader->pVS = SMiscHelpers::compileShader(sPathToShaderFile, nullptr, "VS", SE_VS_SM, bCompileShadersInRelease);
-	pNewShader->pPS = SMiscHelpers::compileShader(sPathToShaderFile, nullptr, "PS", SE_PS_SM, bCompileShadersInRelease);
-	pNewShader->pAlphaPS = SMiscHelpers::compileShader(sPathToShaderFile, alphaTestDefines, "PS", SE_PS_SM, bCompileShadersInRelease);
+	pNewShader->pVS = SMiscHelpers::compileShader(sPathToShaderFile, nullptr, L"VS", SE_VS_SM, bCompileShadersInRelease);
+	pNewShader->pPS = SMiscHelpers::compileShader(sPathToShaderFile, nullptr, L"PS", SE_PS_SM, bCompileShadersInRelease);
+	pNewShader->pAlphaPS = SMiscHelpers::compileShader(sPathToShaderFile, alphaTestDefines, L"PS", SE_PS_SM, bCompileShadersInRelease);
 
 
 	if (createPSO(pNewShader))
@@ -4176,11 +4176,11 @@ bool SApplication::createShadersAndInputLayout()
 	};
 	// Also change in SApplication::compileCustomShader().
 
-	mShaders["basicVS"] = SMiscHelpers::compileShader(L"shaders/basic.hlsl", nullptr, "VS", SE_VS_SM, bCompileShadersInRelease);
-	mShaders["basicPS"] = SMiscHelpers::compileShader(L"shaders/basic.hlsl", nullptr, "PS", SE_PS_SM, bCompileShadersInRelease);
-	mShaders["basicAlphaPS"] = SMiscHelpers::compileShader(L"shaders/basic.hlsl", alphaTestDefines, "PS", SE_PS_SM, bCompileShadersInRelease);
-	mShaders["horzBlurCS"] = SMiscHelpers::compileShader(L"shaders/compute_blur.hlsl", nullptr, "horzBlurCS", SE_CS_SM, bCompileShadersInRelease);
-	mShaders["vertBlurCS"] = SMiscHelpers::compileShader(L"shaders/compute_blur.hlsl", nullptr, "vertBlurCS", SE_CS_SM, bCompileShadersInRelease);
+	mShaders["basicVS"] = SMiscHelpers::compileShader(L"shaders/basic.hlsl", nullptr, L"VS", SE_VS_SM, bCompileShadersInRelease);
+	mShaders["basicPS"] = SMiscHelpers::compileShader(L"shaders/basic.hlsl", nullptr, L"PS", SE_PS_SM, bCompileShadersInRelease);
+	mShaders["basicAlphaPS"] = SMiscHelpers::compileShader(L"shaders/basic.hlsl", alphaTestDefines, L"PS", SE_PS_SM, bCompileShadersInRelease);
+	mShaders["horzBlurCS"] = SMiscHelpers::compileShader(L"shaders/compute_blur.hlsl", nullptr, L"horzBlurCS", SE_CS_SM, bCompileShadersInRelease);
+	mShaders["vertBlurCS"] = SMiscHelpers::compileShader(L"shaders/compute_blur.hlsl", nullptr, L"vertBlurCS", SE_CS_SM, bCompileShadersInRelease);
 
 
 	// All meshes with default shader will be here.
@@ -4661,28 +4661,11 @@ void SApplication::removeComponentsFromGlobalVectors(SContainer* pContainer)
 
 void SApplication::releaseShader(SShader* pShader)
 {
-	unsigned long iLeft = pShader->pVS.Reset();
+	pShader->pVS.Release();
+	pShader->pPS.Release();
+	pShader->pAlphaPS.Release();
 
-	if (iLeft != 0)
-	{
-		showMessageBox(L"Error", L"SApplication::releaseShader() error: vs ref count is not 0.");
-	}
-
-	iLeft = pShader->pPS.Reset();
-
-	if (iLeft != 0)
-	{
-		showMessageBox(L"Error", L"SApplication::releaseShader() error: ps ref count is not 0.");
-	}
-
-	iLeft = pShader->pAlphaPS.Reset();
-
-	if (iLeft != 0)
-	{
-		showMessageBox(L"Error", L"SApplication::releaseShader() error: alpha ps ref count is not 0.");
-	}
-
-	iLeft = pShader->pOpaquePSO.Reset();
+	unsigned long iLeft = pShader->pOpaquePSO.Reset();
 
 	if (iLeft != 0)
 	{

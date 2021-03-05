@@ -16,10 +16,13 @@
 #include <wrl.h> // smart pointers
 #include <d3d12.h>
 
+// DXC
+#include "dxc/dxcapi.h"
+#include <atlbase.h> // Common COM helpers.
 
-#define SE_VS_SM "vs_5_1"
-#define SE_PS_SM "ps_5_1"
-#define SE_CS_SM "cs_5_1"
+#define SE_VS_SM L"vs_6_0"
+#define SE_PS_SM L"ps_6_0"
+#define SE_CS_SM L"cs_6_0"
 
 
 class SMiscHelpers
@@ -36,11 +39,11 @@ public:
 		Microsoft::WRL::ComPtr<ID3D12Resource>& pOutUploadBuffer, bool bCreateUAVBuffer = false);
 
 
-	static Microsoft::WRL::ComPtr<ID3DBlob> compileShader(
+	static ATL::CComPtr<IDxcBlob> compileShader(
 		const std::wstring& sPathToShader,
 		const D3D_SHADER_MACRO* defines,
-		const std::string& sShaderEntryPoint,
-		const std::string& sShaderModel,
+		const std::wstring& sShaderEntryPoint,
+		const std::wstring& sShaderModel,
 		bool bCompileShadersInRelease);
 };
 

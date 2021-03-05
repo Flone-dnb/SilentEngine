@@ -48,6 +48,11 @@ void horzBlurCS(int3 iGroupThreadID : SV_GroupThreadID, int3 iDispatchThreadID :
 	// To get these (2 * BLUR_RADIUS) pixels first BLUR_RADIUS threads will fetch 2 pixels and
 	// BLUR_RADIUS last threads will also fetch 2 pixels, others will fetch only 1 pixel.
 	
+	float dimx = 0.0f;
+	float dimy = 0.0f;
+	inputTexture.GetDimensions(dimx, dimy);
+	float2 textureDimentions = length(float2(dimx, dimy));
+
 	if(iGroupThreadID.x < BLUR_RADIUS)
 	{
 		// Clamp left border.
@@ -57,12 +62,14 @@ void horzBlurCS(int3 iGroupThreadID : SV_GroupThreadID, int3 iDispatchThreadID :
 	if (iGroupThreadID.x >= THREADS_IN_GROUP - BLUR_RADIUS)
 	{
 		// Clamp right border.
-		int iX = min(iDispatchThreadID.x + BLUR_RADIUS, inputTexture.Length.x - 1);
+		
+
+		int iX = min(iDispatchThreadID.x + BLUR_RADIUS, textureDimentions.x - 1);
 		vGroupCache[iGroupThreadID.x + 2 * BLUR_RADIUS] = inputTexture[int2(iX, iDispatchThreadID.y)];
 	}
 	
 	// Clamp borders.
-	vGroupCache[iGroupThreadID.x + BLUR_RADIUS] = inputTexture[min(iDispatchThreadID.xy, inputTexture.Length.xy - 1)];
+	vGroupCache[iGroupThreadID.x + BLUR_RADIUS] = inputTexture[min(iDispatchThreadID.xy, textureDimentions.xy - 1)];
 	
 	// Wait for all threads to finish.
 	GroupMemoryBarrierWithGroupSync();
@@ -93,6 +100,11 @@ void vertBlurCS(int3 iGroupThreadID : SV_GroupThreadID, int3 iDispatchThreadID :
 	// Each group has THREADS_IN_GROUP threads, but we also need (2 * BLUR_RADIUS) more pixels.
 	// To get these (2 * BLUR_RADIUS) pixels first BLUR_RADIUS threads will fetch 2 pixels and
 	// BLUR_RADIUS last threads will also fetch 2 pixels, others will fetch only 1 pixel.
+
+	float dimx = 0.0f;
+	float dimy = 0.0f;
+	inputTexture.GetDimensions(dimx, dimy);
+	float2 textureDimentions = length(float2(dimx, dimy));
 	
 	if(iGroupThreadID.y < BLUR_RADIUS)
 	{
@@ -103,12 +115,12 @@ void vertBlurCS(int3 iGroupThreadID : SV_GroupThreadID, int3 iDispatchThreadID :
 	if (iGroupThreadID.y >= THREADS_IN_GROUP - BLUR_RADIUS)
 	{
 		// Clamp right border.
-		int iY = min(iDispatchThreadID.y + BLUR_RADIUS, inputTexture.Length.y - 1);
+		int iY = min(iDispatchThreadID.y + BLUR_RADIUS, textureDimentions.y - 1);
 		vGroupCache[iGroupThreadID.y + 2 * BLUR_RADIUS] = inputTexture[int2(iDispatchThreadID.x, iY)];
 	}
 	
 	// Clamp borders.
-	vGroupCache[iGroupThreadID.y + BLUR_RADIUS] = inputTexture[min(iDispatchThreadID.xy, inputTexture.Length.xy - 1)];
+	vGroupCache[iGroupThreadID.y + BLUR_RADIUS] = inputTexture[min(iDispatchThreadID.xy, textureDimentions.xy - 1)];
 	
 	// Wait for all threads to finish.
 	GroupMemoryBarrierWithGroupSync();
