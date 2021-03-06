@@ -150,16 +150,6 @@ ATL::CComPtr<IDxcBlob> SMiscHelpers::compileShader(const std::wstring& sPathToSh
 		return nullptr;
 	}
 
-	bool bBuildInDebug = false;
-	//UINT iCompileFlags = D3DCOMPILE_OPTIMIZATION_LEVEL3;
-#if defined(DEBUG) || defined(_DEBUG) 
-	if (bCompileShadersInRelease == false)
-	{
-		//iCompileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
-		bBuildInDebug = true;
-	}
-#endif
-
 
 	// --- FXC ---
 //	HRESULT hresult = S_OK;
@@ -207,7 +197,8 @@ ATL::CComPtr<IDxcBlob> SMiscHelpers::compileShader(const std::wstring& sPathToSh
 	vArgs.push_back(sShaderEntryPoint.c_str());
 	vArgs.push_back(L"-T");
 	vArgs.push_back(sShaderModel.c_str());
-	if (bBuildInDebug)
+#if defined(DEBUG) || defined(_DEBUG) 
+	if (bCompileShadersInRelease == false)
 	{
 		vArgs.push_back(DXC_ARG_DEBUG);
 		vArgs.push_back(DXC_ARG_SKIP_OPTIMIZATIONS);
@@ -218,6 +209,9 @@ ATL::CComPtr<IDxcBlob> SMiscHelpers::compileShader(const std::wstring& sPathToSh
 	{
 		vArgs.push_back(DXC_ARG_OPTIMIZATION_LEVEL3);
 	}
+#elif
+	vArgs.push_back(DXC_ARG_OPTIMIZATION_LEVEL3);
+#endif
 
 
 	// Open source file.  
@@ -288,7 +282,9 @@ ATL::CComPtr<IDxcBlob> SMiscHelpers::compileShader(const std::wstring& sPathToSh
 	fwrite(pShader->GetBufferPointer(), pShader->GetBufferSize(), 1, fp);
 	fclose(fp);*/
 
-	if (bBuildInDebug)
+
+#if defined(DEBUG) || defined(_DEBUG) 
+	if (bCompileShadersInRelease == false)
 	{
 		// Save pdb.
 		CComPtr<IDxcBlob> pPDB = nullptr;
@@ -302,6 +298,7 @@ ATL::CComPtr<IDxcBlob> SMiscHelpers::compileShader(const std::wstring& sPathToSh
 			fclose(fp);
 		}
 	}
+#endif
 
 	return pShader;
 }
