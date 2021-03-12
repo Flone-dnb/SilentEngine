@@ -113,7 +113,7 @@ VertexOut VS(VertexIn vin)
     vout.vNormal = mul(vin.vNormal, (float3x3)vWorld);
 
 
-	vout.vPosWorldSpace = vPos;
+	vout.vPosWorldSpace = vPos.xyz;
 	
     // Transform to homogeneous clip space.
     vout.vPosViewSpace  = mul(vPos, vViewProj);
@@ -182,7 +182,7 @@ float4 PS(VertexOut pin) : SV_Target
 
     // Apply distant fog.
 
-    float fFogAmount = saturate(((vDistToCamera - fFogStart) / fFogRange));
+    float fFogAmount = saturate(((vDistToCamera - fFogStart) / fFogRange)).x;
 	vLitColor = lerp(vLitColor, vFogColor, fFogAmount);
 
 
@@ -202,7 +202,7 @@ float4 PS(VertexOut pin) : SV_Target
 
     // Apply saturation.
     float fLuminance = 0.2126f * vLitColor.r + 0.7152f * vLitColor.g + 0.0722f * vLitColor.b;
-    float3 vColorDiff = vLitColor - float3(fLuminance, fLuminance, fLuminance);
+    float3 vColorDiff = vLitColor.xyz - float3(fLuminance, fLuminance, fLuminance);
 
     vColorDiff *= fSaturation;
 
