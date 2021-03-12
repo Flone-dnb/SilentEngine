@@ -9,6 +9,7 @@
 
 // STL
 #include <fstream>
+#include <filesystem>
 
 // DirectX
 #include <D3Dcompiler.h>
@@ -183,13 +184,6 @@ ATL::CComPtr<IDxcBlob> SMiscHelpers::compileShader(const std::wstring& sPathToSh
 	pUtils->CreateDefaultIncludeHandler(&pIncludeHandler);
 
 
-	/*LPCWSTR pszArgs[] =
-	{
-		sPathToShader.c_str(),
-		L"-E", sShaderEntryPoint.c_str(),
-		L"-T", sShaderModel.c_str(),
-		bBuildInDebug ? DXC_ARG_DEBUG : DXC_ARG_OPTIMIZATION_LEVEL3
-	};*/
 
 	std::vector<LPCWSTR> vArgs;
 	vArgs.push_back(sPathToShader.c_str());
@@ -236,6 +230,7 @@ ATL::CComPtr<IDxcBlob> SMiscHelpers::compileShader(const std::wstring& sPathToSh
 	// Print errors if present.
 	CComPtr<IDxcBlobUtf8> pErrors = nullptr;
 	pResults->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&pErrors), nullptr);
+#if defined(DEBUG) || defined(_DEBUG) 
 	if (pErrors != nullptr && pErrors->GetStringLength() != 0)
 	{
 		OutputDebugStringA("\n--------------------------\n");
@@ -247,6 +242,7 @@ ATL::CComPtr<IDxcBlob> SMiscHelpers::compileShader(const std::wstring& sPathToSh
 		OutputDebugStringA("\n");
 		OutputDebugStringA("--------------------------\n\n");
 	}
+#endif
 
 
 	// Quit if the compilation failed.
@@ -291,9 +287,17 @@ ATL::CComPtr<IDxcBlob> SMiscHelpers::compileShader(const std::wstring& sPathToSh
 		CComPtr<IDxcBlobUtf16> pPDBName = nullptr;
 		pResults->GetOutput(DXC_OUT_PDB, IID_PPV_ARGS(&pPDB), &pPDBName);
 		{
+			std::wstring sTempPDBPath = L"_temp_shaders_pdb/";
+			if (!std::filesystem::exists(sTempPDBPath))
+			{
+				std::filesystem::create_directory(sTempPDBPath);
+			}
+
+			std::wstring sPDBPath = (sTempPDBPath + std::wstring(pPDBName->GetStringPointer())).c_str();
+
 			FILE* fp = NULL;
-			// Note that if you don't specify -Fd, a pdb name will be automatically generated. Use this file name to save the pdb so that PIX can find it quickly.
-			_wfopen_s(&fp, pPDBName->GetStringPointer(), L"wb");
+			// Note that if you don't specify -Fd, a pdb name will be automatically generated.
+			_wfopen_s(&fp, sPDBPath.c_str(), L"wb");
 			fwrite(pPDB->GetBufferPointer(), pPDB->GetBufferSize(), 1, fp);
 			fclose(fp);
 		}

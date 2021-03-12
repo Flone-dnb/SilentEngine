@@ -1,4 +1,5 @@
 ide/.vs/
 ide/x64/
 ide/*.pdb
+ide/_temp_shaders_pdb/
 *.user
