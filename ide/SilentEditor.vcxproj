@@ -92,7 +92,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>false</ConformanceMode>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <FloatingPointModel>Fast</FloatingPointModel>
       <AdditionalIncludeDirectories>../ext/;../src/;</AdditionalIncludeDirectories>
     </ClCompile>
@@ -116,7 +116,7 @@
       <ConformanceMode>false</ConformanceMode>
       <AdditionalIncludeDirectories>../ext/;../src/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <FloatingPointModel>Fast</FloatingPointModel>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -141,7 +141,7 @@ copy /Y "$(SolutionDir)..\ext\dxc\dxcompiler.dll" "$(TargetDir)dxcompiler.dll"</
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>false</ConformanceMode>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <FloatingPointModel>Fast</FloatingPointModel>
       <AdditionalIncludeDirectories>../ext/;../src/;</AdditionalIncludeDirectories>
     </ClCompile>
@@ -169,7 +169,7 @@ copy /Y "$(SolutionDir)..\ext\dxc\dxcompiler.dll" "$(TargetDir)dxcompiler.dll"</
       <ConformanceMode>false</ConformanceMode>
       <AdditionalIncludeDirectories>../ext/;../src/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <FloatingPointModel>Fast</FloatingPointModel>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

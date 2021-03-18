@@ -63,22 +63,30 @@ void SBlurEffect::addBlurToTexture(ID3D12GraphicsCommandList* pCommandList, ID3D
 
 	pCommandList->SetComputeRoot32BitConstants(0, static_cast<UINT>(vWeights.size()), vWeights.data(), 0);
 
-	pCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(pInputTexture,
-		D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_COPY_SOURCE));
+	CD3DX12_RESOURCE_BARRIER transition = CD3DX12_RESOURCE_BARRIER::Transition(pInputTexture,
+		D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_COPY_SOURCE);
 
-	pCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(pBlurMap0.Get(),
-		D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST));
+	pCommandList->ResourceBarrier(1, &transition);
+
+	transition = CD3DX12_RESOURCE_BARRIER::Transition(pBlurMap0.Get(),
+		D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST);
+
+	pCommandList->ResourceBarrier(1, &transition);
 
 	// Copy the input texture to blur map 0.
 	pCommandList->CopyResource(pBlurMap0.Get(), pInputTexture);
 
-	pCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(pBlurMap0.Get(),
-		D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_GENERIC_READ));
+	transition = CD3DX12_RESOURCE_BARRIER::Transition(pBlurMap0.Get(),
+		D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_GENERIC_READ);
+
+	pCommandList->ResourceBarrier(1, &transition);
 
 	// Write to blur map 1.
 
-	pCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(pBlurMap1.Get(),
-		D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_UNORDERED_ACCESS));
+	transition = CD3DX12_RESOURCE_BARRIER::Transition(pBlurMap1.Get(),
+		D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+
+	pCommandList->ResourceBarrier(1, &transition);
 
 	for (size_t i = 0; i < iBlurCount; i++)
 	{
@@ -96,11 +104,13 @@ void SBlurEffect::addBlurToTexture(ID3D12GraphicsCommandList* pCommandList, ID3D
 
 		// Now write to blur map 0 and read from map 1.
 
-		pCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(pBlurMap0.Get(),
-			D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_UNORDERED_ACCESS));
+		transition = CD3DX12_RESOURCE_BARRIER::Transition(pBlurMap0.Get(),
+			D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+		pCommandList->ResourceBarrier(1, &transition);
 
-		pCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(pBlurMap1.Get(),
-			D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_GENERIC_READ));
+		transition = CD3DX12_RESOURCE_BARRIER::Transition(pBlurMap1.Get(),
+			D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_GENERIC_READ);
+		pCommandList->ResourceBarrier(1, &transition);
 
 		// Write bertical blur to map 0.
 
@@ -117,19 +127,23 @@ void SBlurEffect::addBlurToTexture(ID3D12GraphicsCommandList* pCommandList, ID3D
 		{
 			// Now write to blur map 1 again for next iteration.
 
-			pCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(pBlurMap0.Get(),
-				D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_GENERIC_READ));
+			transition = CD3DX12_RESOURCE_BARRIER::Transition(pBlurMap0.Get(),
+				D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_GENERIC_READ);
+			pCommandList->ResourceBarrier(1, &transition);
 
-			pCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(pBlurMap1.Get(),
-				D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_UNORDERED_ACCESS));
+			transition = CD3DX12_RESOURCE_BARRIER::Transition(pBlurMap1.Get(),
+				D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+			pCommandList->ResourceBarrier(1, &transition);
 		}
 		else
 		{
-			pCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(pBlurMap0.Get(),
-				D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON));
+			transition = CD3DX12_RESOURCE_BARRIER::Transition(pBlurMap0.Get(),
+				D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON);
+			pCommandList->ResourceBarrier(1, &transition);
 
-			pCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(pBlurMap1.Get(),
-				D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_COMMON));
+			transition = CD3DX12_RESOURCE_BARRIER::Transition(pBlurMap1.Get(),
+				D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_COMMON);
+			pCommandList->ResourceBarrier(1, &transition);
 		}
 	}
 }
@@ -180,8 +194,10 @@ void SBlurEffect::createResources()
 	texDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
 	texDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
 
+	CD3DX12_HEAP_PROPERTIES heapProps(D3D12_HEAP_TYPE_DEFAULT);
+
 	HRESULT hresult = pDevice->CreateCommittedResource(
-		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+		&heapProps,
 		D3D12_HEAP_FLAG_NONE,
 		&texDesc,
 		D3D12_RESOURCE_STATE_COMMON,
@@ -193,8 +209,10 @@ void SBlurEffect::createResources()
 		return;
 	}
 
+	heapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+
 	hresult = pDevice->CreateCommittedResource(
-		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+		&heapProps,
 		D3D12_HEAP_FLAG_NONE,
 		&texDesc,
 		D3D12_RESOURCE_STATE_COMMON,

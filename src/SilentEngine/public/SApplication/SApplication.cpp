@@ -2047,8 +2047,9 @@ bool SApplication::onResize()
 		msaaClear.Color[2] = backBufferFillColor[2];
 		msaaClear.Color[3] = backBufferFillColor[3];
 
+		CD3DX12_HEAP_PROPERTIES heapProps(D3D12_HEAP_TYPE_DEFAULT);
 		hresult = pDevice->CreateCommittedResource(
-			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+			&heapProps,
 			D3D12_HEAP_FLAG_NONE,
 			&msaaRenderTargetDesc,
 			D3D12_RESOURCE_STATE_COMMON,
@@ -2086,8 +2087,10 @@ bool SApplication::onResize()
 		optClear.DepthStencil.Depth   = 1.0f;
 		optClear.DepthStencil.Stencil = 0;
 
+		heapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+
 		hresult = pDevice->CreateCommittedResource(
-			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+			&heapProps,
 			D3D12_HEAP_FLAG_NONE,
 			&depthStencilDesc,
 			D3D12_RESOURCE_STATE_COMMON,
@@ -2115,8 +2118,9 @@ bool SApplication::onResize()
 
 		// Transition the resource from its initial state to be used as a depth buffer.
 
-		pCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(pDepthStencilBuffer.Get(),
-			D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE));
+		CD3DX12_RESOURCE_BARRIER transition =
+			CD3DX12_RESOURCE_BARRIER::Transition(pDepthStencilBuffer.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE);
+		pCommandList->ResourceBarrier(1, &transition);
 
 
 
@@ -2413,10 +2417,16 @@ void SApplication::updateMainPassCB()
 
 	cameraBoundingFrustumOnLastMainPassUpdate = camera.cameraBoundingFrustum;
 
-	DirectX::XMMATRIX viewProj    = DirectX::XMMatrixMultiply(view, proj);
-	DirectX::XMMATRIX invView     = DirectX::XMMatrixInverse(&DirectX::XMMatrixDeterminant(view), view);
-	DirectX::XMMATRIX invProj     = DirectX::XMMatrixInverse(&DirectX::XMMatrixDeterminant(proj), proj);
-	DirectX::XMMATRIX invViewProj = DirectX::XMMatrixInverse(&DirectX::XMMatrixDeterminant(viewProj), viewProj);
+	DirectX::XMVECTOR viewDet = DirectX::XMMatrixDeterminant(view);
+	DirectX::XMVECTOR projDet = DirectX::XMMatrixDeterminant(proj);
+
+	DirectX::XMMATRIX viewProj = DirectX::XMMatrixMultiply(view, proj);
+
+	DirectX::XMVECTOR viewProjDet = DirectX::XMMatrixDeterminant(viewProj);
+	
+	DirectX::XMMATRIX invView     = DirectX::XMMatrixInverse(&viewDet, view);
+	DirectX::XMMATRIX invProj     = DirectX::XMMatrixInverse(&projDet, proj);
+	DirectX::XMMATRIX invViewProj = DirectX::XMMatrixInverse(&viewProjDet, viewProj);
 
 	DirectX::XMStoreFloat4x4(&mainRenderPassCB.vView, XMMatrixTranspose(view));
 	DirectX::XMStoreFloat4x4(&mainRenderPassCB.vInvView, XMMatrixTranspose(invView));
@@ -2561,9 +2571,9 @@ void SApplication::draw()
 
 	// Translate back buffer state from present state to render target state.
 
-
-	pCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(getCurrentBackBufferResource(), 
-		D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
+	CD3DX12_RESOURCE_BARRIER transition = CD3DX12_RESOURCE_BARRIER::Transition(getCurrentBackBufferResource(),
+		D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+	pCommandList->ResourceBarrier(1, &transition);
 
 
 
@@ -2577,7 +2587,9 @@ void SApplication::draw()
 	
 	// Binds the RTV and DSV to the rendering pipeline.
 
-	pCommandList->OMSetRenderTargets(1, &getCurrentBackBufferViewHandle(), true, &getDepthStencilViewHandle());
+	D3D12_CPU_DESCRIPTOR_HANDLE backBufferCpuHandle = getCurrentBackBufferViewHandle();
+	D3D12_CPU_DESCRIPTOR_HANDLE depthBufferCpuHandle = getDepthStencilViewHandle();
+	pCommandList->OMSetRenderTargets(1, &backBufferCpuHandle, true, &depthBufferCpuHandle);
 
 
 
@@ -2609,8 +2621,9 @@ void SApplication::draw()
 
 	mtxShader.unlock();
 
-	pCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(getCurrentBackBufferResource(),
-		D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
+	transition
+		= CD3DX12_RESOURCE_BARRIER::Transition(getCurrentBackBufferResource(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+	pCommandList->ResourceBarrier(1, &transition);
 
 	if (MSAA_Enabled)
 	{
@@ -2645,14 +2658,16 @@ void SApplication::draw()
 
 		// Prepare to copy blurred output to the back buffer.
 		// back buffer resource is in copy_source state.
-		pCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(getCurrentBackBufferResource(true),
-			D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_COPY_DEST));
+		CD3DX12_RESOURCE_BARRIER transition = CD3DX12_RESOURCE_BARRIER::Transition(getCurrentBackBufferResource(true),
+			D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_COPY_DEST);
+		pCommandList->ResourceBarrier(1, &transition);
 
 		pCommandList->CopyResource(getCurrentBackBufferResource(true), pBlurEffect->getOutput());
 
 		// Transition to PRESENT state.
-		pCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(getCurrentBackBufferResource(true),
-			D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PRESENT));
+		transition = CD3DX12_RESOURCE_BARRIER::Transition(getCurrentBackBufferResource(true),
+			D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PRESENT);
+		pCommandList->ResourceBarrier(1, &transition);
 	}
 
 	executeCustomComputeShaders(false);
@@ -2959,8 +2974,11 @@ void SApplication::drawComponent(SComponent* pComponent, bool bUsingCustomResour
 		pCommandList->SetPipelineState(pOpaqueLineTopologyPSO.Get());
 	}
 
-	pCommandList->IASetVertexBuffers(0, 1, &pComponent->getRenderData()->pGeometry->getVertexBufferView());
-	pCommandList->IASetIndexBuffer(&pComponent->getRenderData()->pGeometry->getIndexBufferView());
+	D3D12_VERTEX_BUFFER_VIEW vertBufView = pComponent->getRenderData()->pGeometry->getVertexBufferView();
+	D3D12_INDEX_BUFFER_VIEW indBufView = pComponent->getRenderData()->pGeometry->getIndexBufferView();
+
+	pCommandList->IASetVertexBuffers(0, 1, &vertBufView);
+	pCommandList->IASetIndexBuffer(&indBufView);
 	pCommandList->IASetPrimitiveTopology(pComponent->getRenderData()->primitiveTopologyType);
 
 
@@ -4859,10 +4877,13 @@ void SApplication::saveBackBufferPixels()
 
 		pDevice->GetCopyableFootprints(&desc, 0, 1, 0, &footprint, nullptr, nullptr, &iPixelsBufferSize);
 
+		CD3DX12_HEAP_PROPERTIES heapProps(D3D12_HEAP_TYPE_READBACK);
+		CD3DX12_RESOURCE_DESC buf = CD3DX12_RESOURCE_DESC::Buffer(iPixelsBufferSize);
+
 		HRESULT hresult = pDevice->CreateCommittedResource(
-				&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_READBACK),
+				&heapProps,
 				D3D12_HEAP_FLAG_NONE,
-				&CD3DX12_RESOURCE_DESC::Buffer(iPixelsBufferSize),
+				&buf,
 				D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS(&pPixelsReadBackBuffer));
 
 		CD3DX12_TEXTURE_COPY_LOCATION dst(pPixelsReadBackBuffer.Get(), footprint);
@@ -5059,11 +5080,14 @@ void SApplication::copyUserComputeResults(SComputeShader* pComputeShader)
 	}
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> pReadBackBuffer;
+	CD3DX12_RESOURCE_DESC buf = CD3DX12_RESOURCE_DESC::Buffer(pResourceToCopyFrom->iDataSizeInBytes);
+
+	CD3DX12_HEAP_PROPERTIES heapProps(D3D12_HEAP_TYPE_READBACK);
 
 	HRESULT hresult = pDevice->CreateCommittedResource(
-		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_READBACK),
+		&heapProps,
 		D3D12_HEAP_FLAG_NONE,
-		&CD3DX12_RESOURCE_DESC::Buffer(pResourceToCopyFrom->iDataSizeInBytes),
+		&buf,
 		D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS(&pReadBackBuffer));
 	if (FAILED(hresult))
 	{
@@ -5075,14 +5099,16 @@ void SApplication::copyUserComputeResults(SComputeShader* pComputeShader)
 
 	resetCommandList();
 
-	pCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(pResourceToCopyFrom->pResource.Get(),
-		D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE));
+	CD3DX12_RESOURCE_BARRIER transition = CD3DX12_RESOURCE_BARRIER::Transition(pResourceToCopyFrom->pResource.Get(),
+		D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE);
+	pCommandList->ResourceBarrier(1, &transition);
 	
 
 	pCommandList->CopyResource(pReadBackBuffer.Get(), pResourceToCopyFrom->pResource.Get());
 
-	pCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(pResourceToCopyFrom->pResource.Get(),
-		D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS));
+	transition = CD3DX12_RESOURCE_BARRIER::Transition(pResourceToCopyFrom->pResource.Get(),
+		D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+	pCommandList->ResourceBarrier(1, &transition);
 
 	executeCommandList();
 	flushCommandQueue();
@@ -5233,10 +5259,13 @@ bool SApplication::doFrustumCulling(SComponent* pComponent)
 	DirectX::XMMATRIX world    = DirectX::XMLoadFloat4x4(&pComponent->renderData.vWorld);
 	pComponent->mtxWorldMatrixUpdate.unlock();
 
-	DirectX::XMMATRIX invWorld = DirectX::XMMatrixInverse(&XMMatrixDeterminant(world), world);
+	DirectX::XMVECTOR worldDet = XMMatrixDeterminant(world);
+
+	DirectX::XMMATRIX invWorld = DirectX::XMMatrixInverse(&worldDet, world);
 
 	DirectX::XMMATRIX view = DirectX::XMMatrixTranspose(DirectX::XMLoadFloat4x4(&mainRenderPassCB.vView)); // transpose back (see updateMainPassCB()).
-	DirectX::XMMATRIX invView = DirectX::XMMatrixInverse(&XMMatrixDeterminant(view), view);
+	DirectX::XMVECTOR viewDet = XMMatrixDeterminant(view);
+	DirectX::XMMATRIX invView = DirectX::XMMatrixInverse(&viewDet, view);
 
 	// View space to the object's local space.
 	DirectX::XMMATRIX viewToObjectLocal = XMMatrixMultiply(invView, invWorld);
@@ -5285,10 +5314,13 @@ void SApplication::doFrustumCullingOnInstancedMesh(SMeshComponent* pMeshComponen
 		}
 
 
-		DirectX::XMMATRIX invWorld = DirectX::XMMatrixInverse(&XMMatrixDeterminant(instanceWorld), instanceWorld);
+		DirectX::XMVECTOR instWorldDet = XMMatrixDeterminant(instanceWorld);
+
+		DirectX::XMMATRIX invWorld = DirectX::XMMatrixInverse(&instWorldDet, instanceWorld);
 
 		DirectX::XMMATRIX view = DirectX::XMMatrixTranspose(DirectX::XMLoadFloat4x4(&mainRenderPassCB.vView)); // transpose back (see updateMainPassCB()).
-		DirectX::XMMATRIX invView = DirectX::XMMatrixInverse(&XMMatrixDeterminant(view), view);
+		DirectX::XMVECTOR viewDet = XMMatrixDeterminant(view);
+		DirectX::XMMATRIX invView = DirectX::XMMatrixInverse(&viewDet, view);
 
 		// View space to the object's local space.
 		DirectX::XMMATRIX viewToObjectLocal = XMMatrixMultiply(invView, invWorld);

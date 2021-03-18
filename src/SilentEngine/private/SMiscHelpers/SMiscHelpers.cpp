@@ -36,10 +36,13 @@ Microsoft::WRL::ComPtr<ID3D12Resource> SMiscHelpers::createBufferWithData(ID3D12
 	HRESULT hresult;
 	if (bCreateUAVBuffer)
 	{
+		CD3DX12_HEAP_PROPERTIES heapProps(D3D12_HEAP_TYPE_DEFAULT);
+		CD3DX12_RESOURCE_DESC buf = CD3DX12_RESOURCE_DESC::Buffer(iDataSizeInBytes, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+
 		hresult = pDevice->CreateCommittedResource(
-			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+			&heapProps,
 			D3D12_HEAP_FLAG_NONE,
-			&CD3DX12_RESOURCE_DESC::Buffer(iDataSizeInBytes, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS),
+			&buf,
 			D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
 			nullptr,
 			IID_PPV_ARGS(pDefaultBuffer.GetAddressOf()));
@@ -51,10 +54,13 @@ Microsoft::WRL::ComPtr<ID3D12Resource> SMiscHelpers::createBufferWithData(ID3D12
 	}
 	else
 	{
+		CD3DX12_HEAP_PROPERTIES heapProps(D3D12_HEAP_TYPE_DEFAULT);
+		CD3DX12_RESOURCE_DESC buf = CD3DX12_RESOURCE_DESC::Buffer(iDataSizeInBytes);
+
 		hresult = pDevice->CreateCommittedResource(
-			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+			&heapProps,
 			D3D12_HEAP_FLAG_NONE,
-			&CD3DX12_RESOURCE_DESC::Buffer(iDataSizeInBytes),
+			&buf,
 			D3D12_RESOURCE_STATE_COMMON,
 			nullptr,
 			IID_PPV_ARGS(pDefaultBuffer.GetAddressOf()));
@@ -69,10 +75,13 @@ Microsoft::WRL::ComPtr<ID3D12Resource> SMiscHelpers::createBufferWithData(ID3D12
 
 	// In order to copy CPU memory data into our default buffer, we need to create an intermediate upload heap.
 
+	CD3DX12_HEAP_PROPERTIES heapProps(D3D12_HEAP_TYPE_UPLOAD);
+	CD3DX12_RESOURCE_DESC buf = CD3DX12_RESOURCE_DESC::Buffer(iDataSizeInBytes);
+
 	hresult = pDevice->CreateCommittedResource(
-		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+		&heapProps,
 		D3D12_HEAP_FLAG_NONE,
-		&CD3DX12_RESOURCE_DESC::Buffer(iDataSizeInBytes),
+		&buf,
 		D3D12_RESOURCE_STATE_GENERIC_READ,
 		nullptr,
 		IID_PPV_ARGS(pOutUploadBuffer.GetAddressOf()));
@@ -96,13 +105,17 @@ Microsoft::WRL::ComPtr<ID3D12Resource> SMiscHelpers::createBufferWithData(ID3D12
 
 	if (bCreateUAVBuffer)
 	{
-		pCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(pDefaultBuffer.Get(),
-			D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_DEST));
+		CD3DX12_RESOURCE_BARRIER transition = CD3DX12_RESOURCE_BARRIER::Transition(pDefaultBuffer.Get(),
+			D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_DEST);
+
+		pCommandList->ResourceBarrier(1, &transition);
 	}
 	else
 	{
-		pCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(pDefaultBuffer.Get(),
-			D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST));
+		CD3DX12_RESOURCE_BARRIER transition = CD3DX12_RESOURCE_BARRIER::Transition(pDefaultBuffer.Get(),
+			D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST);
+
+		pCommandList->ResourceBarrier(1, &transition);
 	}
 
 
@@ -114,13 +127,17 @@ Microsoft::WRL::ComPtr<ID3D12Resource> SMiscHelpers::createBufferWithData(ID3D12
 
 	if (bCreateUAVBuffer)
 	{
-		pCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(pDefaultBuffer.Get(),
-			D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_UNORDERED_ACCESS));
+		CD3DX12_RESOURCE_BARRIER transition = CD3DX12_RESOURCE_BARRIER::Transition(pDefaultBuffer.Get(),
+			D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+
+		pCommandList->ResourceBarrier(1, &transition);
 	}
 	else
 	{
-		pCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(pDefaultBuffer.Get(),
-			D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_GENERIC_READ));
+		CD3DX12_RESOURCE_BARRIER transition = CD3DX12_RESOURCE_BARRIER::Transition(pDefaultBuffer.Get(),
+			D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_GENERIC_READ);
+
+		pCommandList->ResourceBarrier(1, &transition);
 	}
 
 
