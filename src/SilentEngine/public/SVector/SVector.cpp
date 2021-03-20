@@ -135,22 +135,7 @@ float SVector::angleBetweenVectorsInRad(const SVector& b, bool bVectorsNormalize
 
 float SVector::angleBetweenVectorsInDeg(const SVector& b, bool bVectorsNormalized)
 {
-	DirectX::XMFLOAT3 vB = {b.getX(), b.getY(), b.getZ()};
-
-	DirectX::XMVECTOR vec;
-	if (bVectorsNormalized)
-	{
-		vec = DirectX::XMVector3AngleBetweenNormals(DirectX::XMLoadFloat3(&vVector), DirectX::XMLoadFloat3(&vB));
-	}
-	else
-	{
-		vec = DirectX::XMVector3AngleBetweenVectors(DirectX::XMLoadFloat3(&vVector), DirectX::XMLoadFloat3(&vB));
-	}
-
-	DirectX::XMFLOAT3 res;
-	DirectX::XMStoreFloat3(&res, vec);
-
-	return DirectX::XMConvertToDegrees(res.x);
+	return DirectX::XMConvertToDegrees(angleBetweenVectorsInRad(b, bVectorsNormalized));
 }
 
 void SVector::rotateAroundAxis(const SVector& axis, float fAngleInDeg)
