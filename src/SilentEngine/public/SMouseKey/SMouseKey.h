@@ -11,7 +11,7 @@
 #include <windows.h>
 #include <vector>
 
-enum SMouseButton
+enum class SMouseButton
 {
 	SMB_NONE   = 0,
 	SMB_LEFT   = 1,
@@ -33,7 +33,7 @@ public:
 	*/
 	SMouseKey() 
 	{
-		mouseButton  = SMB_NONE;
+		mouseButton  = SMouseButton::SMB_NONE;
 	};
 
 	//@@Function
@@ -42,7 +42,7 @@ public:
 	*/
 	SMouseKey(WPARAM wParam)
 	{
-		mouseButton  = SMB_NONE;
+		mouseButton  = SMouseButton::SMB_NONE;
 
 		determineKey(wParam);
 	}
@@ -101,7 +101,7 @@ private:
 	*/
 	void setOtherKey(WPARAM wParam, SMouseKey& alreadyPressedKey)
 	{
-		mouseButton  = SMB_NONE;
+		mouseButton  = SMouseButton::SMB_NONE;
 
 		if (wParam & MK_LBUTTON && SMouseButton::SMB_LEFT != alreadyPressedKey.getButton())
 		{

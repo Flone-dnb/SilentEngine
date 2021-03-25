@@ -34,7 +34,7 @@ void EditorApplication::onMouseMove(int iMouseXMove, int iMouseYMove)
 
 void EditorApplication::onMouseDown(SMouseKey mouseKey, int iMouseXPos, int iMouseYPos)
 {
-	if (mouseKey.getButton() == SMB_LEFT)
+	if (mouseKey.getButton() == SMouseButton::SMB_LEFT)
 	{
 		bLMBPressed = true;
 	}
@@ -64,7 +64,7 @@ void EditorApplication::onMouseUp(SMouseKey mouseKey, int iMouseXPos, int iMouse
 		bRMBPressed = false;
 		setShowMouseCursor(true);
 	}
-	else if (mouseKey.getButton() == SMB_MIDDLE)
+	else if (mouseKey.getButton() == SMouseButton::SMB_MIDDLE)
 	{
 		bMMBPressed = false;
 	}
@@ -72,52 +72,52 @@ void EditorApplication::onMouseUp(SMouseKey mouseKey, int iMouseXPos, int iMouse
 
 void EditorApplication::onKeyboardButtonDown(SKeyboardKey keyboardKey)
 {
-	if (keyboardKey.getButton() == SKB_W)
+	if (keyboardKey.getButton() == SKeyboardButton::SKB_W)
 	{
 		bWPressed = true;
 	}
-	else if (keyboardKey.getButton() == SKB_S)
+	else if (keyboardKey.getButton() == SKeyboardButton::SKB_S)
 	{
 		bSPressed = true;
 	}
-	else if (keyboardKey.getButton() == SKB_D)
+	else if (keyboardKey.getButton() == SKeyboardButton::SKB_D)
 	{
 		bDPressed = true;
 	}
-	else if (keyboardKey.getButton() == SKB_A)
+	else if (keyboardKey.getButton() == SKeyboardButton::SKB_A)
 	{
 		bAPressed = true;
 	}
-	else if (keyboardKey.getButton() == SKB_E)
+	else if (keyboardKey.getButton() == SKeyboardButton::SKB_E)
 	{
 		bEPressed = true;
 	}
-	else if (keyboardKey.getButton() == SKB_Q)
+	else if (keyboardKey.getButton() == SKeyboardButton::SKB_Q)
 	{
 		bQPressed = true;
 	}
-	else if (keyboardKey.getButton() == SKB_ESC)
+	else if (keyboardKey.getButton() == SKeyboardButton::SKB_ESC)
 	{
 		close();
 	}
-	else if (keyboardKey.getButton() == SKB_LCTRL)
+	else if (keyboardKey.getButton() == SKeyboardButton::SKB_LCTRL)
 	{
 		bCtrlPressed = true;
 	}
-	else if (keyboardKey.getButton() == SKB_LALT)
+	else if (keyboardKey.getButton() == SKeyboardButton::SKB_LALT)
 	{
 		bAltPressed = true;
 	}
-	else if (keyboardKey.getButton() == SKB_LSHIFT)
+	else if (keyboardKey.getButton() == SKeyboardButton::SKB_LSHIFT)
 	{
 		bShiftPressed = true;
 	}
 
 	if (bRMBPressed && keyboardPressTimer.isTimerRunning() == false)
 	{
-		if (keyboardKey.getButton() == SKB_W || keyboardKey.getButton() == SKB_S
-			|| keyboardKey.getButton() == SKB_D || keyboardKey.getButton() == SKB_A
-			|| keyboardKey.getButton() == SKB_Q || keyboardKey.getButton() == SKB_E)
+		if (keyboardKey.getButton() == SKeyboardButton::SKB_W || keyboardKey.getButton() == SKeyboardButton::SKB_S
+			|| keyboardKey.getButton() == SKeyboardButton::SKB_D || keyboardKey.getButton() == SKeyboardButton::SKB_A
+			|| keyboardKey.getButton() == SKeyboardButton::SKB_Q || keyboardKey.getButton() == SKeyboardButton::SKB_E)
 		{
 			std::function<void(void)> f = std::bind(&EditorApplication::autoRepeatKeyPress, this);
 			keyboardPressTimer.setCallbackOnTimeout(f, fMoveTimeStep, true, fMoveTimeStep);
@@ -159,39 +159,39 @@ void EditorApplication::checkAutoRepeatStop()
 
 void EditorApplication::onKeyboardButtonUp(SKeyboardKey keyboardKey)
 {
-	if (keyboardKey.getButton() == SKB_W)
+	if (keyboardKey.getButton() == SKeyboardButton::SKB_W)
 	{
 		bWPressed = false;
 	}
-	else if (keyboardKey.getButton() == SKB_S)
+	else if (keyboardKey.getButton() == SKeyboardButton::SKB_S)
 	{
 		bSPressed = false;
 	}
-	else if (keyboardKey.getButton() == SKB_D)
+	else if (keyboardKey.getButton() == SKeyboardButton::SKB_D)
 	{
 		bDPressed = false;
 	}
-	else if (keyboardKey.getButton() == SKB_A)
+	else if (keyboardKey.getButton() == SKeyboardButton::SKB_A)
 	{
 		bAPressed = false;
 	}
-	else if (keyboardKey.getButton() == SKB_E)
+	else if (keyboardKey.getButton() == SKeyboardButton::SKB_E)
 	{
 		bEPressed = false;
 	}
-	else if (keyboardKey.getButton() == SKB_Q)
+	else if (keyboardKey.getButton() == SKeyboardButton::SKB_Q)
 	{
 		bQPressed = false;
 	}
-	else if (keyboardKey.getButton() == SKB_LCTRL)
+	else if (keyboardKey.getButton() == SKeyboardButton::SKB_LCTRL)
 	{
 		bCtrlPressed = false;
 	}
-	else if (keyboardKey.getButton() == SKB_LALT)
+	else if (keyboardKey.getButton() == SKeyboardButton::SKB_LALT)
 	{
 		bAltPressed = false;
 	}
-	else if (keyboardKey.getButton() == SKB_LSHIFT)
+	else if (keyboardKey.getButton() == SKeyboardButton::SKB_LSHIFT)
 	{
 		bShiftPressed = false;
 	}

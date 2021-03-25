@@ -10,7 +10,9 @@
 // DirectX
 #include <wrl.h> // smart pointers
 #include "d3d12.h"
+#pragma warning(push, 0) // disable warnings from this header
 #include "SilentEngine/Private/d3dx12.h"
+#pragma warning(pop)
 
 // Custom
 #include "SilentEngine/Private/SMath/SMath.h"
@@ -74,7 +76,7 @@ public:
 		pMappedData = nullptr;
 	}
 
-	UINT getElementCount() const
+	UINT64 getElementCount() const
 	{
 		return iElementCount;
 	}

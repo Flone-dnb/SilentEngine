@@ -104,7 +104,7 @@ SMaterial* SApplication::registerMaterial(const std::string& sMaterialName, bool
 	if (bHasUniqueName)
 	{
 		bool bExpanded = false;
-		int iNewMaterialCBIndex = -1;
+		size_t iNewMaterialCBIndex = 0;
 
 		for (size_t i = 0; i < vFrameResources.size(); i++)
 		{
@@ -233,11 +233,11 @@ bool SApplication::unregisterMaterial(const std::string& sMaterialName)
 			// Not the default material.
 			if (vAllSpawnedMeshComponents[i]->meshData.getMeshMaterial()->getMaterialName() == sMaterialName)
 			{
-				if (vAllSpawnedMeshComponents[i]->componentType == SCT_MESH)
+				if (vAllSpawnedMeshComponents[i]->componentType == SComponentType::SCT_MESH)
 				{
 					dynamic_cast<SMeshComponent*>(vAllSpawnedMeshComponents[i])->unbindMaterial();
 				}
-				else if (vAllSpawnedMeshComponents[i]->componentType == SCT_RUNTIME_MESH)
+				else if (vAllSpawnedMeshComponents[i]->componentType == SComponentType::SCT_RUNTIME_MESH)
 				{
 					dynamic_cast<SRuntimeMeshComponent*>(vAllSpawnedMeshComponents[i])->unbindMaterial();
 				}
@@ -550,11 +550,11 @@ bool SApplication::unloadTextureFromGPU(STextureHandle& textureHandle)
 			{
 				if (texHandle.getTextureName() == textureHandle.getTextureName())
 				{
-					if (vAllSpawnedMeshComponents[i]->componentType == SCT_MESH)
+					if (vAllSpawnedMeshComponents[i]->componentType == SComponentType::SCT_MESH)
 					{
 						dynamic_cast<SMeshComponent*>(vAllSpawnedMeshComponents[i])->unbindMaterial();
 					}
-					else if (vAllSpawnedMeshComponents[i]->componentType == SCT_RUNTIME_MESH)
+					else if (vAllSpawnedMeshComponents[i]->componentType == SComponentType::SCT_RUNTIME_MESH)
 					{
 						dynamic_cast<SRuntimeMeshComponent*>(vAllSpawnedMeshComponents[i])->unbindMaterial();
 					}
@@ -1260,9 +1260,9 @@ bool SApplication::setMSAASampleCount(MSAASampleCount eSampleCount)
 {
 	if (pDevice)
 	{
-		if (MSAA_SampleCount != eSampleCount)
+		if (MSAA_SampleCount != static_cast<std::underlying_type<MSAASampleCount>::type>(eSampleCount))
 		{
-			MSAA_SampleCount = eSampleCount;
+			MSAA_SampleCount = static_cast<std::underlying_type<MSAASampleCount>::type>(eSampleCount);
 
 			if (checkMSAASupport())
 			{
@@ -1296,7 +1296,7 @@ bool SApplication::isMSAAEnabled() const
 
 MSAASampleCount SApplication::getMSAASampleCount() const
 {
-	MSAASampleCount sampleCount;
+	MSAASampleCount sampleCount = MSAASampleCount::SC_2;
 
 	switch (MSAA_SampleCount)
 	{
@@ -1451,8 +1451,8 @@ bool SApplication::setCursorPos(const SVector& vPos)
 		if (bMouseCursorShown)
 		{
 			POINT pos;
-			pos.x = vPos.getX();
-			pos.y = vPos.getY();
+			pos.x = static_cast<LONG>(vPos.getX());
+			pos.y = static_cast<LONG>(vPos.getY());
 
 			if (ClientToScreen(hMainWindow, &pos) == 0)
 			{
@@ -1547,8 +1547,8 @@ bool SApplication::getCursorPos(SVector* vPos)
 				return true;
 			}
 
-			vPos->setX(pos.x);
-			vPos->setY(pos.y);
+			vPos->setX(static_cast<float>(pos.x));
+			vPos->setY(static_cast<float>(pos.y));
 
 			return false;
 		}
@@ -1569,8 +1569,8 @@ bool SApplication::getWindowSize(SVector* vSize)
 {
 	if (bInitCalled)
 	{
-		vSize->setX(iMainWindowWidth);
-		vSize->setY(iMainWindowHeight);
+		vSize->setX(static_cast<float>(iMainWindowWidth));
+		vSize->setY(static_cast<float>(iMainWindowHeight));
 
 		return false;
 	}
@@ -2154,14 +2154,14 @@ bool SApplication::onResize()
 		ScreenViewport.TopLeftY = 0;
 		ScreenViewport.Width    = static_cast<float>(iMainWindowWidth);
 		ScreenViewport.Height   = static_cast<float>(iMainWindowHeight);
-		ScreenViewport.MinDepth = 0.0f;
-		ScreenViewport.MaxDepth = 1.0f;
+		ScreenViewport.MinDepth = fMinDepth;
+		ScreenViewport.MaxDepth = fMaxDepth;
 
 		ScissorRect = { 0, 0, iMainWindowWidth, iMainWindowHeight };
 
 
 
-		camera.setCameraAspectRatio(static_cast<double>(iMainWindowWidth) / iMainWindowHeight);
+		camera.setCameraAspectRatio(static_cast<float>(iMainWindowWidth) / iMainWindowHeight);
 		camera.updateViewMatrix();
 
 
@@ -2207,14 +2207,23 @@ void SApplication::update()
 	if (pCurrentFrameResource->iFence != 0 && pFence->GetCompletedValue() < pCurrentFrameResource->iFence)
 	{
 		HANDLE eventHandle = CreateEventEx(nullptr, FALSE, FALSE, EVENT_ALL_ACCESS);
-		HRESULT hresult = pFence->SetEventOnCompletion(pCurrentFrameResource->iFence, eventHandle);
-		if (FAILED(hresult))
+		if (eventHandle != NULL)
 		{
-			SError::showErrorMessageBox(hresult, L"SApplication::update::SetEventOnCompletion()");
+			HRESULT hresult = pFence->SetEventOnCompletion(pCurrentFrameResource->iFence, eventHandle);
+			if (FAILED(hresult))
+			{
+				SError::showErrorMessageBox(hresult, L"SApplication::update::SetEventOnCompletion()");
+				return;
+			}
+
+			WaitForSingleObject(eventHandle, INFINITE);
+			CloseHandle(eventHandle);
+		}
+		else
+		{
+			SError::showErrorMessageBox(L"SApplication::update::CreateEventEx()", L"Error id: " + std::to_wstring(GetLastError()) + L".");
 			return;
 		}
-		WaitForSingleObject(eventHandle, INFINITE);
-		CloseHandle(eventHandle);
 	}
 	else
 	{
@@ -2228,8 +2237,8 @@ void SApplication::update()
 	if (bDontCount == false)
 	{
 		pProfiler->fTimeSpentWaitingForGPUBetweenFramesInMS
-			= std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now() - timeInSleep).count()
-			/ 1000000.0;
+			= static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now() - timeInSleep).count()
+				/ 1000000.0);
 
 #if defined(DEBUG) || defined(_DEBUG)
 		frameStats.fTimeSpentWaitingForGPUInUpdateInMS = pProfiler->fTimeSpentWaitingForGPUBetweenFramesInMS;
@@ -2246,8 +2255,8 @@ void SApplication::update()
 
 #if defined(DEBUG) || defined(_DEBUG)
 	frameStats.fTimeSpentOnUpdateInMS
-		= std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now() - timeOnUpdate).count()
-		/ 1000000.0;
+		= static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now() - timeOnUpdate).count()
+			/ 1000000.0);
 #endif
 }
 
@@ -2325,7 +2334,7 @@ void SApplication::updateObjectCBs()
 
 void SApplication::updateComponentAndChilds(SComponent* pComponent, SUploadBuffer<SObjectConstants>* pCurrentObjectCB)
 {
-	if (pComponent->componentType == SCT_MESH)
+	if (pComponent->componentType == SComponentType::SCT_MESH)
 	{
 		SMeshComponent* pMeshComponent = dynamic_cast<SMeshComponent*>(pComponent);
 
@@ -2349,7 +2358,7 @@ void SApplication::updateComponentAndChilds(SComponent* pComponent, SUploadBuffe
 			pMeshComponent->mtxComponentProps.unlock();
 		}
 	}
-	else if (pComponent->componentType == SCT_RUNTIME_MESH)
+	else if (pComponent->componentType == SComponentType::SCT_RUNTIME_MESH)
 	{
 		SRuntimeMeshComponent* pRuntimeMeshComponent = dynamic_cast<SRuntimeMeshComponent*>(pComponent);
 
@@ -2445,7 +2454,7 @@ void SApplication::updateMainPassCB()
 	mainRenderPassCB.iDirectionalLightCount = 0;
 	mainRenderPassCB.iPointLightCount = 0;
 	mainRenderPassCB.iSpotLightCount = 0;
-	mainRenderPassCB.iTextureFilterIndex = textureFilterIndex;
+	mainRenderPassCB.iTextureFilterIndex = static_cast<std::underlying_type<TEX_FILTER_MODE>::type>(textureFilterIndex);
 
 	mainRenderPassCB.vAmbientLightRGBA = { renderPassVisualSettings.vAmbientLightRGB.getX(),
 		renderPassVisualSettings.vAmbientLightRGB.getY(),
@@ -2892,7 +2901,7 @@ void SApplication::drawComponent(SComponent* pComponent, bool bUsingCustomResour
 
 	bool bUsingInstancing = false;
 
-	if (pComponent->componentType == SCT_MESH)
+	if (pComponent->componentType == SComponentType::SCT_MESH)
 	{
 		SMeshComponent* pMeshComponent = dynamic_cast<SMeshComponent*>(pComponent);
 
@@ -2929,7 +2938,7 @@ void SApplication::drawComponent(SComponent* pComponent, bool bUsingCustomResour
 		}
 		pMeshComponent->mtxComponentProps.unlock();
 	}
-	else if (pComponent->componentType == SCT_RUNTIME_MESH)
+	else if (pComponent->componentType == SComponentType::SCT_RUNTIME_MESH)
 	{
 		SRuntimeMeshComponent* pRuntimeMeshComponent = dynamic_cast<SRuntimeMeshComponent*>(pComponent);
 
@@ -3005,7 +3014,7 @@ void SApplication::drawComponent(SComponent* pComponent, bool bUsingCustomResour
 		}
 	}
 
-	if (pComponent->componentType == SCT_MESH)
+	if (pComponent->componentType == SComponentType::SCT_MESH)
 	{
 		SMeshComponent* pMeshComponent = dynamic_cast<SMeshComponent*>(pComponent);
 
@@ -3057,7 +3066,19 @@ void SApplication::drawComponent(SComponent* pComponent, bool bUsingCustomResour
 	{
 		// Do frustum culling anyway.
 
-		doFrustumCullingOnInstancedMesh(dynamic_cast<SMeshComponent*>(pComponent), iDrawInstanceCount);
+		UINT64 drawCount = 0;
+		doFrustumCullingOnInstancedMesh(dynamic_cast<SMeshComponent*>(pComponent), drawCount);
+
+#if defined(DEBUG) || defined(_DEBUG)
+		if (drawCount > UINT_MAX)
+		{
+			SError::showErrorMessageBox(L"SApplication::drawComponent()",
+				L"the number of visible instances is " + std::to_wstring(drawCount) + L" but the allowed maximum is "
+				+ std::to_wstring(UINT_MAX) + L". Please reduce the number of instances.");
+		}
+#endif
+
+		iDrawInstanceCount = static_cast<UINT>(drawCount);
 
 		pCommandList->SetGraphicsRootShaderResourceView(4,
 			dynamic_cast<SMeshComponent*>(pComponent)->vFrameResourcesInstancedData[iCurrentFrameResourceIndex]->getResource()->GetGPUVirtualAddress());
@@ -3147,19 +3168,26 @@ bool SApplication::flushCommandQueue()
 	if (pFence->GetCompletedValue() < iCurrentFence)
 	{
 		HANDLE hEvent = CreateEventEx(nullptr, FALSE, FALSE, EVENT_ALL_ACCESS);
-
-		// Fire event when GPU hits current fence.  
-		hresult = pFence->SetEventOnCompletion(iCurrentFence, hEvent);
-		if (FAILED(hresult))
+		if (hEvent != NULL)
 		{
-			SError::showErrorMessageBox(hresult, L"SApplication::flushCommandQueue::ID3D12Fence::SetEventOnCompletion()");
+			// Fire event when GPU hits current fence.  
+			hresult = pFence->SetEventOnCompletion(iCurrentFence, hEvent);
+			if (FAILED(hresult))
+			{
+				SError::showErrorMessageBox(hresult, L"SApplication::flushCommandQueue::ID3D12Fence::SetEventOnCompletion()");
+				return true;
+			}
+
+			// Wait until event is fired.
+			WaitForSingleObject(hEvent, INFINITE);
+
+			CloseHandle(hEvent);
+		}
+		else
+		{
+			SError::showErrorMessageBox(L"SApplication::flushCommandQueue::CreateEventEx()", L"Error id: " + std::to_wstring(GetLastError()) + L".");
 			return true;
 		}
-
-		// Wait until event is fired.
-		WaitForSingleObject(hEvent, INFINITE);
-		
-		CloseHandle(hEvent);
 	}
 
 	return false;
@@ -3206,7 +3234,7 @@ size_t SApplication::roundUp(size_t iNum, size_t iMultiple)
 		return iMultiple;
 	}
 
-	int iRemainder = iNum % iMultiple;
+	size_t iRemainder = iNum % iMultiple;
 	if (iRemainder == 0)
 	{
 		return iNum;
@@ -3777,7 +3805,7 @@ bool SApplication::getScreenParams(bool bApplyResolution)
 	{
 		// Not default params. Look if this resolution is supported.
 
-		for (int i = vDisplayModes.size() - 1; i > 0; i--)
+		for (int i = static_cast<int>(vDisplayModes.size()) - 1; i > 0; i--)
 		{
 			if ((vDisplayModes[i].Width == iMainWindowWidth)
 				&&
@@ -3911,7 +3939,7 @@ bool SApplication::createRTVAndDSVDescriptorHeaps()
 
 bool SApplication::createCBVSRVUAVHeap()
 {
-	size_t iDescCount = roundUp(vRegisteredMaterials.size(), OBJECT_CB_RESIZE_MULTIPLE); // for SMaterialConstants
+	UINT iDescCount = static_cast<UINT>(roundUp(vRegisteredMaterials.size(), OBJECT_CB_RESIZE_MULTIPLE)); // for SMaterialConstants
 
 	// new stuff per frame resource goes here
 	// make sure to recreate cbv heap (like in the end of the spawnContainerInLevel())
@@ -3923,7 +3951,7 @@ bool SApplication::createCBVSRVUAVHeap()
 	iPerFrameResEndOffset = iDescriptorCount;
 
 
-	iDescriptorCount += vLoadedTextures.size(); // one SRV per texture
+	iDescriptorCount += static_cast<UINT>(vLoadedTextures.size()); // one SRV per texture
 	iDescriptorCount += BLUR_VIEW_COUNT; // for blur effect
 
 
@@ -3948,10 +3976,22 @@ bool SApplication::createCBVSRVUAVHeap()
 
 void SApplication::createViews()
 {
-	size_t iMaterialCount = roundUp(vRegisteredMaterials.size(), OBJECT_CB_RESIZE_MULTIPLE);
+	size_t iMatCount = roundUp(vRegisteredMaterials.size(), OBJECT_CB_RESIZE_MULTIPLE);
+	if (iMatCount > INT_MAX)
+	{
+		SError::showErrorMessageBox(L"SApplication::createViews()", L"cannot create CBVs because an overflow will occur.");
+		return;
+	}
 
-	UINT iMaterialCBSizeInBytes = SMath::makeMultipleOf256(sizeof(SMaterialConstants));
+	int iMaterialCount = static_cast<int>(iMatCount);
 
+	UINT64 iMaterialCBSizeInBytes = static_cast<UINT64>(SMath::makeMultipleOf256(sizeof(SMaterialConstants)));
+
+	if ((iFrameResourcesCount - 1) * iMaterialCount + (iMaterialCount - 1) > INT_MAX)
+	{
+		SError::showErrorMessageBox(L"SApplication::createViews()", L"cannot create CBVs because an overflow will occur.");
+		return;
+	}
 
 	for (int iFrameIndex = 0; iFrameIndex < iFrameResourcesCount; iFrameIndex++)
 	{
@@ -3971,19 +4011,25 @@ void SApplication::createViews()
 
 			D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc;
 			cbvDesc.BufferLocation = currentMaterialConstantBufferAddress;
-			cbvDesc.SizeInBytes = iMaterialCBSizeInBytes;
+			cbvDesc.SizeInBytes = static_cast<UINT>(iMaterialCBSizeInBytes);
 
 			pDevice->CreateConstantBufferView(&cbvDesc, handle);
 		}
 	}
 
 
-	size_t iTextureCount = vLoadedTextures.size();
+	int iTextureCount = static_cast<int>(vLoadedTextures.size());
 
 	// Need one SRV per loaded texture.
+	if (iPerFrameResEndOffset + iTextureCount > INT_MAX)
+	{
+		SError::showErrorMessageBox(L"SApplication::createViews()", L"cannot create SRVs because an overflow will occur.");
+		return;
+	}
+
 	for (size_t i = 0; i < vLoadedTextures.size(); i++)
 	{
-		int iIndexInHeap = iPerFrameResEndOffset + i;
+		int iIndexInHeap = iPerFrameResEndOffset + static_cast<int>(i);
 		auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(pCBVSRVUAVHeap->GetCPUDescriptorHandleForHeapStart());
 
 		handle.Offset(iIndexInHeap, iCBVSRVUAVDescriptorSize);
@@ -3998,7 +4044,7 @@ void SApplication::createViews()
 
 		pDevice->CreateShaderResourceView(vLoadedTextures[i]->pResource.Get(), &srvDesc, handle);
 
-		vLoadedTextures[i]->iTexSRVHeapIndex = i;
+		vLoadedTextures[i]->iTexSRVHeapIndex = static_cast<int>(i);
 	}
 
 
@@ -4033,7 +4079,7 @@ bool SApplication::createRootSignature(SCustomShaderResources* pCustomShaderReso
 	CD3DX12_DESCRIPTOR_RANGE texTable;
 	if (pCustomShaderResources && bUseTextures)
 	{
-		texTable.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, pCustomShaderResources->vMaterials.size(), 0);
+		texTable.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, static_cast<UINT>(pCustomShaderResources->vMaterials.size()), 0);
 	}
 	else
 	{
@@ -4620,9 +4666,9 @@ void SApplication::removeComponentsFromGlobalVectors(SContainer* pContainer)
 
 	size_t iLeftComponents = vOpaqueMeshComponents.size();
 
-	for (long long i = 0; i < vAllRenderableSpawnedOpaqueComponents.size(); i++)
+	for (long long i = 0; i < static_cast<long long>(vAllRenderableSpawnedOpaqueComponents.size()); i++)
 	{
-		for (long long j = 0; j < vOpaqueMeshComponents.size(); j++)
+		for (long long j = 0; j < static_cast<long long>(vOpaqueMeshComponents.size()); j++)
 		{
 			if (vAllRenderableSpawnedOpaqueComponents[i] == vOpaqueMeshComponents[j])
 			{
@@ -4650,9 +4696,9 @@ void SApplication::removeComponentsFromGlobalVectors(SContainer* pContainer)
 
 	iLeftComponents = vTransparentMeshComponents.size();
 
-	for (long long i = 0; i < vAllRenderableSpawnedTransparentComponents.size(); i++)
+	for (long long i = 0; i < static_cast<long long>(vAllRenderableSpawnedTransparentComponents.size()); i++)
 	{
-		for (long long j = 0; j < vTransparentMeshComponents.size(); j++)
+		for (long long j = 0; j < static_cast<long long>(vTransparentMeshComponents.size()); j++)
 		{
 			if (vAllRenderableSpawnedTransparentComponents[i] == vTransparentMeshComponents[j])
 			{
@@ -4756,14 +4802,14 @@ void SApplication::removeShaderFromObjects(SShader* pShader, std::vector<SShader
 		{
 			for (size_t j = 0; j < pObjectsByShader->operator[](i).vMeshComponentsWithThisShader.size(); j++)
 			{
-				if (pObjectsByShader->operator[](i).vMeshComponentsWithThisShader[j]->componentType == SCT_MESH)
+				if (pObjectsByShader->operator[](i).vMeshComponentsWithThisShader[j]->componentType == SComponentType::SCT_MESH)
 				{
 					dynamic_cast<SMeshComponent*>(pObjectsByShader->operator[](i).vMeshComponentsWithThisShader[j])->pCustomShader = nullptr;
 
 					// Add to default engine shader.
 					pObjectsByShader->operator[](0).vMeshComponentsWithThisShader.push_back(pObjectsByShader->operator[](i).vMeshComponentsWithThisShader[j]);
 				}
-				else if (pObjectsByShader->operator[](i).vMeshComponentsWithThisShader[j]->componentType == SCT_RUNTIME_MESH)
+				else if (pObjectsByShader->operator[](i).vMeshComponentsWithThisShader[j]->componentType == SComponentType::SCT_RUNTIME_MESH)
 				{
 					dynamic_cast<SRuntimeMeshComponent*>(pObjectsByShader->operator[](i).vMeshComponentsWithThisShader[j])->pCustomShader = nullptr;
 
@@ -4947,12 +4993,12 @@ void SApplication::executeCustomComputeShader(SComputeShader* pComputeShader)
 	{
 		if (pComputeShader->vShaderResources[i]->bIsUAV)
 		{
-			pCommandList->SetComputeRootUnorderedAccessView(i,
+			pCommandList->SetComputeRootUnorderedAccessView(static_cast<UINT>(i),
 				pComputeShader->vShaderResources[i]->pResource->GetGPUVirtualAddress());
 		}
 		else
 		{
-			pCommandList->SetComputeRootShaderResourceView(i,
+			pCommandList->SetComputeRootShaderResourceView(static_cast<UINT>(i),
 				pComputeShader->vShaderResources[i]->pResource->GetGPUVirtualAddress());
 		}
 	}
@@ -4971,7 +5017,7 @@ void SApplication::executeCustomComputeShader(SComputeShader* pComputeShader)
 			}
 		}
 
-		pCommandList->SetComputeRoot32BitConstants(pComputeShader->vUsedRootIndex[i], vValuesToCopy.size(), vValuesToCopy.data(), 0);
+		pCommandList->SetComputeRoot32BitConstants(pComputeShader->vUsedRootIndex[i], static_cast<UINT>(vValuesToCopy.size()), vValuesToCopy.data(), 0);
 	}
 
 	pCommandList->Dispatch(pComputeShader->iThreadGroupCountX, pComputeShader->iThreadGroupCountY, pComputeShader->iThreadGroupCountZ);
@@ -5079,57 +5125,65 @@ void SApplication::copyUserComputeResults(SComputeShader* pComputeShader)
 		}
 	}
 
-	Microsoft::WRL::ComPtr<ID3D12Resource> pReadBackBuffer;
-	CD3DX12_RESOURCE_DESC buf = CD3DX12_RESOURCE_DESC::Buffer(pResourceToCopyFrom->iDataSizeInBytes);
-
-	CD3DX12_HEAP_PROPERTIES heapProps(D3D12_HEAP_TYPE_READBACK);
-
-	HRESULT hresult = pDevice->CreateCommittedResource(
-		&heapProps,
-		D3D12_HEAP_FLAG_NONE,
-		&buf,
-		D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS(&pReadBackBuffer));
-	if (FAILED(hresult))
+	if (pResourceToCopyFrom)
 	{
-		SError::showErrorMessageBox(hresult, L"SApplication::doOptionalPauseForUserComputeShaders()");
+		Microsoft::WRL::ComPtr<ID3D12Resource> pReadBackBuffer;
+		CD3DX12_RESOURCE_DESC buf = CD3DX12_RESOURCE_DESC::Buffer(pResourceToCopyFrom->iDataSizeInBytes);
 
+		CD3DX12_HEAP_PROPERTIES heapProps(D3D12_HEAP_TYPE_READBACK);
+
+		HRESULT hresult = pDevice->CreateCommittedResource(
+			&heapProps,
+			D3D12_HEAP_FLAG_NONE,
+			&buf,
+			D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS(&pReadBackBuffer));
+		if (FAILED(hresult))
+		{
+			SError::showErrorMessageBox(hresult, L"SApplication::copyUserComputeResults::CreateCommittedResource()");
+			return;
+		}
+
+
+		resetCommandList();
+
+		CD3DX12_RESOURCE_BARRIER transition = CD3DX12_RESOURCE_BARRIER::Transition(pResourceToCopyFrom->pResource.Get(),
+			D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE);
+		pCommandList->ResourceBarrier(1, &transition);
+
+
+		pCommandList->CopyResource(pReadBackBuffer.Get(), pResourceToCopyFrom->pResource.Get());
+
+		transition = CD3DX12_RESOURCE_BARRIER::Transition(pResourceToCopyFrom->pResource.Get(),
+			D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+		pCommandList->ResourceBarrier(1, &transition);
+
+		executeCommandList();
+		flushCommandQueue();
+
+
+
+		D3D12_RANGE readbackBufferRange{ 0, pResourceToCopyFrom->iDataSizeInBytes };
+		char* pCopiedData = new char[pResourceToCopyFrom->iDataSizeInBytes];
+
+		char* pMappedData = nullptr;
+
+		pReadBackBuffer->Map(0, &readbackBufferRange, reinterpret_cast<void**>(&pMappedData));
+
+		std::memcpy(pCopiedData, pMappedData, pResourceToCopyFrom->iDataSizeInBytes);
+
+		pReadBackBuffer->Unmap(0, nullptr);
+
+
+		pReadBackBuffer->Release();
+
+		pComputeShader->finishedCopyingComputeResults(pCopiedData, pResourceToCopyFrom->iDataSizeInBytes);
+	}
+	else
+	{
+		SError::showErrorMessageBox(L"SApplication::copyUserComputeResults()",
+			L"SComputeShaderResource* pResourceToCopyFrom is nullptr, could not find the specified resource.");
 		return;
 	}
-
-
-	resetCommandList();
-
-	CD3DX12_RESOURCE_BARRIER transition = CD3DX12_RESOURCE_BARRIER::Transition(pResourceToCopyFrom->pResource.Get(),
-		D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE);
-	pCommandList->ResourceBarrier(1, &transition);
-	
-
-	pCommandList->CopyResource(pReadBackBuffer.Get(), pResourceToCopyFrom->pResource.Get());
-
-	transition = CD3DX12_RESOURCE_BARRIER::Transition(pResourceToCopyFrom->pResource.Get(),
-		D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-	pCommandList->ResourceBarrier(1, &transition);
-
-	executeCommandList();
-	flushCommandQueue();
-
-
-
-	D3D12_RANGE readbackBufferRange{ 0, pResourceToCopyFrom->iDataSizeInBytes };
-	char* pCopiedData = new char[pResourceToCopyFrom->iDataSizeInBytes];
-
-	char* pMappedData = nullptr;
-
-	pReadBackBuffer->Map(0, &readbackBufferRange, reinterpret_cast<void**>(&pMappedData));
-
-	std::memcpy(pCopiedData, pMappedData, pResourceToCopyFrom->iDataSizeInBytes);
-
-	pReadBackBuffer->Unmap(0, nullptr);
-
-
-	pReadBackBuffer->Release();
-
-	pComputeShader->finishedCopyingComputeResults(pCopiedData, pResourceToCopyFrom->iDataSizeInBytes);
 }
 
 bool SApplication::doesComponentExists(SComponent* pComponent)
@@ -5284,7 +5338,7 @@ bool SApplication::doFrustumCulling(SComponent* pComponent)
 	return false;
 }
 
-void SApplication::doFrustumCullingOnInstancedMesh(SMeshComponent* pMeshComponent, UINT& iOutVisibleInstanceCount)
+void SApplication::doFrustumCullingOnInstancedMesh(SMeshComponent* pMeshComponent, UINT64& iOutVisibleInstanceCount)
 {
 	std::lock_guard<std::mutex> lock(pMeshComponent->mtxInstancing);
 
@@ -5352,6 +5406,15 @@ SApplication::SApplication(HINSTANCE hInstance)
 	pProfiler      = new SProfiler(this);
 
 	pCurrentLevel  = new SLevel(this);
+
+	ScissorRect = { 0, 0, iMainWindowWidth, iMainWindowHeight };
+
+	ScreenViewport.TopLeftX = 0;
+	ScreenViewport.TopLeftY = 0;
+	ScreenViewport.Width = static_cast<float>(iMainWindowWidth);
+	ScreenViewport.Height = static_cast<float>(iMainWindowHeight);
+	ScreenViewport.MinDepth = fMinDepth;
+	ScreenViewport.MaxDepth = fMaxDepth;
 
 #if defined(DEBUG) || defined(_DEBUG)
 	bCompileShadersInRelease = false;
@@ -5544,8 +5607,8 @@ LRESULT SApplication::msgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		iMainWindowWidth  = LOWORD(lParam);
 		iMainWindowHeight = HIWORD(lParam);
 
-		fWindowCenterX = iMainWindowWidth / 2.0f;
-		fWindowCenterY = iMainWindowHeight / 2.0f;
+		iWindowCenterX = iMainWindowWidth / 2;
+		iWindowCenterY = iMainWindowHeight / 2;
 
 		if (bInitCalled)
 		{
@@ -5645,7 +5708,7 @@ LRESULT SApplication::msgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	{
 		SMouseKey mousekey;
 
-		if (pressedMouseKey.getButton() != SMB_NONE)
+		if (pressedMouseKey.getButton() != SMouseButton::SMB_NONE)
 		{
 			mousekey.setOtherKey(wParam, pressedMouseKey);
 		}
@@ -5671,7 +5734,7 @@ LRESULT SApplication::msgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		{
 			onMouseUp(pressedMouseKey, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
 
-			pressedMouseKey.setKey(SMB_NONE);
+			pressedMouseKey.setKey(SMouseButton::SMB_NONE);
 		}
 		else
 		{
@@ -5685,8 +5748,8 @@ LRESULT SApplication::msgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		if (bMouseCursorShown == false)
 		{
 			POINT pos;
-			pos.x = fWindowCenterX;
-			pos.y = fWindowCenterY;
+			pos.x = iWindowCenterX;
+			pos.y = iWindowCenterY;
 
 			ClientToScreen(hMainWindow, &pos);
 
@@ -5697,7 +5760,7 @@ LRESULT SApplication::msgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	}
 	case WM_INPUT:
 	{
-		UINT dataSize;
+		UINT dataSize = 0;
 
 		GetRawInputData(reinterpret_cast<HRAWINPUT>(lParam), RID_INPUT, NULL, &dataSize, sizeof(RAWINPUTHEADER));
 
@@ -5772,7 +5835,7 @@ LRESULT SApplication::msgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		}
 
 		SKeyboardKey key(wParam, lParam);
-		if (key.getButton() != SKB_NONE)
+		if (key.getButton() != SKeyboardButton::SKB_NONE)
 		{
 			onKeyboardButtonDown(key);
 		}
@@ -5783,7 +5846,7 @@ LRESULT SApplication::msgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	case WM_SYSKEYUP:
 	{
 		SKeyboardKey key(wParam, lParam);
-		if (key.getButton() != SKB_NONE)
+		if (key.getButton() != SKeyboardButton::SKB_NONE)
 		{
 			onKeyboardButtonUp(key);
 		}
@@ -5864,8 +5927,8 @@ int SApplication::run()
 					bTimeWindowsMessageStarted = false;
 
 					frameStats.fTimeSpentOnWindowsMessagesInMS
-						= std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now() - timeWindowsMessage).count()
-						/ 1000000.0;
+						= static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now() - timeWindowsMessage).count()
+							/ 1000000.0);
 				}
 				else
 				{
@@ -5887,8 +5950,8 @@ int SApplication::run()
 
 #if defined(DEBUG) || defined(_DEBUG)
 				frameStats.fTimeSpentOnUserOnTickFunctionsInMS
-					= std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now() - timeUserOnTick).count()
-					/ 1000000.0;
+					= static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now() - timeUserOnTick).count()
+						/ 1000000.0);
 #endif
 
 
@@ -5902,8 +5965,8 @@ int SApplication::run()
 
 #if defined(DEBUG) || defined(_DEBUG)
 				frameStats.fTimeSpentOnCPUDrawInMS
-					= std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now() - timeOnDraw).count()
-					/ 1000000.0;
+					= static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now() - timeOnDraw).count()
+						/ 1000000.0);
 #endif
 
 #if defined(DEBUG) || defined(_DEBUG)
@@ -5914,8 +5977,8 @@ int SApplication::run()
 
 #if defined(DEBUG) || defined(_DEBUG)
 				frameStats.fTimeSpentOnFPSCalcInMS
-					= std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now() - timeOnCalcFPS).count()
-					/ 1000000.0;
+					= static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now() - timeOnCalcFPS).count()
+						/ 1000000.0);
 #endif
 
 
@@ -5933,7 +5996,7 @@ int SApplication::run()
 						timeEndPeriod(1);
 
 #if defined(DEBUG) || defined(_DEBUG)
-						frameStats.fTimeSpentInSleepInMS = dTimeInNS / 1000000.0;
+						frameStats.fTimeSpentInSleepInMS = static_cast<float>(dTimeInNS / 1000000.0);
 #endif
 					}
 

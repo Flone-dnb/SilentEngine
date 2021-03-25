@@ -9,7 +9,9 @@
 
 // Custom
 #include "SilentEngine/Private/SError/SError.h"
+#pragma warning(push, 0) // disable warnings from this header
 #include "SilentEngine/Private/d3dx12.h"
+#pragma warning(pop)
 #include "SilentEngine/Public/SApplication/SApplication.h"
 #include "SilentEngine/Private/EntityComponentSystem/SComponent/SComponent.h"
 #include "SilentEngine/Public/EntityComponentSystem/SMeshComponent/SMeshComponent.h"
@@ -209,7 +211,7 @@ bool SComputeShader::setAddMeshResource(SMeshDataComputeResource* pResource, con
 	pNewResource->bIsUAV = true;
 	pNewResource->iShaderRegister = iShaderRegister;
 	pNewResource->sResourceName = sResourceName;
-	if (pResource->pResourceOwner->componentType == SCT_MESH)
+	if (pResource->pResourceOwner->componentType == SComponentType::SCT_MESH)
 	{
 		pNewResource->pResource = dynamic_cast<SMeshComponent*>(pResource->pResourceOwner)->getResource(pResource->bVertexBuffer);
 	}
@@ -362,7 +364,7 @@ void SComputeShader::updateMeshResource(const std::string& sResourceName)
 	{
 		if (vShaderResources[i]->sResourceName == sResourceName)
 		{
-			if (vShaderResources[i]->pMeshComputeResource->pResourceOwner->componentType == SCT_MESH)
+			if (vShaderResources[i]->pMeshComputeResource->pResourceOwner->componentType == SComponentType::SCT_MESH)
 			{
 				vShaderResources[i]->pResource = dynamic_cast<SMeshComponent*>(vShaderResources[i]->pMeshComputeResource->pResourceOwner)
 					->getResource(vShaderResources[i]->pMeshComputeResource->bVertexBuffer);
@@ -425,7 +427,7 @@ void SComputeShader::createRootSignatureAndPSO()
 		}
 	}
 
-	size_t iStartIndex = vShaderResources.size();
+	UINT iStartIndex = static_cast<UINT>(vShaderResources.size());
 
 	for (size_t i = 0; i < vUsedCBRegisters.size(); i++)
 	{
@@ -445,7 +447,7 @@ void SComputeShader::createRootSignatureAndPSO()
 	}
 
 
-	CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc(vShaderResources.size() + vUsedCBRegisters.size(), pSlotRootParameter,
+	CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc(static_cast<UINT>(vShaderResources.size() + vUsedCBRegisters.size()), pSlotRootParameter,
 		0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
 	Microsoft::WRL::ComPtr<ID3DBlob> serializedRootSig = nullptr;

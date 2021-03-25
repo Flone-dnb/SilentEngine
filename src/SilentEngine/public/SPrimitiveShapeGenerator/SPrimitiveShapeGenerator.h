@@ -41,10 +41,11 @@ struct SMeshVertex
 	//@@Function
 	SMeshVertex()
 	{
-		this->vPosition = { 0.0f, 0.0f, 0.0f };
-		this->vNormal = { 0.0f, 0.0f, 0.0f };
-		this->vTangent = { 0.0f, 0.0f, 0.0f };
-		this->vUV = { 0.0f, 0.0f };
+		vPosition = { 0.0f, 0.0f, 0.0f };
+		vNormal = { 0.0f, 0.0f, 0.0f };
+		vTangent = { 0.0f, 0.0f, 0.0f };
+		vUV = { 0.0f, 0.0f };
+		vCustomVec4 = { 0.0f, 0.0f, 0.0f, 0.0f };
 	};
 	//@@Function
 	/*
@@ -54,9 +55,10 @@ struct SMeshVertex
 	SMeshVertex(const SVector& vPosition)
 	{
 		this->vPosition = {vPosition.getX(), vPosition.getY(), vPosition.getZ()};
-		this->vNormal   = {0.0f, 0.0f, 0.0f};
-		this->vTangent  = {0.0f, 0.0f, 0.0f};
-		this->vUV       = {0.0f, 0.0f};
+		vNormal   = {0.0f, 0.0f, 0.0f};
+		vTangent  = {0.0f, 0.0f, 0.0f};
+		vUV       = {0.0f, 0.0f};
+		vCustomVec4 = { 0.0f, 0.0f, 0.0f, 0.0f };
 	}
 	//@@Function
 	/*
@@ -73,6 +75,7 @@ struct SMeshVertex
 		this->vNormal   = {vNormal.getX(),   vNormal.getY(),   vNormal.getZ()};
 		this->vTangent  = {vTangent.getX(),  vTangent.getY(),  vTangent.getZ()};
 		this->vUV       = {vUV.getX(),       vUV.getY()};
+		vCustomVec4 = { 0.0f, 0.0f, 0.0f, 0.0f };
 	}
 	//@@Function
 	/*
@@ -89,6 +92,7 @@ struct SMeshVertex
 		this->vNormal   = {fNormalX, fNormalY, fNormalZ};
 		this->vTangent  = {fTangentX, fTangentY, fTangentZ};
 		this->vUV       = {fU, fV};
+		vCustomVec4 = { 0.0f, 0.0f, 0.0f, 0.0f };
 	}
 
 	void setPosition(const SVector& vPosition)
@@ -163,17 +167,20 @@ private:
 };
 
 
-struct SMeshDataComputeResource
+class SMeshDataComputeResource
 {
+public:
 	class SComponent* pResourceOwner;
 	bool bVertexBuffer;
 };
+
 //@@Struct
 /*
 The struct represents the 3D-geometry data.
 */
-struct SMeshData
+class SMeshData
 {
+public:
 	//@@Function
 	/*
 	* desc: adds a new vertex to the mesh geometry.

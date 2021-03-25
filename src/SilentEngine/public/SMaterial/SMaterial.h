@@ -56,8 +56,9 @@ private:
 	bool bRegistered = false;
 };
 
-struct STextureInternal
+class STextureInternal
 {
+public:
 	std::string sTextureName = "";
 	std::wstring sPathToTexture = L"";
 
@@ -73,8 +74,9 @@ struct STextureInternal
 /*
 The class represents material properties.
 */
-struct SMaterialProperties
+class SMaterialProperties
 {
+public:
 	//@@Function
 	/*
 	* desc: sets the custom transparency.

@@ -13,7 +13,9 @@
 // DirectX
 #include <wrl.h> // smart pointers
 #include <d3d12.h>
+#pragma warning(push, 0) // disable warnings from this header
 #include "SilentEngine/private/d3dx12.h"
+#pragma warning(pop)
 
 #define BLUR_VIEW_COUNT 4 // 2 for srv, 2 for uav
 

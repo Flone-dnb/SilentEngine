@@ -11,7 +11,7 @@
 
 SLightComponent::SLightComponent(std::string sComponentName)
 {
-	componentType = SCT_LIGHT;
+	componentType = SComponentType::SCT_LIGHT;
 
 	this->sComponentName = sComponentName;
 

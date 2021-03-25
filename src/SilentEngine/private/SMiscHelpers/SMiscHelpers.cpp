@@ -13,7 +13,9 @@
 
 // DirectX
 #include <D3Dcompiler.h>
+#pragma warning(push, 0) // disable warnings from this header
 #include "SilentEngine/Private/d3dx12.h"
+#pragma warning(pop)
 
 // DXC
 #include "dxc/d3d12shader.h"
@@ -238,7 +240,7 @@ ATL::CComPtr<IDxcBlob> SMiscHelpers::compileShader(const std::wstring& sPathToSh
 	pCompiler->Compile(
 		&Source,
 		vArgs.data(),
-		vArgs.size(),
+		static_cast<UINT32>(vArgs.size()),
 		pIncludeHandler,
 		IID_PPV_ARGS(&pResults)
 	);

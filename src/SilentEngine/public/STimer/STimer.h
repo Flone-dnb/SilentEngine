@@ -13,6 +13,8 @@
 #include <thread>
 #include <mutex>
 
+#define STIMER_CUSTOM_DATA_SIZE 64
+
 //@@Class
 /*
 The class provides the timer functionality. Get the elapsed time since the timer started, or set a timeout which will call your function.
@@ -115,8 +117,8 @@ private:
 	std::mutex mtxStop;
 
 	std::function<void(void)> timeoutFunction;
-	std::function<void(char[64])> timeoutFunctionWithCustomData;
-	char customData[64];
+	std::function<void(char[STIMER_CUSTOM_DATA_SIZE])> timeoutFunctionWithCustomData;
+	char customData[STIMER_CUSTOM_DATA_SIZE];
 	bool bUsingCustomData = false;
 
 	//@@Variable

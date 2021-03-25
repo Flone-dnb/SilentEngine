@@ -29,7 +29,7 @@ SFrameResource::SFrameResource(ID3D12Device* pDevice, UINT iObjectCBCount)
 	}
 }
 
-void SFrameResource::createRenderObjectBuffers(UINT iObjectCBCount)
+void SFrameResource::createRenderObjectBuffers(UINT64 iObjectCBCount)
 {
 	iObjectCBCount = roundUp(iObjectCBCount, iCBResizeMultiple);
 
@@ -37,16 +37,16 @@ void SFrameResource::createRenderObjectBuffers(UINT iObjectCBCount)
 	pObjectsCB    = std::make_unique<SUploadBuffer<SObjectConstants>>      (pDevice, iObjectCBCount, true);
 }
 
-void SFrameResource::createMaterialBuffer(UINT iMaterialCBCount)
+void SFrameResource::createMaterialBuffer(UINT64 iMaterialCBCount)
 {
 	iMaterialCBCount = roundUp(iMaterialCBCount, iCBResizeMultiple);
 
 	pMaterialCB = std::make_unique<SUploadBuffer<SMaterialConstants>> (pDevice, iMaterialCBCount, true);
 }
 
-size_t SFrameResource::addNewObjectCB(size_t iNewCBCount, bool* pbCBWasExpanded)
+UINT64 SFrameResource::addNewObjectCB(UINT64 iNewCBCount, bool* pbCBWasExpanded)
 {
-	size_t iCeiling = roundUp(iObjectsCBActualElementCount, iCBResizeMultiple);
+	UINT64 iCeiling = roundUp(iObjectsCBActualElementCount, iCBResizeMultiple);
 
 	if (iObjectsCBActualElementCount + iNewCBCount > iCeiling)
 	{
@@ -66,9 +66,9 @@ size_t SFrameResource::addNewObjectCB(size_t iNewCBCount, bool* pbCBWasExpanded)
 	return iObjectsCBActualElementCount - iNewCBCount;
 }
 
-void SFrameResource::removeObjectCB(size_t iCBStartIndex, size_t iCBCount, bool* pbCBWasResized)
+void SFrameResource::removeObjectCB(UINT64 iCBStartIndex, UINT64 iCBCount, bool* pbCBWasResized)
 {
-	size_t iCeiling = roundUp(iObjectsCBActualElementCount, iCBResizeMultiple);
+	UINT64 iCeiling = roundUp(iObjectsCBActualElementCount, iCBResizeMultiple);
 
 	iCeiling -= iCBResizeMultiple;
 
@@ -96,7 +96,7 @@ void SFrameResource::removeObjectCB(size_t iCBStartIndex, size_t iCBCount, bool*
 
 size_t SFrameResource::addNewMaterialCB(bool* pbCBWasExpanded)
 {
-	size_t iCeiling = roundUp(iMaterialCBActualElementCount, iCBResizeMultiple);
+	UINT64 iCeiling = roundUp(iMaterialCBActualElementCount, iCBResizeMultiple);
 
 	if (iMaterialCBActualElementCount + 1 > iCeiling)
 	{
@@ -116,7 +116,7 @@ size_t SFrameResource::addNewMaterialCB(bool* pbCBWasExpanded)
 	return iMaterialCBActualElementCount - 1;
 }
 
-void SFrameResource::removeMaterialCB(size_t iCBIndex, bool * pbCBWasResized)
+void SFrameResource::removeMaterialCB(UINT64 iCBIndex, bool * pbCBWasResized)
 {
 	size_t iCeiling = roundUp(iMaterialCBActualElementCount, iCBResizeMultiple);
 
@@ -244,7 +244,7 @@ void SFrameResource::recreateRuntimeMeshVertexBuffer(size_t iVertexBufferIndex, 
 	vRuntimeMeshVertexBuffers[iVertexBufferIndex] = std::make_unique<SUploadBuffer<SVertex>> (pDevice, iNewVertexCount, false);
 }
 
-UINT SFrameResource::roundUp(UINT iNum, UINT iMultiple)
+size_t SFrameResource::roundUp(size_t iNum, size_t iMultiple)
 {
 	if (iMultiple == 0)
 	{
@@ -256,7 +256,7 @@ UINT SFrameResource::roundUp(UINT iNum, UINT iMultiple)
 		return iMultiple;
 	}
 
-	int iRemainder = iNum % iMultiple;
+	size_t iRemainder = iNum % iMultiple;
 	if (iRemainder == 0)
 	{
 		return iNum;

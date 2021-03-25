@@ -146,7 +146,7 @@ bool SContainer::addComponentToContainer(SComponent* pComponent)
 		}
 	}
 
-	if (pComponent->componentType == SCT_MESH || pComponent->componentType == SCT_RUNTIME_MESH)
+	if (pComponent->componentType == SComponentType::SCT_MESH || pComponent->componentType == SComponentType::SCT_RUNTIME_MESH)
 	{
 		iMeshComponentsCount++;
 	}
@@ -171,7 +171,7 @@ bool SContainer::removeComponentFromContainer(SComponent* pComponent)
 	{
 		if (vComponents[i] == pComponent)
 		{
-			if (pComponent->componentType == SCT_MESH || pComponent->componentType == SCT_RUNTIME_MESH)
+			if (pComponent->componentType == SComponentType::SCT_MESH || pComponent->componentType == SComponentType::SCT_RUNTIME_MESH)
 			{
 				iMeshComponentsCount--;
 			}

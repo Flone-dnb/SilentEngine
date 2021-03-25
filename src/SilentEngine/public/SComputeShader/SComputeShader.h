@@ -32,20 +32,20 @@ struct SComputeShaderResource
 
 	std::string sResourceName;
 
-	unsigned int iShaderRegister;
+	unsigned int iShaderRegister = 0;
 
-	unsigned long long iDataSizeInBytes;
+	unsigned long long iDataSizeInBytes = 0;
 
-	bool bIsUAV;
+	bool bIsUAV = false;
 };
 
 struct SComputeShaderConstant
 {
 	std::string sConstantName;
-	float _32BitConstant;
-	unsigned int iShaderRegister;
+	float _32BitConstant = 0.0f;
+	unsigned int iShaderRegister = 0;
 
-	UINT iRootParamIndex;
+	UINT iRootParamIndex = 0;
 };
 
 //@@Class

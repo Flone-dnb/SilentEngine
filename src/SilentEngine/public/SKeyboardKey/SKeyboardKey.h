@@ -10,7 +10,7 @@
 
 #include <windows.h>
 
-enum SKeyboardButton
+enum class SKeyboardButton
 {
 	SKB_NONE  = 0,
 	SKB_ESC   = 3,
@@ -115,7 +115,7 @@ public:
 	*/
 	SKeyboardKey(WPARAM wParam, LPARAM lParam)
 	{
-		keyboardButton = SKB_NONE;
+		keyboardButton = SKeyboardButton::SKB_NONE;
 
 		determineKey(wParam, lParam);
 	}

@@ -19,7 +19,7 @@
 
 SMeshComponent::SMeshComponent(std::string sComponentName, bool bUseInstancing) : SComponent()
 {
-	componentType = SCT_MESH;
+	componentType = SComponentType::SCT_MESH;
 
 	this->sComponentName = sComponentName;
 
@@ -167,21 +167,53 @@ void SMeshComponent::setMeshData(const SMeshData& meshData, bool bAddedRemovedIn
 
 	if (bAddedRemovedIndices)
 	{
-		renderData.pGeometry->iVertexBufferSizeInBytes = meshData.getVerticesCount() * sizeof(SVertex);
-		renderData.pGeometry->iVertexGraphicsObjectSizeInBytes = sizeof(SVertex);
+		if (meshData.getVerticesCount() > UINT_MAX)
+		{
+			SError::showErrorMessageBox(L"SMeshComponent::setMeshData()",
+				L"the number of vertices in the specified mesh data has exceeded the maximum amount of vertices (the maximum is "
+				+ std::to_wstring(UINT_MAX) + L").");
+		}
+		else if (meshData.getVerticesCount() * sizeof(SVertex) > UINT_MAX)
+		{
+			SError::showErrorMessageBox(L"SMeshComponent::setMeshData()",
+				L"the number of vertices in the specified mesh data is too big, can't continue because an overflow will occur.");
+		}
+
+		// to UINT because views require UINT
+		renderData.pGeometry->iVertexBufferSizeInBytes = static_cast<UINT>(meshData.getVerticesCount() * sizeof(SVertex));
+		renderData.pGeometry->iVertexGraphicsObjectSizeInBytes = static_cast<UINT>(sizeof(SVertex));
+
+		if (meshData.getIndicesCount() > UINT_MAX)
+		{
+			SError::showErrorMessageBox(L"SMeshComponent::setMeshData()",
+				L"the number of indices in the specified mesh data has exceeded the maximum amount of indices (the maximum is "
+				+ std::to_wstring(UINT_MAX) + L").");
+		}
 
 		if (meshData.hasIndicesMoreThan16Bits())
 		{
+			if (meshData.getIndicesCount() * sizeof(std::uint32_t) > UINT_MAX)
+			{
+				SError::showErrorMessageBox(L"SMeshComponent::setMeshData()",
+					L"the number of indices in the specified mesh data is too big, can't continue because an overflow will occur.");
+			}
+
 			renderData.pGeometry->indexFormat = DXGI_FORMAT_R32_UINT;
-			renderData.pGeometry->iIndexBufferSizeInBytes = meshData.getIndicesCount() * sizeof(std::uint32_t);
+			renderData.pGeometry->iIndexBufferSizeInBytes = static_cast<UINT>(meshData.getIndicesCount() * sizeof(std::uint32_t));
 		}
 		else
 		{
+			if (meshData.getIndicesCount() * sizeof(std::uint16_t) > UINT_MAX)
+			{
+				SError::showErrorMessageBox(L"SMeshComponent::setMeshData()",
+					L"the number of indices in the specified mesh data is too big, can't continue because an overflow will occur.");
+			}
+
 			renderData.pGeometry->indexFormat = DXGI_FORMAT_R16_UINT;
-			renderData.pGeometry->iIndexBufferSizeInBytes = meshData.getIndicesCount() * sizeof(std::uint16_t);
+			renderData.pGeometry->iIndexBufferSizeInBytes = static_cast<UINT>(meshData.getIndicesCount() * sizeof(std::uint16_t));
 		}
 
-		renderData.iIndexCount = meshData.getIndicesCount();
+		renderData.iIndexCount = static_cast<UINT>(meshData.getIndicesCount());
 	}
 
 	if (bSpawnedInLevel)
@@ -278,7 +310,7 @@ unsigned int SMeshComponent::getInstanceCount()
 
 	if (bUseInstancing)
 	{
-		return vInstanceData.size();
+		return static_cast<unsigned int>(vInstanceData.size());
 	}
 	else
 	{
@@ -446,31 +478,7 @@ void SMeshComponent::createGeometryBuffers(bool bAddedRemovedIndices)
 
 	std::vector<SVertex> vShaderVertices = meshData.toShaderVertex();
 
-	HRESULT hresult;
-
-	// do we need to create them?
-	/*if (bAddedVerticesOrUpdatedIndicesCount)
-	{
-		hresult = D3DCreateBlob(renderData.pGeometry->iVertexBufferSizeInBytes, &renderData.pGeometry->pVertexBufferCPU);
-		if (FAILED(hresult))
-		{
-			SError::showErrorMessageBox(hresult, L"SMeshComponent::createGeometryBuffers::D3DCreateBlob()");
-			return;
-		}
-	}
-
-	std::memcpy(renderData.pGeometry->pVertexBufferCPU->GetBufferPointer(), vShaderVertices.data(), renderData.pGeometry->iVertexBufferSizeInBytes);
-
-	if (bAddedVerticesOrUpdatedIndicesCount)
-	{
-		hresult = D3DCreateBlob(renderData.pGeometry->iIndexBufferSizeInBytes, &renderData.pGeometry->pIndexBufferCPU);
-		if (FAILED(hresult))
-		{
-			SError::showErrorMessageBox(hresult, L"SMeshComponent::createGeometryBuffers::D3DCreateBlob()");
-			return;
-		}
-	}*/
-
+	HRESULT hresult = S_OK;
 
 	if (bSpawnedInLevel)
 	{

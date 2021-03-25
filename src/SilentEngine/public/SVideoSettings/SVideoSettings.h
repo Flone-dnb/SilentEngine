@@ -28,7 +28,7 @@ struct SScreenResolution
 	unsigned int iHeight;
 };
 
-enum MSAASampleCount
+enum class MSAASampleCount
 {
 	SC_2  = 2,
 	SC_4  = 4

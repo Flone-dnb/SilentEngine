@@ -19,7 +19,7 @@
 #include "SilentEngine/Private/SRenderItem/SRenderItem.h"
 #include "SilentEngine/Public/SPrimitiveShapeGenerator/SPrimitiveShapeGenerator.h"
 
-enum SComponentType
+enum class SComponentType
 {
 	SCT_NONE = 0,
 	SCT_MESH = 1,
@@ -36,7 +36,7 @@ class SComputeShader;
 
 struct SComputeResourceBind
 {
-	SComputeShader* pShader;
+	SComputeShader* pShader = nullptr;
 	std::string sResource;
 };
 

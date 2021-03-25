@@ -18,7 +18,9 @@
 #include <DirectXPackedVector.h>
 #include <DirectXCollision.h>
 #include <d3d12.h>
+#pragma warning(push, 0) // disable warnings from this header
 #include "SilentEngine/Private/d3dx12.h"
+#pragma warning(pop)
 #include <DirectXColors.h>
 
 // Custom
@@ -48,9 +50,9 @@ struct SMeshGeometry
 
 
 	// Data about the buffers.
-	size_t iVertexGraphicsObjectSizeInBytes = 0;
-	size_t iVertexBufferSizeInBytes = 0;
-	size_t iIndexBufferSizeInBytes = 0;
+	UINT iVertexGraphicsObjectSizeInBytes = 0;
+	UINT iVertexBufferSizeInBytes = 0;
+	UINT iIndexBufferSizeInBytes = 0;
 	DXGI_FORMAT indexFormat = DXGI_FORMAT_R16_UINT;
 
 	DirectX::BoundingBox bounds;

@@ -19,6 +19,8 @@ STimer::STimer()
 	fTimeInSecToTimeout = 0.0f;
 
 	fTimerAccuracyInSec = 0.1f;
+
+	memset(customData, 0, STIMER_CUSTOM_DATA_SIZE);
 }
 
 void STimer::setCallbackOnTimeout(std::function<void(void)> function, float fTimeInSecToTimeout, bool bLooping, float fTimerAccuracyInSec)
@@ -42,12 +44,12 @@ void STimer::setCallbackOnTimeout(std::function<void(void)> function, float fTim
 	bTimeoutEnabled = true;
 }
 
-void STimer::setCallbackOnTimeout(std::function<void(char[64])> function, char customData[64], float fTimeInSecToTimeout, bool bLooping, float fTimerAccuracyInSec)
+void STimer::setCallbackOnTimeout(std::function<void(char[STIMER_CUSTOM_DATA_SIZE])> function, char customData[STIMER_CUSTOM_DATA_SIZE], float fTimeInSecToTimeout, bool bLooping, float fTimerAccuracyInSec)
 {
 	bUsingCustomData = true;
 
-	memset(this->customData, 0, 64);
-	std::memcpy(this->customData, customData, 64);
+	memset(this->customData, 0, STIMER_CUSTOM_DATA_SIZE);
+	std::memcpy(this->customData, customData, STIMER_CUSTOM_DATA_SIZE);
 
 	timeoutFunctionWithCustomData = function;
 
@@ -98,7 +100,7 @@ void STimer::stop()
 	{
 		bRunning = false;
 
-		Sleep(fTimerAccuracyInSec + 1); // not good
+		Sleep(static_cast<unsigned long>(fTimerAccuracyInSec + 1.0f)); // not good: fix this
 	}
 
 	mtxStop.unlock();
@@ -108,7 +110,8 @@ double STimer::getElapsedTimeInMS()
 {
 	if (bRunning)
 	{
-		double dTimeElapsedInMS = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - startTime).count();
+		double dTimeElapsedInMS = static_cast<double>(
+			std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - startTime).count());
 
 		return dTimeElapsedInMS - dTimeInPauseInMS;
 	}
@@ -122,7 +125,8 @@ double STimer::getElapsedTimeInNS()
 {
 	if (bRunning)
 	{
-		double dTimeElapsedInMS = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now() - startTime).count();
+		double dTimeElapsedInMS = static_cast<double>(
+			std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now() - startTime).count());
 
 		return dTimeElapsedInMS - dTimeInPauseInMS * 1000000;
 	}

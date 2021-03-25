@@ -60,9 +60,10 @@ private:
 
 class SComponent;
 
-struct SShaderObjects
+class SShaderObjects
 {
-	SShader* pShader;
+public:
+	SShader* pShader = nullptr;
 
 	std::vector<SComponent*> vMeshComponentsWithThisShader;
 };

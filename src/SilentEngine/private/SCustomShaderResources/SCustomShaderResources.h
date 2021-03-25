@@ -40,6 +40,6 @@ private:
 
 	Microsoft::WRL::ComPtr<ID3D12RootSignature> pCustomRootSignature;
 
-	bool bUsingInstancing;
+	bool bUsingInstancing = false;
 };
 

@@ -11,7 +11,7 @@
 
 STargetComponent::STargetComponent(std::string sComponentName)
 {
-	componentType = SCT_NONE;
+	componentType = SComponentType::SCT_NONE;
 
 	this->sComponentName = sComponentName;
 }

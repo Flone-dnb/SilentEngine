@@ -35,9 +35,9 @@ struct SObjectConstants
 
 	// update SMeshComponent::convertInstancePropsToConstants() if this struct changed
 
-	float pad1;
-	float pad2;
-	float pad3;
+	float pad1 = 0.0f;
+	float pad2 = 0.0f;
+	float pad3 = 0.0f;
 };
 
 struct SMaterialConstants
@@ -58,10 +58,10 @@ struct SMaterialConstants
 	int bHasDiffuseTexture = 0;
 	int bHasNormalTexture = 0;
 
-	int pad1;
+	int pad1 = 0;
 };
 
-enum TEX_FILTER_MODE
+enum class TEX_FILTER_MODE
 {
 	TFM_POINT = 0,
 	TFM_LINEAR = 1,
@@ -99,7 +99,7 @@ struct SRenderPassConstants
 	int iPointLightCount = 0;
 	int iSpotLightCount = 0;
 
-	int iTextureFilterIndex = TFM_ANISOTROPIC;
+	int iTextureFilterIndex = static_cast<std::underlying_type<TEX_FILTER_MODE>::type>(TEX_FILTER_MODE::TFM_ANISOTROPIC);
 
 	DirectX::XMFLOAT4 vFogColor = { 0.5f, 0.5f, 0.5f, 1.0f };
 	float fFogStart = fFarZ / 2;
@@ -165,13 +165,13 @@ public:
 
 
 	// returns new cb start index
-	size_t addNewObjectCB       (size_t iNewCBCount, bool* pbCBWasExpanded);
-	void   removeObjectCB       (size_t iCBStartIndex, size_t iCBCount, bool* pbCBWasResized);
+	UINT64 addNewObjectCB       (UINT64 iNewCBCount, bool* pbCBWasExpanded);
+	void   removeObjectCB       (UINT64 iCBStartIndex, UINT64 iCBCount, bool* pbCBWasResized);
 
 
 	// returns new cb start index
 	size_t addNewMaterialCB     (bool* pbCBWasExpanded);
-	void   removeMaterialCB     (size_t iCBIndex, bool* pbCBWasResized);
+	void   removeMaterialCB     (UINT64 iCBIndex, bool* pbCBWasResized);
 
 
 	// returns the pointer to the created bundle
@@ -211,14 +211,14 @@ public:
 
 private:
 
-	UINT roundUp                   (UINT iNum, UINT iMultiple);
-	void createRenderObjectBuffers (UINT iObjectCBCount);
-	void createMaterialBuffer      (UINT iMaterialCBCount);
+	size_t roundUp                 (size_t iNum, size_t iMultiple);
+	void createRenderObjectBuffers (UINT64 iObjectCBCount);
+	void createMaterialBuffer      (UINT64 iMaterialCBCount);
 
 
-	size_t iObjectsCBActualElementCount = 0;
-	size_t iMaterialCBActualElementCount = 0;
-	size_t iRenderPassCBCount = 1;
-	int    iCBResizeMultiple = OBJECT_CB_RESIZE_MULTIPLE;
+	UINT64 iObjectsCBActualElementCount = 0;
+	UINT64 iMaterialCBActualElementCount = 0;
+	UINT64 iRenderPassCBCount = 1;
+	UINT64  iCBResizeMultiple = OBJECT_CB_RESIZE_MULTIPLE;
 };
 

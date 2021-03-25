@@ -10,7 +10,6 @@
 #include "SilentEngine/Public/EntityComponentSystem/SContainer/SContainer.h"
 #include "SilentEngine/Public/EntityComponentSystem/SMeshComponent/SMeshComponent.h"
 #include "SilentEngine/Public/EntityComponentSystem/SRuntimeMeshComponent/SRuntimeMeshComponent.h"
-#include "SilentEngine/Private/EntityComponentSystem/SLightComponent/SLightComponent.h" // remove this line
 #include "SilentEngine/Private/SError/SError.h"
 #include "SilentEngine/Private/SShader/SShader.h"
 #include "SilentEngine/Public/SApplication/SApplication.h"
@@ -18,7 +17,7 @@
 
 SComponent::SComponent()
 {
-	componentType = SCT_NONE;
+	componentType = SComponentType::SCT_NONE;
 
 	sComponentName = "";
 
@@ -90,7 +89,7 @@ bool SComponent::addChildComponent(SComponent* pComponent)
 
 			if (pComponentWithSameName == nullptr)
 			{
-				if (pComponent->componentType == SCT_MESH || pComponent->componentType == SCT_RUNTIME_MESH)
+				if (pComponent->componentType == SComponentType::SCT_MESH || pComponent->componentType == SComponentType::SCT_RUNTIME_MESH)
 				{
 					iMeshComponentsCount++;
 				}
@@ -127,7 +126,7 @@ bool SComponent::removeChildComponent(SComponent* pComponent)
 		{
 			if (vChildComponents[i] == pComponent)
 			{
-				if (pComponent->componentType == SCT_MESH || pComponent->componentType == SCT_RUNTIME_MESH)
+				if (pComponent->componentType == SComponentType::SCT_MESH || pComponent->componentType == SComponentType::SCT_RUNTIME_MESH)
 				{
 					iMeshComponentsCount--;
 				}
@@ -239,7 +238,7 @@ void SComponent::setParentComponent(SComponent* pComponent)
 
 void SComponent::createVertexBufferForRuntimeMeshComponents(SFrameResource* pFrameResource)
 {
-	if (componentType == SCT_RUNTIME_MESH)
+	if (componentType == SComponentType::SCT_RUNTIME_MESH)
 	{
 		SRuntimeMeshComponent* pRuntimeMesh = dynamic_cast<SRuntimeMeshComponent*>(this);
 		pRuntimeMesh->addVertexBuffer(pFrameResource);
@@ -253,7 +252,7 @@ void SComponent::createVertexBufferForRuntimeMeshComponents(SFrameResource* pFra
 
 void SComponent::createInstancingDataForFrameResource(std::vector<std::unique_ptr<SFrameResource>>* vFrameResources)
 {
-	if (componentType == SCT_MESH)
+	if (componentType == SComponentType::SCT_MESH)
 	{
 		SMeshComponent* pMesh = dynamic_cast<SMeshComponent*>(this);
 		
@@ -278,7 +277,7 @@ void SComponent::createInstancingDataForFrameResource(std::vector<std::unique_pt
 
 void SComponent::removeVertexBufferForRuntimeMeshComponents(std::vector<std::unique_ptr<SFrameResource>>* vFrameResources, size_t& iRemovedCount)
 {
-	if (componentType == SCT_RUNTIME_MESH)
+	if (componentType == SComponentType::SCT_RUNTIME_MESH)
 	{
 		SRuntimeMeshComponent* pRuntimeMesh = dynamic_cast<SRuntimeMeshComponent*>(this);
 		pRuntimeMesh->removeVertexBuffer(vFrameResources);
@@ -294,7 +293,7 @@ void SComponent::removeVertexBufferForRuntimeMeshComponents(std::vector<std::uni
 
 void SComponent::removeInstancingDataForFrameResources(std::vector<std::unique_ptr<SFrameResource>>* vFrameResources)
 {
-	if (componentType == SCT_MESH)
+	if (componentType == SComponentType::SCT_MESH)
 	{
 		SMeshComponent* pMesh = dynamic_cast<SMeshComponent*>(this);
 
@@ -319,7 +318,7 @@ void SComponent::removeInstancingDataForFrameResources(std::vector<std::unique_p
 
 void SComponent::getMaxVertexBufferIndexForRuntimeMeshComponents(size_t& iMaxIndex)
 {
-	if (componentType == SCT_RUNTIME_MESH)
+	if (componentType == SComponentType::SCT_RUNTIME_MESH)
 	{
 		SRuntimeMeshComponent* pRuntimeMesh = dynamic_cast<SRuntimeMeshComponent*>(this);
 		pRuntimeMesh->updateVertexBufferMaxIndex(iMaxIndex);
@@ -333,7 +332,7 @@ void SComponent::getMaxVertexBufferIndexForRuntimeMeshComponents(size_t& iMaxInd
 
 void SComponent::updateVertexBufferIndexForRuntimeMeshComponents(size_t iIfIndexMoreThatThisValue, size_t iMinusValue)
 {
-	if (componentType == SCT_RUNTIME_MESH)
+	if (componentType == SComponentType::SCT_RUNTIME_MESH)
 	{
 		SRuntimeMeshComponent* pRuntimeMesh = dynamic_cast<SRuntimeMeshComponent*>(this);
 		pRuntimeMesh->updateVertexBufferIndex(iIfIndexMoreThatThisValue, iMinusValue);
@@ -385,7 +384,7 @@ DirectX::XMMATRIX XM_CALLCONV SComponent::getWorldMatrix()
 
 void SComponent::addMeshesByShader(std::vector<SShaderObjects>* pOpaqueMeshesByShader, std::vector<SShaderObjects>* pTransparentMeshesByShader) const
 {
-	if (componentType == SCT_MESH || componentType == SCT_RUNTIME_MESH)
+	if (componentType == SComponentType::SCT_MESH || componentType == SComponentType::SCT_RUNTIME_MESH)
 	{
 		std::vector<SShaderObjects>* pVectorToLook;
 
@@ -431,7 +430,7 @@ void SComponent::addMeshesByShader(std::vector<SShaderObjects>* pOpaqueMeshesByS
 
 void SComponent::removeMeshesByShader(std::vector<SShaderObjects>* pOpaqueMeshesByShader, std::vector<SShaderObjects>* pTransparentMeshesByShader) const
 {
-	if (componentType == SCT_MESH || componentType == SCT_RUNTIME_MESH)
+	if (componentType == SComponentType::SCT_MESH || componentType == SComponentType::SCT_RUNTIME_MESH)
 	{
 		std::vector<SShaderObjects>* pVectorToLook;
 
@@ -547,7 +546,7 @@ void SComponent::updateBoundsForFrustumCulling()
 
 void SComponent::getAllMeshComponents(std::vector<SComponent*>* pvOpaqueComponents, std::vector<SComponent*>* pvTransparentComponents)
 {
-	if (componentType == SCT_MESH || componentType == SCT_RUNTIME_MESH)
+	if (componentType == SComponentType::SCT_MESH || componentType == SComponentType::SCT_RUNTIME_MESH)
 	{
 		if (bEnableTransparency)
 		{
@@ -581,7 +580,7 @@ size_t SComponent::getLightComponentsCount() const
 {
 	size_t iCount = 0;
 
-	if (componentType == SCT_LIGHT)
+	if (componentType == SComponentType::SCT_LIGHT)
 	{
 		iCount++;
 	}
@@ -596,7 +595,7 @@ size_t SComponent::getLightComponentsCount() const
 
 void SComponent::addLightComponentsToVector(std::vector<SLightComponent*>& vLights)
 {
-	if (componentType == SCT_LIGHT)
+	if (componentType == SComponentType::SCT_LIGHT)
 	{
 		SLightComponent* pThisComponent = dynamic_cast<SLightComponent*>(this);
 		SVector vWorldPos = getLocationInWorld();
@@ -614,7 +613,7 @@ void SComponent::addLightComponentsToVector(std::vector<SLightComponent*>& vLigh
 
 void SComponent::removeLightComponentsFromVector(std::vector<class SLightComponent*>& vLights)
 {
-	if (componentType == SCT_LIGHT)
+	if (componentType == SComponentType::SCT_LIGHT)
 	{
 		for (size_t i = 0; i < vLights.size(); i++)
 		{
@@ -740,12 +739,12 @@ void SComponent::setSpawnedInLevel(bool bSpawned)
 
 void SComponent::setUpdateCBForEveryMeshComponent()
 {
-	if (componentType == SCT_MESH)
+	if (componentType == SComponentType::SCT_MESH)
 	{
 		SMeshComponent* pMeshComponent = dynamic_cast<SMeshComponent*>(this);
 		pMeshComponent->renderData.iUpdateCBInFrameResourceCount = SFRAME_RES_COUNT;
 	}
-	else if (componentType == SCT_RUNTIME_MESH)
+	else if (componentType == SComponentType::SCT_RUNTIME_MESH)
 	{
 		SRuntimeMeshComponent* pRuntimeMeshComponent = dynamic_cast<SRuntimeMeshComponent*>(this);
 		pRuntimeMeshComponent->renderData.iUpdateCBInFrameResourceCount = SFRAME_RES_COUNT;
@@ -759,9 +758,9 @@ void SComponent::setUpdateCBForEveryMeshComponent()
 
 void SComponent::setCBIndexForMeshComponents(size_t* iIndex, bool bCreateBuffers)
 {
-	if (componentType == SCT_MESH || componentType == SCT_RUNTIME_MESH)
+	if (componentType == SComponentType::SCT_MESH || componentType == SComponentType::SCT_RUNTIME_MESH)
 	{
-		if (componentType == SCT_MESH)
+		if (componentType == SComponentType::SCT_MESH)
 		{
 			SMeshComponent* pMeshComponent = dynamic_cast<SMeshComponent*>(this);
 

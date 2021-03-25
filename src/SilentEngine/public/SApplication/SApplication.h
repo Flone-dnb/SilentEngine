@@ -19,7 +19,9 @@
 #include <dxgi1_4.h>
 #include <d3d12.h>
 #include <D3Dcompiler.h>
+#pragma warning(push, 0) // disable warnings from this header
 #include "SilentEngine/Private/d3dx12.h"
+#pragma warning(pop)
 #include <DirectXColors.h>
 #include <DirectXMath.h>
 
@@ -1103,7 +1105,7 @@ private:
 		void setTransparentPSO();
 
 		bool doFrustumCulling(SComponent* pComponent);
-		void doFrustumCullingOnInstancedMesh(SMeshComponent* pMeshComponent, UINT& iOutVisibleInstanceCount);
+		void doFrustumCullingOnInstancedMesh(SMeshComponent* pMeshComponent, UINT64& iOutVisibleInstanceCount);
 
 
 	// -----------------------------------------------------------------
@@ -1184,7 +1186,7 @@ private:
 
 	// CB constants.
 	SRenderPassConstants mainRenderPassCB;
-	size_t iPerFrameResEndOffset = 0;
+	int iPerFrameResEndOffset = 0;
 	size_t iActualObjectCBCount = 0;
 
 
@@ -1192,7 +1194,7 @@ private:
 	std::vector<SMaterial*> vRegisteredMaterials;
 	std::string sDefaultEngineMaterialName = "Default Engine Material";
 	std::vector<STextureInternal*> vLoadedTextures;
-	TEX_FILTER_MODE textureFilterIndex = TFM_ANISOTROPIC;
+	TEX_FILTER_MODE textureFilterIndex = TEX_FILTER_MODE::TFM_ANISOTROPIC;
 	std::vector<SShader*> vCompiledUserShaders;
 	std::vector<SShaderObjects> vOpaqueMeshesByCustomShader;
 	std::vector<SShaderObjects> vTransparentMeshesByCustomShader;
@@ -1250,6 +1252,8 @@ private:
 	// Viewport / Camera
 	D3D12_VIEWPORT ScreenViewport; 
 	D3D12_RECT     ScissorRect;
+	float          fMinDepth = 0.0f;
+	float          fMaxDepth = 1.0f;
 	SCamera        camera;
 	DirectX::BoundingFrustum cameraBoundingFrustumOnLastMainPassUpdate;
 
@@ -1257,12 +1261,12 @@ private:
 	// Windows stuff.
 	HINSTANCE      hApplicationInstance     = nullptr;
 	HWND           hMainWindow              = nullptr;
-	SMouseKey      pressedMouseKey = SMB_NONE;
+	SMouseKey      pressedMouseKey = SMouseKey();
 	bool           bMouseCursorShown        = true;
 	bool           bRawInputReady           = false;
 	bool           bHideTitleBar            = true;
-	float          fWindowCenterX           = 0;
-	float          fWindowCenterY           = 0;
+	long           iWindowCenterX           = 0;
+	long           iWindowCenterY           = 0;
 
 
 	// VSunc

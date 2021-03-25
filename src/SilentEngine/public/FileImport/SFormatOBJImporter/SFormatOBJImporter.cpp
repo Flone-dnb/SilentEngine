@@ -110,7 +110,7 @@ bool SFormatOBJImporter::importMeshDataFromFile(const std::wstring& sPathToFile,
 				SMeshVertex vertex(vVertices[iVertexIndex], vNormal, SVector(), vUV);
 
 				pMeshData->addVertex(vertex);
-				pMeshData->addIndex(pMeshData->getVerticesCount() - 1);
+				pMeshData->addIndex(static_cast<uint32_t>(pMeshData->getVerticesCount() - 1));
 
 				iVertexCount++;
 
@@ -154,15 +154,15 @@ SVector SFormatOBJImporter::readValues(const std::string& sLine, size_t iReadSta
 			{
 				if (iReadValues == 0)
 				{
-					vVec.setX(std::stod(sValue));
+					vVec.setX(std::stof(sValue));
 				}
 				else if (iReadValues == 1)
 				{
-					vVec.setY(std::stod(sValue));
+					vVec.setY(std::stof(sValue));
 				}
 				else
 				{
-					vVec.setZ(std::stod(sValue));
+					vVec.setZ(std::stof(sValue));
 				}
 
 				iReadValues++;
@@ -181,15 +181,15 @@ SVector SFormatOBJImporter::readValues(const std::string& sLine, size_t iReadSta
 	{
 		if (iReadValues == 0)
 		{
-			vVec.setX(std::stod(sValue));
+			vVec.setX(std::stof(sValue));
 		}
 		else if (iReadValues == 1)
 		{
-			vVec.setY(std::stod(sValue));
+			vVec.setY(std::stof(sValue));
 		}
 		else
 		{
-			vVec.setZ(std::stod(sValue));
+			vVec.setZ(std::stof(sValue));
 		}
 	}
 

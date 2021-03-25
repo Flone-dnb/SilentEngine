@@ -20,7 +20,7 @@
 
 SRuntimeMeshComponent::SRuntimeMeshComponent(std::string sComponentName, bool bDisableFrustumCulling) : SComponent()
 {
-	componentType = SCT_RUNTIME_MESH;
+	componentType = SComponentType::SCT_RUNTIME_MESH;
 
 	this->sComponentName = sComponentName;
 
@@ -135,21 +135,53 @@ void SRuntimeMeshComponent::setMeshData(const SMeshData& meshData, bool bAddedRe
 
 	if (bAddedRemovedVerticesOrAddedRemovedIndices)
 	{
-		renderData.pGeometry->iVertexBufferSizeInBytes = meshData.getVerticesCount() * sizeof(SVertex);
-		renderData.pGeometry->iVertexGraphicsObjectSizeInBytes = sizeof(SVertex);
+		if (meshData.getVerticesCount() > UINT_MAX)
+		{
+			SError::showErrorMessageBox(L"SRuntimeMeshComponent::setMeshData()",
+				L"the number of vertices in the specified mesh data has exceeded the maximum amount of vertices (the maximum is "
+				+ std::to_wstring(UINT_MAX) + L").");
+		}
+		else if (meshData.getVerticesCount() * sizeof(SVertex) > UINT_MAX)
+		{
+			SError::showErrorMessageBox(L"SRuntimeMeshComponent::setMeshData()",
+				L"the number of vertices in the specified mesh data is too big, can't continue because an overflow will occur.");
+		}
+
+		// to UINT because views require UINT
+		renderData.pGeometry->iVertexBufferSizeInBytes = static_cast<UINT>(meshData.getVerticesCount() * sizeof(SVertex));
+		renderData.pGeometry->iVertexGraphicsObjectSizeInBytes = static_cast<UINT>(sizeof(SVertex));
+
+		if (meshData.getIndicesCount() > UINT_MAX)
+		{
+			SError::showErrorMessageBox(L"SRuntimeMeshComponent::setMeshData()",
+				L"the number of indices in the specified mesh data has exceeded the maximum amount of indices (the maximum is "
+				+ std::to_wstring(UINT_MAX) + L").");
+		}
 
 		if (meshData.hasIndicesMoreThan16Bits())
 		{
+			if (meshData.getIndicesCount() * sizeof(std::uint32_t) > UINT_MAX)
+			{
+				SError::showErrorMessageBox(L"SRuntimeMeshComponent::setMeshData()",
+					L"the number of indices in the specified mesh data is too big, can't continue because an overflow will occur.");
+			}
+
 			renderData.pGeometry->indexFormat = DXGI_FORMAT_R32_UINT;
-			renderData.pGeometry->iIndexBufferSizeInBytes = meshData.getIndicesCount() * sizeof(std::uint32_t);
+			renderData.pGeometry->iIndexBufferSizeInBytes = static_cast<UINT>(meshData.getIndicesCount() * sizeof(std::uint32_t));
 		}
 		else
 		{
+			if (meshData.getIndicesCount() * sizeof(std::uint16_t) > UINT_MAX)
+			{
+				SError::showErrorMessageBox(L"SRuntimeMeshComponent::setMeshData()",
+					L"the number of indices in the specified mesh data is too big, can't continue because an overflow will occur.");
+			}
+
 			renderData.pGeometry->indexFormat = DXGI_FORMAT_R16_UINT;
-			renderData.pGeometry->iIndexBufferSizeInBytes = meshData.getIndicesCount() * sizeof(std::uint16_t);
+			renderData.pGeometry->iIndexBufferSizeInBytes = static_cast<UINT>(meshData.getIndicesCount() * sizeof(std::uint16_t));
 		}
 
-		renderData.iIndexCount = meshData.getIndicesCount();
+		renderData.iIndexCount = static_cast<UINT>(meshData.getIndicesCount());
 
 		if (bSpawnedInLevel)
 		{

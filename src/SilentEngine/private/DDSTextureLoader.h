@@ -24,7 +24,9 @@
 
 #include <wrl.h>
 #include <d3d11_1.h>
+#pragma warning(push, 0) // disable warnings from this header
 #include "d3dx12.h"
+#pragma warning(pop)
 
 #pragma warning(push)
 #pragma warning(disable : 4005)
