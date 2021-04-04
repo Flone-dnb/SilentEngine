@@ -19,7 +19,7 @@
 #include "SilentEngine/Private/SMiscHelpers/SMiscHelpers.h"
 #include "SilentEngine/Public/SPrimitiveShapeGenerator/SPrimitiveShapeGenerator.h" // for SMeshDataComputeResource
 
-bool SComputeShader::copyComputeResults(const std::string& sResourceNameToCopyFrom, bool bBlockDraw, std::function<void(char*, size_t)> callback)
+bool SComputeShader::copyComputeResults(const std::vector<std::string>& vResourceNamesToCopyFrom, bool bBlockDraw, std::function<void(std::vector<char*>, std::vector<size_t>)> callback)
 {
 	if (bExecuteShader == false)
 	{
@@ -27,20 +27,34 @@ bool SComputeShader::copyComputeResults(const std::string& sResourceNameToCopyFr
 	}
 
 
-	bool bFound = false;
-
-	for (size_t i = 0; i < vShaderResources.size(); i++)
+	std::vector<bool> vFound(vResourceNamesToCopyFrom.size());
+	for (size_t i = 0; i < vResourceNamesToCopyFrom.size(); i++)
 	{
-		if (vShaderResources[i]->sResourceName == sResourceNameToCopyFrom)
+		for (size_t j = 0; j < vShaderResources.size(); j++)
 		{
-			bFound = true;
+			if (vShaderResources[j]->sResourceName == vResourceNamesToCopyFrom[i])
+			{
+				vFound[i] = true;
 
+				break;
+			}
+		}
+	}
+
+	bool bFoundAll = true;
+
+	for (size_t i = 0; i < vFound.size(); i++)
+	{
+		if (vFound[i] == false)
+		{
+			bFoundAll = false;
 			break;
 		}
 	}
 
-	if (bFound == false)
+	if (bFoundAll == false)
 	{
+		SError::showErrorMessageBox(L"SComputeShader::copyComputeResults()", L"Not all resource names were found.");
 		return true;
 	}
 
@@ -48,7 +62,7 @@ bool SComputeShader::copyComputeResults(const std::string& sResourceNameToCopyFr
 	bWaitForComputeShaderRightAfterDraw = bBlockDraw;
 	bWaitForComputeShaderToFinish = true;
 
-	this->sResourceNameToCopyFrom = sResourceNameToCopyFrom;
+	this->vResourceNamesToCopyFrom = vResourceNamesToCopyFrom;
 
 	callbackWhenResultsCopied = callback;
 
@@ -348,13 +362,13 @@ SComputeShader::~SComputeShader()
 	pCompiledShader.Release();
 }
 
-void SComputeShader::finishedCopyingComputeResults(char* pData, size_t iSizeInBytes)
+void SComputeShader::finishedCopyingComputeResults(const std::vector<char*>& vData, const std::vector<size_t>& vDataSizes)
 {
 	bWaitForComputeShaderRightAfterDraw = false;
 	bWaitForComputeShaderToFinish = false;
 
 	bCopyingComputeResult = true;
-	callbackWhenResultsCopied(pData, iSizeInBytes);
+	callbackWhenResultsCopied(vData, vDataSizes);
 	bCopyingComputeResult = false;
 }
 

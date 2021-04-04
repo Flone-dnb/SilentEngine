@@ -59,19 +59,17 @@ public:
 	//@@Function
 	/*
 	* desc: use to query copy of the results of the compute shader for the next frame only.
-	* param "sResourceNameToCopyFrom": the name of the resource (added through setAddData()), which will be copied after the compute shader finished work.
+	* param "vResourceNamesToCopyFrom": the names of the resources (added through setAddData()), which will be copied after the compute shader finished work.
 	* param "bBlockDraw": determines if we should block the frame drawing process right after we started executing our compute shader (will cause
 	fps drop), or pass 'false' if you don't need this data right away (the data may be copied after 2-3 frames).
-	* param "callback": function which will be called after the data was copied, the first param is a pointer to the copied data
-	(you need to delete[] this data manually), the second param is the size of the copied data in bytes (should be equal to iDataSizeInBytes
+	* param "callback": function which will be called after the data was copied, the first param is the vector of pointers to the copied data
+	(you need to delete[] each pointer in the vector manually), the second param is the vector of sizes of the copied data in bytes (should be equal to iDataSizeInBytes
 	passed to setAddData()).
-	An example of std::function pointing to a member
-	function of a class - "using namespace std::placeholders; std::function<void(char_ptr, size_t)> f = std::bind(&Foo::foo, this, _1, _2);".
 	* return: returns true if the resource with the specified name was not found, or startShaderExecution() was not called.
 	If you call stopShaderExecution() after the copyComputeResults() call then even if the shader worked at least 1 time,
 	the callback function will not be called.
 	*/
-	bool copyComputeResults(const std::string& sResourceNameToCopyFrom, bool bBlockDraw, std::function<void(char*, size_t)> callback);
+	bool copyComputeResults(const std::vector<std::string>& vResourceNamesToCopyFrom, bool bBlockDraw, std::function<void(std::vector<char*>, std::vector<size_t>)> callback);
 	//@@Function
 	/*
 	* desc: starts to execute shader on every draw call until stopShaderExecution() is called.
@@ -164,7 +162,7 @@ private:
 	~SComputeShader();
 
 
-	void finishedCopyingComputeResults(char* pData, size_t iSizeInBytes);
+	void finishedCopyingComputeResults(const std::vector<char*>& vData, const std::vector<size_t>& vDataSizes);
 	// called when setMeshData gets called.
 	void updateMeshResource(const std::string& sResourceName);
 
@@ -186,10 +184,10 @@ private:
 	std::vector<UINT64> vFinishFences;
 	std::mutex mtxFencesVector;
 
-	std::function<void(char*, size_t)> callbackWhenResultsCopied;
+	std::function<void(std::vector<char*>, std::vector<size_t>)> callbackWhenResultsCopied;
 
 	std::string sComputeShaderName;
-	std::string sResourceNameToCopyFrom;
+	std::vector<std::string> vResourceNamesToCopyFrom;
 
 	std::vector<SComputeShaderConstant> v32BitConstants;
 	std::vector<UINT> vUsedRootIndex;

@@ -5112,78 +5112,87 @@ void SApplication::doOptionalPauseForUserComputeShaders()
 
 void SApplication::copyUserComputeResults(SComputeShader* pComputeShader)
 {
-	SComputeShaderResource* pResourceToCopyFrom = nullptr;
+	std::vector<char*> vDataPointers(pComputeShader->vResourceNamesToCopyFrom.size());
+	std::vector<size_t> vDataSizes(pComputeShader->vResourceNamesToCopyFrom.size());
 
-	// Find resource.
-	for (size_t k = 0; k < pComputeShader->vShaderResources.size(); k++)
+	for (size_t i = 0; i < pComputeShader->vResourceNamesToCopyFrom.size(); i++)
 	{
-		if (pComputeShader->vShaderResources[k]->sResourceName == pComputeShader->sResourceNameToCopyFrom)
-		{
-			pResourceToCopyFrom = pComputeShader->vShaderResources[k];
+		SComputeShaderResource* pResourceToCopyFrom = nullptr;
 
-			break;
+		// Find resource.
+		for (size_t k = 0; k < pComputeShader->vShaderResources.size(); k++)
+		{
+			if (pComputeShader->vShaderResources[k]->sResourceName == pComputeShader->vResourceNamesToCopyFrom[i])
+			{
+				pResourceToCopyFrom = pComputeShader->vShaderResources[k];
+
+				break;
+			}
 		}
-	}
 
-	if (pResourceToCopyFrom)
-	{
-		Microsoft::WRL::ComPtr<ID3D12Resource> pReadBackBuffer;
-		CD3DX12_RESOURCE_DESC buf = CD3DX12_RESOURCE_DESC::Buffer(pResourceToCopyFrom->iDataSizeInBytes);
-
-		CD3DX12_HEAP_PROPERTIES heapProps(D3D12_HEAP_TYPE_READBACK);
-
-		HRESULT hresult = pDevice->CreateCommittedResource(
-			&heapProps,
-			D3D12_HEAP_FLAG_NONE,
-			&buf,
-			D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS(&pReadBackBuffer));
-		if (FAILED(hresult))
+		if (pResourceToCopyFrom)
 		{
-			SError::showErrorMessageBox(hresult, L"SApplication::copyUserComputeResults::CreateCommittedResource()");
+			Microsoft::WRL::ComPtr<ID3D12Resource> pReadBackBuffer;
+			CD3DX12_RESOURCE_DESC buf = CD3DX12_RESOURCE_DESC::Buffer(pResourceToCopyFrom->iDataSizeInBytes);
+
+			CD3DX12_HEAP_PROPERTIES heapProps(D3D12_HEAP_TYPE_READBACK);
+
+			HRESULT hresult = pDevice->CreateCommittedResource(
+				&heapProps,
+				D3D12_HEAP_FLAG_NONE,
+				&buf,
+				D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS(&pReadBackBuffer));
+			if (FAILED(hresult))
+			{
+				SError::showErrorMessageBox(hresult, L"SApplication::copyUserComputeResults::CreateCommittedResource()");
+				return;
+			}
+
+
+			resetCommandList();
+
+			CD3DX12_RESOURCE_BARRIER transition = CD3DX12_RESOURCE_BARRIER::Transition(pResourceToCopyFrom->pResource.Get(),
+				D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE);
+			pCommandList->ResourceBarrier(1, &transition);
+
+
+			pCommandList->CopyResource(pReadBackBuffer.Get(), pResourceToCopyFrom->pResource.Get());
+
+			transition = CD3DX12_RESOURCE_BARRIER::Transition(pResourceToCopyFrom->pResource.Get(),
+				D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+			pCommandList->ResourceBarrier(1, &transition);
+
+			executeCommandList();
+			flushCommandQueue();
+
+
+
+			D3D12_RANGE readbackBufferRange{ 0, pResourceToCopyFrom->iDataSizeInBytes };
+			char* pCopiedData = new char[pResourceToCopyFrom->iDataSizeInBytes];
+
+			char* pMappedData = nullptr;
+
+			pReadBackBuffer->Map(0, &readbackBufferRange, reinterpret_cast<void**>(&pMappedData));
+
+			std::memcpy(pCopiedData, pMappedData, pResourceToCopyFrom->iDataSizeInBytes);
+
+			pReadBackBuffer->Unmap(0, nullptr);
+
+
+			pReadBackBuffer->Release();
+
+			vDataPointers[i] = pCopiedData;
+			vDataSizes[i] = pResourceToCopyFrom->iDataSizeInBytes;
+		}
+		else
+		{
+			SError::showErrorMessageBox(L"SApplication::copyUserComputeResults()",
+				L"SComputeShaderResource* pResourceToCopyFrom is nullptr, could not find the specified resource.");
 			return;
 		}
-
-
-		resetCommandList();
-
-		CD3DX12_RESOURCE_BARRIER transition = CD3DX12_RESOURCE_BARRIER::Transition(pResourceToCopyFrom->pResource.Get(),
-			D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE);
-		pCommandList->ResourceBarrier(1, &transition);
-
-
-		pCommandList->CopyResource(pReadBackBuffer.Get(), pResourceToCopyFrom->pResource.Get());
-
-		transition = CD3DX12_RESOURCE_BARRIER::Transition(pResourceToCopyFrom->pResource.Get(),
-			D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-		pCommandList->ResourceBarrier(1, &transition);
-
-		executeCommandList();
-		flushCommandQueue();
-
-
-
-		D3D12_RANGE readbackBufferRange{ 0, pResourceToCopyFrom->iDataSizeInBytes };
-		char* pCopiedData = new char[pResourceToCopyFrom->iDataSizeInBytes];
-
-		char* pMappedData = nullptr;
-
-		pReadBackBuffer->Map(0, &readbackBufferRange, reinterpret_cast<void**>(&pMappedData));
-
-		std::memcpy(pCopiedData, pMappedData, pResourceToCopyFrom->iDataSizeInBytes);
-
-		pReadBackBuffer->Unmap(0, nullptr);
-
-
-		pReadBackBuffer->Release();
-
-		pComputeShader->finishedCopyingComputeResults(pCopiedData, pResourceToCopyFrom->iDataSizeInBytes);
 	}
-	else
-	{
-		SError::showErrorMessageBox(L"SApplication::copyUserComputeResults()",
-			L"SComputeShaderResource* pResourceToCopyFrom is nullptr, could not find the specified resource.");
-		return;
-	}
+
+	pComputeShader->finishedCopyingComputeResults(vDataPointers, vDataSizes);
 }
 
 bool SApplication::doesComponentExists(SComponent* pComponent)
