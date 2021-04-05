@@ -1522,6 +1522,11 @@ void SApplication::setInitShowWindowTitleBar(bool bShowTitleBar)
 	}
 }
 
+SAudioEngine* SApplication::getAudioEngine()
+{
+	return pAudioEngine;
+}
+
 SApplication* SApplication::getApp()
 {
 	return pApp;
@@ -5503,6 +5508,12 @@ SApplication::~SApplication()
 
 	delete pVideoSettings;
 	delete pProfiler;
+
+
+	if (pAudioEngine)
+	{
+		delete pAudioEngine;
+	}
 }
 
 void SApplication::initDisableD3DDebugLayer()
@@ -5602,6 +5613,16 @@ bool SApplication::init()
 	{
 		return true;
 	}
+
+
+	// Init audio engine.
+
+	pAudioEngine = new SAudioEngine();
+	if (pAudioEngine->init(true))
+	{
+		return true;
+	}
+
 
 	return false;
 }

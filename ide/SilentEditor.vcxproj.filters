@@ -139,6 +139,18 @@
     <Filter Include="SilentEngine\Public\SComputeShader">
       <UniqueIdentifier>{a5c793dc-964d-456a-9325-de6ce3ee316c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="SilentEngine\Private\AudioEngine">
+      <UniqueIdentifier>{2d149914-50e5-4669-85fe-ce99990f1365}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SilentEngine\Private\AudioEngine\SAudioEngine">
+      <UniqueIdentifier>{49c98022-8a64-4e3d-b57d-83cc403e9465}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SilentEngine\Private\AudioEngine\SSound">
+      <UniqueIdentifier>{f9f8b5d0-eef1-4940-94a4-c18cb6f5ec07}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SilentEngine\Private\AudioEngine\SSoundMix">
+      <UniqueIdentifier>{75a20ddf-0ed4-4f55-9419-f83ed8bb92a6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\SilentEngine\public\SApplication\SApplication.cpp">
@@ -239,6 +251,15 @@
     </ClCompile>
     <ClCompile Include="..\src\SilentEngine\Public\SComputeShader\SComputeShader.cpp">
       <Filter>SilentEngine\Public\SComputeShader</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SilentEngine\Private\AudioEngine\SAudioEngine\saudioengine.cpp">
+      <Filter>SilentEngine\Private\AudioEngine\SAudioEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SilentEngine\Private\AudioEngine\SSound\ssound.cpp">
+      <Filter>SilentEngine\Private\AudioEngine\SSound</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SilentEngine\Private\AudioEngine\SSoundMix\ssoundmix.cpp">
+      <Filter>SilentEngine\Private\AudioEngine\SSoundMix</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -346,6 +367,15 @@
     </ClInclude>
     <ClInclude Include="..\src\SilentEngine\Public\SComputeShader\SComputeShader.h">
       <Filter>SilentEngine\Public\SComputeShader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SilentEngine\Private\AudioEngine\SAudioEngine\saudioengine.h">
+      <Filter>SilentEngine\Private\AudioEngine\SAudioEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SilentEngine\Private\AudioEngine\SSound\ssound.h">
+      <Filter>SilentEngine\Private\AudioEngine\SSound</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SilentEngine\Private\AudioEngine\SSoundMix\ssoundmix.h">
+      <Filter>SilentEngine\Private\AudioEngine\SSoundMix</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

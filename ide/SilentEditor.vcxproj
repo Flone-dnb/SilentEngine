@@ -191,6 +191,9 @@ copy /Y "$(SolutionDir)..\ext\dxc\dxcompiler.dll" "$(TargetDir)dxcompiler.dll"</
     <ClCompile Include="..\src\SilentEditor\EditorApplication\EditorApplication.cpp" />
     <ClCompile Include="..\src\SilentEditor\main.cpp" />
     <ClCompile Include="..\src\SilentEditor\MyContainer\MyContainer.cpp" />
+    <ClCompile Include="..\src\SilentEngine\Private\AudioEngine\SAudioEngine\saudioengine.cpp" />
+    <ClCompile Include="..\src\SilentEngine\Private\AudioEngine\SSoundMix\ssoundmix.cpp" />
+    <ClCompile Include="..\src\SilentEngine\Private\AudioEngine\SSound\ssound.cpp" />
     <ClCompile Include="..\src\SilentEngine\Private\DDSTextureLoader.cpp" />
     <ClCompile Include="..\src\SilentEngine\Private\EntityComponentSystem\SComponent\SComponent.cpp" />
     <ClCompile Include="..\src\SilentEngine\Private\EntityComponentSystem\SLightComponent\SLightComponent.cpp" />
@@ -225,6 +228,9 @@ copy /Y "$(SolutionDir)..\ext\dxc\dxcompiler.dll" "$(TargetDir)dxcompiler.dll"</
   <ItemGroup>
     <ClInclude Include="..\src\SilentEditor\EditorApplication\EditorApplication.h" />
     <ClInclude Include="..\src\SilentEditor\MyContainer\MyContainer.h" />
+    <ClInclude Include="..\src\SilentEngine\Private\AudioEngine\SAudioEngine\saudioengine.h" />
+    <ClInclude Include="..\src\SilentEngine\Private\AudioEngine\SSoundMix\ssoundmix.h" />
+    <ClInclude Include="..\src\SilentEngine\Private\AudioEngine\SSound\ssound.h" />
     <ClInclude Include="..\src\SilentEngine\Private\DDSTextureLoader.h" />
     <ClInclude Include="..\src\SilentEngine\Private\EntityComponentSystem\SComponent\SComponent.h" />
     <ClInclude Include="..\src\SilentEngine\Private\EntityComponentSystem\SLightComponent\SLightComponent.h" />

@@ -45,6 +45,7 @@
 #include "SilentEngine/Public/SComputeShader/SComputeShader.h"
 #include "SilentEngine/Public/SCamera/SCamera.h"
 #include "SilentEngine/Private/SCustomShaderResources/SCustomShaderResources.h"
+#include "SilentEngine/Private/AudioEngine/SAudioEngine/SAudioEngine.h"
 
 // Other
 #include <Windows.h>
@@ -422,9 +423,16 @@ public:
 		/*
 		* desc: returns the camera's.
 		*/
-		SCamera*                getCamera                      ();
+		SCamera*               getCamera                       ();
 
 		// Other
+
+		//@@Function
+		/*
+		* desc: returns the audio engine that can be used to control master volume, listener position and
+		create sound mixes.
+		*/
+		SAudioEngine*          getAudioEngine                  ();
 
 		//@@Function
 		/*
@@ -1290,6 +1298,10 @@ private:
 	double         dDelayBetweenFramesInNS  = 0.0;
 	bool           bShowFrameStatsInTitle   = false;
 	bool           bCompileShadersInRelease = false;
+
+
+	// Audio
+	SAudioEngine*  pAudioEngine = nullptr;
 
 
 	SGameTimer     gameTimer;
