@@ -203,7 +203,7 @@ public:
 		//@@Function
 		/*
 		* desc: registers a new material in the application so it can be used in the component, such as SMeshComponent.
-		* param "sMaterialName": unique name if the new material.
+		* param "sMaterialName": unique name of the new material.
 		* param "bErrorOccurred": will be true if an error occurred and the returned pointer is nullptr.
 		* return: valid pointer if successful, nullptr otherwise.
 		* remarks: any material should be registered first and only then used.
