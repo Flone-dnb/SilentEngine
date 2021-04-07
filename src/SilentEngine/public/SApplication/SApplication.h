@@ -421,7 +421,7 @@ public:
 
 		//@@Function
 		/*
-		* desc: returns the camera's.
+		* desc: returns the camera (eyes).
 		*/
 		SCamera*               getCamera                       ();
 
