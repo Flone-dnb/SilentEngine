@@ -7,9 +7,7 @@
 
 #include "STargetComponent.h"
 
-#include "SilentEngine/Private/EntityComponentSystem/SComponent/SComponent.h"
-
-STargetComponent::STargetComponent(std::string sComponentName)
+STargetComponent::STargetComponent(const std::string& sComponentName)
 {
 	componentType = SComponentType::SCT_NONE;
 

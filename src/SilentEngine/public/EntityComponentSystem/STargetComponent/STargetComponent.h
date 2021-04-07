@@ -12,7 +12,6 @@
 
 // Custom
 #include "SilentEngine/Private/EntityComponentSystem/SComponent/SComponent.h"
-#include "SilentEngine/Public/SPrimitiveShapeGenerator/SPrimitiveShapeGenerator.h"
 
 
 //@@Class
@@ -24,7 +23,7 @@ class STargetComponent : public SComponent
 {
 public:
 	//@@Function
-	STargetComponent(std::string sComponentName);
+	STargetComponent(const std::string& sComponentName);
 
 	STargetComponent() = delete;
 	STargetComponent(const STargetComponent&) = delete;
