@@ -14,6 +14,7 @@
 #include "SilentEngine/Private/SShader/SShader.h"
 #include "SilentEngine/Public/SApplication/SApplication.h"
 #include "SilentEngine/Public/SPrimitiveShapeGenerator/SPrimitiveShapeGenerator.h"
+#include "SilentEngine/Public/EntityComponentSystem/SAudioComponent/SAudioComponent.h"
 
 SComponent::SComponent()
 {
@@ -44,6 +45,12 @@ SComponent::SComponent()
 
 SComponent::~SComponent()
 {
+	if (bSpawnedInLevel)
+	{
+		SError::showErrorMessageBox(L"SComponent::~SComponent()", L"component destructor is called while the component is spawned. "
+			L"Despawn the component first.");
+	}
+
 	for (int i = 0; i < vResourceUsed.size(); i++)
 	{
 		if (SApplication::getApp()->doesComputeShaderExists(vResourceUsed[i].pShader) == false)
@@ -490,6 +497,32 @@ void SComponent::removeMeshesByShader(std::vector<SShaderObjects>* pOpaqueMeshes
 	for (size_t i = 0; i < vChildComponents.size(); i++)
 	{
 		vChildComponents[i]->removeMeshesByShader(pOpaqueMeshesByShader, pTransparentMeshesByShader);
+	}
+}
+
+void SComponent::registerAll3DSoundComponents()
+{
+	if (componentType == SComponentType::SCT_AUDIO)
+	{
+		SApplication::getApp()->getAudioEngine()->registerNew3DAudioComponent(dynamic_cast<SAudioComponent*>(this));
+	}
+
+	for (size_t i = 0; i < vChildComponents.size(); i++)
+	{
+		vChildComponents[i]->registerAll3DSoundComponents();
+	}
+}
+
+void SComponent::unregisterAll3DSoundComponents()
+{
+	if (componentType == SComponentType::SCT_AUDIO)
+	{
+		SApplication::getApp()->getAudioEngine()->unregister3DAudioComponent(dynamic_cast<SAudioComponent*>(this));
+	}
+
+	for (size_t i = 0; i < vChildComponents.size(); i++)
+	{
+		vChildComponents[i]->unregisterAll3DSoundComponents();
 	}
 }
 

@@ -206,6 +206,7 @@ copy /Y "$(SolutionDir)..\ext\dxc\dxcompiler.dll" "$(TargetDir)dxcompiler.dll"</
     <ClCompile Include="..\src\SilentEngine\Private\SMiscHelpers\SMiscHelpers.cpp" />
     <ClCompile Include="..\src\SilentEngine\Private\SRenderItem\SRenderItem.cpp" />
     <ClCompile Include="..\src\SilentEngine\Private\SShader\SShader.cpp" />
+    <ClCompile Include="..\src\SilentEngine\Public\EntityComponentSystem\SAudioComponent\SAudioComponent.cpp" />
     <ClCompile Include="..\src\SilentEngine\Public\EntityComponentSystem\SContainer\SContainer.cpp" />
     <ClCompile Include="..\src\SilentEngine\Public\EntityComponentSystem\SDirectionalLightComponent\SDirectionalLightComponent.cpp" />
     <ClCompile Include="..\src\SilentEngine\Public\EntityComponentSystem\SMeshComponent\SMeshComponent.cpp" />
@@ -244,6 +245,7 @@ copy /Y "$(SolutionDir)..\ext\dxc\dxcompiler.dll" "$(TargetDir)dxcompiler.dll"</
     <ClInclude Include="..\src\SilentEngine\Private\SRenderItem\SRenderItem.h" />
     <ClInclude Include="..\src\SilentEngine\Private\SShader\SShader.h" />
     <ClInclude Include="..\src\SilentEngine\private\SUploadBuffer\SUploadBuffer.h" />
+    <ClInclude Include="..\src\SilentEngine\Public\EntityComponentSystem\SAudioComponent\SAudioComponent.h" />
     <ClInclude Include="..\src\SilentEngine\Public\EntityComponentSystem\SContainer\SContainer.h" />
     <ClInclude Include="..\src\SilentEngine\Public\EntityComponentSystem\SDirectionalLightComponent\SDirectionalLightComponent.h" />
     <ClInclude Include="..\src\SilentEngine\Public\EntityComponentSystem\SMeshComponent\SMeshComponent.h" />

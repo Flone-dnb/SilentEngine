@@ -50,6 +50,7 @@ public:
       bIsEndOfStream(FALSE), hrStatus(S_OK)
     {
         hReadSampleEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+		llTimestamp = 0;
     }
 
     void restart()
@@ -212,6 +213,7 @@ struct VoiceCallback : public IXAudio2VoiceCallback
 
 class SSoundMix;
 class SSound;
+class SAudioComponent;
 
 struct SListenerProps
 {
@@ -228,21 +230,14 @@ public:
 
     SAudioEngine();
 
-    bool init(bool bEnableLowLatency = true);
-
 
     // Will be auto deleted in ~SAudioEngine().
     bool createSoundMix(SSoundMix*& pOutSoundMix);
 
 
     bool setMasterVolume(float fVolume);
-
-    // will be heard only after SSound::applyNew3DSoundProps() calls
-    // should be normalized
-    void applyNew3DListenerProps(SListenerProps& listenerProps);
-
-
     bool getMasterVolume(float& fVolume);
+
 
     ~SAudioEngine();
 
@@ -251,6 +246,22 @@ private:
     friend class SSound;
     friend class SSoundMix;
     friend class SAudioEffect;
+	friend class SComponent;
+	friend class SApplication;
+
+	bool init(bool bEnableLowLatency = true);
+
+	// called in onSpawn()
+	void registerNew3DAudioComponent(SAudioComponent* pAudioComponent);
+	// called in onDespawn()
+	void unregister3DAudioComponent(SAudioComponent* pAudioComponent);
+
+	// will be heard only after SSound::applyNew3DSoundProps() calls
+	// should be normalized
+	void applyNew3DListenerProps(SListenerProps& listenerProps);
+	void apply3DPropsForComponent(SAudioComponent* pAudioComponent, float fDeltaTime = 0.0f);
+
+	void update3DSound(class SCamera* pPlayerCamera);
 
 
     bool initXAudio2();
@@ -266,11 +277,9 @@ private:
 
     X3DAUDIO_HANDLE         hX3dAudio;
     X3DAUDIO_LISTENER       x3dAudioListener;
-    // Specify sound cone to add directionality to listener for artistic effect:
-    // Emitters behind the listener are defined here to be more attenuated,
-    // have a lower LPF cutoff frequency,
-    // yet have a slightly higher reverb send level.
-    //X3DAUDIO_CONE x3dAudioListenerDirectionalCone = { X3DAUDIO_PI*5.0f/6.0f, X3DAUDIO_PI*11.0f/6.0f, 1.0f, 0.75f, 0.0f, 0.25f, 0.708f, 1.0f };
+
+
+	std::vector<SAudioComponent*> vSpawned3DAudioComponents;
 
 
     std::mutex mtxSoundMix;
@@ -285,7 +294,7 @@ private:
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
 
-enum S_EFFECT_TYPE
+enum class S_EFFECT_TYPE
 {
     ET_REVERB = 0,
     ET_EQ = 1,
@@ -303,6 +312,10 @@ public:
         this->bEnable = bEnable;
 
         this->pAudioEngine = pAudioEngine;
+
+		reverbParams = { 0 };
+		eqParams = { 0 };
+		echoParams = { 0 };
     }
 
     void setReverbParameters(FXREVERB_PARAMETERS params)

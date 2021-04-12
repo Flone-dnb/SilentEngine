@@ -257,23 +257,23 @@ float SCamera::getCameraFarClipWindowHeight() const
 	return fFarClipWindowHeight;
 }
 
-void SCamera::getCameraBasicVectors(SVector* pvXAxis, SVector* pvYAxis, SVector* pvZAxis)
+void SCamera::getCameraBasicVectors(SVector* pvForward, SVector* pvRight, SVector* pvUp)
 {
 	mtxLocRotView.lock();
 
-	if (pvYAxis)
+	if (pvForward)
 	{
-		*pvYAxis = SVector(vForwardVector.x, vForwardVector.y, vForwardVector.z);
+		*pvForward = SVector(vForwardVector.x, vForwardVector.y, vForwardVector.z);
 	}
 
-	if (pvXAxis)
+	if (pvRight)
 	{
-		*pvXAxis = SVector(vRightVector.x, vRightVector.y, vRightVector.z);
+		*pvRight = SVector(vRightVector.x, vRightVector.y, vRightVector.z);
 	}
 
-	if (pvZAxis)
+	if (pvUp)
 	{
-		*pvZAxis = SVector(vUpVector.x, vUpVector.y, vUpVector.z);
+		*pvUp = SVector(vUpVector.x, vUpVector.y, vUpVector.z);
 	}
 
 	mtxLocRotView.unlock();

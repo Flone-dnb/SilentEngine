@@ -25,7 +25,8 @@ enum class SComponentType
 	SCT_MESH = 1,
 	SCT_RUNTIME_MESH = 2,
 	SCT_LIGHT = 3,
-	SCT_CAMERA = 4
+	SCT_CAMERA = 4,
+	SCT_AUDIO = 5
 };
 
 class SContainer;
@@ -275,6 +276,17 @@ protected:
 	* desc: removes meshes from vectors based on their transparency if they use custom shader.
 	*/
 	void removeMeshesByShader(std::vector<SShaderObjects>* pOpaqueMeshesByShader, std::vector<SShaderObjects>* pTransparentMeshesByShader) const;
+	//@@Function
+	/*
+	* desc: registers all SAudioComponents that use 3D sound to SAudioEngine so that we can update their 3D sound position in onTick().
+	*/
+	void registerAll3DSoundComponents();
+	//@@Function
+	/*
+	* desc: unregisters all SAudioComponents that use 3D sound from SAudioEngine so that we know that we no longer need to update
+	their 3D sound position in onTick().
+	*/
+	void unregisterAll3DSoundComponents();
 
 	void bindResourceUpdates(SComputeShader* pShader, const std::string& sResourceName);
 	void unbindResourceUpdates(SComputeShader* pShader);
@@ -289,6 +301,7 @@ protected:
 	friend class STargetComponent;
 	friend class SComputeShader;
 	friend class SLightComponent;
+	friend class SAudioComponent;
 
 
 	SComponent* pParentComponent;

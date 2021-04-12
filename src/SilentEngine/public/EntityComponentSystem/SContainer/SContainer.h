@@ -206,7 +206,6 @@ private:
 	* desc: decreases the vertex buffer index for all runtime mesh components on specified value.
 	*/
 	void updateVertexBufferIndexForRuntimeMeshComponents(size_t iIfIndexMoreThatThisValue, size_t iMinusValue);
-
 	//@@Function
 	/*
 	* desc: returns the number of mesh components (mesh and runtime mesh components) (even in child components).
@@ -227,6 +226,17 @@ private:
 	* desc: removes meshes from vectors based on their transparency if they use custom shader.
 	*/
 	void removeMeshesByShader(std::vector<SShaderObjects>* pOpaqueMeshesByShader, std::vector<SShaderObjects>* pTransparentMeshesByShader) const;
+	//@@Function
+	/*
+	* desc: registers all SAudioComponents that use 3D sound to SAudioEngine so that we can update their 3D sound position in onTick().
+	*/
+	void registerAll3DSoundComponents();
+	//@@Function
+	/*
+	* desc: unregisters all SAudioComponents that use 3D sound from SAudioEngine so that we know that we no longer need to update
+	their 3D sound position in onTick().
+	*/
+	void unregisterAll3DSoundComponents();
 
 
 	// -----------------------------------------------

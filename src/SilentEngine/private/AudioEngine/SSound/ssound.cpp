@@ -12,17 +12,17 @@
 
 // Engine
 #include "SilentEngine/Private/SError/serror.h"
-
-// Custom
+#include "SilentEngine/Public/EntityComponentSystem/SAudioComponent/SAudioComponent.h"
 #include "../SSoundMix/ssoundmix.h"
 
 // Other
 #include <Mferror.h>
 
 
-SSound::SSound(SAudioEngine* pAudioEngine, bool bIs3DSound)
+SSound::SSound(SAudioEngine* pAudioEngine, bool bIs3DSound, SAudioComponent* pOwnerComponent)
 {
     this->pAudioEngine = pAudioEngine;
+	this->pOwnerComponent = pOwnerComponent;
 
     pAsyncSourceReader = nullptr;
     pOptionalSourceReader = nullptr;
@@ -47,7 +47,7 @@ SSound::SSound(SAudioEngine* pAudioEngine, bool bIs3DSound)
     iCurrentEffectIndex = 0;
 
 
-    soundState = SS_NOT_PLAYING;
+    soundState = SSoundState::SS_NOT_PLAYING;
 
 
     hEventUnpauseSound = CreateEvent(NULL, FALSE, FALSE, NULL);
@@ -183,9 +183,9 @@ bool SSound::loadAudioFile(const std::wstring &sAudioFilePath, bool bStreamAudio
         }
     }
 
-    if (soundInfo.iChannels != 2)
+    if (bIs3DSound && soundInfo.iChannels != 1)
     {
-		SError::showErrorMessageBox(L"SSound::loadAudioFile()", L"Unsupported channel format (expected 2 channels, received "
+		SError::showErrorMessageBox(L"SSound::loadAudioFile()", L"Any 3D sound should be mono (1 channel), but the given sound has "
                                     + std::to_wstring(soundInfo.iChannels) + L" channels.");
         return true;
     }
@@ -211,7 +211,7 @@ bool SSound::loadAudioFile(const std::wstring &sAudioFilePath, bool bStreamAudio
     bUseStreaming = bStreamAudio;
 
 
-    soundState = SS_NOT_PLAYING;
+    soundState = SSoundState::SS_NOT_PLAYING;
 
     return false;
 }
@@ -224,13 +224,18 @@ bool SSound::playSound()
         return true;
     }
 
+	if (pOwnerComponent->bSpawnedInLevel == false)
+	{
+		SError::showErrorMessageBox(L"Sound::playSound()", L"can't play audio because the audio component is not spawned.");
+		return true;
+	}
 
     if (bCurrentlyStreaming && bUseStreaming)
     {
         bStopStreaming = true;
     }
 
-    if (soundState == SS_PLAYING)
+    if (soundState == SSoundState::SS_PLAYING)
     {
         stopSound();
     }
@@ -256,7 +261,6 @@ bool SSound::playSound()
     {
         std::thread t(&SSound::streamAudioFile, this, pAsyncSourceReader);
         t.detach();
-        //streamAudioFile(pAsyncSourceReader);
     }
     else
     {
@@ -278,10 +282,15 @@ bool SSound::playSound()
 			SError::showErrorMessageBox(hr, L"Sound::playSound::Start()");
             return true;
         }
+
+		if (bIs3DSound)
+		{
+			pAudioEngine->apply3DPropsForComponent(pOwnerComponent);
+		}
     }
 
 
-    soundState = SS_PLAYING;
+    soundState = SSoundState::SS_PLAYING;
 
 
     return false;
@@ -295,14 +304,14 @@ bool SSound::pauseSound()
         return true;
     }
 
-    if (soundState == SS_PAUSED || soundState == SS_NOT_PLAYING)
+    if (soundState == SSoundState::SS_PAUSED || soundState == SSoundState::SS_NOT_PLAYING)
     {
         return false;
     }
 
     mtxSoundState.lock();
 
-    soundState = SS_PAUSED;
+    soundState = SSoundState::SS_PAUSED;
 
     mtxSoundState.unlock();
 
@@ -324,7 +333,13 @@ bool SSound::unpauseSound()
         return true;
     }
 
-    if (soundState == SS_PLAYING || soundState == SS_NOT_PLAYING)
+	if (pOwnerComponent->bSpawnedInLevel == false)
+	{
+		SError::showErrorMessageBox(L"Sound::unpauseSound()", L"can't play audio because the audio component is not spawned.");
+		return true;
+	}
+
+    if (soundState == SSoundState::SS_PLAYING || soundState == SSoundState::SS_NOT_PLAYING)
     {
         return false;
     }
@@ -337,9 +352,15 @@ bool SSound::unpauseSound()
     }
 
 
+	if (bIs3DSound)
+	{
+		pAudioEngine->apply3DPropsForComponent(pOwnerComponent);
+	}
+
+
     mtxSoundState.lock();
 
-    soundState = SS_PLAYING;
+    soundState = SSoundState::SS_PLAYING;
 
     mtxSoundState.unlock();
 
@@ -356,7 +377,7 @@ bool SSound::stopSound()
         return true;
     }
 
-    if (soundState == SS_NOT_PLAYING)
+    if (soundState == SSoundState::SS_NOT_PLAYING)
     {
         return false;
     }
@@ -387,11 +408,11 @@ bool SSound::stopSound()
 
         SetEvent(voiceCallback.hBufferEndEvent);
 
-        if (soundState == SS_PAUSED)
+        if (soundState == SSoundState::SS_PAUSED)
         {
             mtxSoundState.lock();
 
-            soundState = SS_PLAYING;
+            soundState = SSoundState::SS_PLAYING;
 
             mtxSoundState.unlock();
 
@@ -427,7 +448,7 @@ bool SSound::stopSound()
     audioBuffer.PlayBegin = 0;
 
 
-    soundState = SS_NOT_PLAYING;
+    soundState = SSoundState::SS_NOT_PLAYING;
 
 
     return false;
@@ -545,6 +566,12 @@ bool SSound::setPositionInSec(double dPositionInSec)
     }
 
 
+	if (bIs3DSound)
+	{
+		pAudioEngine->apply3DPropsForComponent(pOwnerComponent);
+	}
+
+
     return false;
 }
 
@@ -627,7 +654,35 @@ bool SSound::setPitchInSemitones(float fSemitones)
     return false;
 }
 
-bool SSound::applyNew3DSoundProps(SEmitterProps &emitterProps, bool bCalcDopplerEffect)
+void SSound::set3DSoundProps(const S3DSoundProps& props)
+{
+	if (bIs3DSound)
+	{
+		std::lock_guard<std::mutex> lock(mtxUpdate3DSound);
+
+		float fCurrentValue = -0.1f;
+		for (size_t i = 0; i < props.vCustomVolumeCurve.size(); i++)
+		{
+			if (props.vCustomVolumeCurve[i].Distance > fCurrentValue)
+			{
+				fCurrentValue = props.vCustomVolumeCurve[i].Distance;
+			}
+			else
+			{
+				SError::showErrorMessageBox(L"SSound::set3DSoundProps", L"distance values in the vCustomVolumeCurve should be sorted.");
+			}
+		}
+
+		sound3DProps = props;
+	}
+	else
+	{
+		SError::showErrorMessageBox(L"SSound::set3DSoundProps()", L"you can use this function only on a 3D sound (see SSound constructor).");
+		return;
+	}
+}
+
+bool SSound::applyNew3DSoundProps(SEmitterProps &emitterProps)
 {
     if (bIs3DSound)
     {
@@ -637,6 +692,8 @@ bool SSound::applyNew3DSoundProps(SEmitterProps &emitterProps, bool bCalcDoppler
             return true;
         }
 
+		std::lock_guard<std::mutex> lock(mtxUpdate3DSound);
+
         X3DAUDIO_EMITTER emitter;
         float emitterAzimuths[XAUDIO2_MAX_AUDIO_CHANNELS] = {};
         std::memset(&emitter, 0, sizeof(X3DAUDIO_EMITTER));
@@ -645,11 +702,24 @@ bool SSound::applyNew3DSoundProps(SEmitterProps &emitterProps, bool bCalcDoppler
 
         emitter.OrientTop.z =
             emitter.ChannelRadius =
-            emitter.CurveDistanceScaler =
             emitter.DopplerScaler = 1.f;
+
+		emitter.CurveDistanceScaler = sound3DProps.fSoundAttenuationMultiplier;
 
         emitter.ChannelCount = 1;
         emitter.pChannelAzimuths = emitterAzimuths;
+
+		X3DAUDIO_DISTANCE_CURVE volumeCurve;
+		if (sound3DProps.vCustomVolumeCurve.size() > 0)
+		{
+			volumeCurve.PointCount = sound3DProps.vCustomVolumeCurve.size();
+			volumeCurve.pPoints = &sound3DProps.vCustomVolumeCurve[0];
+			emitter.pVolumeCurve = &volumeCurve;
+		}
+		else
+		{
+			emitter.pVolumeCurve = nullptr;
+		}
 
         emitter.InnerRadiusAngle = X3DAUDIO_PI / 4.0f;
 
@@ -668,7 +738,6 @@ bool SSound::applyNew3DSoundProps(SEmitterProps &emitterProps, bool bCalcDoppler
 
 
         UINT32 iFlags = X3DAUDIO_CALCULATE_MATRIX;
-        if (bCalcDopplerEffect) iFlags |= X3DAUDIO_CALCULATE_DOPPLER;
 
         float matrix[XAUDIO2_MAX_AUDIO_CHANNELS * 8] = {};
         x3dAudioDSPSettings.pMatrixCoefficients = matrix;
@@ -685,18 +754,6 @@ bool SSound::applyNew3DSoundProps(SEmitterProps &emitterProps, bool bCalcDoppler
 
 
         HRESULT hr = S_OK;
-
-
-        if (bCalcDopplerEffect)
-        {
-            hr = pSourceVoice->SetFrequencyRatio(x3dAudioDSPSettings.DopplerFactor);
-            if (FAILED(hr))
-            {
-                SError::showErrorMessageBox(hr, L"SSound::applyNew3DSoundProps::SetFrequencyRatio()");
-                return true;
-            }
-        }
-
 
         if (pSoundMix)
         {
@@ -838,6 +895,12 @@ bool SSound::isSoundStoppedManually() const
 
 bool SSound::readWaveData(std::vector<unsigned char>* pvWaveData, bool& bEndOfStream)
 {
+	if (bSoundLoaded == false)
+	{
+		SError::showErrorMessageBox(L"Sound::readWaveData()", L"no sound is loaded.");
+		return true;
+	}
+
     std::lock_guard<std::mutex> lock(mtxOptionalSourceReaderRead);
 
     if (pOptionalSourceReader == nullptr)
@@ -1226,6 +1289,7 @@ bool SSound::streamAudioFile(IMFSourceReader *pAsyncReader)
 
     if (bStopStreaming)
     {
+		mtxStreamingSwitch.unlock();
         return false;
     }
 
@@ -1241,6 +1305,11 @@ bool SSound::streamAudioFile(IMFSourceReader *pAsyncReader)
 
 
     pSourceVoice->Start();
+
+	if (bIs3DSound)
+	{
+		pAudioEngine->apply3DPropsForComponent(pOwnerComponent);
+	}
 
 
     if (loopStream(pAsyncReader, pSourceVoice))
@@ -1583,7 +1652,7 @@ bool SSound::createSourceReader(const std::wstring &sAudioFilePath, SourceReader
 bool SSound::waitForUnpause()
 {
     mtxSoundState.lock();
-    if (soundState == SS_PAUSED)
+    if (soundState == SSoundState::SS_PAUSED)
     {
         mtxSoundState.unlock();
 

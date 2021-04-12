@@ -66,7 +66,7 @@ bool SApplication::close()
 	}
 }
 
-void SApplication::setGlobalVisualSettings(SGlobalVisualSettings settings)
+void SApplication::setGlobalVisualSettings(const SGlobalVisualSettings& settings)
 {
 	renderPassVisualSettings = settings;
 }
@@ -980,6 +980,9 @@ bool SApplication::spawnContainerInLevel(SContainer* pContainer)
 		mtxShader.unlock();
 
 
+		pContainer->registerAll3DSoundComponents();
+
+
 		if (bExpanded)
 		{
 			// All CBs are cleared (they are new), need to refill them.
@@ -1133,6 +1136,9 @@ void SApplication::despawnContainerFromLevel(SContainer* pContainer)
 		mtxShader.lock();
 		pContainer->removeMeshesByShader(&vOpaqueMeshesByCustomShader, &vTransparentMeshesByCustomShader);
 		mtxShader.unlock();
+
+
+		pContainer->unregisterAll3DSoundComponents();
 
 
 		if (bResized)
@@ -3031,7 +3037,7 @@ void SApplication::drawComponent(SComponent* pComponent, bool bUsingCustomResour
 			}
 		}
 	}
-	else
+	else if (pComponent->componentType == SComponentType::SCT_RUNTIME_MESH)
 	{
 		SRuntimeMeshComponent* pRuntimeMeshComponent = dynamic_cast<SRuntimeMeshComponent*>(pComponent);
 
@@ -5927,6 +5933,8 @@ int SApplication::run()
 		std::chrono::time_point<std::chrono::steady_clock> timeUserOnTick;
 		std::chrono::time_point<std::chrono::steady_clock> timeOnDraw;
 		std::chrono::time_point<std::chrono::steady_clock> timeOnCalcFPS;
+		std::chrono::time_point<std::chrono::steady_clock> timeOnAudio;
+		double dToMS = 1000000.0;
 #endif
 
 		while(msg.message != WM_QUIT)
@@ -5958,7 +5966,7 @@ int SApplication::run()
 
 					frameStats.fTimeSpentOnWindowsMessagesInMS
 						= static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now() - timeWindowsMessage).count()
-							/ 1000000.0);
+							/ dToMS);
 				}
 				else
 				{
@@ -5968,6 +5976,8 @@ int SApplication::run()
 #endif
 
 				gameTimer.tick();
+
+
 
 
 #if defined(DEBUG) || defined(_DEBUG)
@@ -5981,11 +5991,32 @@ int SApplication::run()
 #if defined(DEBUG) || defined(_DEBUG)
 				frameStats.fTimeSpentOnUserOnTickFunctionsInMS
 					= static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now() - timeUserOnTick).count()
-						/ 1000000.0);
+						/ dToMS);
 #endif
 
 
+
+
+
+#if defined(DEBUG) || defined(_DEBUG)
+				timeOnAudio = std::chrono::steady_clock::now();
+#endif
+				mtxSpawnDespawn.lock();
+				pAudioEngine->update3DSound(getCamera());
+				mtxSpawnDespawn.unlock();
+
+#if defined(DEBUG) || defined(_DEBUG)
+				frameStats.fTimeSpentOn3DAudioUpdateInMS
+					= static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now() - timeOnAudio).count()
+						/ dToMS);
+#endif
+
+
+
 				update();
+
+
+
 
 #if defined(DEBUG) || defined(_DEBUG)
 				timeOnDraw = std::chrono::steady_clock::now();
@@ -5996,8 +6027,12 @@ int SApplication::run()
 #if defined(DEBUG) || defined(_DEBUG)
 				frameStats.fTimeSpentOnCPUDrawInMS
 					= static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now() - timeOnDraw).count()
-						/ 1000000.0);
+						/ dToMS);
 #endif
+
+
+
+
 
 #if defined(DEBUG) || defined(_DEBUG)
 				timeOnCalcFPS = std::chrono::steady_clock::now();
@@ -6008,8 +6043,10 @@ int SApplication::run()
 #if defined(DEBUG) || defined(_DEBUG)
 				frameStats.fTimeSpentOnFPSCalcInMS
 					= static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now() - timeOnCalcFPS).count()
-						/ 1000000.0);
+						/ dToMS);
 #endif
+
+
 
 
 				if (fFPSLimit >= 1.0f)
@@ -6026,7 +6063,7 @@ int SApplication::run()
 						timeEndPeriod(1);
 
 #if defined(DEBUG) || defined(_DEBUG)
-						frameStats.fTimeSpentInSleepInMS = static_cast<float>(dTimeInNS / 1000000.0);
+						frameStats.fTimeSpentInFPSLimitSleepInMS = static_cast<float>(dTimeInNS / dToMS);
 #endif
 					}
 
@@ -6035,9 +6072,10 @@ int SApplication::run()
 #if defined(DEBUG) || defined(_DEBUG)
 				else
 				{
-					frameStats.fTimeSpentInSleepInMS = 0.0f;
+					frameStats.fTimeSpentInFPSLimitSleepInMS = 0.0f;
 				}
 #endif
+
 
 #if defined(DEBUG) || defined(_DEBUG)
 				pProfiler->setFrameStats(frameStats);

@@ -168,7 +168,7 @@ public:
 	//@@Function
 	float   getCameraFarClipWindowHeight () const;
 	//@@Function
-	void    getCameraBasicVectors        (SVector* pvForward, SVector* pvLeft, SVector* pvZAxis);
+	void    getCameraBasicVectors        (SVector* pvForward, SVector* pvRight, SVector* pvUp);
 	//@@Function
 	SCameraEffects getCameraEffects();
 

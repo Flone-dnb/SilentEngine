@@ -190,7 +190,7 @@ public:
 		/*
 		* desc: used to set the global visual settings.
 		*/
-		void             setGlobalVisualSettings               (SGlobalVisualSettings settings);
+		void             setGlobalVisualSettings               (const SGlobalVisualSettings& settings);
 		//@@Function
 		/*
 		* desc: returns the global visual settings.

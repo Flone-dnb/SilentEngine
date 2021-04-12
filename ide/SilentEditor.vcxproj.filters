@@ -151,6 +151,9 @@
     <Filter Include="SilentEngine\Private\AudioEngine\SSoundMix">
       <UniqueIdentifier>{75a20ddf-0ed4-4f55-9419-f83ed8bb92a6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="SilentEngine\Public\EntityComponentSystem\SAudioComponent">
+      <UniqueIdentifier>{af860788-a8d2-49a3-9a28-525d92929446}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\SilentEngine\public\SApplication\SApplication.cpp">
@@ -260,6 +263,9 @@
     </ClCompile>
     <ClCompile Include="..\src\SilentEngine\Private\AudioEngine\SSoundMix\ssoundmix.cpp">
       <Filter>SilentEngine\Private\AudioEngine\SSoundMix</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SilentEngine\Public\EntityComponentSystem\SAudioComponent\SAudioComponent.cpp">
+      <Filter>SilentEngine\Public\EntityComponentSystem\SAudioComponent</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -376,6 +382,9 @@
     </ClInclude>
     <ClInclude Include="..\src\SilentEngine\Private\AudioEngine\SSoundMix\ssoundmix.h">
       <Filter>SilentEngine\Private\AudioEngine\SSoundMix</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SilentEngine\Public\EntityComponentSystem\SAudioComponent\SAudioComponent.h">
+      <Filter>SilentEngine\Public\EntityComponentSystem\SAudioComponent</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

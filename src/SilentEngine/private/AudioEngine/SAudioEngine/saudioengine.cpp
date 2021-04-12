@@ -12,9 +12,10 @@
 
 // Engine
 #include "SilentEngine/Private/SError/serror.h"
-
-// Custom
+#include "SilentEngine/Public/EntityComponentSystem/SAudioComponent/SAudioComponent.h"
+#include "SilentEngine/Public/SCamera/SCamera.h"
 #include "../SSoundMix/ssoundmix.h"
+#include "../SSound/ssound.h"
 
 
 SAudioEngine::SAudioEngine()
@@ -22,8 +23,9 @@ SAudioEngine::SAudioEngine()
     pMasteringVoice = nullptr;
 
     bEngineInitialized = false;
-
     bEnableLowLatency = true;
+
+	memset(&x3dAudioListener, 0, sizeof(X3DAUDIO_LISTENER));
 }
 
 bool SAudioEngine::init(bool bEnableLowLatency)
@@ -100,6 +102,19 @@ void SAudioEngine::applyNew3DListenerProps(SListenerProps &listenerProps)
     x3dAudioListener.Velocity = listenerProps.velocity;
 }
 
+void SAudioEngine::apply3DPropsForComponent(SAudioComponent* pAudioComponent, float fDeltaTime)
+{
+	SVector vComponentLocation = pAudioComponent->getLocationInWorld();
+
+	SEmitterProps emitterProps;
+	X3DAUDIO_VECTOR currentPosition = { vComponentLocation.getX(), vComponentLocation.getY(), vComponentLocation.getZ() };
+
+	emitterProps.position = currentPosition;
+	emitterProps.velocity = { 0.0f, 0.0f, 0.0f };
+
+	pAudioComponent->pSound->applyNew3DSoundProps(emitterProps);
+}
+
 bool SAudioEngine::getMasterVolume(float &fVolume)
 {
     if (bEngineInitialized == false)
@@ -137,6 +152,61 @@ SAudioEngine::~SAudioEngine()
     MFShutdown();
 }
 
+void SAudioEngine::registerNew3DAudioComponent(SAudioComponent* pAudioComponent)
+{
+	// called in onSpawn() (in spawn mutex)
+
+	vSpawned3DAudioComponents.push_back(pAudioComponent);
+}
+
+void SAudioEngine::unregister3DAudioComponent(SAudioComponent* pAudioComponent)
+{
+	// called in onSpawn() (in spawn mutex)
+
+	bool bFound = false;
+
+	for (size_t i = 0; i < vSpawned3DAudioComponents.size(); i++)
+	{
+		if (vSpawned3DAudioComponents[i] == pAudioComponent)
+		{
+			bFound = true;
+			break;
+		}
+	}
+
+	if (bFound == false)
+	{
+		SError::showErrorMessageBox(L"SAudioEngine::unregister3DAudioComponent()", L"can't find specified audio component as a registered one.");
+	}
+}
+
+void SAudioEngine::update3DSound(SCamera* pPlayerCamera)
+{
+	// called under mtxSpawnDespawn
+
+
+	SVector vCameraLocation = pPlayerCamera->getCameraLocationInWorld();
+	SVector vCameraForwardVector;
+	SVector vCameraUpVector;
+	pPlayerCamera->getCameraBasicVectors(&vCameraForwardVector, nullptr, &vCameraUpVector);
+
+	SListenerProps listenerProps;
+	listenerProps.position = { vCameraLocation.getX(), vCameraLocation.getY(), vCameraLocation.getZ() };
+	listenerProps.upVector = { vCameraUpVector.getX(), vCameraUpVector.getY(), vCameraUpVector.getZ() };
+	listenerProps.forwardVector = { vCameraForwardVector.getX(), vCameraForwardVector.getY(), vCameraForwardVector.getZ() };
+	listenerProps.velocity = { 0.0f, 0.0f, 0.0f };
+
+
+	applyNew3DListenerProps(listenerProps);
+
+
+
+	for (size_t i = 0; i < vSpawned3DAudioComponents.size(); i++)
+	{
+		apply3DPropsForComponent(vSpawned3DAudioComponents[i]);
+	}
+}
+
 bool SAudioEngine::initXAudio2()
 {
     UINT32 iFlags = 0;
@@ -145,9 +215,15 @@ bool SAudioEngine::initXAudio2()
     iFlags = XAUDIO2_DEBUG_ENGINE;
 #endif
 
-    CoInitializeEx( 0, COINIT_MULTITHREADED );
+	HRESULT hr = CoInitializeEx( 0, COINIT_MULTITHREADED );
+	if (FAILED(hr))
+	{
+		SError::showErrorMessageBox(hr, L"AudioEngine::initXAudio2::CoInitializeEx()");
+		return true;
+	}
 
-    HRESULT hr = XAudio2Create(&pXAudio2Engine, iFlags);
+
+    hr = XAudio2Create(&pXAudio2Engine, iFlags);
     if (FAILED(hr))
     {
 		SError::showErrorMessageBox(hr, L"AudioEngine::initXAudio2::XAudio2Create()");

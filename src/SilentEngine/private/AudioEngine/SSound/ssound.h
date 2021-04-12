@@ -23,8 +23,9 @@
 
 class SAudioEngine;
 class SSoundMix;
+class SAudioComponent;
 
-enum SSoundState
+enum class SSoundState
 {
     SS_NOT_PLAYING = 0,
     SS_PLAYING = 1,
@@ -49,15 +50,34 @@ struct SEmitterProps
     X3DAUDIO_VECTOR velocity; // in units per sec. (only for doppler)
 };
 
+struct S3DSoundProps
+{
+	float fSoundAttenuationMultiplier = 1.0f; // also can affect vCustomVolumeCurve (all distance values will be multiplied by this value)
+	// example: if distance (0 - 10) use volume (1.0f), then on distance (10 - 20) change volume to (0.0f):
+	// X3DAUDIO_DISTANCE_CURVE_POINT point1, point2;
+	// point1.Distance = 10.0f;
+	// point1.DSPSetting = 1.0f;
+	// point2.Distance = 20.0f;
+	// point2.DSPSetting = 0.0f;
+	// props.vCustomVolumeCurve.push_back(point1);
+	// props.vCustomVolumeCurve.push_back(point2);
+	std::vector<X3DAUDIO_DISTANCE_CURVE_POINT> vCustomVolumeCurve;
+};
+
 class SSound
 {
 public:
 
-    SSound(SAudioEngine* pAudioEngine, bool bIs3DSound);
+    SSound(SAudioEngine* pAudioEngine, bool bIs3DSound, SAudioComponent* pOwnerComponent);
     ~SSound();
 
 
     // Resets all sound effects (audio effects (reverb, echo...), volume, pan, pitch, etc.)
+	// create new sound mixes using SApplication::getAudioEngine() and SAudioEngine::createSoundMix()
+	// one sound mix can be used for multiple sounds, don't create sound mix per sound
+	// consider sound mix as a mixer channel (like master channel)
+	// all sound mixes pass the sound to the master channel (controlled by SAudioEngine)
+	// TODO: what audio formats do we support?
     bool loadAudioFile(const std::wstring& sAudioFilePath, bool bStreamAudio, SSoundMix* pOutputToSoundMix = nullptr);
 
 
@@ -76,8 +96,7 @@ public:
     bool setPitchInSemitones(float fSemitones);
 
 
-    // update listener first
-    bool applyNew3DSoundProps (SEmitterProps& emitterProps, bool bCalcDopplerEffect);
+	void set3DSoundProps  (const S3DSoundProps& props);
 
 
     void setOnPlayEndCallback(std::function<void(SSound*)> f);
@@ -95,6 +114,8 @@ public:
 
 private:
 
+	friend class SAudioEngine;
+
     void init3DSound();
     bool loadFileIntoMemory(const std::wstring& sAudioFilePath, std::vector<unsigned char>& vAudioData, WAVEFORMATEX** pFormat, unsigned int& iWaveFormatSize);
 
@@ -104,6 +125,9 @@ private:
 
     bool createSourceReader(const std::wstring& sAudioFilePath, SourceReaderCallback** pAsyncSourceReaderCallback,
                             IMFSourceReader*& pOutSourceReader, WAVEFORMATEX** pFormat, unsigned int& iWaveFormatSize, bool bOptional = false);
+
+	// update listener first
+	bool applyNew3DSoundProps(SEmitterProps& emitterProps);
 
     bool waitForUnpause();
 
@@ -122,6 +146,10 @@ private:
     SAudioEngine*         pAudioEngine;
     IXAudio2SourceVoice*  pSourceVoice;
     SSoundMix*            pSoundMix;
+	SAudioComponent*      pOwnerComponent;
+
+
+	S3DSoundProps         sound3DProps;
 
 
     X3DAUDIO_DSP_SETTINGS x3dAudioDSPSettings;
@@ -165,6 +193,9 @@ private:
 
 
     std::wstring   sAudioFileDiskPath;
+
+
+	std::mutex     mtxUpdate3DSound;
 
 
     XAUDIO2_BUFFER audioBuffer;

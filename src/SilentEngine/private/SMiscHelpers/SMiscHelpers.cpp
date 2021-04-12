@@ -222,10 +222,9 @@ ATL::CComPtr<IDxcBlob> SMiscHelpers::compileShader(const std::wstring& sPathToSh
 	{
 		vArgs.push_back(DXC_ARG_OPTIMIZATION_LEVEL3);
 	}
-#elif
+#else
 	vArgs.push_back(DXC_ARG_OPTIMIZATION_LEVEL3);
 #endif
-
 
 	// Open source file.  
 	CComPtr<IDxcBlobEncoding> pSource = nullptr;

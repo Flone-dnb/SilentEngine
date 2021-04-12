@@ -390,3 +390,19 @@ void SContainer::removeMeshesByShader(std::vector<SShaderObjects>* pOpaqueMeshes
 		vComponents[i]->removeMeshesByShader(pOpaqueMeshesByShader, pTransparentMeshesByShader);
 	}
 }
+
+void SContainer::registerAll3DSoundComponents()
+{
+	for (size_t i = 0; i < vComponents.size(); i++)
+	{
+		vComponents[i]->registerAll3DSoundComponents();
+	}
+}
+
+void SContainer::unregisterAll3DSoundComponents()
+{
+	for (size_t i = 0; i < vComponents.size(); i++)
+	{
+		vComponents[i]->unregisterAll3DSoundComponents();
+	}
+}

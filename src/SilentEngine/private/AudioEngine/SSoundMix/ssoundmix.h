@@ -12,6 +12,7 @@
 
 class SAudioEngine;
 class SAudioEffect;
+class IXAudio2SubmixVoice;
 
 class SSoundMix
 {
@@ -47,8 +48,8 @@ private:
     friend class SSound;
 
 
-    class IXAudio2SubmixVoice* pSubmixVoice;
-    class IXAudio2SubmixVoice* pSubmixVoiceFX;
+    IXAudio2SubmixVoice* pSubmixVoice;
+    IXAudio2SubmixVoice* pSubmixVoiceFX;
 
     SAudioEngine* pAudioEngine;
 

@@ -114,17 +114,17 @@ bool SSoundMix::setAudioEffects(std::vector<SAudioEffect> *pvEffects)
 
         switch(pvEffects->operator[](i).effectType)
         {
-        case(ET_REVERB):
+		case(S_EFFECT_TYPE::ET_REVERB):
         {
             hr = CreateFX(__uuidof(FXReverb), &vXAPO[i]);
             break;
         }
-        case(ET_EQ):
+        case(S_EFFECT_TYPE::ET_EQ):
         {
             hr = CreateFX(__uuidof(FXEQ), &vXAPO[i]);
             break;
         }
-        case(ET_ECHO):
+        case(S_EFFECT_TYPE::ET_ECHO):
         {
             hr = CreateFX(__uuidof(FXEcho), &vXAPO[i]);
             break;
@@ -183,17 +183,17 @@ bool SSoundMix::setAudioEffects(std::vector<SAudioEffect> *pvEffects)
     {
         switch(pvEffects->operator[](i).effectType)
         {
-        case(ET_REVERB):
+        case(S_EFFECT_TYPE::ET_REVERB):
         {
             hr = pSubmixVoiceFX->SetEffectParameters(static_cast<UINT32>(i), &pvEffects->operator[](i).reverbParams, sizeof( FXREVERB_PARAMETERS ), XAUDIO2_COMMIT_NOW);
             break;
         }
-        case(ET_EQ):
+        case(S_EFFECT_TYPE::ET_EQ):
         {
             hr = pSubmixVoiceFX->SetEffectParameters(static_cast<UINT32>(i), &pvEffects->operator[](i).eqParams, sizeof( FXEQ_PARAMETERS ), XAUDIO2_COMMIT_NOW);
             break;
         }
-        case(ET_ECHO):
+        case(S_EFFECT_TYPE::ET_ECHO):
         {
             hr = pSubmixVoiceFX->SetEffectParameters(static_cast<UINT32>(i), &pvEffects->operator[](i).echoParams, sizeof( FXECHO_PARAMETERS ), XAUDIO2_COMMIT_NOW);
             break;
@@ -267,17 +267,17 @@ bool SSoundMix::setAudioEffectParameters(unsigned int iEffectIndex, SAudioEffect
 
     switch(params->effectType)
     {
-    case(ET_REVERB):
+    case(S_EFFECT_TYPE::ET_REVERB):
     {
         hr = pSubmixVoiceFX->SetEffectParameters(iEffectIndex, &params->reverbParams, sizeof( FXREVERB_PARAMETERS ), XAUDIO2_COMMIT_NOW);
         break;
     }
-    case(ET_EQ):
+    case(S_EFFECT_TYPE::ET_EQ):
     {
         hr = pSubmixVoiceFX->SetEffectParameters(iEffectIndex, &params->eqParams, sizeof( FXEQ_PARAMETERS ), XAUDIO2_COMMIT_NOW);
         break;
     }
-    case(ET_ECHO):
+    case(S_EFFECT_TYPE::ET_ECHO):
     {
         hr = pSubmixVoiceFX->SetEffectParameters(iEffectIndex, &params->echoParams, sizeof( FXECHO_PARAMETERS ), XAUDIO2_COMMIT_NOW);
         break;
