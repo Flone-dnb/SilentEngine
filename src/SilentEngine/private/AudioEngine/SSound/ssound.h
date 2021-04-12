@@ -64,6 +64,10 @@ struct S3DSoundProps
 	std::vector<X3DAUDIO_DISTANCE_CURVE_POINT> vCustomVolumeCurve;
 };
 
+//@@Class
+/*
+This class is used for playing an audio files in 2D or 3D.
+*/
 class SSound
 {
 public:
@@ -71,46 +75,137 @@ public:
     SSound(SAudioEngine* pAudioEngine, bool bIs3DSound, SAudioComponent* pOwnerComponent);
     ~SSound();
 
-
-    // Resets all sound effects (audio effects (reverb, echo...), volume, pan, pitch, etc.)
-	// create new sound mixes using SApplication::getAudioEngine() and SAudioEngine::createSoundMix()
-	// one sound mix can be used for multiple sounds, don't create sound mix per sound
-	// consider sound mix as a mixer channel (like master channel)
-	// all sound mixes pass the sound to the master channel (controlled by SAudioEngine)
-	// TODO: what audio formats do we support?
+	//@@Function
+	/*
+	* desc: use to load/reload an audio file to play.
+	* param "sAudioFilePath": path to the audio file. Supported audio formats are: .wav, .mp3, .ogg.
+	* param "bStreamAudio": if set to 'false' the whole audio file will be uncompressed and
+	loaded in the RAM (you can use getLoadedAudioDataSizeInBytes() to see the size),
+	if set to 'true' the sound will be loaded in small chunks while playing and thus
+	keeping the amount of used memory very low. Note that there are some cons for using streaming because the sound
+	that is being streamed will apply operations (such as pause/unpause/stop and etc.) with a delay and
+	the setPosition/getPosition functions will not be that precise. The general rule is this: only use streaming if the
+	sound is very long (4-5 min. and longer).
+	* param "pOutputToSoundMix": (optional) pass the SSoundMix (that can be created using
+	SApplication::getAudioEngine()->createSoundMix()) to route this sound to a custom sound mix (i.e. mixer channel).
+	Sound mixes are used for sound grouping and applying the audio effects, for example, all UI sounds may use one
+	SSoundMix and this SSoundMix can be used to control overall volume of all UI sounds.
+	* return: true if an error occurred, false otherwise.
+	* remarks: if this function is called not the first time and there was a sound mix used pass it again,
+	otherwise the sound will use master channel.
+	*/
     bool loadAudioFile(const std::wstring& sAudioFilePath, bool bStreamAudio, SSoundMix* pOutputToSoundMix = nullptr);
 
 
-    // will restart the sound if playing, unpause if paused
+	//@@Function
+	/*
+	* desc: use to start playing the sound.
+	* return: true if an error occurred, false otherwise.
+	* remarks: will restart the sound if it's already playing and unpause if paused.
+	*/
     bool playSound    ();
+	//@@Function
+	/*
+	* desc: pauses the sound at current position.
+	* return: true if an error occurred, false otherwise.
+	*/
     bool pauseSound   ();
+	//@@Function
+	/*
+	* desc: unpauses the sound.
+	* return: true if an error occurred, false otherwise.
+	*/
     bool unpauseSound ();
+	//@@Function
+	/*
+	* desc: stops the sound.
+	* return: true if an error occurred, false otherwise.
+	*/
     bool stopSound    ();
+	//@@Function
+	/*
+	* desc: use to change the current playing position.
+	* return: true if an error occurred, false otherwise.
+	*/
     bool setPositionInSec (double dPositionInSec);
 
 
+	//@@Function
+	/*
+	* desc: sets the volume of this sound.
+	* return: true if an error occurred, false otherwise.
+	*/
     bool setVolume        (float fVolume);
-    // [0.03125, 32] so [-5, 5] octaves
+	//@@Function
+	/*
+	* desc: used to set the pitch in freq. ratio, valid range is [0.03125, 32] so it's [-5, 5] octaves.
+	* return: true if an error occurred, false otherwise.
+	*/
     bool setPitchInFreqRatio(float fRatio);
-    // [-5, 5] octaves so [-60, 60]
+	//@@Function
+	/*
+	* desc: used to set the pitch in semitones, valid range is [-60, 60] so it's [-5, 5] octaves.
+	* return: true if an error occurred, false otherwise.
+	*/
     bool setPitchInSemitones(float fSemitones);
 
-
+	//@@Function
+	/*
+	* desc: used to set the properties of this 3D sound.
+	* remarks: will show an error if used on a 2D sound.
+	*/
 	void set3DSoundProps  (const S3DSoundProps& props);
 
-
+	//@@Function
+	/*
+	* desc: used to set the callback that will be called when the SSound is finished playing the sound,
+	or if the sound was stopped (use isSoundStoppedManually() to see the reason).
+	*/
     void setOnPlayEndCallback(std::function<void(SSound*)> f);
 
-
+	//@@Function
+	/*
+	* desc: used to retrieve the current volume.
+	* return: true if an error occurred, false otherwise.
+	*/
     bool getVolume        (float& fVolume);
+	//@@Function
+	/*
+	* desc: used to retrieve the sound info (file size on disk, sound length, bitrate and etc.).
+	* return: true if an error occurred, false otherwise.
+	*/
     bool getSoundInfo     (SSoundInfo& soundInfo);
+	//@@Function
+	/*
+	* desc: used to retrieve the sound state (not playing, playing, stopped and etc.).
+	* return: true if an error occurred, false otherwise.
+	*/
     bool getSoundState    (SSoundState& state);
+	//@@Function
+	/*
+	* desc: used to retrieve the current sound position.
+	* return: true if an error occurred, false otherwise.
+	*/
     bool getPositionInSec (double& dPositionInSec);
-    // returns valid value only if not using streaming
+	//@@Function
+	/*
+	* desc: used to retrieve the size of the loaded sound in RAM (only used without streaming).
+	* return: true if an error occurred, false otherwise.
+	* remarks: returns valid value only if not using streaming.
+	*/
     bool getLoadedAudioDataSizeInBytes(size_t& iSizeInBytes);
+	//@@Function
+	/*
+	* desc: tells if the sound was stopped manually (using stopSound()).
+	* return: true if an error occurred, false otherwise.
+	*/
     bool isSoundStoppedManually() const;
-
-    bool readWaveData     (std::vector<unsigned char>* pvWaveData, bool& bEndOfStream);
+	//@@Function
+	/*
+	* desc: use to read raw PCM audio samples (use in cycle until bEndOfStream is true).
+	* return: true if an error occurred, false otherwise.
+	*/
+    bool readWaveData(std::vector<unsigned char>* pvWaveData, bool& bEndOfStream);
 
 private:
 

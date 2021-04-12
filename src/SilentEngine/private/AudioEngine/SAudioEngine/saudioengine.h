@@ -223,6 +223,10 @@ struct SListenerProps
     X3DAUDIO_VECTOR velocity; // in units per sec. (only for doppler)
 };
 
+//@@Class
+/*
+This class represents an audio engine that controlls all the sounds.
+*/
 class SAudioEngine
 {
 
@@ -231,11 +235,26 @@ public:
     SAudioEngine();
 
 
-    // Will be auto deleted in ~SAudioEngine().
+	//@@Function
+	/*
+	* desc: returns a pointer to the new SSoundMix that can be used. Multiple SSound objects may use one SSoundMix.
+	Consider SSoundMix as a mixer channel, multiple sounds may use it, don't create one SSoundMix per SSound object.
+	* return: true if an error occurred, false otherwise.
+	* remarks: returned SSoundMix be auto deleted in ~SAudioEngine().
+	*/
     bool createSoundMix(SSoundMix*& pOutSoundMix);
 
-
+	//@@Function
+	/*
+	* desc: sets the volume of the master channel and thus controls the overall volume of the application.
+	* return: true if an error occurred, false otherwise.
+	*/
     bool setMasterVolume(float fVolume);
+	//@@Function
+	/*
+	* desc: use to get the current master volume.
+	* return: true if an error occurred, false otherwise.
+	*/
     bool getMasterVolume(float& fVolume);
 
 

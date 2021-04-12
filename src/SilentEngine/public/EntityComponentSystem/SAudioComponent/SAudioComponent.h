@@ -17,7 +17,7 @@
 
 //@@Class
 /*
-This class provides an audio emitter for 2D and 3D sound.
+This class represents an audio emitter for 2D and 3D sound.
 */
 class SAudioComponent : public SComponent
 {
