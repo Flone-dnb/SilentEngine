@@ -4,9 +4,7 @@ TODO
 
 # Dependencies
 
-|         Name          |  Link  |
-|  -------------------  |  ----  |
-| DirectXShaderCompiler | [Link](https://github.com/microsoft/DirectXShaderCompiler) |
+- [Link](https://github.com/microsoft/DirectXShaderCompiler)
 
 # License
 
