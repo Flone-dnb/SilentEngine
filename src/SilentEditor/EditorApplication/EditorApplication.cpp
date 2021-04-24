@@ -22,7 +22,6 @@ void EditorApplication::onRun()
 
 	// If you will use camera roll (roll axis), use setDontFlipCamera() to false.
 
-
 }
 
 void EditorApplication::onMouseMove(int iMouseXMove, int iMouseYMove)
@@ -113,49 +112,6 @@ void EditorApplication::onKeyboardButtonDown(SKeyboardKey keyboardKey)
 	{
 		bShiftPressed = true;
 	}
-
-	if (bRMBPressed && keyboardPressTimer.isTimerRunning() == false)
-	{
-		if (keyboardKey.getButton() == SKeyboardButton::SKB_W || keyboardKey.getButton() == SKeyboardButton::SKB_S
-			|| keyboardKey.getButton() == SKeyboardButton::SKB_D || keyboardKey.getButton() == SKeyboardButton::SKB_A
-			|| keyboardKey.getButton() == SKeyboardButton::SKB_Q || keyboardKey.getButton() == SKeyboardButton::SKB_E)
-		{
-			std::function<void(void)> f = std::bind(&EditorApplication::autoRepeatKeyPress, this);
-			keyboardPressTimer.setCallbackOnTimeout(f, fMoveTimeStep, true, fMoveTimeStep);
-			keyboardPressTimer.start();
-		}
-	}
-}
-
-void EditorApplication::autoRepeatKeyPress()
-{
-	float fSpeedMult = 1.0f;
-
-	if (bShiftPressed)
-	{
-		fSpeedMult = fShiftSpeedMult;
-	}
-	else if (bCtrlPressed)
-	{
-		fSpeedMult = fCtrlSpeedMult;
-	}
-
-	float fSpeed = fMoveStepSize * fSpeedMult;
-
-	getCamera()->moveCameraForward((bWPressed - bSPressed) * fSpeed);
-	getCamera()->moveCameraRight((bDPressed - bAPressed) * fSpeed);
-	getCamera()->moveCameraUp((bEPressed - bQPressed) * fSpeed);
-
-	checkAutoRepeatStop();
-}
-
-void EditorApplication::checkAutoRepeatStop()
-{
-	if (!bWPressed && !bSPressed && !bDPressed && !bAPressed && !bEPressed && !bQPressed)
-	{
-		// Nothing is pressed.
-		keyboardPressTimer.stop();
-	}
 }
 
 void EditorApplication::onKeyboardButtonUp(SKeyboardKey keyboardKey)
@@ -198,10 +154,33 @@ void EditorApplication::onKeyboardButtonUp(SKeyboardKey keyboardKey)
 	}
 }
 
+void EditorApplication::onPhysicsTick(float fDeltaTime)
+{
+	if (bRMBPressed && (bWPressed || bSPressed || bDPressed || bAPressed || bQPressed || bEPressed))
+	{
+		float fSpeedMult = 1.0f;
+
+		if (bShiftPressed)
+		{
+			fSpeedMult = fShiftSpeedMult;
+		}
+		else if (bCtrlPressed)
+		{
+			fSpeedMult = fCtrlSpeedMult;
+		}
+
+		fSpeedMult *= fDeltaTime;
+
+		float fSpeed = fMoveStepSize * fSpeedMult;
+
+		getCamera()->moveCameraForward((bWPressed - bSPressed) * fSpeed);
+		getCamera()->moveCameraRight((bDPressed - bAPressed) * fSpeed);
+		getCamera()->moveCameraUp((bEPressed - bQPressed) * fSpeed);
+	}
+}
+
 EditorApplication::~EditorApplication()
 {
-	keyboardPressTimer.stop();
-
 	// If the container was spawned (spawnContainerInLevel()) then
 	// here DO NOT:
 	// - delete pContainer;

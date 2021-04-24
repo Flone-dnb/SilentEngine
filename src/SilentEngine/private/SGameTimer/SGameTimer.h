@@ -15,7 +15,7 @@ public:
 	SGameTimer();
 
 	float getTimeElapsedInSec() const;
-	float getDeltaTimeBetweenFramesInSec() const;
+	float getDeltaTimeBetweenTicksInSec() const;
 
 	void reset();
 	void unpause();
@@ -25,7 +25,7 @@ public:
 private:
 
 	double  dSecondsPerCount;
-	double  dDeltaTimeBetweenFrames;
+	double  dDeltaTimeBetweenTicks;
 
 	__int64 iResetTime;
 	__int64 iPausedTime; // all time in pause mode

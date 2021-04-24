@@ -12,7 +12,6 @@
 
 // Custom
 #include "SilentEngine/public/SApplication/SApplication.h"
-#include "SilentEngine/Public/STimer/STimer.h"
 
 class EditorApplication : public SApplication
 {
@@ -28,25 +27,16 @@ public:
 	virtual void onKeyboardButtonDown (SKeyboardKey keyboardKey) override;
 	virtual void onKeyboardButtonUp   (SKeyboardKey keyboardKey) override;
 
+	virtual void onPhysicsTick(float fDeltaTime) override;
+
 	~EditorApplication() override;
 
 private:
 
-	void autoRepeatKeyPress();
-	void checkAutoRepeatStop();
-
-
-
-	// if the keyboard button is pressed update position on 'fMoveStepSize' value
-	// every 'fMoveTimeStep' sec.
-	float fMoveStepSize = 0.1f;
+	float fMoveStepSize = 2.0f;
 	float fShiftSpeedMult = 5.0f;
 	float fCtrlSpeedMult = 0.25f;
-	float fMoveTimeStep = 0.01f;
 	float fMouseSensitivity = 0.1f;
-
-
-	STimer keyboardPressTimer;
 
 
 	bool bWPressed = false, bSPressed = false, bDPressed = false, bAPressed = false, bEPressed = false, bQPressed = false;

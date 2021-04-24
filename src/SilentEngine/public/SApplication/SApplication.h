@@ -13,6 +13,7 @@
 #include <vector>
 #include <mutex>
 #include <unordered_map>
+#include <future>
 
 // DirectX
 #include <wrl.h> // smart pointers
@@ -411,7 +412,15 @@ public:
 		* desc: used to show/hide window title bar (only visible when fullscreen is disabled).
 		* remarks: title bar is hidden by default. Should be called before init().
 		*/
-		void            setInitShowWindowTitleBar(bool bShowTitleBar);
+		bool            setInitShowWindowTitleBar(bool bShowTitleBar);
+		//@@Function
+		/*
+		* desc: used to set the number of physics ticks per second (i.e. the number of times the onPhysicsTick() function will be called per second)
+		(default: 60).
+		* return: false if successful, true otherwise.
+		* remarks: should be called before calling the SApplication::init().
+		*/
+		bool            setInitPhysicsTicksPerSecond(int iTicksPerSecond = 60);
 
 
 
@@ -516,6 +525,12 @@ protected:
 		This value will be valid even if you just enabled onTick() calls.
 		*/
 		virtual void onTick(float fDeltaTime) {};
+		//@@Function
+		/*
+		* desc: an overridable function, called fixed amount of times in second (60 by default).
+		* param "fDeltaTime": the time that has passed since the last onPhysicsTick() call.
+		*/
+		virtual void onPhysicsTick(float fDeltaTime) {};
 
 
 	// Input
@@ -1064,6 +1079,9 @@ private:
 
 		std::array<const CD3DX12_STATIC_SAMPLER_DESC, 3> getStaticSamples();
 
+		void internalPhysicsTickThread();
+
+
 
 	// Buffers and views.
 
@@ -1300,11 +1318,19 @@ private:
 	bool           bCompileShadersInRelease = false;
 
 
-	// Audio
+	// Audio.
 	SAudioEngine*  pAudioEngine = nullptr;
+
+	
+	// Physics.
+	int            iPhysicsTicksPerSecond = 60;
+	bool           bTerminatePhysics = false;
+	std::promise<bool> promiseFinishedPhysics;
+	std::future<bool> futureFinishedPhysics;
 
 
 	SGameTimer     gameTimer;
+	SGameTimer     gamePhysicsTimer;
 
 	
 	std::mutex     mtxSpawnDespawn;

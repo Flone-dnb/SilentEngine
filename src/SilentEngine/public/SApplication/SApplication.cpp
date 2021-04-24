@@ -1227,6 +1227,32 @@ bool SApplication::setInitEnableVSync(bool bEnable)
 	}
 }
 
+bool SApplication::setInitPhysicsTicksPerSecond(int iTicksPerSecond)
+{
+	if (bInitCalled == false)
+	{
+		if (iTicksPerSecond <= 0)
+		{
+			SError::showErrorMessageBox(L"SApplication::setInitPhysicsTicksPerSecond()", L"iTicksPerSecond can't be 0 or negative.");
+			return true;
+		}
+		else if (iTicksPerSecond > 500)
+		{
+			SError::showErrorMessageBox(L"SApplication::setInitPhysicsTicksPerSecond()", L"iTicksPerSecond can't be bigger than 500.");
+			return true;
+		}
+
+		this->iPhysicsTicksPerSecond = iTicksPerSecond;
+
+		return false;
+	}
+	else
+	{
+		SError::showErrorMessageBox(L"SApplication::setInitPhysicsTicksPerSecond()", L"this function should be called before init().");
+		return true;
+	}
+}
+
 void SApplication::setBackBufferFillColor(SVector vColor)
 {
 	backBufferFillColor[0] = vColor.getX();
@@ -1520,11 +1546,17 @@ void SApplication::setWindowTitleText(const std::wstring& sTitleText)
 	}
 }
 
-void SApplication::setInitShowWindowTitleBar(bool bShowTitleBar)
+bool SApplication::setInitShowWindowTitleBar(bool bShowTitleBar)
 {
 	if (bInitCalled == false)
 	{
 		bHideTitleBar = !bShowTitleBar;
+		return false;
+	}
+	else
+	{
+		SError::showErrorMessageBox(L"SApplication::setInitShowWindowTitleBar()", L"this function should be called before init().");
+		return true;
 	}
 }
 
@@ -2461,7 +2493,7 @@ void SApplication::updateMainPassCB()
 	mainRenderPassCB.fNearZ = camera.getCameraNearClipPlane();
 	mainRenderPassCB.fFarZ = camera.getCameraFarClipPlane();
 	mainRenderPassCB.fTotalTime = gameTimer.getTimeElapsedInSec();
-	mainRenderPassCB.fDeltaTime = gameTimer.getDeltaTimeBetweenFramesInSec();
+	mainRenderPassCB.fDeltaTime = gameTimer.getDeltaTimeBetweenTicksInSec();
 	mainRenderPassCB.iDirectionalLightCount = 0;
 	mainRenderPassCB.iPointLightCount = 0;
 	mainRenderPassCB.iSpotLightCount = 0;
@@ -3281,6 +3313,40 @@ std::array<const CD3DX12_STATIC_SAMPLER_DESC, 3> SApplication::getStaticSamples(
 	);
 
 	return { pointWrap, linearWrap, anisotropicWrap };
+}
+
+void SApplication::internalPhysicsTickThread()
+{
+	double dToMS = 1000000.0;
+	double dTimeToSleepInNS = 1000.0 / iPhysicsTicksPerSecond * dToMS;
+
+	std::chrono::time_point<std::chrono::steady_clock> timeUserOnPhysicsTick;
+
+
+	while (bTerminatePhysics == false)
+	{
+		timeBeginPeriod(1);
+
+		nanosleep(static_cast<long long>(dTimeToSleepInNS));
+
+		timeEndPeriod(1);
+
+
+
+		gamePhysicsTimer.tick();
+
+		timeUserOnPhysicsTick = std::chrono::steady_clock::now();
+
+		onPhysicsTick(gamePhysicsTimer.getDeltaTimeBetweenTicksInSec());
+
+#if defined(DEBUG) || defined(_DEBUG)
+		frameStats.fTimeSpentOnUserOnPhysicsTickFunctionInMS
+			= static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now() - timeUserOnPhysicsTick).count()
+				/ dToMS);
+#endif
+	}
+
+	promiseFinishedPhysics.set_value(false);
 }
 
 LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -5912,11 +5978,22 @@ int SApplication::run()
 		MSG msg = {0};
 
 		gameTimer.reset();
+		gamePhysicsTimer.reset();
 
 		bRunCalled = true;
 
+		gamePhysicsTimer.tick();
+
+		promiseFinishedPhysics = std::promise<bool>();
+		futureFinishedPhysics = promiseFinishedPhysics.get_future();
+		
+		std::thread t(&SApplication::internalPhysicsTickThread, this);
+		t.detach();
+
+
 		STimer frameTimer;
 		gameTimer.tick();
+
 
 		update(); // so pCurrentFrameResource will be assigned before onTick()
 		draw();
@@ -5985,15 +6062,14 @@ int SApplication::run()
 #endif
 				if (bCallTick)
 				{
-					onTick(gameTimer.getDeltaTimeBetweenFramesInSec());
+					onTick(gameTimer.getDeltaTimeBetweenTicksInSec());
 				}
 
 #if defined(DEBUG) || defined(_DEBUG)
-				frameStats.fTimeSpentOnUserOnTickFunctionsInMS
+				frameStats.fTimeSpentOnUserOnTickFunctionInMS
 					= static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now() - timeUserOnTick).count()
 						/ dToMS);
 #endif
-
 
 
 
@@ -6082,6 +6158,9 @@ int SApplication::run()
 #endif
 			}
 		}
+
+		bTerminatePhysics = true;
+		futureFinishedPhysics.get();
 
 		return static_cast<int>(msg.wParam);
 	}

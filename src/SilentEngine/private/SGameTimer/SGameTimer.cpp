@@ -13,7 +13,7 @@
 SGameTimer::SGameTimer()
 {
 	dSecondsPerCount        = 0.0;
-	dDeltaTimeBetweenFrames = -1.0;
+	dDeltaTimeBetweenTicks = -1.0;
 
 	iResetTime   = 0;
 	iPausedTime  = 0;
@@ -46,13 +46,13 @@ void SGameTimer::tick()
 {
 	if (bOnPause)
 	{
-		dDeltaTimeBetweenFrames = 0.0;
+		dDeltaTimeBetweenTicks = 0.0;
 		return;
 	}
 
 	QueryPerformanceCounter((LARGE_INTEGER*)&iCurrentTime);
 
-	dDeltaTimeBetweenFrames = (iCurrentTime - iPrevTime) * dSecondsPerCount;
+	dDeltaTimeBetweenTicks = (iCurrentTime - iPrevTime) * dSecondsPerCount;
 
 	iPrevTime = iCurrentTime;
 
@@ -60,9 +60,9 @@ void SGameTimer::tick()
 	// processor goes into a power save mode or we get shuffled to another
 	// processor, then dDeltaTimeBetweenFrames can be negative.
 
-	if (dDeltaTimeBetweenFrames < 0.0)
+	if (dDeltaTimeBetweenTicks < 0.0)
 	{
-		dDeltaTimeBetweenFrames = 0.0;
+		dDeltaTimeBetweenTicks = 0.0;
 	}
 }
 
@@ -92,9 +92,9 @@ float SGameTimer::getTimeElapsedInSec() const
 	}
 }
 
-float SGameTimer::getDeltaTimeBetweenFramesInSec() const
+float SGameTimer::getDeltaTimeBetweenTicksInSec() const
 {
-	return static_cast<float>(dDeltaTimeBetweenFrames);
+	return static_cast<float>(dDeltaTimeBetweenTicks);
 }
 
 void SGameTimer::reset()

@@ -21,7 +21,7 @@ struct SFrameStats
 	float fTimeSpentOnWindowsMessagesInMS = 0.0f;
 	// on tick is called before drawing a frame
 	// this is the second thing that we will do before drawing a frame
-	float fTimeSpentOnUserOnTickFunctionsInMS = 0.0f;
+	float fTimeSpentOnUserOnTickFunctionInMS = 0.0f;
 	// time spent updating position of the sounds in all 3D audio components
 	// this is the third thing that we will do before drawing a frame
 	float fTimeSpentOn3DAudioUpdateInMS = 0.0f;
@@ -51,6 +51,8 @@ struct SFrameStats
 	// when fps limit is set
 	// after the frame is drawn
 	float fTimeSpentInFPSLimitSleepInMS = 0.0f;
+	// this value is independent and does not relate to the main rendering thread
+	float fTimeSpentOnUserOnPhysicsTickFunctionInMS = 0.0f;
 };
 #endif
 
