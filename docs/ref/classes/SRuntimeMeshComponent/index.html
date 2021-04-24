@@ -12,7 +12,6 @@
 		<br>
 		<a class="cpp_link_title" href="../../structs/index.html"> Structs </a>
 		<br>
-		<a class="cpp_link_title" href="../../enums/index.html"> Enums </a>
     </div>
     
 	<div class="cpp_doc">
@@ -29,21 +28,25 @@
 			<br>
 			<summary class="cpp_summary"> Public: </summary>
 			<div class="cpp_func_container">
-				<code class="cpp_function"> <code class="cpp_func_name"><a class="cpp_link" href="SRuntimeMeshComponent_func_1.html">SRuntimeMeshComponent</a></code>(std::string sComponentName); </code>
+				<code class="cpp_function"> <code class="cpp_func_name"><a class="cpp_link" href="SRuntimeMeshComponent_func_1.html">SRuntimeMeshComponent</a></code>(std::string sComponentName, bool bDisableFrustumCulling); </code>
 				<br>
 				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="setVisibility_func_1.html">setVisibility</a></code>(bool bVisible); </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="setDisableFrustumCulling_func_1.html">setDisableFrustumCulling</a></code>(bool bDisable); </code>
 				<br>
 				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="setEnableTransparency_func_1.html">setEnableTransparency</a></code>(bool bEnable); </code>
 				<br>
 				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="setUseCustomShader_func_1.html">setUseCustomShader</a></code>(SShader* pCustomShader, bool bForceChangeEvenIfSpawned = false); </code>
 				<br>
-				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="setMeshData_func_1.html">setMeshData</a></code>(const <a class="cpp_link_ref" href="../../structs/SMeshData/index.html">SMeshData</a>&amp; meshData, bool bAddedRemovedVerticesOrAddedRemovedIndices, bool bUpdateBoundingBox = false); </code>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="setMeshData_func_1.html">setMeshData</a></code>(const <a class="cpp_link_ref" href="../SMeshData/index.html">SMeshData</a>&amp; meshData, bool bAddedRemovedVerticesOrAddedRemovedIndices); </code>
 				<br>
 				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="unbindMaterial_func_1.html">unbindMaterial</a></code>(); </code>
 				<br>
 				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="setUseDefaultShader_func_1.html">setUseDefaultShader</a></code>(bool bForceUseDefaultEvenIfSpawned = false); </code>
 				<br>
 				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="setMeshMaterial_func_1.html">setMeshMaterial</a></code>(<a class="cpp_link_ref" href="../SMaterial/index.html">SMaterial</a>* pMaterial); </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="setCullDistance_func_1.html">setCullDistance</a></code>(float fCullDistance); </code>
 				<br>
 				<code class="cpp_function"> bool  <code class="cpp_func_name"><a class="cpp_link" href="setMeshTextureUVOffset_func_1.html">setMeshTextureUVOffset</a></code>(const <a class="cpp_link_ref" href="../SVector/index.html">SVector</a>&amp; vMeshTexUVOffset); </code>
 				<br>
@@ -55,6 +58,8 @@
 				<br>
 				<code class="cpp_function"> <a class="cpp_link_ref" href="../SMaterial/index.html">SMaterial</a>* <code class="cpp_func_name"><a class="cpp_link" href="getMeshMaterial_func_1.html">getMeshMaterial</a></code>(); </code>
 				<br>
+				<code class="cpp_function"> float  <code class="cpp_func_name"><a class="cpp_link" href="getCullDistance_func_1.html">getCullDistance</a></code>() const; </code>
+				<br>
 				<code class="cpp_function"> bool  <code class="cpp_func_name"><a class="cpp_link" href="getEnableTransparency_func_1.html">getEnableTransparency</a></code>() const; </code>
 				<br>
 				<code class="cpp_function"> <a class="cpp_link_ref" href="../SVector/index.html">SVector</a> <code class="cpp_func_name"><a class="cpp_link" href="getTextureUVOffset_func_1.html">getTextureUVOffset</a></code>() const; </code>
@@ -63,7 +68,7 @@
 				<br>
 				<code class="cpp_function"> float  <code class="cpp_func_name"><a class="cpp_link" href="getTextureUVRotation_func_1.html">getTextureUVRotation</a></code>() const; </code>
 				<br>
-				<code class="cpp_function"> <a class="cpp_link_ref" href="../../structs/SMeshData/index.html">SMeshData</a> <code class="cpp_func_name"><a class="cpp_link" href="getMeshData_func_1.html">getMeshData</a></code>() const; </code>
+				<code class="cpp_function"> <a class="cpp_link_ref" href="../SMeshData/index.html">SMeshData</a>* <code class="cpp_func_name"><a class="cpp_link" href="getMeshData_func_1.html">getMeshData</a></code>(); </code>
 				<br>
 				<code class="cpp_function"> SShader* <code class="cpp_func_name"><a class="cpp_link" href="getCustomShader_func_1.html">getCustomShader</a></code>() const; </code>
 				<br>

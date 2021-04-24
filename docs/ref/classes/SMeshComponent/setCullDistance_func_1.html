@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../../doc.css">
+    <title>setCullDistance - Silent Engine Documentation</title>
+</head>
+<body>
+    <div class="nav_panel">
+        <a class="cpp_link_title" href="../../classes/index.html"> Classes </a>
+		<br>
+		<a class="cpp_link_title" href="../../structs/index.html"> Structs </a>
+		<br>
+    </div>
+    
+	<div class="cpp_doc">
+		<h3 class="cpp_object"> setCullDistance </h3>
+		<div class="cpp_codeobject_desc"> used to set the cull distance, if the distance between the camera and the mesh origin point will be    equal or more that this value then the mesh will not be drawn. </div>
+		<br>
+		<code class="cpp_func_line_code"> void setCullDistance(float fCullDistance); </code>
+		<br>
+		<br>
+		----------------------------------------------
+		<br>
+		<br>
+		<div class="cpp_func_param"> Remarks </div>
+		<br>
+		<div class="cpp_func_param_desc"> if using instancing then the distance between the camera and the instance location is considered instead,    the cull distance test will be executed in the frustum culling, so if the frustum culling is disabled then the    cull distance is not gonna work too. </div>
+		<br>
+		
+	</div>
+</body>
+</html>

@@ -12,19 +12,18 @@
 		<br>
 		<a class="cpp_link_title" href="../../structs/index.html"> Structs </a>
 		<br>
-		<a class="cpp_link_title" href="../../enums/index.html"> Enums </a>
     </div>
     
 	<div class="cpp_doc">
 		<h3 class="cpp_object"> copyComputeResults </h3>
 		<div class="cpp_codeobject_desc"> use to query copy of the results of the compute shader for the next frame only. </div>
 		<br>
-		<code class="cpp_func_line_code"> bool copyComputeResults<br>(<br>&nbsp;&nbsp;&nbsp;const std::string&amp; sResourceNameToCopyFrom,<br>&nbsp;&nbsp;&nbsp;bool bBlockDraw,<br>&nbsp;&nbsp;&nbsp;std::function&lt;void(char*, size_t)&gt; callback<br>); </code>
+		<code class="cpp_func_line_code"> bool copyComputeResults<br>(<br>&nbsp;&nbsp;&nbsp;const std::vector&lt;std::string&gt;&amp; vResourceNamesToCopyFrom,<br>&nbsp;&nbsp;&nbsp;bool bBlockDraw,<br>&nbsp;&nbsp;&nbsp;std::function&lt;void(std::vector&lt;char*&gt;, std::vector&lt;size_t&gt;)&gt; callback<br>); </code>
 		<br>
 		<br>
-		<div class="cpp_func_param">sResourceNameToCopyFrom</div>
+		<div class="cpp_func_param">vResourceNamesToCopyFrom</div>
 		<br>
-		<div class="cpp_func_param_desc">the name of the resource (added through setAddData()), which will be copied after the compute shader finished work.</div>
+		<div class="cpp_func_param_desc">the names of the resources (added through setAddData()), which will be copied after the compute shader finished work.</div>
 		<br>
 		<div class="cpp_func_param">bBlockDraw</div>
 		<br>
@@ -32,7 +31,7 @@
 		<br>
 		<div class="cpp_func_param">callback</div>
 		<br>
-		<div class="cpp_func_param_desc">function which will be called after the data was copied, the first param is a pointer to the copied data    (you need to delete[] this data manually), the second param is the size of the copied data in bytes (should be equal to iDataSizeInBytes    passed to setAddData()).    An example of std::function pointing to a member    function of a class - "using namespace std::placeholders; std::function<void(char_ptr, size_t)> f = std::bind(&Foo::foo, this, _1, _2);".</div>
+		<div class="cpp_func_param_desc">function which will be called after the data was copied, the first param is the vector of pointers to the copied data    (you need to delete[] each pointer in the vector manually), the second param is the vector of sizes of the copied data in bytes (should be equal to iDataSizeInBytes    passed to setAddData()).</div>
 		<br>
 	----------------------------------------------
 	<br>

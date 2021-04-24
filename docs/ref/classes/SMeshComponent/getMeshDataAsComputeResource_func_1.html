@@ -12,19 +12,18 @@
 		<br>
 		<a class="cpp_link_title" href="../../structs/index.html"> Structs </a>
 		<br>
-		<a class="cpp_link_title" href="../../enums/index.html"> Enums </a>
     </div>
     
 	<div class="cpp_doc">
 		<h3 class="cpp_object"> getMeshDataAsComputeResource </h3>
 		<div class="cpp_codeobject_desc"> used to retrieve the mesh data as a resource for SComputeShader. </div>
 		<br>
-		<code class="cpp_func_line_code"> <a class="cpp_link_ref" href="../../structs/SMeshData/index.html">SMeshData</a>ComputeResource* getMeshDataAsComputeResource<br>(<br>&nbsp;&nbsp;&nbsp;bool bGetVertexBuffer<br>); </code>
+		<code class="cpp_func_line_code"> <a class="cpp_link_ref" href="../SMeshData/index.html">SMeshData</a>ComputeResource* getMeshDataAsComputeResource<br>(<br>&nbsp;&nbsp;&nbsp;bool bGetVertexBuffer<br>); </code>
 		<br>
 		<br>
 		<div class="cpp_func_param">bGetVertexBuffer</div>
 		<br>
-		<div class="cpp_func_param_desc">set true to get vertex buffer as a resource for SComputeShader, false for index buffer.</div>
+		<div class="cpp_func_param_desc">set true to get vertex buffer as a resource for SComputeShader, false for index buffer. 'True' will also    disable the frustum culling for this component (even if you are not using compute shader anymore).</div>
 		<br>
 	----------------------------------------------
 	<br>

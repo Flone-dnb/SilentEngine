@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../../doc.css">
+    <title>addInstance - Silent Engine Documentation</title>
+</head>
+<body>
+    <div class="nav_panel">
+        <a class="cpp_link_title" href="../../classes/index.html"> Classes </a>
+		<br>
+		<a class="cpp_link_title" href="../../structs/index.html"> Structs </a>
+		<br>
+    </div>
+    
+	<div class="cpp_doc">
+		<h3 class="cpp_object"> addInstance </h3>
+		<div class="cpp_codeobject_desc"> used to add mesh instance. </div>
+		<br>
+		<code class="cpp_func_line_code"> void addInstance<br>(<br>&nbsp;&nbsp;&nbsp;const SInstanceProps&amp; instanceData<br>); </code>
+		<br>
+		<br>
+		<div class="cpp_func_param">instanceData</div>
+		<br>
+		<div class="cpp_func_param_desc">parameters of the instance, location/rotation/scale is specified relative to the component props.</div>
+		<br>
+	----------------------------------------------
+	<br>
+	<br>
+	<div class="cpp_func_param"> Remarks </div>
+	<br>
+	<div class="cpp_func_param_desc"> if the mesh is spawned pauses the frame drawing to add a new instance so may lead to small fps drops.    Does nothing if instancing is disabled. </div>
+	<br>
+	
+</div>
+</body>
+</html>

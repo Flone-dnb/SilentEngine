@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../../doc.css">
+    <title>setDiffuseTexture - Silent Engine Documentation</title>
+</head>
+<body>
+    <div class="nav_panel">
+        <a class="cpp_link_title" href="../../classes/index.html"> Classes </a>
+		<br>
+		<a class="cpp_link_title" href="../../structs/index.html"> Structs </a>
+		<br>
+    </div>
+    
+	<div class="cpp_doc">
+		<h3 class="cpp_object"> setDiffuseTexture </h3>
+		<div class="cpp_codeobject_desc"> sets the texture for diffuse color. </div>
+		<br>
+		<code class="cpp_func_line_code"> bool setDiffuseTexture(STextureHandle textureHandle); </code>
+		<br>
+		<br>
+		----------------------------------------------
+		<br>
+		<br>
+		<div class="cpp_func_param"> Return Value </div>
+		<br>
+		<div class="cpp_func_param_desc"> true (error) if the texture is not loaded by the SApplication::loadTextureFromDiskToGPU(), false otherwise. </div>
+		<br>
+		<div class="cpp_func_param"> Remarks </div>
+		<br>
+		<div class="cpp_func_param_desc"> alpha channel of the diffuse texture controls the transparency (see setCustomTransparency() for more).    Changing the diffuse color (setDiffuseColor()) will affect the final look of the material as texture and color will blend. </div>
+		<br>
+		
+	</div>
+</body>
+</html>

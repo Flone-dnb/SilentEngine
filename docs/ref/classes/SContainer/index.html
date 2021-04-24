@@ -12,7 +12,6 @@
 		<br>
 		<a class="cpp_link_title" href="../../structs/index.html"> Structs </a>
 		<br>
-		<a class="cpp_link_title" href="../../enums/index.html"> Enums </a>
     </div>
     
 	<div class="cpp_doc">
@@ -43,21 +42,13 @@
 				<br>
 				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="removeComponentFromContainer_func_1.html">removeComponentFromContainer</a></code>(SComponent* pComponent); </code>
 				<br>
-				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="setEnableUserInputCalls_func_1.html">setEnableUserInputCalls</a></code>(bool bEnableUserInputCalls); </code>
-				<br>
-				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="setCallTick_func_1.html">setCallTick</a></code>(bool bCallTick); </code>
-				<br>
 				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="setVisibility_func_1.html">setVisibility</a></code>(bool bVisible); </code>
 				<br>
 				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="setContainerName_func_1.html">setContainerName</a></code>(const std::string&amp; sContainerName); </code>
 				<br>
 				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="unbindMaterialsFromAllComponents_func_1.html">unbindMaterialsFromAllComponents</a></code>(); </code>
 				<br>
-				<code class="cpp_function"> bool  <code class="cpp_func_name"><a class="cpp_link" href="isUserInputCallsEnabled_func_1.html">isUserInputCallsEnabled</a></code>() const; </code>
-				<br>
 				<code class="cpp_function"> bool  <code class="cpp_func_name"><a class="cpp_link" href="isVisible_func_1.html">isVisible</a></code>() const; </code>
-				<br>
-				<code class="cpp_function"> bool  <code class="cpp_func_name"><a class="cpp_link" href="getCallTick_func_1.html">getCallTick</a></code>() const; </code>
 				<br>
 				<code class="cpp_function"> std::string <code class="cpp_func_name"><a class="cpp_link" href="getContainerName_func_1.html">getContainerName</a></code>() const; </code>
 				<br>
@@ -78,27 +69,6 @@
 			</div>
 		</details>
 		<br>
-		<details open class="cpp_details">
-			<br>
-			<summary class="cpp_summary"> Protected: </summary>
-			<div class="cpp_func_container">
-				<code class="cpp_function"> virtual void <code class="cpp_func_name"><a class="cpp_link" href="onTick_func_1.html">onTick</a></code>(float fDeltaTime); </code>
-				<br>
-				<code class="cpp_function"> virtual void <code class="cpp_func_name"><a class="cpp_link" href="onMouseDown_func_1.html">onMouseDown</a></code>(<a class="cpp_link_ref" href="../SMouseKey/index.html">SMouseKey</a> mouseKey, int iMouseXPos, int iMouseYPos); </code>
-				<br>
-				<code class="cpp_function"> virtual void <code class="cpp_func_name"><a class="cpp_link" href="onMouseUp_func_1.html">onMouseUp</a></code>(<a class="cpp_link_ref" href="../SMouseKey/index.html">SMouseKey</a> mouseKey, int iMouseXPos, int iMouseYPos); </code>
-				<br>
-				<code class="cpp_function"> virtual void <code class="cpp_func_name"><a class="cpp_link" href="onMouseMove_func_1.html">onMouseMove</a></code>(int iMouseXMove, int iMouseYMove); </code>
-				<br>
-				<code class="cpp_function"> virtual void <code class="cpp_func_name"><a class="cpp_link" href="onMouseWheelMove_func_1.html">onMouseWheelMove</a></code>(bool bUp, int iMouseXPos, int iMouseYPos); </code>
-				<br>
-				<code class="cpp_function"> virtual void <code class="cpp_func_name"><a class="cpp_link" href="onKeyboardButtonDown_func_1.html">onKeyboardButtonDown</a></code>(<a class="cpp_link_ref" href="../SKeyboardKey/index.html">SKeyboardKey</a> keyboardKey); </code>
-				<br>
-				<code class="cpp_function"> virtual void <code class="cpp_func_name"><a class="cpp_link" href="onKeyboardButtonUp_func_1.html">onKeyboardButtonUp</a></code>(<a class="cpp_link_ref" href="../SKeyboardKey/index.html">SKeyboardKey</a> keyboardKey); </code>
-				<br>
-			</div>
-		</details>
-		<br>
 		<details class="cpp_details">
 			<br>
 			<summary class="cpp_summary"> Private: </summary>
@@ -111,7 +81,11 @@
 				<br>
 				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="createVertexBufferForRuntimeMeshComponents_func_1.html">createVertexBufferForRuntimeMeshComponents</a></code>(SFrameResource* pFrameResource); </code>
 				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="createInstancingDataForFrameResource_func_1.html">createInstancingDataForFrameResource</a></code>(std::vector&lt;std::unique_ptr&lt;SFrameResource&gt;&gt;* vFrameResources); </code>
+				<br>
 				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="removeVertexBufferForRuntimeMeshComponents_func_1.html">removeVertexBufferForRuntimeMeshComponents</a></code>(std::vector&lt;std::unique_ptr&lt;SFrameResource&gt;&gt;* vFrameResources, size_t&amp; iRemovedCount); </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="removeInstancingDataForFrameResources_func_1.html">removeInstancingDataForFrameResources</a></code>(std::vector&lt;std::unique_ptr&lt;SFrameResource&gt;&gt;* vFrameResources); </code>
 				<br>
 				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="getMaxVertexBufferIndexForRuntimeMeshComponents_func_1.html">getMaxVertexBufferIndexForRuntimeMeshComponents</a></code>(size_t&amp; iMaxIndex); </code>
 				<br>
@@ -124,6 +98,10 @@
 				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="addMeshesByShader_func_1.html">addMeshesByShader</a></code>(std::vector&lt;SShaderObjects&gt;* pOpaqueMeshesByShader, std::vector&lt;SShaderObjects&gt;* pTransparentMeshesByShader) const; </code>
 				<br>
 				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="removeMeshesByShader_func_1.html">removeMeshesByShader</a></code>(std::vector&lt;SShaderObjects&gt;* pOpaqueMeshesByShader, std::vector&lt;SShaderObjects&gt;* pTransparentMeshesByShader) const; </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="registerAll3DSoundComponents_func_1.html">registerAll3DSoundComponents</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="unregisterAll3DSoundComponents_func_1.html">unregisterAll3DSoundComponents</a></code>(); </code>
 				<br>
 			</div>
 		</details>

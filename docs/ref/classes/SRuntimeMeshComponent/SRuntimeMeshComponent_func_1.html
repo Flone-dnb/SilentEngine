@@ -12,17 +12,20 @@
 		<br>
 		<a class="cpp_link_title" href="../../structs/index.html"> Structs </a>
 		<br>
-		<a class="cpp_link_title" href="../../enums/index.html"> Enums </a>
     </div>
     
 	<div class="cpp_doc">
 		<h3 class="cpp_object"> SRuntimeMeshComponent </h3>
-		<div class="cpp_codeobject_desc">  </div>
+		<div class="cpp_codeobject_desc"> constructor function. </div>
 		<br>
-		<code class="cpp_func_line_code"> SRuntimeMeshComponent(std::string sComponentName); </code>
+		<code class="cpp_func_line_code"> SRuntimeMeshComponent<br>(<br>&nbsp;&nbsp;&nbsp;std::string sComponentName,<br>&nbsp;&nbsp;&nbsp;bool bDisableFrustumCulling<br>); </code>
 		<br>
 		<br>
-		
-	</div>
+		<div class="cpp_func_param">bDisableFrustumCulling</div>
+		<br>
+		<div class="cpp_func_param_desc">set to true if the mesh data of this component will be changing very rapidly (like moving particles for example),    and so we won't recalculate the object's bounds on every setMeshData() call for frustum culling (which will disable the frustum culling    for this component only, but slightly reduce the CPU load and... well... increase the GPU load - you should probably benchmark    this and see what's better for your game). You can change this setting using the setDisableFrustumCulling() function.</div>
+		<br>
+	
+</div>
 </body>
 </html>

@@ -12,7 +12,6 @@
 		<br>
 		<a class="cpp_link_title" href="../../structs/index.html"> Structs </a>
 		<br>
-		<a class="cpp_link_title" href="../../enums/index.html"> Enums </a>
     </div>
     
 	<div class="cpp_doc">
@@ -51,7 +50,7 @@
 				<br>
 				<code class="cpp_function"> static bool  <code class="cpp_func_name"><a class="cpp_link" href="close_func_1.html">close</a></code>(); </code>
 				<br>
-				<code class="cpp_function"> void    <code class="cpp_func_name"><a class="cpp_link" href="setGlobalVisualSettings_func_1.html">setGlobalVisualSettings</a></code>(SGlobalVisualSettings settings); </code>
+				<code class="cpp_function"> void    <code class="cpp_func_name"><a class="cpp_link" href="setGlobalVisualSettings_func_1.html">setGlobalVisualSettings</a></code>(const SGlobalVisualSettings&amp; settings); </code>
 				<br>
 				<code class="cpp_function"> SGlobalVisualSettings <code class="cpp_func_name"><a class="cpp_link" href="getGlobalVisualSettings_func_1.html">getGlobalVisualSettings</a></code>(); </code>
 				<br>
@@ -71,7 +70,7 @@
 				<br>
 				<code class="cpp_function"> bool   <code class="cpp_func_name"><a class="cpp_link" href="unloadTextureFromGPU_func_1.html">unloadTextureFromGPU</a></code>(STextureHandle&amp; textureHandle); </code>
 				<br>
-				<code class="cpp_function"> SShader*  <code class="cpp_func_name"><a class="cpp_link" href="compileCustomShader_func_1.html">compileCustomShader</a></code>(const std::wstring&amp; sPathToShaderFile,      const std::vector&lt;std::string&gt;&amp; vCustomMaterialNames =; </code>
+				<code class="cpp_function"> SShader*  <code class="cpp_func_name"><a class="cpp_link" href="compileCustomShader_func_1.html">compileCustomShader</a></code>(const std::wstring&amp; sPathToShaderFile,      const SCustomShaderProperties&amp; customProps, SCustomShaderResources** pOutCustomResources = nullptr); </code>
 				<br>
 				<code class="cpp_function"> void   <code class="cpp_func_name"><a class="cpp_link" href="getCompiledCustomShaders_func_1.html">getCompiledCustomShaders</a></code>(std::vector&lt;SShader*&gt;* pvShaders); </code>
 				<br>
@@ -97,9 +96,13 @@
 				<br>
 				<code class="cpp_function"> void   <code class="cpp_func_name"><a class="cpp_link" href="setWindowTitleText_func_1.html">setWindowTitleText</a></code>(const std::wstring&amp; sTitleText); </code>
 				<br>
-				<code class="cpp_function"> void   <code class="cpp_func_name"><a class="cpp_link" href="setInitShowWindowTitleBar_func_1.html">setInitShowWindowTitleBar</a></code>(bool bShowTitleBar); </code>
+				<code class="cpp_function"> bool   <code class="cpp_func_name"><a class="cpp_link" href="setInitShowWindowTitleBar_func_1.html">setInitShowWindowTitleBar</a></code>(bool bShowTitleBar); </code>
+				<br>
+				<code class="cpp_function"> bool   <code class="cpp_func_name"><a class="cpp_link" href="setInitPhysicsTicksPerSecond_func_1.html">setInitPhysicsTicksPerSecond</a></code>(int iTicksPerSecond = 60); </code>
 				<br>
 				<code class="cpp_function"> <a class="cpp_link_ref" href="../SCamera/index.html">SCamera</a>*    <code class="cpp_func_name"><a class="cpp_link" href="getCamera_func_1.html">getCamera</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> SAudioEngine*   <code class="cpp_func_name"><a class="cpp_link" href="getAudioEngine_func_1.html">getAudioEngine</a></code>(); </code>
 				<br>
 				<code class="cpp_function"> static SApplication* <code class="cpp_func_name"><a class="cpp_link" href="getApp_func_1.html">getApp</a></code>(); </code>
 				<br>
@@ -115,6 +118,8 @@
 				<br>
 				<code class="cpp_function"> void     <code class="cpp_func_name"><a class="cpp_link" href="showMessageBox_func_1.html">showMessageBox</a></code>(const std::wstring&amp; sMessageBoxTitle, const std::wstring&amp; sMessageText) const; </code>
 				<br>
+				<code class="cpp_function"> void     <code class="cpp_func_name"><a class="cpp_link" href="openInternetURL_func_1.html">openInternetURL</a></code>(const std::wstring&amp; sURL); </code>
+				<br>
 				<code class="cpp_function"> void     <code class="cpp_func_name"><a class="cpp_link" href="makeOneCopyOfScreenPixelsToCustomBuffer_func_1.html">makeOneCopyOfScreenPixelsToCustomBuffer</a></code>(unsigned char* pPixels); </code>
 				<br>
 			</div>
@@ -127,6 +132,8 @@
 				<code class="cpp_function"> virtual void <code class="cpp_func_name"><a class="cpp_link" href="onRun_func_1.html">onRun</a></code>(); </code>
 				<br>
 				<code class="cpp_function"> virtual void <code class="cpp_func_name"><a class="cpp_link" href="onTick_func_1.html">onTick</a></code>(float fDeltaTime); </code>
+				<br>
+				<code class="cpp_function"> virtual void <code class="cpp_func_name"><a class="cpp_link" href="onPhysicsTick_func_1.html">onPhysicsTick</a></code>(float fDeltaTime); </code>
 				<br>
 				<code class="cpp_function"> virtual void <code class="cpp_func_name"><a class="cpp_link" href="onMouseDown_func_1.html">onMouseDown</a></code>(<a class="cpp_link_ref" href="../SMouseKey/index.html">SMouseKey</a> mouseKey, int iMouseXPos, int iMouseYPos); </code>
 				<br>
@@ -151,6 +158,10 @@
 				<code class="cpp_function"> virtual void <code class="cpp_func_name"><a class="cpp_link" href="onHideEvent_func_1.html">onHideEvent</a></code>(); </code>
 				<br>
 				<code class="cpp_function"> virtual void <code class="cpp_func_name"><a class="cpp_link" href="onShowEvent_func_1.html">onShowEvent</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> virtual void <code class="cpp_func_name"><a class="cpp_link" href="onLoseFocus_func_1.html">onLoseFocus</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> virtual void <code class="cpp_func_name"><a class="cpp_link" href="onGainFocus_func_1.html">onGainFocus</a></code>(); </code>
 				<br>
 			</div>
 		</details>
@@ -185,7 +196,7 @@
 				<br>
 				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="createFrameResources_func_1.html">createFrameResources</a></code>(); </code>
 				<br>
-				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="createRootSignature_func_1.html">createRootSignature</a></code>(SCustomShaderResources* pCustomShaderResources = nullptr, bool bUseTextures = false); </code>
+				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="createRootSignature_func_1.html">createRootSignature</a></code>(SCustomShaderResources* pCustomShaderResources = nullptr, bool bUseTextures = false, bool bUseInstancing = false); </code>
 				<br>
 				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="createShadersAndInputLayout_func_1.html">createShadersAndInputLayout</a></code>(); </code>
 				<br>
@@ -221,11 +232,11 @@
 				<br>
 				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="setMSAAEnabled_func_1.html">setMSAAEnabled</a></code>(bool bEnable); </code>
 				<br>
-				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="setMSAASampleCount_func_1.html">setMSAASampleCount</a></code>(<a class="cpp_link_ref" href="../../enums/MSAASampleCount/index.html">MSAASampleCount</a> eSampleCount); </code>
+				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="setMSAASampleCount_func_1.html">setMSAASampleCount</a></code>(MSAASampleCount eSampleCount); </code>
 				<br>
 				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="isMSAAEnabled_func_1.html">isMSAAEnabled</a></code>() const; </code>
 				<br>
-				<code class="cpp_function"> <a class="cpp_link_ref" href="../../enums/MSAASampleCount/index.html">MSAASampleCount</a> <code class="cpp_func_name"><a class="cpp_link" href="getMSAASampleCount_func_1.html">getMSAASampleCount</a></code>() const; </code>
+				<code class="cpp_function"> MSAASampleCount <code class="cpp_func_name"><a class="cpp_link" href="getMSAASampleCount_func_1.html">getMSAASampleCount</a></code>() const; </code>
 				<br>
 				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="setFullscreenWithCurrentResolution_func_1.html">setFullscreenWithCurrentResolution</a></code>(bool bFullScreen); </code>
 				<br>
@@ -242,8 +253,6 @@
 				<code class="cpp_function"> <a class="cpp_link_ref" href="../SVector/index.html">SVector</a> <code class="cpp_func_name"><a class="cpp_link" href="getBackBufferFillColor_func_1.html">getBackBufferFillColor</a></code>() const; </code>
 				<br>
 				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="isWireframeModeEnabled_func_1.html">isWireframeModeEnabled</a></code>() const; </code>
-				<br>
-				<code class="cpp_function"> unsigned long long <code class="cpp_func_name"><a class="cpp_link" href="getTriangleCountInWorld_func_1.html">getTriangleCountInWorld</a></code>(); </code>
 				<br>
 				<code class="cpp_function"> std::vector&lt;std::wstring&gt; <code class="cpp_func_name"><a class="cpp_link" href="getSupportedDisplayAdapters_func_1.html">getSupportedDisplayAdapters</a></code>() const; </code>
 				<br>
