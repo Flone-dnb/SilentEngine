@@ -41,7 +41,7 @@ public:
 	"std::function<void(void)> f = std::bind(&Foo::func, this);".
 	*/
 	void setCallbackOnTimeout(std::function<void(void)> function, float fTimeInSecToTimeout, bool bLooping, float fTimerAccuracyInSec);
-	void setCallbackOnTimeout(std::function<void(char[64])> function, char customData[64], float fTimeInSecToTimeout, bool bLooping, float fTimerAccuracyInSec);
+	void setCallbackOnTimeout(std::function<void(char[STIMER_CUSTOM_DATA_SIZE])> function, char customData[STIMER_CUSTOM_DATA_SIZE], float fTimeInSecToTimeout, bool bLooping, float fTimerAccuracyInSec);
 
 	//@@Function
 	/*
@@ -51,10 +51,10 @@ public:
 
 	//@@Function
 	/*
-	* desc: stops the timer and callback timer if the setCallbackOnTimeout() and setTime() was called. After
+	* desc: stops the timer and the callback timer if the setCallbackOnTimeout() was called. After
 	calling this function getElapsedTimeInSec() and getElapsedTimeInMS() will always return 0.
-	* remarks: if you've called setCallbackOnTimeout(), this function will block current thread
-	until the callback timer stopped (this wait (block) will take fTimerAccuracyInSec).
+	* remarks: if you've called setCallbackOnTimeout(), this function will block the current thread
+	until the callback timer stopped.
 	*/
 	void stop();
 
