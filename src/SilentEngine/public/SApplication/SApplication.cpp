@@ -55,13 +55,13 @@ bool SApplication::close()
 		}
 		else
 		{
-			MessageBox(0, L"An error occurred at SApplication::close(). Error: run() should be called first.", L"Error", 0);
+			SError::showErrorMessageBox(L"SApplication::close()", L"run() should be called first.");
 			return true;
 		}
 	}
 	else
 	{
-		MessageBox(0, L"An error occurred at SApplication::close(). Error: an application instance is not created (pApp was nullptr).", L"Error", 0);
+		SError::showErrorMessageBox(L"SApplication::close()", L"an application instance is not created (pApp was nullptr).");
 		return true;
 	}
 }
@@ -1180,7 +1180,7 @@ bool SApplication::setInitPreferredDisplayAdapter(std::wstring sPreferredDisplay
 	}
 	else
 	{
-		MessageBox(0, L"An error occurred at SApplication::setInitPreferredDisplayAdapter(). Error: this function should be called before init() call.", L"Error", 0);
+		SError::showErrorMessageBox(L"SApplication::setInitPreferredDisplayAdapter()", L"this function should be called before init() call.");
 		return true;
 	}
 }
@@ -1194,7 +1194,7 @@ bool SApplication::setInitPreferredOutputAdapter(std::wstring sPreferredOutputAd
 	}
 	else
 	{
-		MessageBox(0, L"An error occurred at SApplication::setInitPreferredOutputAdapter(). Error: this function should be called before init() call.", L"Error", 0);
+		SError::showErrorMessageBox(L"SApplication::setInitPreferredOutputAdapter()", L"this function should be called before init() call.");
 		return true;
 	}
 }
@@ -1208,7 +1208,7 @@ bool SApplication::setInitFullscreen(bool bFullscreen)
 	}
 	else
 	{
-		MessageBox(0, L"An error occurred at SApplication::setInitFullscreen(). Error: this function should be called before init() call.", L"Error", 0);
+		SError::showErrorMessageBox(L"SApplication::setInitFullscreen()", L"this function should be called before init() call.");
 		return true;
 	}
 }
@@ -1222,7 +1222,7 @@ bool SApplication::setInitEnableVSync(bool bEnable)
 	}
 	else
 	{
-		MessageBox(0, L"An error occurred at SApplication::setInitEnableVSync(). Error: this function should be called before init() call.", L"Error", 0);
+		SError::showErrorMessageBox(L"SApplication::setInitEnableVSync()", L"this function should be called before init() call.");
 		return true;
 	}
 }
@@ -1384,7 +1384,7 @@ bool SApplication::setFullscreenWithCurrentResolution(bool bFullscreen)
 	}
 	else
 	{
-		MessageBox(0, L"An error occurred at SApplication::setFullscreen(). Error: init() should be called first.", L"Error", 0);
+		SError::showErrorMessageBox(L"SApplication::setFullscreenWithCurrentResolution()", L"init() should be called first.");
 		return true;
 	}
 }
@@ -1446,7 +1446,7 @@ bool SApplication::setScreenResolution(SScreenResolution screenResolution)
 	}
 	else
 	{
-		MessageBox(0, L"An error occurred at SApplication::setScreenResolution(). Error: init() should be called first.", L"Error", 0);
+		SError::showErrorMessageBox(L"SApplication::setScreenResolution()", L"init() should be called first.");
 		return true;
 	}
 }
@@ -1898,7 +1898,7 @@ bool SApplication::getCurrentScreenResolution(SScreenResolution* pScreenResoluti
 	}
 	else
 	{
-		MessageBox(0, L"An error occurred at SApplication::getCurrentScreenResolution(). Error: init() should be called first.", L"Error", 0);
+		SError::showErrorMessageBox(L"SApplication::getCurrentScreenResolution()", L"init() should be called first.");
 		return true;
 	}
 }
@@ -1933,7 +1933,7 @@ bool SApplication::getTimeElapsedFromStart(float* fTimeInSec) const
 	}
 	else
 	{
-		MessageBox(0, L"An error occurred at SApplication::getTimeElapsedNonPausedFromStart(). Error: run() should be called first.", L"Error", 0);
+		SError::showErrorMessageBox(L"SApplication::getTimeElapsedFromStart()", L"run() should be called first.");
 		return true;
 	}
 }
@@ -1947,7 +1947,7 @@ bool SApplication::getFPS(int* iFPS) const
 	}
 	else
 	{
-		MessageBox(0, L"An error occurred at SApplication::getFPS(). Error: run() should be called first.", L"Error", 0);
+		SError::showErrorMessageBox(L"SApplication::getFPS()", L"run() should be called first.");
 		return true;
 	}
 }
@@ -1961,7 +1961,7 @@ bool SApplication::getTimeToRenderFrame(float* fTimeInMS) const
 	}
 	else
 	{
-		MessageBox(0, L"An error occurred at SApplication::getFPS(). Error: run() should be called first.", L"Error", 0);
+		SError::showErrorMessageBox(L"SApplication::getTimeToRenderFrame()", L"run() should be called first.");
 		return true;
 	}
 }
@@ -2221,7 +2221,7 @@ bool SApplication::onResize()
 	}
 	else
 	{
-		MessageBox(0, L"An error occurred at SApplication::onResize(). Error: init() should be called first.", L"Error", 0);
+		SError::showErrorMessageBox(L"SApplication::onResize()", L"init() should be called first.");
 
 		return true;
 	}
@@ -3503,10 +3503,7 @@ bool SApplication::initD3DFirstStage()
 
 	if (getFirstSupportedDisplayAdapter(*pAdapter.GetAddressOf()))
 	{
-		MessageBox(0, 
-			L"An error occurred at SApplication::initD3DFirstStage::getFirstSupportedDisplayAdapter(). Error: Can't find a supported display adapter.",
-			L"Error",
-			0);
+		SError::showErrorMessageBox(L"SApplication::initD3DFirstStage::getFirstSupportedDisplayAdapter()", L"can't find a supported display adapter.");
 
 		return true;
 	}
@@ -3581,10 +3578,7 @@ bool SApplication::initD3DFirstStage()
 
 	if (getFirstOutputDisplay(*pOutput.GetAddressOf()))
 	{
-		MessageBox(0, 
-			L"An error occurred at SApplication::initDirect3D::getFirstOutputAdapter(). Error: Can't find any output adapters for current display adapter.",
-			L"Error",
-			0);
+		SError::showErrorMessageBox(L"SApplication::initDirect3D::getFirstOutputAdapter()", L"can't find any output adapters for current display adapter.");
 
 		return true;
 	}
