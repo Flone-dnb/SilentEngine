@@ -70,7 +70,7 @@ public:
 	int iTexSRVHeapIndex = -1;
 };
 
-//@@Struct
+//@@Class
 /*
 The class represents material properties.
 */

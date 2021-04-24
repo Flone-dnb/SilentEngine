@@ -174,9 +174,9 @@ public:
 	bool bVertexBuffer;
 };
 
-//@@Struct
+//@@Class
 /*
-The struct represents the 3D-geometry data.
+The class represents the 3D-geometry data.
 */
 class SMeshData
 {
