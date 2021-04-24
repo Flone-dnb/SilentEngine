@@ -712,7 +712,7 @@ bool SSound::applyNew3DSoundProps(SEmitterProps &emitterProps)
 		X3DAUDIO_DISTANCE_CURVE volumeCurve;
 		if (sound3DProps.vCustomVolumeCurve.size() > 0)
 		{
-			volumeCurve.PointCount = sound3DProps.vCustomVolumeCurve.size();
+			volumeCurve.PointCount = static_cast<UINT32>(sound3DProps.vCustomVolumeCurve.size());
 			volumeCurve.pPoints = &sound3DProps.vCustomVolumeCurve[0];
 			emitter.pVolumeCurve = &volumeCurve;
 		}

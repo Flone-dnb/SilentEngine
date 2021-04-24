@@ -10,9 +10,11 @@
 // STL
 #include <vector>
 
+// XAudio2
+#include <xaudio2.h>
+
 class SAudioEngine;
 class SAudioEffect;
-class IXAudio2SubmixVoice;
 
 //@@Class
 /*
