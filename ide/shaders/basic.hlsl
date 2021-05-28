@@ -1,10 +1,3 @@
-// ******************************************************************
-// This file is part of the Silent Engine.
-// Copyright Aleksandr "Flone" Tretyakov (github.com/Flone-dnb).
-// Licensed under the ZLib license.
-// Refer to the LICENSE file included.
-// ******************************************************************
-
 #include "light_tools.hlsl"
 
 Texture2D diffuseTexture : register(t0);
