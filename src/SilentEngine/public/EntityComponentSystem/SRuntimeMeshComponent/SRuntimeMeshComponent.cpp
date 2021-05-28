@@ -137,14 +137,12 @@ void SRuntimeMeshComponent::setMeshData(const SMeshData& meshData, bool bAddedRe
 	{
 		if (meshData.getVerticesCount() > UINT_MAX)
 		{
-			SError::showErrorMessageBox(L"SRuntimeMeshComponent::setMeshData()",
-				L"the number of vertices in the specified mesh data has exceeded the maximum amount of vertices (the maximum is "
-				+ std::to_wstring(UINT_MAX) + L").");
+			SError::showErrorMessageBoxAndLog("the number of vertices in the specified mesh data has exceeded the maximum amount of vertices (the maximum is "
+				+ std::to_string(UINT_MAX) + ").");
 		}
 		else if (meshData.getVerticesCount() * sizeof(SVertex) > UINT_MAX)
 		{
-			SError::showErrorMessageBox(L"SRuntimeMeshComponent::setMeshData()",
-				L"the number of vertices in the specified mesh data is too big, can't continue because an overflow will occur.");
+			SError::showErrorMessageBoxAndLog("the number of vertices in the specified mesh data is too big, can't continue because an overflow will occur.");
 		}
 
 		// to UINT because views require UINT
@@ -153,17 +151,15 @@ void SRuntimeMeshComponent::setMeshData(const SMeshData& meshData, bool bAddedRe
 
 		if (meshData.getIndicesCount() > UINT_MAX)
 		{
-			SError::showErrorMessageBox(L"SRuntimeMeshComponent::setMeshData()",
-				L"the number of indices in the specified mesh data has exceeded the maximum amount of indices (the maximum is "
-				+ std::to_wstring(UINT_MAX) + L").");
+			SError::showErrorMessageBoxAndLog("the number of indices in the specified mesh data has exceeded the maximum amount of indices (the maximum is "
+				+ std::to_string(UINT_MAX) + ").");
 		}
 
 		if (meshData.hasIndicesMoreThan16Bits())
 		{
 			if (meshData.getIndicesCount() * sizeof(std::uint32_t) > UINT_MAX)
 			{
-				SError::showErrorMessageBox(L"SRuntimeMeshComponent::setMeshData()",
-					L"the number of indices in the specified mesh data is too big, can't continue because an overflow will occur.");
+				SError::showErrorMessageBoxAndLog("the number of indices in the specified mesh data is too big, can't continue because an overflow will occur.");
 			}
 
 			renderData.pGeometry->indexFormat = DXGI_FORMAT_R32_UINT;
@@ -173,8 +169,7 @@ void SRuntimeMeshComponent::setMeshData(const SMeshData& meshData, bool bAddedRe
 		{
 			if (meshData.getIndicesCount() * sizeof(std::uint16_t) > UINT_MAX)
 			{
-				SError::showErrorMessageBox(L"SRuntimeMeshComponent::setMeshData()",
-					L"the number of indices in the specified mesh data is too big, can't continue because an overflow will occur.");
+				SError::showErrorMessageBoxAndLog("the number of indices in the specified mesh data is too big, can't continue because an overflow will occur.");
 			}
 
 			renderData.pGeometry->indexFormat = DXGI_FORMAT_R16_UINT;
@@ -224,7 +219,7 @@ bool SRuntimeMeshComponent::setMeshMaterial(SMaterial* pMaterial)
 	{
 		if (pMaterial->bUsedInBundle)
 		{
-			SError::showErrorMessageBox(L"SRuntimeMeshComponent::setMeshMaterial", L"The given material is used in a bundle. It cannot be used here.");
+			SError::showErrorMessageBoxAndLog("the given material is used in a bundle. It cannot be used here.");
 
 			return true;
 		}
@@ -237,7 +232,7 @@ bool SRuntimeMeshComponent::setMeshMaterial(SMaterial* pMaterial)
 	}
 	else
 	{
-		SError::showErrorMessageBox(L"SRuntimeMeshComponent::setMeshMaterial", L"The given material is not registered. Register the material "
+		SError::showErrorMessageBoxAndLog("the given material is not registered. Register the material "
 			"using the SApplication::registerMaterial() function before using it.");
 
 		return true;
@@ -356,7 +351,7 @@ void SRuntimeMeshComponent::createIndexBuffer()
 	/*HRESULT hresult = D3DCreateBlob(renderData.pGeometry->iIndexBufferSizeInBytes, &renderData.pGeometry->pIndexBufferCPU);
 	if (FAILED(hresult))
 	{
-		SError::showErrorMessageBox(hresult, L"SMeshComponent::createGeometryBuffers::D3DCreateBlob()");
+		SError::showErrorMessageBoxAndLog(hresult, L"SMeshComponent::createGeometryBuffers::D3DCreateBlob()");
 		return;
 	}*/
 

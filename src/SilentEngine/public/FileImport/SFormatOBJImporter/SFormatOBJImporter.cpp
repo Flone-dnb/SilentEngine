@@ -25,7 +25,7 @@ bool SFormatOBJImporter::importMeshDataFromFile(const std::wstring& sPathToFile,
 
 	if (objFile.is_open() == false)
 	{
-		SError::showErrorMessageBox(L"SFormatOBJImporter::importMeshDataFromFile", L"The specified file cannot be opened, does it exist?");
+		SError::showErrorMessageBoxAndLog("the specified file cannot be opened, does it exist?");
 		return true;
 	}
 	else
@@ -39,7 +39,7 @@ bool SFormatOBJImporter::importMeshDataFromFile(const std::wstring& sPathToFile,
 	{
 		// Not an .obj file.
 
-		SError::showErrorMessageBox(L"SFormatOBJImporter::importMeshDataFromFile", L"File format is not '.obj'.");
+		SError::showErrorMessageBoxAndLog("file format is not '.obj'.");
 		return true;
 	}
 
@@ -118,7 +118,7 @@ bool SFormatOBJImporter::importMeshDataFromFile(const std::wstring& sPathToFile,
 				{
 					objFile.close();
 
-					SError::showErrorMessageBox(L"SFormatOBJImporter::importMeshDataFromFile", L"Object faces are not triangulated!");
+					SError::showErrorMessageBoxAndLog("object faces are not triangulated.");
 
 					return true;
 				}

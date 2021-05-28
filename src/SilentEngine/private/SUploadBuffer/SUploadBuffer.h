@@ -54,7 +54,7 @@ public:
 
 		if (FAILED(hresult))
 		{
-			SError::showErrorMessageBox(hresult, L"SUploadBuffer::SUploadBuffer::ID3D12Device::CreateCommittedResource()");
+			SError::showErrorMessageBoxAndLog(hresult);
 		}
 
 		hresult = pUploadBuffer->Map(0, nullptr, reinterpret_cast<void**>(&pMappedData));

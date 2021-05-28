@@ -54,7 +54,7 @@ bool SComputeShader::copyComputeResults(const std::vector<std::string>& vResourc
 
 	if (bFoundAll == false)
 	{
-		SError::showErrorMessageBox(L"SComputeShader::copyComputeResults()", L"Not all resource names were found.");
+		SError::showErrorMessageBoxAndLog("Not all resource names were found.");
 		return true;
 	}
 
@@ -78,7 +78,7 @@ bool SComputeShader::startShaderExecution(unsigned int iThreadGroupCountX, unsig
 
 	if (iThreadGroupCountX < 1 || iThreadGroupCountY < 1 || iThreadGroupCountZ < 1)
 	{
-		SError::showErrorMessageBox(L"SComputeShader::startShaderExecution()", L"iThreadGroupCount must be at least 1.");
+		SError::showErrorMessageBoxAndLog("iThreadGroupCount must be at least 1.");
 		return true;
 	}
 
@@ -182,14 +182,14 @@ bool SComputeShader::setAddData(bool bReadOnlyData, const std::string& sResource
 				IID_PPV_ARGS(pNewResource->pResource.GetAddressOf()));
 			if (FAILED(hresult))
 			{
-				SError::showErrorMessageBox(hresult, L"SComputeShader::setAddData::ID3D12Device::CreateCommittedResource() (read-write without init data)");
+				SError::showErrorMessageBoxAndLog(hresult);
 				delete pNewResource;
 				return true;
 			}
 		}
 		else
 		{
-			SError::showErrorMessageBox(L"SComputeShader::setAddData()", L"cannot create read only resource without init data.");
+			SError::showErrorMessageBoxAndLog("cannot create read only resource without init data.");
 			delete pNewResource;
 			return true;
 		}
@@ -231,7 +231,7 @@ bool SComputeShader::setAddMeshResource(SMeshDataComputeResource* pResource, con
 	}
 	else
 	{
-		SError::showErrorMessageBox(L"SComputeShader::setAddMeshResource()", L"SComponent type is not SCT_MESH!");
+		SError::showErrorMessageBoxAndLog("SComponent type is not SCT_MESH!");
 	}
 	pNewResource->pMeshComputeResource = pResource;
 
@@ -322,14 +322,14 @@ SComputeShader::~SComputeShader()
 		if ((iLeftRef != 0) && (vShaderResources[i]->pMeshComputeResource == nullptr))
 		{
 			// This resource is added using setAddData().
-			SError::showErrorMessageBox(L"SComputeShader::~SComputeShader()", L"shader resource left ref. count is not 0.");
+			SError::showErrorMessageBoxAndLog("shader resource left ref. count is not 0.");
 		}
 
 		iLeftRef = vShaderResources[i]->pUploadResource.Reset();
 
 		if (iLeftRef != 0)
 		{
-			SError::showErrorMessageBox(L"SComputeShader::~SComputeShader()", L"shader upload resource left ref. count is not 0.");
+			SError::showErrorMessageBoxAndLog("shader upload resource left ref. count is not 0.");
 		}
 
 		if (vShaderResources[i]->pMeshComputeResource)
@@ -350,13 +350,13 @@ SComputeShader::~SComputeShader()
 	ULONG iLeftRef = pComputeRootSignature.Reset();
 	if (iLeftRef != 0)
 	{
-		SError::showErrorMessageBox(L"SComputeShader::~SComputeShader()", L"compute root signature left ref. count is not 0.");
+		SError::showErrorMessageBoxAndLog("compute root signature left ref. count is not 0.");
 	}
 
 	iLeftRef = pComputePSO.Reset();
 	if (iLeftRef != 0)
 	{
-		SError::showErrorMessageBox(L"SComputeShader::~SComputeShader()", L"compute pso left ref. count is not 0.");
+		SError::showErrorMessageBoxAndLog("compute pso left ref. count is not 0.");
 	}
 
 	pCompiledShader.Release();
@@ -385,7 +385,7 @@ void SComputeShader::updateMeshResource(const std::string& sResourceName)
 			}
 			else
 			{
-				SError::showErrorMessageBox(L"SComputeShader::updateMeshResource()", L"SComponent type is not SCT_MESH!");
+				SError::showErrorMessageBoxAndLog("SComponent type is not SCT_MESH.");
 			}
 
 			break;
@@ -476,7 +476,7 @@ void SComputeShader::createRootSignatureAndPSO()
 
 	if (FAILED(hresult))
 	{
-		SError::showErrorMessageBox(hresult, L"SComputeShader::createRootSignatureAndPSO::ID3D12Device::D3D12SerializeRootSignature()");
+		SError::showErrorMessageBoxAndLog(hresult);
 		delete[] pSlotRootParameter;
 		return;
 	}
@@ -489,7 +489,7 @@ void SComputeShader::createRootSignatureAndPSO()
 	);
 	if (FAILED(hresult))
 	{
-		SError::showErrorMessageBox(hresult, L"SComputeShader::createRootSignatureAndPSO::ID3D12Device::CreateRootSignature()");
+		SError::showErrorMessageBoxAndLog(hresult);
 		delete[] pSlotRootParameter;
 		return;
 	}
@@ -510,7 +510,7 @@ void SComputeShader::createRootSignatureAndPSO()
 	hresult = pDevice->CreateComputePipelineState(&horzBlurPSO, IID_PPV_ARGS(&pComputePSO));
 	if (FAILED(hresult))
 	{
-		SError::showErrorMessageBox(hresult, L"SComputeShader::createRootSignatureAndPSO::ID3D12Device::CreateGraphicsPipelineState()");
+		SError::showErrorMessageBoxAndLog(hresult);
 		return;
 	}
 }

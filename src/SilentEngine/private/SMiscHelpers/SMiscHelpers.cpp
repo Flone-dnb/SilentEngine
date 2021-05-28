@@ -50,7 +50,7 @@ Microsoft::WRL::ComPtr<ID3D12Resource> SMiscHelpers::createBufferWithData(ID3D12
 			IID_PPV_ARGS(pDefaultBuffer.GetAddressOf()));
 		if (FAILED(hresult))
 		{
-			SError::showErrorMessageBox(hresult, L"SMiscHelpers::createDefaultBuffer::ID3D12Device::CreateCommittedResource() (default buffer)");
+			SError::showErrorMessageBoxAndLog(hresult);
 			return nullptr;
 		}
 	}
@@ -68,7 +68,7 @@ Microsoft::WRL::ComPtr<ID3D12Resource> SMiscHelpers::createBufferWithData(ID3D12
 			IID_PPV_ARGS(pDefaultBuffer.GetAddressOf()));
 		if (FAILED(hresult))
 		{
-			SError::showErrorMessageBox(hresult, L"SMiscHelpers::createDefaultBuffer::ID3D12Device::CreateCommittedResource() (default buffer)");
+			SError::showErrorMessageBoxAndLog(hresult);
 			return nullptr;
 		}
 	}
@@ -89,7 +89,7 @@ Microsoft::WRL::ComPtr<ID3D12Resource> SMiscHelpers::createBufferWithData(ID3D12
 		IID_PPV_ARGS(pOutUploadBuffer.GetAddressOf()));
 	if (FAILED(hresult))
 	{
-		SError::showErrorMessageBox(hresult, L"SMiscHelpers::createDefaultBuffer::ID3D12Device::CreateCommittedResource() (upload heap)");
+		SError::showErrorMessageBoxAndLog(hresult);
 		return nullptr;
 	}
 
@@ -166,7 +166,7 @@ ATL::CComPtr<IDxcBlob> SMiscHelpers::compileShader(const std::wstring& sPathToSh
 	}
 	else
 	{
-		SError::showErrorMessageBox(L"SMiscHelpers::compileShader()", L"file at " + sPathToShader + L" does not exist.");
+		SError::showErrorMessageBoxAndLog("file does not exist.");
 		return nullptr;
 	}
 
@@ -186,7 +186,7 @@ ATL::CComPtr<IDxcBlob> SMiscHelpers::compileShader(const std::wstring& sPathToSh
 //
 //	if (FAILED(hresult))
 //	{
-//		SError::showErrorMessageBox(hresult, L"SMiscHelpers::compileShader::D3DCompileFromFile()");
+//		SError::showErrorMessageBoxAndLog(hresult, L"SMiscHelpers::compileShader::D3DCompileFromFile()");
 //		return nullptr;
 //	}
 	// --- FXC ---
@@ -269,9 +269,9 @@ ATL::CComPtr<IDxcBlob> SMiscHelpers::compileShader(const std::wstring& sPathToSh
 	if (FAILED(hrStatus))
 	{
 #if defined(DEBUG) || defined(_DEBUG) 
-		SError::showErrorMessageBox(L"SMiscHelpers::compileShader::GetStatus()", L"There was a shader compilation error (see output).");
+		SError::showErrorMessageBoxAndLog("there was a shader compilation error (see output).");
 #else
-		SError::showErrorMessageBox(L"SMiscHelpers::compileShader::GetStatus()", L"There was a shader compilation error.");
+		SError::showErrorMessageBoxAndLog("there was a shader compilation error.");
 #endif
 		return nullptr;
 	}
@@ -283,7 +283,7 @@ ATL::CComPtr<IDxcBlob> SMiscHelpers::compileShader(const std::wstring& sPathToSh
 	pResults->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&pShader), &pShaderName);
 	if (pShader == nullptr)
 	{
-		SError::showErrorMessageBox(L"SMiscHelpers::compileShader::GetStatus()", L"no shader binary was generated.");
+		SError::showErrorMessageBoxAndLog("no shader binary was generated.");
 		return nullptr;
 	}
 

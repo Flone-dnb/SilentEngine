@@ -19,7 +19,7 @@ SAudioComponent::SAudioComponent(const std::string& sComponentName, bool bIs3DSo
 
 	if (SApplication::getApp()->getAudioEngine() == nullptr)
 	{
-		SError::showErrorMessageBox(L"SAudioComponent::SAudioComponent()", L"can't create the sound because the audio engine is not created.");
+		SError::showErrorMessageBoxAndLog("can't create the sound because the audio engine is not created.");
 		return;
 	}
 

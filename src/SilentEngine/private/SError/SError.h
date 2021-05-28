@@ -8,6 +8,8 @@
 
 #pragma once
 
+// STL
+#include <source_location>
 #include <string>
 
 #include <comdef.h> // for _com_error
@@ -39,6 +41,6 @@ class SError
 {
 public:
 
-	static void showErrorMessageBox(HRESULT hresult, std::wstring sPathToFailedFunction);
-	static void showErrorMessageBox(std::wstring sPathToFailedFunction, std::wstring sErrorString);
+	static void showErrorMessageBoxAndLog(HRESULT hresult, const std::source_location& location = std::source_location::current());
+	static void showErrorMessageBoxAndLog(std::string sErrorString, const std::source_location& location = std::source_location::current());
 };

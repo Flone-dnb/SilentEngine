@@ -55,13 +55,13 @@ bool SApplication::close()
 		}
 		else
 		{
-			SError::showErrorMessageBox(L"SApplication::close()", L"run() should be called first.");
+			SError::showErrorMessageBoxAndLog("run() should be called first.");
 			return true;
 		}
 	}
 	else
 	{
-		SError::showErrorMessageBox(L"SApplication::close()", L"an application instance is not created (pApp was nullptr).");
+		SError::showErrorMessageBoxAndLog("an application instance is not created (pApp was nullptr).");
 		return true;
 	}
 }
@@ -372,7 +372,7 @@ STextureHandle SApplication::loadTextureFromDiskToGPU(std::string sTextureName, 
 
 	if (FAILED(hresult))
 	{
-		SError::showErrorMessageBox(hresult, L"SApplication::loadTextureFromDiskToGPU::DirectX::CreateDDSTextureFromFile12()");
+		SError::showErrorMessageBoxAndLog(hresult);
 
 		mtxDraw.unlock();
 		mtxTexture.unlock();
@@ -417,7 +417,7 @@ STextureHandle SApplication::loadTextureFromDiskToGPU(std::string sTextureName, 
 	if (pTexture->pResource->GetDesc().Width % 4 != 0   || pTexture->pResource->GetDesc().Height % 4 != 0
 		|| pTexture->pResource->GetDesc().Width != pTexture->pResource->GetDesc().Height)
 	{
-		SError::showErrorMessageBox(L"SApplication::loadTextureFromDiskToGPU()", L"The texture size should be a multiple of 4.");
+		SError::showErrorMessageBoxAndLog("the texture size should be a multiple of 4.");
 		
 		delete pTexture;
 
@@ -575,7 +575,7 @@ bool SApplication::unloadTextureFromGPU(STextureHandle& textureHandle)
 
 			if (iLeftRef != 0)
 			{
-				showMessageBox(L"Error", L"SApplication::unloadTextureFromGPU() error: texture ref count is not 0.");
+				SError::showErrorMessageBoxAndLog("texture ref count is not 0.");
 			}
 
 			delete vLoadedTextures[i];
@@ -612,7 +612,7 @@ SShader* SApplication::compileCustomShader(const std::wstring& sPathToShaderFile
 
 	if (shaderFile.is_open() == false)
 	{
-		SError::showErrorMessageBox(L"SApplication::compileCustomShader()", L"could not open the shader file.");
+		SError::showErrorMessageBoxAndLog("could not open the shader file.");
 		return nullptr;
 	}
 	else
@@ -799,8 +799,7 @@ void SApplication::unregisterCustomComputeShader(SComputeShader* pComputeShader)
 	if (pComputeShader->bCopyingComputeResult)
 	{
 		// will cause deadlock (we are in the draw() right now)
-		SError::showErrorMessageBox(L"SApplication::unregisterCustomComputeShader()", L"cannot unregister "
-			L"the compute shader while we are in the copyComputeResults() function.");
+		SError::showErrorMessageBoxAndLog("cannot unregister the compute shader while we are in the copyComputeResults() function.");
 		return;
 	}
 
@@ -888,7 +887,7 @@ bool SApplication::spawnContainerInLevel(SContainer* pContainer)
 
 	if (getCurrentLevel()->vSpawnedLightComponents.size() + iLightComponents > MAX_LIGHTS)
 	{
-		SError::showErrorMessageBox(L"SApplication::spawnContainerInLevel()", L"exceeded MAX_LIGHTS (this container was not spawned)");
+		SError::showErrorMessageBoxAndLog("exceeded MAX_LIGHTS (this container was not spawned).");
 		mtxSpawnDespawn.unlock();
 		return true;
 	}
@@ -1180,7 +1179,7 @@ bool SApplication::setInitPreferredDisplayAdapter(std::wstring sPreferredDisplay
 	}
 	else
 	{
-		SError::showErrorMessageBox(L"SApplication::setInitPreferredDisplayAdapter()", L"this function should be called before init() call.");
+		SError::showErrorMessageBoxAndLog("this function should be called before init() call.");
 		return true;
 	}
 }
@@ -1194,7 +1193,7 @@ bool SApplication::setInitPreferredOutputAdapter(std::wstring sPreferredOutputAd
 	}
 	else
 	{
-		SError::showErrorMessageBox(L"SApplication::setInitPreferredOutputAdapter()", L"this function should be called before init() call.");
+		SError::showErrorMessageBoxAndLog("this function should be called before init() call.");
 		return true;
 	}
 }
@@ -1208,7 +1207,7 @@ bool SApplication::setInitFullscreen(bool bFullscreen)
 	}
 	else
 	{
-		SError::showErrorMessageBox(L"SApplication::setInitFullscreen()", L"this function should be called before init() call.");
+		SError::showErrorMessageBoxAndLog("this function should be called before init() call.");
 		return true;
 	}
 }
@@ -1222,7 +1221,7 @@ bool SApplication::setInitEnableVSync(bool bEnable)
 	}
 	else
 	{
-		SError::showErrorMessageBox(L"SApplication::setInitEnableVSync()", L"this function should be called before init() call.");
+		SError::showErrorMessageBoxAndLog("this function should be called before init() call.");
 		return true;
 	}
 }
@@ -1233,12 +1232,12 @@ bool SApplication::setInitPhysicsTicksPerSecond(int iTicksPerSecond)
 	{
 		if (iTicksPerSecond <= 0)
 		{
-			SError::showErrorMessageBox(L"SApplication::setInitPhysicsTicksPerSecond()", L"iTicksPerSecond can't be 0 or negative.");
+			SError::showErrorMessageBoxAndLog("iTicksPerSecond can't be 0 or negative.");
 			return true;
 		}
 		else if (iTicksPerSecond > 500)
 		{
-			SError::showErrorMessageBox(L"SApplication::setInitPhysicsTicksPerSecond()", L"iTicksPerSecond can't be bigger than 500.");
+			SError::showErrorMessageBoxAndLog("iTicksPerSecond can't be bigger than 500.");
 			return true;
 		}
 
@@ -1248,7 +1247,7 @@ bool SApplication::setInitPhysicsTicksPerSecond(int iTicksPerSecond)
 	}
 	else
 	{
-		SError::showErrorMessageBox(L"SApplication::setInitPhysicsTicksPerSecond()", L"this function should be called before init().");
+		SError::showErrorMessageBoxAndLog("this function should be called before init().");
 		return true;
 	}
 }
@@ -1367,7 +1366,7 @@ bool SApplication::setFullscreenWithCurrentResolution(bool bFullscreen)
 
 			if (FAILED(hresult))
 			{
-				SError::showErrorMessageBox(hresult, L"SApplication::setFullscreen::IDXGISwapChain::SetFullscreenState()");
+				SError::showErrorMessageBoxAndLog(hresult);
 				mtxDraw.unlock();
 				return true;
 			}
@@ -1384,7 +1383,7 @@ bool SApplication::setFullscreenWithCurrentResolution(bool bFullscreen)
 	}
 	else
 	{
-		SError::showErrorMessageBox(L"SApplication::setFullscreenWithCurrentResolution()", L"init() should be called first.");
+		SError::showErrorMessageBoxAndLog("init() should be called first.");
 		return true;
 	}
 }
@@ -1446,7 +1445,7 @@ bool SApplication::setScreenResolution(SScreenResolution screenResolution)
 	}
 	else
 	{
-		SError::showErrorMessageBox(L"SApplication::setScreenResolution()", L"init() should be called first.");
+		SError::showErrorMessageBoxAndLog("init() should be called first.");
 		return true;
 	}
 }
@@ -1488,13 +1487,13 @@ bool SApplication::setCursorPos(const SVector& vPos)
 
 			if (ClientToScreen(hMainWindow, &pos) == 0)
 			{
-				SError::showErrorMessageBox(L"SApplication::setCursorPos::ClientToScreen()", std::to_wstring(GetLastError()));
+				SError::showErrorMessageBoxAndLog(std::to_string(GetLastError()));
 				return true;
 			}
 
 			if (SetCursorPos(pos.x, pos.y) == 0)
 			{
-				SError::showErrorMessageBox(L"SApplication::setCursorPos::SetCursorPos()", std::to_wstring(GetLastError()));
+				SError::showErrorMessageBoxAndLog(std::to_string(GetLastError()));
 				return true;
 			}
 
@@ -1502,13 +1501,13 @@ bool SApplication::setCursorPos(const SVector& vPos)
 		}
 		else
 		{
-			SError::showErrorMessageBox(L"SApplication::setCursorPos()", L"the cursor is hidden.");
+			SError::showErrorMessageBoxAndLog("the cursor is hidden.");
 			return true;
 		}
 	}
 	else
 	{
-		SError::showErrorMessageBox(L"SApplication::setCursorPos()", L"init() should be called first.");
+		SError::showErrorMessageBoxAndLog("init() should be called first.");
 		return true;
 	}
 }
@@ -1555,7 +1554,7 @@ bool SApplication::setInitShowWindowTitleBar(bool bShowTitleBar)
 	}
 	else
 	{
-		SError::showErrorMessageBox(L"SApplication::setInitShowWindowTitleBar()", L"this function should be called before init().");
+		SError::showErrorMessageBoxAndLog("this function should be called before init().");
 		return true;
 	}
 }
@@ -1580,13 +1579,13 @@ bool SApplication::getCursorPos(SVector* vPos)
 
 			if (GetCursorPos(&pos) == 0)
 			{
-				SError::showErrorMessageBox(L"SApplication::getCursorPos::GetCursorPos()", std::to_wstring(GetLastError()));
+				SError::showErrorMessageBoxAndLog(std::to_string(GetLastError()));
 				return true;
 			}
 
 			if (ScreenToClient(hMainWindow, &pos) == 0)
 			{
-				SError::showErrorMessageBox(L"SApplication::getCursorPos::ScreenToClient()", std::to_wstring(GetLastError()));
+				SError::showErrorMessageBoxAndLog(std::to_string(GetLastError()));
 				return true;
 			}
 
@@ -1597,13 +1596,13 @@ bool SApplication::getCursorPos(SVector* vPos)
 		}
 		else
 		{
-			SError::showErrorMessageBox(L"SApplication::getCursorPos()", L"the cursor is hidden.");
+			SError::showErrorMessageBoxAndLog("the cursor is hidden.");
 			return true;
 		}
 	}
 	else
 	{
-		SError::showErrorMessageBox(L"SApplication::getCursorPos()", L"init() shound be called first.");
+		SError::showErrorMessageBoxAndLog("init() shound be called first.");
 		return true;
 	}
 }
@@ -1619,7 +1618,7 @@ bool SApplication::getWindowSize(SVector* vSize)
 	}
 	else
 	{
-		SError::showErrorMessageBox(L"SApplication::getWindowSize()", L"init() should be called first.");
+		SError::showErrorMessageBoxAndLog("init() should be called first.");
 		return true;
 	}
 }
@@ -1796,7 +1795,7 @@ bool SApplication::getAvailableScreenResolutionsOfCurrentOutputDisplay(std::vect
 		HRESULT hresult = pOutput->GetDisplayModeList(BackBufferFormat, 0, &numModes, NULL);
 		if (FAILED(hresult))
 		{
-			SError::showErrorMessageBox(hresult, L"SApplication::getSupportedScreenResolutionsOfCurrentOutputDisplay::IDXGIOutput::GetDisplayModeList() (count)");
+			SError::showErrorMessageBoxAndLog(hresult);
 			return true;
 		}
 
@@ -1805,7 +1804,7 @@ bool SApplication::getAvailableScreenResolutionsOfCurrentOutputDisplay(std::vect
 		hresult = pOutput->GetDisplayModeList(BackBufferFormat, 0, &numModes, &vDisplayModes[0]);
 		if (FAILED(hresult))
 		{
-			SError::showErrorMessageBox(hresult, L"SApplication::getSupportedScreenResolutionsOfCurrentOutputDisplay::IDXGIOutput::GetDisplayModeList() (list)");
+			SError::showErrorMessageBoxAndLog(hresult);
 			return true;
 		}
 
@@ -1861,7 +1860,7 @@ float SApplication::getCurrentOutputDisplayRefreshRate() const
 		HRESULT hresult = pSwapChain->GetFullscreenDesc(&desc);
 		if (FAILED(hresult))
 		{
-			SError::showErrorMessageBox(hresult, L"SApplication::getCurrentScreenResolution::IDXGISwapChain1::GetFullscreenDesc()");
+			SError::showErrorMessageBoxAndLog(hresult);
 			return 0.0f;
 		}
 		else
@@ -1871,7 +1870,7 @@ float SApplication::getCurrentOutputDisplayRefreshRate() const
 	}
 	else
 	{
-		SError::showErrorMessageBox(L"SApplication::getCurrentOutputDisplayRefreshRate()", L"init() should be called first.");
+		SError::showErrorMessageBoxAndLog("init() should be called first.");
 		return 0.0f;
 	}
 }
@@ -1885,7 +1884,7 @@ bool SApplication::getCurrentScreenResolution(SScreenResolution* pScreenResoluti
 		HRESULT hresult = pSwapChain->GetDesc1(&desc);
 		if (FAILED(hresult))
 		{
-			SError::showErrorMessageBox(hresult, L"SApplication::getCurrentScreenResolution::IDXGISwapChain1::GetDesc1()");
+			SError::showErrorMessageBoxAndLog(hresult);
 			return true;
 		}
 		else
@@ -1898,7 +1897,7 @@ bool SApplication::getCurrentScreenResolution(SScreenResolution* pScreenResoluti
 	}
 	else
 	{
-		SError::showErrorMessageBox(L"SApplication::getCurrentScreenResolution()", L"init() should be called first.");
+		SError::showErrorMessageBoxAndLog("init() should be called first.");
 		return true;
 	}
 }
@@ -1933,7 +1932,7 @@ bool SApplication::getTimeElapsedFromStart(float* fTimeInSec) const
 	}
 	else
 	{
-		SError::showErrorMessageBox(L"SApplication::getTimeElapsedFromStart()", L"run() should be called first.");
+		SError::showErrorMessageBoxAndLog("run() should be called first.");
 		return true;
 	}
 }
@@ -1947,7 +1946,7 @@ bool SApplication::getFPS(int* iFPS) const
 	}
 	else
 	{
-		SError::showErrorMessageBox(L"SApplication::getFPS()", L"run() should be called first.");
+		SError::showErrorMessageBoxAndLog("run() should be called first.");
 		return true;
 	}
 }
@@ -1961,7 +1960,7 @@ bool SApplication::getTimeToRenderFrame(float* fTimeInMS) const
 	}
 	else
 	{
-		SError::showErrorMessageBox(L"SApplication::getTimeToRenderFrame()", L"run() should be called first.");
+		SError::showErrorMessageBoxAndLog("run() should be called first.");
 		return true;
 	}
 }
@@ -1975,7 +1974,7 @@ bool SApplication::getLastFrameDrawCallCount(unsigned long long* iDrawCallCount)
 	}
 	else
 	{
-		SError::showErrorMessageBox(L"SApplication::getLastFrameDrawCallCount()", L"run() should be called first.");
+		SError::showErrorMessageBoxAndLog("run() should be called first.");
 		return true;
 	}
 }
@@ -2003,7 +2002,7 @@ bool SApplication::onResize()
 		HRESULT hresult = pCommandList->Reset(pCommandListAllocator.Get(), nullptr);
 		if (FAILED(hresult))
 		{
-			SError::showErrorMessageBox(hresult, L"SApplication::onResize::ID3D12GraphicsCommandList::Reset()");
+			SError::showErrorMessageBoxAndLog(hresult);
 			return true;
 		}
 
@@ -2038,7 +2037,7 @@ bool SApplication::onResize()
 
 		if (FAILED(hresult))
 		{
-			SError::showErrorMessageBox(hresult, L"SApplication::onResize::IDXGISwapChain::ResizeBuffers()");
+			SError::showErrorMessageBoxAndLog(hresult);
 			return true;
 		}
 
@@ -2057,7 +2056,7 @@ bool SApplication::onResize()
 			hresult = pSwapChain->GetBuffer(i, IID_PPV_ARGS(&pSwapChainBuffer[i]));
 			if (FAILED(hresult))
 			{
-				SError::showErrorMessageBox(hresult, L"SApplication::onResize::IDXGISwapChain::GetBuffer() (i = " + std::to_wstring(i) + L")");
+				SError::showErrorMessageBoxAndLog(hresult);
 				return true;
 			}
 
@@ -2100,7 +2099,7 @@ bool SApplication::onResize()
 			IID_PPV_ARGS(pMSAARenderTarget.GetAddressOf()));
 		if (FAILED(hresult))
 		{
-			SError::showErrorMessageBox(hresult, L"SApplication::onResize::ID3D12Device::CreateCommittedResource()");
+			SError::showErrorMessageBoxAndLog(hresult);
 			return true;
 		}
 
@@ -2141,7 +2140,7 @@ bool SApplication::onResize()
 			IID_PPV_ARGS(pDepthStencilBuffer.GetAddressOf()));
 		if (FAILED(hresult))
 		{
-			SError::showErrorMessageBox(hresult, L"SApplication::onResize::ID3D12Device::CreateCommittedResource()");
+			SError::showErrorMessageBoxAndLog(hresult);
 			return true;
 		}
 
@@ -2172,7 +2171,7 @@ bool SApplication::onResize()
 		hresult = pCommandList->Close();
 		if (FAILED(hresult))
 		{
-			SError::showErrorMessageBox(hresult, L"SApplication::onResize::ID3D12GraphicsCommandList::Close()");
+			SError::showErrorMessageBoxAndLog(hresult);
 			return true;
 		}
 
@@ -2221,7 +2220,7 @@ bool SApplication::onResize()
 	}
 	else
 	{
-		SError::showErrorMessageBox(L"SApplication::onResize()", L"init() should be called first.");
+		SError::showErrorMessageBoxAndLog("init() should be called first.");
 
 		return true;
 	}
@@ -2255,7 +2254,7 @@ void SApplication::update()
 			HRESULT hresult = pFence->SetEventOnCompletion(pCurrentFrameResource->iFence, eventHandle);
 			if (FAILED(hresult))
 			{
-				SError::showErrorMessageBox(hresult, L"SApplication::update::SetEventOnCompletion()");
+				SError::showErrorMessageBoxAndLog(hresult);
 				return;
 			}
 
@@ -2264,7 +2263,7 @@ void SApplication::update()
 		}
 		else
 		{
-			SError::showErrorMessageBox(L"SApplication::update::CreateEventEx()", L"Error id: " + std::to_wstring(GetLastError()) + L".");
+			SError::showErrorMessageBoxAndLog(std::to_string(GetLastError()));
 			return;
 		}
 	}
@@ -2582,7 +2581,7 @@ void SApplication::draw()
 	HRESULT hresult = pCurrentCommandListAllocator->Reset();
 	if (FAILED(hresult))
 	{
-		SError::showErrorMessageBox(hresult, L"SApplication::draw::ID3D12CommandAllocator::Reset()");
+		SError::showErrorMessageBoxAndLog(hresult);
 		mtxDraw.unlock();
 		return;
 	}
@@ -2602,7 +2601,7 @@ void SApplication::draw()
 
 	if (FAILED(hresult))
 	{
-		SError::showErrorMessageBox(hresult, L"SApplication::draw::ID3D12GraphicsCommandList::Reset()");
+		SError::showErrorMessageBoxAndLog(hresult);
 		mtxDraw.unlock();
 		return;
 	}
@@ -2738,7 +2737,7 @@ void SApplication::draw()
 	hresult = pCommandList->Close();
 	if (FAILED(hresult))
 	{
-		SError::showErrorMessageBox(hresult, L"SApplication::draw::ID3D12GraphicsCommandList::Close()");
+		SError::showErrorMessageBoxAndLog(hresult);
 		mtxDraw.unlock();
 		return;
 	}
@@ -2806,7 +2805,7 @@ void SApplication::draw()
 	}
 	if (FAILED(hresult))
 	{
-		SError::showErrorMessageBox(hresult, L"SApplication::draw::IDXGISwapChain1::Present()");
+		SError::showErrorMessageBoxAndLog(hresult);
 		mtxDraw.unlock();
 		return;
 	}
@@ -3115,9 +3114,8 @@ void SApplication::drawComponent(SComponent* pComponent, bool bUsingCustomResour
 #if defined(DEBUG) || defined(_DEBUG)
 		if (drawCount > UINT_MAX)
 		{
-			SError::showErrorMessageBox(L"SApplication::drawComponent()",
-				L"the number of visible instances is " + std::to_wstring(drawCount) + L" but the allowed maximum is "
-				+ std::to_wstring(UINT_MAX) + L". Please reduce the number of instances.");
+			SError::showErrorMessageBoxAndLog("the number of visible instances is " + std::to_string(drawCount) + " but the allowed maximum is "
+				+ std::to_string(UINT_MAX) + ". Please, reduce the number of instances.");
 		}
 #endif
 
@@ -3203,7 +3201,7 @@ bool SApplication::flushCommandQueue()
 
 	if (FAILED(hresult))
 	{
-		SError::showErrorMessageBox(hresult, L"SApplication::flushCommandQueue::ID3D12CommandQueue::Signal()");
+		SError::showErrorMessageBoxAndLog(hresult);
 		return true;
 	}
 
@@ -3217,7 +3215,7 @@ bool SApplication::flushCommandQueue()
 			hresult = pFence->SetEventOnCompletion(iCurrentFence, hEvent);
 			if (FAILED(hresult))
 			{
-				SError::showErrorMessageBox(hresult, L"SApplication::flushCommandQueue::ID3D12Fence::SetEventOnCompletion()");
+				SError::showErrorMessageBoxAndLog(hresult);
 				return true;
 			}
 
@@ -3228,7 +3226,7 @@ bool SApplication::flushCommandQueue()
 		}
 		else
 		{
-			SError::showErrorMessageBox(L"SApplication::flushCommandQueue::CreateEventEx()", L"Error id: " + std::to_wstring(GetLastError()) + L".");
+			SError::showErrorMessageBoxAndLog(std::to_string(GetLastError()));
 			return true;
 		}
 	}
@@ -3419,7 +3417,7 @@ bool SApplication::createMainWindow()
 	if (RegisterRawInputDevices(Rid, 1, sizeof(Rid[0])) == FALSE) 
 	//if (RegisterRawInputDevices(Rid, 2, sizeof(Rid[0])) == FALSE) 
 	{
-		SError::showErrorMessageBox(L"SApplication::createMainWindow::RegisterRawInputDevices()", std::to_wstring(GetLastError()));
+		SError::showErrorMessageBoxAndLog(std::to_string(GetLastError()));
 		return true;
 	}
 	else
@@ -3451,7 +3449,7 @@ bool SApplication::initD3DSecondStage()
 	HRESULT hresult = pFactory->MakeWindowAssociation(hMainWindow, DXGI_MWA_NO_ALT_ENTER);
 	if (FAILED(hresult))
 	{
-		SError::showErrorMessageBox(hresult, L"SApplication::initD3DSecondStage::IDXGIFactory4::MakeWindowAssociation()");
+		SError::showErrorMessageBoxAndLog(hresult);
 		return true;
 	}
 
@@ -3492,7 +3490,7 @@ bool SApplication::initD3DFirstStage()
 
 	if (FAILED(hresult))
 	{
-		SError::showErrorMessageBox(hresult, L"SApplication::initD3DFirstStage::CreateDXGIFactory1()");
+		SError::showErrorMessageBoxAndLog(hresult);
 		return true;
 	}
 
@@ -3503,7 +3501,7 @@ bool SApplication::initD3DFirstStage()
 
 	if (getFirstSupportedDisplayAdapter(*pAdapter.GetAddressOf()))
 	{
-		SError::showErrorMessageBox(L"SApplication::initD3DFirstStage::getFirstSupportedDisplayAdapter()", L"can't find a supported display adapter.");
+		SError::showErrorMessageBoxAndLog("can't find a supported display adapter.");
 
 		return true;
 	}
@@ -3520,7 +3518,7 @@ bool SApplication::initD3DFirstStage()
 
 	if (FAILED(hresult))
 	{
-		SError::showErrorMessageBox(hresult, L"SApplication::initD3DFirstStage::D3D12CreateDevice()");
+		SError::showErrorMessageBoxAndLog(hresult);
 		
 		// Try to create device with WARP (software) adapter.
 
@@ -3534,7 +3532,7 @@ bool SApplication::initD3DFirstStage()
 
 		if (FAILED(hresult))
 		{
-			SError::showErrorMessageBox(hresult, L"SApplication::initD3DFirstStage::D3D12CreateDevice() (WARP adapter)");
+			SError::showErrorMessageBoxAndLog(hresult);
 			return true;
 		}
 		else
@@ -3552,7 +3550,7 @@ bool SApplication::initD3DFirstStage()
 
 	if (FAILED(hresult))
 	{
-		SError::showErrorMessageBox(hresult, L"SApplication::initD3DFirstStage::ID3D12Device::CreateFence()");
+		SError::showErrorMessageBoxAndLog(hresult);
 		return true;
 	}
 
@@ -3578,7 +3576,7 @@ bool SApplication::initD3DFirstStage()
 
 	if (getFirstOutputDisplay(*pOutput.GetAddressOf()))
 	{
-		SError::showErrorMessageBox(L"SApplication::initDirect3D::getFirstOutputAdapter()", L"can't find any output adapters for current display adapter.");
+		SError::showErrorMessageBoxAndLog("can't find any output adapters for current display adapter.");
 
 		return true;
 	}
@@ -3723,7 +3721,7 @@ bool SApplication::checkMSAASupport()
 
 	if (FAILED(hresult))
 	{
-		SError::showErrorMessageBox(hresult, L"SApplication::checkMSAASupport::ID3D12Device::CheckFeatureSupport(D3D12_FEATURE_MULTISAMPLE_QUALITY_LEVELS)");
+		SError::showErrorMessageBoxAndLog(hresult);
 		return true;
 	}
 
@@ -3751,7 +3749,7 @@ bool SApplication::createCommandObjects()
 
 	if (FAILED(hresult))
 	{
-		SError::showErrorMessageBox(hresult, L"SApplication::createCommandObjects::ID3D12Device::CreateCommandQueue()");
+		SError::showErrorMessageBoxAndLog(hresult);
 		return true;
 	}
 
@@ -3764,7 +3762,7 @@ bool SApplication::createCommandObjects()
 
 	if (FAILED(hresult))
 	{
-		SError::showErrorMessageBox(hresult, L"SApplication::createCommandObjects::ID3D12Device::CreateCommandAllocator()");
+		SError::showErrorMessageBoxAndLog(hresult);
 		return true;
 	}
 
@@ -3782,7 +3780,7 @@ bool SApplication::createCommandObjects()
 
 	if (FAILED(hresult))
 	{
-		SError::showErrorMessageBox(hresult, L"SApplication::createCommandObjects::ID3D12Device::CreateCommandList()");
+		SError::showErrorMessageBoxAndLog(hresult);
 		return true;
 	}
 
@@ -3840,7 +3838,7 @@ bool SApplication::createSwapChain()
 	HRESULT hresult = pFactory->CreateSwapChainForHwnd(pCommandQueue.Get(), hMainWindow, &desc, &fdesc, pOutput.Get(), pSwapChain.GetAddressOf());
 	if (FAILED(hresult))
 	{
-		SError::showErrorMessageBox(hresult, L"SApplication::createSwapChain::IDXGIFactory4::CreateSwapChainForHwnd()");
+		SError::showErrorMessageBoxAndLog(hresult);
 		return true;
 	}
 
@@ -3854,7 +3852,7 @@ bool SApplication::getScreenParams(bool bApplyResolution)
 	HRESULT hresult = pOutput->GetDisplayModeList(BackBufferFormat, 0, &numModes, NULL);
 	if (FAILED(hresult))
 	{
-		SError::showErrorMessageBox(hresult, L"SApplication::initDirect3D::IDXGIOutput::GetDisplayModeList() (count)");
+		SError::showErrorMessageBoxAndLog(hresult);
 		return true;
 	}
 
@@ -3863,7 +3861,7 @@ bool SApplication::getScreenParams(bool bApplyResolution)
 	hresult = pOutput->GetDisplayModeList(BackBufferFormat, 0, &numModes, &vDisplayModes[0]);
 	if (FAILED(hresult))
 	{
-		SError::showErrorMessageBox(hresult, L"SApplication::initDirect3D::IDXGIOutput::GetDisplayModeList() (list)");
+		SError::showErrorMessageBoxAndLog(hresult);
 		return true;
 	}
 
@@ -3983,7 +3981,7 @@ bool SApplication::createRTVAndDSVDescriptorHeaps()
 	HRESULT hresult = pDevice->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(pRTVHeap.GetAddressOf()));
 	if (FAILED(hresult))
 	{
-		SError::showErrorMessageBox(hresult, L"SApplication::createRTVAndDSVDescriptorHeaps::ID3D12Device::CreateDescriptorHeap() (RTV)");
+		SError::showErrorMessageBoxAndLog(hresult);
 		return true;
 	}
 
@@ -4001,7 +3999,7 @@ bool SApplication::createRTVAndDSVDescriptorHeaps()
 	hresult = pDevice->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(pDSVHeap.GetAddressOf()));
 	if (FAILED(hresult))
 	{
-		SError::showErrorMessageBox(hresult, L"SApplication::createRTVAndDSVDescriptorHeaps::ID3D12Device::CreateDescriptorHeap() (DSV)");
+		SError::showErrorMessageBoxAndLog(hresult);
 		return true;
 	}
 
@@ -4038,7 +4036,7 @@ bool SApplication::createCBVSRVUAVHeap()
 	HRESULT hresult = pDevice->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&pCBVSRVUAVHeap));
 	if (FAILED(hresult))
 	{
-		SError::showErrorMessageBox(hresult, L"SApplication::createCBVDescriptorHeap::ID3D12Device::CreateDescriptorHeap()");
+		SError::showErrorMessageBoxAndLog(hresult);
 		return true;
 	}
 
@@ -4050,7 +4048,7 @@ void SApplication::createViews()
 	size_t iMatCount = roundUp(vRegisteredMaterials.size(), OBJECT_CB_RESIZE_MULTIPLE);
 	if (iMatCount > INT_MAX)
 	{
-		SError::showErrorMessageBox(L"SApplication::createViews()", L"cannot create CBVs because an overflow will occur.");
+		SError::showErrorMessageBoxAndLog("cannot create CBVs because an overflow will occur.");
 		return;
 	}
 
@@ -4060,7 +4058,7 @@ void SApplication::createViews()
 
 	if ((iFrameResourcesCount - 1) * iMaterialCount + (iMaterialCount - 1) > INT_MAX)
 	{
-		SError::showErrorMessageBox(L"SApplication::createViews()", L"cannot create CBVs because an overflow will occur.");
+		SError::showErrorMessageBoxAndLog("cannot create CBVs because an overflow will occur.");
 		return;
 	}
 
@@ -4094,7 +4092,7 @@ void SApplication::createViews()
 	// Need one SRV per loaded texture.
 	if (iPerFrameResEndOffset + iTextureCount > INT_MAX)
 	{
-		SError::showErrorMessageBox(L"SApplication::createViews()", L"cannot create SRVs because an overflow will occur.");
+		SError::showErrorMessageBoxAndLog("cannot create SRVs because an overflow will occur.");
 		return;
 	}
 
@@ -4213,7 +4211,7 @@ bool SApplication::createRootSignature(SCustomShaderResources* pCustomShaderReso
 
 	if (FAILED(hresult))
 	{
-		SError::showErrorMessageBox(hresult, L"SApplication::createRootSignature::D3D12SerializeRootSignature()");
+		SError::showErrorMessageBoxAndLog(hresult);
 		return true;
 	}
 
@@ -4239,7 +4237,7 @@ bool SApplication::createRootSignature(SCustomShaderResources* pCustomShaderReso
 	
 	if (FAILED(hresult))
 	{
-		SError::showErrorMessageBox(hresult, L"SApplication::createRootSignature::ID3D12Device::CreateRootSignature()");
+		SError::showErrorMessageBoxAndLog(hresult);
 		return true;
 	}
 
@@ -4280,7 +4278,7 @@ bool SApplication::createBlurRootSignature()
 
 	if (FAILED(hr))
 	{
-		SError::showErrorMessageBox(hr, L"SApplication::createBlurRootSignature::ID3D12Device::D3D12SerializeRootSignature()");
+		SError::showErrorMessageBoxAndLog(hr);
 		return true;
 	}
 
@@ -4293,7 +4291,7 @@ bool SApplication::createBlurRootSignature()
 	);
 	if (FAILED(hr))
 	{
-		SError::showErrorMessageBox(hr, L"SApplication::createBlurRootSignature::ID3D12Device::CreateRootSignature()");
+		SError::showErrorMessageBoxAndLog(hr);
 		return true;
 	}
 
@@ -4419,7 +4417,7 @@ bool SApplication::createPSO(SShader* pPSOsForCustomShader)
 		hresult = pDevice->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pPSOsForCustomShader->pOpaquePSO));
 		if (FAILED(hresult))
 		{
-			SError::showErrorMessageBox(hresult, L"SApplication::createPSO::ID3D12Device::CreateGraphicsPipelineState() (custom shader)");
+			SError::showErrorMessageBoxAndLog(hresult);
 			return true;
 		}
 	}
@@ -4428,7 +4426,7 @@ bool SApplication::createPSO(SShader* pPSOsForCustomShader)
 		hresult = pDevice->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pOpaquePSO));
 		if (FAILED(hresult))
 		{
-			SError::showErrorMessageBox(hresult, L"SApplication::createPSO::ID3D12Device::CreateGraphicsPipelineState()");
+			SError::showErrorMessageBoxAndLog(hresult);
 			return true;
 		}
 
@@ -4437,7 +4435,7 @@ bool SApplication::createPSO(SShader* pPSOsForCustomShader)
 		hresult = pDevice->CreateGraphicsPipelineState(&psoLineDesc, IID_PPV_ARGS(&pOpaqueLineTopologyPSO));
 		if (FAILED(hresult))
 		{
-			SError::showErrorMessageBox(hresult, L"SApplication::createPSO::ID3D12Device::CreateGraphicsPipelineState()");
+			SError::showErrorMessageBoxAndLog(hresult);
 			return true;
 		}
 	}
@@ -4457,7 +4455,7 @@ bool SApplication::createPSO(SShader* pPSOsForCustomShader)
 		hresult = pDevice->CreateGraphicsPipelineState(&transparentPsoDesc, IID_PPV_ARGS(&pPSOsForCustomShader->pTransparentPSO));
 		if (FAILED(hresult))
 		{
-			SError::showErrorMessageBox(hresult, L"SApplication::createPSO::ID3D12Device::CreateGraphicsPipelineState() (custom shader)");
+			SError::showErrorMessageBoxAndLog(hresult);
 			return true;
 		}
 	}
@@ -4471,7 +4469,7 @@ bool SApplication::createPSO(SShader* pPSOsForCustomShader)
 		hresult = pDevice->CreateGraphicsPipelineState(&transparentPsoDesc, IID_PPV_ARGS(&pTransparentPSO));
 		if (FAILED(hresult))
 		{
-			SError::showErrorMessageBox(hresult, L"SApplication::createPSO::ID3D12Device::CreateGraphicsPipelineState()");
+			SError::showErrorMessageBoxAndLog(hresult);
 			return true;
 		}
 	}
@@ -4487,7 +4485,7 @@ bool SApplication::createPSO(SShader* pPSOsForCustomShader)
 		hresult = pDevice->CreateGraphicsPipelineState(&transparentAlphaToCoveragePsoDesc, IID_PPV_ARGS(&pPSOsForCustomShader->pTransparentAlphaToCoveragePSO));
 		if (FAILED(hresult))
 		{
-			SError::showErrorMessageBox(hresult, L"SApplication::createPSO::ID3D12Device::CreateGraphicsPipelineState() (custom shader)");
+			SError::showErrorMessageBoxAndLog(hresult);
 			return true;
 		}
 	}
@@ -4496,7 +4494,7 @@ bool SApplication::createPSO(SShader* pPSOsForCustomShader)
 		hresult = pDevice->CreateGraphicsPipelineState(&transparentAlphaToCoveragePsoDesc, IID_PPV_ARGS(&pTransparentAlphaToCoveragePSO));
 		if (FAILED(hresult))
 		{
-			SError::showErrorMessageBox(hresult, L"SApplication::createPSO::ID3D12Device::CreateGraphicsPipelineState()");
+			SError::showErrorMessageBoxAndLog(hresult);
 			return true;
 		}
 	}
@@ -4511,7 +4509,7 @@ bool SApplication::createPSO(SShader* pPSOsForCustomShader)
 		hresult = pDevice->CreateGraphicsPipelineState(&opaqueWireframePsoDesc, IID_PPV_ARGS(&pPSOsForCustomShader->pOpaqueWireframePSO));
 		if (FAILED(hresult))
 		{
-			SError::showErrorMessageBox(hresult, L"SApplication::createPSO::ID3D12Device::CreateGraphicsPipelineState() (custom shader)");
+			SError::showErrorMessageBoxAndLog(hresult);
 			return true;
 		}
 	}
@@ -4520,7 +4518,7 @@ bool SApplication::createPSO(SShader* pPSOsForCustomShader)
 		hresult = pDevice->CreateGraphicsPipelineState(&opaqueWireframePsoDesc, IID_PPV_ARGS(&pOpaqueWireframePSO));
 		if (FAILED(hresult))
 		{
-			SError::showErrorMessageBox(hresult, L"SApplication::createPSO::ID3D12Device::CreateGraphicsPipelineState()");
+			SError::showErrorMessageBoxAndLog(hresult);
 			return true;
 		}
 	}
@@ -4536,7 +4534,7 @@ bool SApplication::createPSO(SShader* pPSOsForCustomShader)
 		hresult = pDevice->CreateGraphicsPipelineState(&transparentWireframePsoDesc, IID_PPV_ARGS(&pPSOsForCustomShader->pTransparentWireframePSO));
 		if (FAILED(hresult))
 		{
-			SError::showErrorMessageBox(hresult, L"SApplication::createPSO::ID3D12Device::CreateGraphicsPipelineState() (custom shader)");
+			SError::showErrorMessageBoxAndLog(hresult);
 			return true;
 		}
 	}
@@ -4545,7 +4543,7 @@ bool SApplication::createPSO(SShader* pPSOsForCustomShader)
 		hresult = pDevice->CreateGraphicsPipelineState(&transparentWireframePsoDesc, IID_PPV_ARGS(&pTransparentWireframePSO));
 		if (FAILED(hresult))
 		{
-			SError::showErrorMessageBox(hresult, L"SApplication::createPSO::ID3D12Device::CreateGraphicsPipelineState()");
+			SError::showErrorMessageBoxAndLog(hresult);
 			return true;
 		}
 
@@ -4563,7 +4561,7 @@ bool SApplication::createPSO(SShader* pPSOsForCustomShader)
 		hresult = pDevice->CreateComputePipelineState(&horzBlurPSO, IID_PPV_ARGS(&pBlurHorizontalPSO));
 		if (FAILED(hresult))
 		{
-			SError::showErrorMessageBox(hresult, L"SApplication::createPSO::ID3D12Device::CreateGraphicsPipelineState() (blur horizontal pso)");
+			SError::showErrorMessageBoxAndLog(hresult);
 			return true;
 		}
 
@@ -4579,7 +4577,7 @@ bool SApplication::createPSO(SShader* pPSOsForCustomShader)
 		hresult = pDevice->CreateComputePipelineState(&vertBlurPSO, IID_PPV_ARGS(&pBlurVerticalPSO));
 		if (FAILED(hresult))
 		{
-			SError::showErrorMessageBox(hresult, L"SApplication::createPSO::ID3D12Device::CreateGraphicsPipelineState() (blur vertical pso)");
+			SError::showErrorMessageBoxAndLog(hresult);
 			return true;
 		}
 	}
@@ -4600,7 +4598,7 @@ bool SApplication::resetCommandList()
 
 	if (FAILED(hresult))
 	{
-		SError::showErrorMessageBox(hresult, L"SApplication::resetCommandList::ID3D12GraphicsCommandList::Reset()");
+		SError::showErrorMessageBoxAndLog(hresult);
 		return true;
 	}
 	else
@@ -4638,7 +4636,7 @@ bool SApplication::executeCommandList()
 	HRESULT hresult = pCommandList->Close();
 	if (FAILED(hresult))
 	{
-		SError::showErrorMessageBox(hresult, L"SApplication::executeCommandList::ID3D12GraphicsCommandList::Close()");
+		SError::showErrorMessageBoxAndLog(hresult);
 		return true;
 	}
 
@@ -4725,7 +4723,7 @@ void SApplication::showDeviceRemovedReason()
 {
 	HRESULT hResult = pDevice->GetDeviceRemovedReason();
 
-	SError::showErrorMessageBox(hResult, L"SApplication::showDeviceRemovedReason()");
+	SError::showErrorMessageBoxAndLog(hResult);
 }
 
 void SApplication::removeComponentsFromGlobalVectors(SContainer* pContainer)
@@ -4960,7 +4958,7 @@ void SApplication::forceChangeMeshShader(SShader* pOldShader, SShader* pNewShade
 
 	if (bFound == false)
 	{
-		SError::showErrorMessageBox(L"SApplication::forceChangeMeshShader()", L"Could not find specified old shader / object.");
+		SError::showErrorMessageBoxAndLog("could not find specified old shader / object.");
 		mtxShader.unlock();
 		return;
 	}
@@ -5018,7 +5016,7 @@ void SApplication::saveBackBufferPixels()
 	}
 	else
 	{
-		SError::showErrorMessageBox(L"SApplication::saveBackBufferPixels()", L"Unsupported back buffer format.");
+		SError::showErrorMessageBoxAndLog("unsupported back buffer format.");
 	}
 }
 
@@ -5145,7 +5143,7 @@ void SApplication::doOptionalPauseForUserComputeShaders()
 
 					if (FAILED(hresult))
 					{
-						SError::showErrorMessageBox(hresult, L"SApplication::doOptionalPauseForUserComputeShaders()::ID3D12CommandQueue::Signal()");
+						SError::showErrorMessageBoxAndLog(hresult);
 						vUserComputeShaders[i]->mtxFencesVector.unlock();
 						continue;
 					}
@@ -5215,7 +5213,7 @@ void SApplication::copyUserComputeResults(SComputeShader* pComputeShader)
 				D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS(&pReadBackBuffer));
 			if (FAILED(hresult))
 			{
-				SError::showErrorMessageBox(hresult, L"SApplication::copyUserComputeResults::CreateCommittedResource()");
+				SError::showErrorMessageBoxAndLog(hresult);
 				return;
 			}
 
@@ -5257,8 +5255,7 @@ void SApplication::copyUserComputeResults(SComputeShader* pComputeShader)
 		}
 		else
 		{
-			SError::showErrorMessageBox(L"SApplication::copyUserComputeResults()",
-				L"SComputeShaderResource* pResourceToCopyFrom is nullptr, could not find the specified resource.");
+			SError::showErrorMessageBoxAndLog("pResourceToCopyFrom is nullptr, could not find the specified resource.");
 			return;
 		}
 	}
@@ -5352,7 +5349,7 @@ SMaterial* SApplication::registerMaterialBundleElement(const std::string& sMater
 
 	if (sMaterialName == "")
 	{
-		SError::showErrorMessageBox(L"SApplication::registerMaterialBundleElement()", L"material name cannot be empty.");
+		SError::showErrorMessageBoxAndLog("material name cannot be empty.");
 
 		bErrorOccurred = true;
 
@@ -5621,7 +5618,7 @@ bool SApplication::init()
 	HRESULT hresult = pCommandList->Reset(pCommandListAllocator.Get(), nullptr);
 	if (FAILED(hresult))
 	{
-		SError::showErrorMessageBox(hresult, L"SApplication::init::ID3D12GraphicsCommandList::Reset()");
+		SError::showErrorMessageBoxAndLog(hresult);
 		return true;
 	}
 
@@ -5664,7 +5661,7 @@ bool SApplication::init()
 	hresult = pCommandList->Close();
 	if (FAILED(hresult))
 	{
-		SError::showErrorMessageBox(hresult, L"SApplication::init::ID3D12GraphicsCommandList::Close()");
+		SError::showErrorMessageBoxAndLog(hresult);
 		return true;
 	}
 
@@ -5866,7 +5863,7 @@ LRESULT SApplication::msgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 			if (GetRawInputData(reinterpret_cast<HRAWINPUT>(lParam), RID_INPUT, lpb, &dataSize, sizeof(RAWINPUTHEADER)) != dataSize)
 			{
-				SError::showErrorMessageBox(L"SApplication::msgProc::GetRawInputData()", L"GetRawInputData() does not return correct size.");
+				SError::showErrorMessageBoxAndLog("incorrect size was returned from GetRawInputData().");
 				return 0;
 			}
 

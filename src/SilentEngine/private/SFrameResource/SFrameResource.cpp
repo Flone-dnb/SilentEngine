@@ -20,7 +20,7 @@ SFrameResource::SFrameResource(ID3D12Device* pDevice, UINT iObjectCBCount)
 
 	if (FAILED(hresult))
 	{
-		SError::showErrorMessageBox(hresult, L"SFrameResource::SFrameResource::ID3D12Device::CreateCommandAllocator()");
+		SError::showErrorMessageBoxAndLog(hresult);
 	}
 	else
 	{

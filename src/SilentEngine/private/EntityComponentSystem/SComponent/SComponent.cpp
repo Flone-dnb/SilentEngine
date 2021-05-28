@@ -47,8 +47,7 @@ SComponent::~SComponent()
 {
 	if (bSpawnedInLevel)
 	{
-		SError::showErrorMessageBox(L"SComponent::~SComponent()", L"component destructor is called while the component is spawned. "
-			L"Despawn the component first.");
+		SError::showErrorMessageBoxAndLog("component destructor is called while the component is spawned. Despawn the component first.");
 	}
 
 	for (int i = 0; i < vResourceUsed.size(); i++)
@@ -78,7 +77,7 @@ bool SComponent::addChildComponent(SComponent* pComponent)
 
 	if (bSpawnedInLevel)
 	{
-		SError::showErrorMessageBox(L"SComponent::addChildComponent()", L"cannot add a component when the parent component is already spawned.");
+		SError::showErrorMessageBoxAndLog("cannot add a component when the parent component is already spawned.");
 		return true;
 	}
 	else
@@ -87,7 +86,7 @@ bool SComponent::addChildComponent(SComponent* pComponent)
 		{
 			if (pComponent->pContainer)
 			{
-				SError::showErrorMessageBox(L"SComponent::addChildComponent()", L"component already added to other container/component.");
+				SError::showErrorMessageBoxAndLog("component already added to other container/component.");
 				return true;
 			}
 
@@ -114,8 +113,8 @@ bool SComponent::addChildComponent(SComponent* pComponent)
 		}
 		else
 		{
-			SError::showErrorMessageBox(L"SComponent::addChildComponent()", L"The component has no parent and it can't have child "
-				L"components yet. Add the component to the container or other component and then use this function.");
+			SError::showErrorMessageBoxAndLog("The component has no parent and it can't have child "
+				"components yet. Add the component to the container or other component and then use this function.");
 			return true;
 		}
 	}
@@ -155,7 +154,7 @@ void SComponent::setLocalLocation(const SVector& location)
 {
 	if (!pContainer)
 	{
-		SError::showErrorMessageBox(L"SComponent::setLocalLocation()", L"Add the component to a container or other component first.");
+		SError::showErrorMessageBoxAndLog("add the component to a container or other component first.");
 		return;
 	}
 
@@ -183,7 +182,7 @@ void SComponent::setLocalRotation(const SVector& rotation)
 {
 	if (!pContainer)
 	{
-		SError::showErrorMessageBox(L"SComponent::setLocalRotation()", L"Add the component to a container or other component first.");
+		SError::showErrorMessageBoxAndLog("Add the component to a container or other component first.");
 		return;
 	}
 
@@ -215,7 +214,7 @@ void SComponent::setLocalScale(const SVector& scale)
 {
 	if (!pContainer)
 	{
-		SError::showErrorMessageBox(L"SComponent::setLocalScale()", L"Add the component to a container or other component first.");
+		SError::showErrorMessageBoxAndLog("Add the component to a container or other component first.");
 		return;
 	}
 
@@ -474,7 +473,7 @@ void SComponent::removeMeshesByShader(std::vector<SShaderObjects>* pOpaqueMeshes
 
 				if (bFoundObject == false)
 				{
-					SError::showErrorMessageBox(L"SComponent::removeMeshesByShader()", L"Could not find the object in the shader array.");
+					SError::showErrorMessageBoxAndLog("could not find the object in the shader array.");
 				}
 
 				if ((pVectorToLook->operator[](i).vMeshComponentsWithThisShader.size() == 0) && (pVectorToLook->operator[](i).pShader != nullptr))
@@ -490,7 +489,7 @@ void SComponent::removeMeshesByShader(std::vector<SShaderObjects>* pOpaqueMeshes
 
 		if (bFound == false)
 		{
-			SError::showErrorMessageBox(L"SComponent::removeMeshesByShader()", L"Could not find the object by the given shader in the array.");
+			SError::showErrorMessageBoxAndLog("could not find the object by the given shader in the array.");
 		}
 	}
 
@@ -710,7 +709,7 @@ SVector SComponent::getLocationInWorld()
 {
 	if (!pContainer)
 	{
-		SError::showErrorMessageBox(L"SComponent::getLocationInWorld()", L"Add the component to a container or other component first.");
+		SError::showErrorMessageBoxAndLog("add the component to a container or other component first.");
 		return SVector(0.0f, 0.0f, 0.0f);
 	}
 

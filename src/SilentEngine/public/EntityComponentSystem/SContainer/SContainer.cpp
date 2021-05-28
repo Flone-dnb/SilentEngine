@@ -133,7 +133,7 @@ bool SContainer::addComponentToContainer(SComponent* pComponent)
 {
 	if (bSpawnedInLevel)
 	{
-		SError::showErrorMessageBox(L"SContainer::addComponentToContainer()", L"cannot add a component when the container is already spawned.");
+		SError::showErrorMessageBoxAndLog("cannot add a component when the container is already spawned.");
 		return true;
 	}
 
@@ -141,7 +141,7 @@ bool SContainer::addComponentToContainer(SComponent* pComponent)
 	{
 		if (vComponents[i]->getComponentName() == pComponent->getComponentName())
 		{
-			SError::showErrorMessageBox(L"SContainer::addComponentToContainer()", L"the component's name is not unique within this container.");
+			SError::showErrorMessageBoxAndLog("the component's name is not unique within this container.");
 			return true;
 		}
 	}
@@ -163,7 +163,7 @@ bool SContainer::removeComponentFromContainer(SComponent* pComponent)
 {
 	if (bSpawnedInLevel)
 	{
-		SError::showErrorMessageBox(L"SContainer::removeComponentFromContainer()", L"cannot remove a component when the container is already spawned.");
+		SError::showErrorMessageBoxAndLog("cannot remove a component when the container is already spawned.");
 		return true;
 	}
 

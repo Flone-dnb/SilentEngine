@@ -169,14 +169,12 @@ void SMeshComponent::setMeshData(const SMeshData& meshData, bool bAddedRemovedIn
 	{
 		if (meshData.getVerticesCount() > UINT_MAX)
 		{
-			SError::showErrorMessageBox(L"SMeshComponent::setMeshData()",
-				L"the number of vertices in the specified mesh data has exceeded the maximum amount of vertices (the maximum is "
-				+ std::to_wstring(UINT_MAX) + L").");
+			SError::showErrorMessageBoxAndLog("the number of vertices in the specified mesh data has exceeded the maximum amount of vertices (the maximum is "
+				+ std::to_string(UINT_MAX) + ").");
 		}
 		else if (meshData.getVerticesCount() * sizeof(SVertex) > UINT_MAX)
 		{
-			SError::showErrorMessageBox(L"SMeshComponent::setMeshData()",
-				L"the number of vertices in the specified mesh data is too big, can't continue because an overflow will occur.");
+			SError::showErrorMessageBoxAndLog("the number of vertices in the specified mesh data is too big, can't continue because an overflow will occur.");
 		}
 
 		// to UINT because views require UINT
@@ -185,17 +183,15 @@ void SMeshComponent::setMeshData(const SMeshData& meshData, bool bAddedRemovedIn
 
 		if (meshData.getIndicesCount() > UINT_MAX)
 		{
-			SError::showErrorMessageBox(L"SMeshComponent::setMeshData()",
-				L"the number of indices in the specified mesh data has exceeded the maximum amount of indices (the maximum is "
-				+ std::to_wstring(UINT_MAX) + L").");
+			SError::showErrorMessageBoxAndLog("the number of indices in the specified mesh data has exceeded the maximum amount of indices (the maximum is "
+				+ std::to_string(UINT_MAX) + ").");
 		}
 
 		if (meshData.hasIndicesMoreThan16Bits())
 		{
 			if (meshData.getIndicesCount() * sizeof(std::uint32_t) > UINT_MAX)
 			{
-				SError::showErrorMessageBox(L"SMeshComponent::setMeshData()",
-					L"the number of indices in the specified mesh data is too big, can't continue because an overflow will occur.");
+				SError::showErrorMessageBoxAndLog("the number of indices in the specified mesh data is too big, can't continue because an overflow will occur.");
 			}
 
 			renderData.pGeometry->indexFormat = DXGI_FORMAT_R32_UINT;
@@ -205,8 +201,7 @@ void SMeshComponent::setMeshData(const SMeshData& meshData, bool bAddedRemovedIn
 		{
 			if (meshData.getIndicesCount() * sizeof(std::uint16_t) > UINT_MAX)
 			{
-				SError::showErrorMessageBox(L"SMeshComponent::setMeshData()",
-					L"the number of indices in the specified mesh data is too big, can't continue because an overflow will occur.");
+				SError::showErrorMessageBoxAndLog("the number of indices in the specified mesh data is too big, can't continue because an overflow will occur.");
 			}
 
 			renderData.pGeometry->indexFormat = DXGI_FORMAT_R16_UINT;
@@ -265,7 +260,7 @@ bool SMeshComponent::setMeshMaterial(SMaterial* pMaterial)
 	{
 		if (pMaterial->bUsedInBundle)
 		{
-			SError::showErrorMessageBox(L"SMeshComponent::setMeshMaterial", L"The given material is used in a bundle. It cannot be used here.");
+			SError::showErrorMessageBoxAndLog("The given material is used in a bundle. It cannot be used here.");
 
 			return true;
 		}
@@ -282,7 +277,7 @@ bool SMeshComponent::setMeshMaterial(SMaterial* pMaterial)
 	}
 	else
 	{
-		SError::showErrorMessageBox(L"SMeshComponent::setMeshMaterial", L"The given material is not registered. Register the material "
+		SError::showErrorMessageBoxAndLog("the given material is not registered. Register the material "
 			"using the SApplication::registerMaterial() function before using it.");
 
 		return true;
@@ -369,7 +364,7 @@ void SMeshComponent::setDrawAsLines(bool bDrawAsLines)
 	{
 		if (bEnableTransparency)
 		{
-			SError::showErrorMessageBox(L"SMeshComponent::setDrawAsLines()", L"cannot draw as lines because the mesh is using transparency.");
+			SError::showErrorMessageBoxAndLog("cannot draw as lines because the mesh is using transparency.");
 		}
 		else
 		{
@@ -411,8 +406,7 @@ SMeshDataComputeResource* SMeshComponent::getMeshDataAsComputeResource(bool bGet
 {
 	if (bUseInstancing)
 	{
-		SError::showErrorMessageBox(L"SMeshComponent::getMeshDataAsComputeResource()",
-			L"cannot use this mesh in a compute shader because this mesh is using instancing.");
+		SError::showErrorMessageBoxAndLog("cannot use this mesh in a compute shader because this mesh is using instancing.");
 		// because if we use instancing we should always do frustum culling
 		// as we fill vInstancedMeshes every frame
 		return nullptr;
@@ -420,8 +414,7 @@ SMeshDataComputeResource* SMeshComponent::getMeshDataAsComputeResource(bool bGet
 
 	if (bSpawnedInLevel == false)
 	{
-		SError::showErrorMessageBox(L"SMeshComponent::getMeshDataAsComputeResource()",
-			L"cannot use this mesh in a compute shader because this mesh is not spawned (no buffer was created yet).");
+		SError::showErrorMessageBoxAndLog("cannot use this mesh in a compute shader because this mesh is not spawned (no buffer was created yet).");
 		return nullptr;
 	}
 

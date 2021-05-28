@@ -23,7 +23,7 @@
     <ProjectGuid>{2ACF33FE-CE55-4B81-8799-EF16C19B9A0B}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>SilentEditor</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.18362.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

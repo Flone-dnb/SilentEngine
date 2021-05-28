@@ -77,7 +77,7 @@ bool SAudioEngine::setMasterVolume(float fVolume)
 {
     if (bEngineInitialized == false)
     {
-		SError::showErrorMessageBox(L"AudioEngine::setMasterVolume()", L"the audio engine is not initialized.");
+		SError::showErrorMessageBoxAndLog("the audio engine is not initialized.");
         return true;
     }
 
@@ -119,7 +119,7 @@ bool SAudioEngine::getMasterVolume(float &fVolume)
 {
     if (bEngineInitialized == false)
     {
-		SError::showErrorMessageBox(L"AudioEngine::getMasterVolume()", L"the audio engine is not initialized.");
+		SError::showErrorMessageBoxAndLog("the audio engine is not initialized.");
         return true;
     }
 
@@ -176,7 +176,7 @@ void SAudioEngine::unregister3DAudioComponent(SAudioComponent* pAudioComponent)
 
 	if (bFound == false)
 	{
-		SError::showErrorMessageBox(L"SAudioEngine::unregister3DAudioComponent()", L"can't find specified audio component as a registered one.");
+		SError::showErrorMessageBoxAndLog("can't find specified audio component as a registered one.");
 	}
 }
 
@@ -218,7 +218,7 @@ bool SAudioEngine::initXAudio2()
 	HRESULT hr = CoInitializeEx( 0, COINIT_MULTITHREADED );
 	if (FAILED(hr))
 	{
-		SError::showErrorMessageBox(hr, L"AudioEngine::initXAudio2::CoInitializeEx()");
+		SError::showErrorMessageBoxAndLog(hr);
 		return true;
 	}
 
@@ -226,7 +226,7 @@ bool SAudioEngine::initXAudio2()
     hr = XAudio2Create(&pXAudio2Engine, iFlags);
     if (FAILED(hr))
     {
-		SError::showErrorMessageBox(hr, L"AudioEngine::initXAudio2::XAudio2Create()");
+		SError::showErrorMessageBoxAndLog(hr);
         return true;
     }
 
@@ -243,7 +243,7 @@ bool SAudioEngine::initXAudio2()
     hr = pXAudio2Engine->CreateMasteringVoice(&pMasteringVoice);
     if (FAILED(hr))
     {
-		SError::showErrorMessageBox(hr, L"AudioEngine::initXAudio2::CreateMasteringVoice()");
+		SError::showErrorMessageBoxAndLog(hr);
         return true;
     }
 
@@ -258,7 +258,7 @@ bool SAudioEngine::initWMF()
     HRESULT hr = MFStartup(MF_VERSION);
     if (FAILED(hr))
     {
-		SError::showErrorMessageBox(hr, L"AudioEngine::initWMF::MFStartup()");
+		SError::showErrorMessageBoxAndLog(hr);
         return true;
     }
 
@@ -285,7 +285,7 @@ bool SAudioEngine::initSourceReaderConfig(IMFAttributes*& pSourceReaderConfig)
     HRESULT hr = MFCreateAttributes(&pSourceReaderConfig, 1);
     if (FAILED(hr))
     {
-		SError::showErrorMessageBox(hr, L"AudioEngine::initSourceReaderConfig::MFCreateAttributes()");
+		SError::showErrorMessageBoxAndLog(hr);
         return true;
     }
 
@@ -298,7 +298,7 @@ bool SAudioEngine::initSourceReaderConfig(IMFAttributes*& pSourceReaderConfig)
         hr = pSourceReaderConfig->SetUINT32(MF_LOW_LATENCY, true);
         if (FAILED(hr))
         {
-			SError::showErrorMessageBox(hr, L"AudioEngine::initSourceReaderConfig::MFCreateAttributes()");
+			SError::showErrorMessageBoxAndLog(hr);
             return true;
         }
     }

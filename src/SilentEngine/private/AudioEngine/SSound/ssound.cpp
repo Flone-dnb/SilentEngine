@@ -126,7 +126,7 @@ bool SSound::loadAudioFile(const std::wstring &sAudioFilePath, bool bStreamAudio
 
         if (FAILED(hr))
         {
-			SError::showErrorMessageBox(hr, L"Sound::loadAudioFile::CreateSourceVoice()");
+			SError::showErrorMessageBoxAndLog(hr);
             return true;
         }
 
@@ -178,15 +178,15 @@ bool SSound::loadAudioFile(const std::wstring &sAudioFilePath, bool bStreamAudio
         // create the source voice
         if (FAILED(hr))
         {
-			SError::showErrorMessageBox(hr, L"SSound::loadAudioFile::CreateSourceVoice() [async]");
+			SError::showErrorMessageBoxAndLog(hr);
             return true;
         }
     }
 
     if (bIs3DSound && soundInfo.iChannels != 1)
     {
-		SError::showErrorMessageBox(L"SSound::loadAudioFile()", L"Any 3D sound should be mono (1 channel), but the given sound has "
-                                    + std::to_wstring(soundInfo.iChannels) + L" channels.");
+		SError::showErrorMessageBoxAndLog("Any 3D sound should be mono (1 channel), but the given sound has "
+                                    + std::to_string(soundInfo.iChannels) + " channels.");
         return true;
     }
 
@@ -220,13 +220,13 @@ bool SSound::playSound()
 {
     if (bSoundLoaded == false)
     {
-		SError::showErrorMessageBox(L"Sound::playSound()", L"no sound is loaded.");
+		SError::showErrorMessageBoxAndLog("no sound is loaded.");
         return true;
     }
 
 	if (pOwnerComponent->bSpawnedInLevel == false)
 	{
-		SError::showErrorMessageBox(L"Sound::playSound()", L"can't play audio because the audio component is not spawned.");
+		SError::showErrorMessageBoxAndLog("can't play audio because the audio component is not spawned.");
 		return true;
 	}
 
@@ -271,7 +271,7 @@ bool SSound::playSound()
         HRESULT hr = pSourceVoice->SubmitSourceBuffer(&audioBuffer);
         if (FAILED(hr))
         {
-			SError::showErrorMessageBox(hr, L"Sound::playSound::SubmitSourceBuffer()");
+			SError::showErrorMessageBoxAndLog(hr);
             return true;
         }
 
@@ -279,7 +279,7 @@ bool SSound::playSound()
         hr = pSourceVoice->Start();
         if (FAILED(hr))
         {
-			SError::showErrorMessageBox(hr, L"Sound::playSound::Start()");
+			SError::showErrorMessageBoxAndLog(hr);
             return true;
         }
 
@@ -300,7 +300,7 @@ bool SSound::pauseSound()
 {
     if (bSoundLoaded == false)
     {
-		SError::showErrorMessageBox(L"Sound::pauseSound()", L"no sound is loaded.");
+		SError::showErrorMessageBoxAndLog("no sound is loaded.");
         return true;
     }
 
@@ -318,7 +318,7 @@ bool SSound::pauseSound()
     HRESULT hr = pSourceVoice->Stop();
     if (FAILED(hr))
     {
-		SError::showErrorMessageBox(hr, L"Sound::pauseSound::Stop()");
+		SError::showErrorMessageBoxAndLog(hr);
         return true;
     }
 
@@ -329,13 +329,13 @@ bool SSound::unpauseSound()
 {
     if (bSoundLoaded == false)
     {
-		SError::showErrorMessageBox(L"Sound::unpauseSound()", L"no sound is loaded.");
+		SError::showErrorMessageBoxAndLog("no sound is loaded.");
         return true;
     }
 
 	if (pOwnerComponent->bSpawnedInLevel == false)
 	{
-		SError::showErrorMessageBox(L"Sound::unpauseSound()", L"can't play audio because the audio component is not spawned.");
+		SError::showErrorMessageBoxAndLog("can't play audio because the audio component is not spawned.");
 		return true;
 	}
 
@@ -347,7 +347,7 @@ bool SSound::unpauseSound()
     HRESULT hr = pSourceVoice->Start();
     if (FAILED(hr))
     {
-		SError::showErrorMessageBox(hr, L"Sound::unpauseSound::Stop()");
+		SError::showErrorMessageBoxAndLog(hr);
         return true;
     }
 
@@ -373,7 +373,7 @@ bool SSound::stopSound()
 {
     if (bSoundLoaded == false)
     {
-		SError::showErrorMessageBox(L"Sound::stopSound()", L"no sound is loaded.");
+		SError::showErrorMessageBoxAndLog("no sound is loaded.");
         return true;
     }
 
@@ -396,7 +396,7 @@ bool SSound::stopSound()
         HRESULT hr = pSourceVoice->Stop();
         if (FAILED(hr))
         {
-            SError::showErrorMessageBox(hr, L"Sound::stopSound::Stop()");
+            SError::showErrorMessageBoxAndLog(hr);
             return true;
         }
     }
@@ -434,7 +434,7 @@ bool SSound::stopSound()
         HRESULT hr = pAsyncSourceReader->SetCurrentPosition(GUID_NULL, var);
         if (FAILED(hr))
         {
-            SError::showErrorMessageBox(hr, L"Sound::playSound::SetCurrentPosition() [restart]");
+            SError::showErrorMessageBoxAndLog(hr);
             return true;
         }
     }
@@ -458,13 +458,13 @@ bool SSound::setPositionInSec(double dPositionInSec)
 {
     if (bSoundLoaded == false)
     {
-        SError::showErrorMessageBox(L"Sound::setPositionInSec()", L"no sound is loaded.");
+        SError::showErrorMessageBoxAndLog("no sound is loaded.");
         return true;
     }
 
     if ((dPositionInSec > soundInfo.dSoundLengthInSec) || (dPositionInSec < 0.0))
     {
-        SError::showErrorMessageBox(L"Sound::setPositionInSec()", L"the specified position is invalid.");
+        SError::showErrorMessageBoxAndLog("the specified position is invalid.");
         return true;
     }
 
@@ -487,7 +487,7 @@ bool SSound::setPositionInSec(double dPositionInSec)
             hr = pAsyncSourceReader->Flush((DWORD)MF_SOURCE_READER_FIRST_AUDIO_STREAM);
             if (FAILED(hr))
             {
-                SError::showErrorMessageBox(hr, L"Sound::setPositionInSec::Flush()");
+                SError::showErrorMessageBoxAndLog(hr);
                 return true;
             }
 
@@ -497,14 +497,14 @@ bool SSound::setPositionInSec(double dPositionInSec)
             hr = pSourceVoice->Stop();
             if (FAILED(hr))
             {
-                SError::showErrorMessageBox(hr, L"Sound::setPositionInSec::Stop()");
+                SError::showErrorMessageBoxAndLog(hr);
                 return true;
             }
 
             hr = pSourceVoice->FlushSourceBuffers();
             if (FAILED(hr))
             {
-                SError::showErrorMessageBox(hr, L"Sound::setPositionInSec::FlushSourceBuffers()");
+                SError::showErrorMessageBoxAndLog(hr);
                 return true;
             }
 
@@ -513,13 +513,13 @@ bool SSound::setPositionInSec(double dPositionInSec)
             hr = pSourceVoice->Start();
             if (FAILED(hr))
             {
-                SError::showErrorMessageBox(hr, L"Sound::setPositionInSec::Start()");
+                SError::showErrorMessageBoxAndLog(hr);
                 return true;
             }
         }
         else
         {
-            SError::showErrorMessageBox(hr, L"Sound::setPositionInSec::SetCurrentPosition()");
+            SError::showErrorMessageBoxAndLog(hr);
             return true;
         }
     }
@@ -528,14 +528,14 @@ bool SSound::setPositionInSec(double dPositionInSec)
         HRESULT hr = pSourceVoice->Stop();
         if (FAILED(hr))
         {
-            SError::showErrorMessageBox(hr, L"Sound::setPositionInSec::Stop()");
+            SError::showErrorMessageBoxAndLog(hr);
             return true;
         }
 
         hr = pSourceVoice->FlushSourceBuffers();
         if (FAILED(hr))
         {
-            SError::showErrorMessageBox(hr, L"Sound::setPositionInSec::FlushSourceBuffers()");
+            SError::showErrorMessageBoxAndLog(hr);
             return true;
         }
 
@@ -553,14 +553,14 @@ bool SSound::setPositionInSec(double dPositionInSec)
         hr = pSourceVoice->SubmitSourceBuffer(&audioBuffer);
         if (FAILED(hr))
         {
-            SError::showErrorMessageBox(hr, L"Sound::setPositionInSec::SubmitSourceBuffer()");
+            SError::showErrorMessageBoxAndLog(hr);
             return true;
         }
 
         hr = pSourceVoice->Start();
         if (FAILED(hr))
         {
-            SError::showErrorMessageBox(hr, L"Sound::setPositionInSec::Start()");
+            SError::showErrorMessageBoxAndLog(hr);
             return true;
         }
     }
@@ -584,7 +584,7 @@ bool SSound::setVolume(float fVolume)
 {
     if (bSoundLoaded == false)
     {
-        SError::showErrorMessageBox(L"Sound::setVolume()", L"no sound is loaded.");
+        SError::showErrorMessageBoxAndLog("no sound is loaded.");
         return true;
     }
 
@@ -592,7 +592,7 @@ bool SSound::setVolume(float fVolume)
     HRESULT hr = pSourceVoice->SetVolume(fVolume);
     if (FAILED(hr))
     {
-        SError::showErrorMessageBox(hr, L"Sound::setVolume::SetVolume()");
+        SError::showErrorMessageBoxAndLog(hr);
         return true;
     }
 
@@ -604,7 +604,7 @@ bool SSound::setPitchInFreqRatio(float fRatio)
 {
     if (bSoundLoaded == false)
     {
-        SError::showErrorMessageBox(L"Sound::setPitchInFreqRatio()", L"no sound is loaded.");
+        SError::showErrorMessageBoxAndLog("no sound is loaded.");
         return true;
     }
 
@@ -620,7 +620,7 @@ bool SSound::setPitchInFreqRatio(float fRatio)
     HRESULT hr = pSourceVoice->SetFrequencyRatio(fRatio);
     if (FAILED(hr))
     {
-        SError::showErrorMessageBox(hr, L"Sound::setPitchInFreqRatio::SetFrequencyRatio()");
+        SError::showErrorMessageBoxAndLog(hr);
         return true;
     }
 
@@ -631,7 +631,7 @@ bool SSound::setPitchInSemitones(float fSemitones)
 {
     if (bSoundLoaded == false)
     {
-        SError::showErrorMessageBox(L"Sound::setPitchInFreqRation()", L"no sound is loaded.");
+        SError::showErrorMessageBoxAndLog("no sound is loaded.");
         return true;
     }
 
@@ -647,7 +647,7 @@ bool SSound::setPitchInSemitones(float fSemitones)
     HRESULT hr = pSourceVoice->SetFrequencyRatio(powf(2.0f, fSemitones / 12.0f));
     if (FAILED(hr))
     {
-        SError::showErrorMessageBox(hr, L"Sound::setPitchInSemitones::SetFrequencyRatio()");
+        SError::showErrorMessageBoxAndLog(hr);
         return true;
     }
 
@@ -669,7 +669,7 @@ void SSound::set3DSoundProps(const S3DSoundProps& props)
 			}
 			else
 			{
-				SError::showErrorMessageBox(L"SSound::set3DSoundProps", L"distance values in the vCustomVolumeCurve should be sorted.");
+				SError::showErrorMessageBoxAndLog("distance values in the vCustomVolumeCurve should be sorted.");
 			}
 		}
 
@@ -677,7 +677,7 @@ void SSound::set3DSoundProps(const S3DSoundProps& props)
 	}
 	else
 	{
-		SError::showErrorMessageBox(L"SSound::set3DSoundProps()", L"you can use this function only on a 3D sound (see SSound constructor).");
+		SError::showErrorMessageBoxAndLog("you can use this function only on a 3D sound (see SSound constructor).");
 		return;
 	}
 }
@@ -688,7 +688,7 @@ bool SSound::applyNew3DSoundProps(SEmitterProps &emitterProps)
     {
         if (bSoundLoaded == false)
         {
-            SError::showErrorMessageBox(L"SSound::applyNew3DSoundProps()", L"The sound is not loaded.");
+            SError::showErrorMessageBoxAndLog("the sound is not loaded.");
             return true;
         }
 
@@ -773,7 +773,7 @@ bool SSound::applyNew3DSoundProps(SEmitterProps &emitterProps)
 
         if (FAILED(hr))
         {
-            SError::showErrorMessageBox(hr, L"SSound::applyNew3DSoundProps::SetOutputMatrix()");
+            SError::showErrorMessageBoxAndLog(hr);
             return true;
         }
 
@@ -782,7 +782,7 @@ bool SSound::applyNew3DSoundProps(SEmitterProps &emitterProps)
     }
     else
     {
-        SError::showErrorMessageBox(L"SSound::applyNew3DSoundProps()", L"you can use this function only on a 3D sound (see SSound constructor).");
+        SError::showErrorMessageBoxAndLog("you can use this function only on a 3D sound (see SSound constructor).");
         return true;
     }
 }
@@ -791,7 +791,7 @@ bool SSound::getVolume(float &fVolume)
 {
     if (bSoundLoaded == false)
     {
-        SError::showErrorMessageBox(L"Sound::getVolume()", L"no sound is loaded.");
+        SError::showErrorMessageBoxAndLog("no sound is loaded.");
         return true;
     }
 
@@ -806,7 +806,7 @@ bool SSound::getSoundInfo(SSoundInfo &soundInfo)
 {
     if (bSoundLoaded == false)
     {
-        SError::showErrorMessageBox(L"Sound::getSoundFormat()", L"no sound is loaded.");
+        SError::showErrorMessageBoxAndLog("no sound is loaded.");
         return true;
     }
 
@@ -819,7 +819,7 @@ bool SSound::getSoundState(SSoundState &state)
 {
     if (bSoundLoaded == false)
     {
-        SError::showErrorMessageBox(L"Sound::getSoundFormat()", L"no sound is loaded.");
+        SError::showErrorMessageBoxAndLog("no sound is loaded.");
         return true;
     }
 
@@ -832,7 +832,7 @@ bool SSound::getPositionInSec(double &dPositionInSec)
 {
     if (bSoundLoaded == false)
     {
-        SError::showErrorMessageBox(L"Sound::getSoundFormat()", L"no sound is loaded.");
+        SError::showErrorMessageBoxAndLog("no sound is loaded.");
         return true;
     }
 
@@ -870,7 +870,7 @@ bool SSound::getLoadedAudioDataSizeInBytes(size_t& iSizeInBytes)
 {
     if (bSoundLoaded == false)
     {
-        SError::showErrorMessageBox(L"Sound::getLoadedAudioDataSizeInBytes()", L"no sound is loaded.");
+        SError::showErrorMessageBoxAndLog("no sound is loaded.");
         return true;
     }
 
@@ -897,7 +897,7 @@ bool SSound::readWaveData(std::vector<unsigned char>* pvWaveData, bool& bEndOfSt
 {
 	if (bSoundLoaded == false)
 	{
-		SError::showErrorMessageBox(L"Sound::readWaveData()", L"no sound is loaded.");
+		SError::showErrorMessageBoxAndLog("no sound is loaded.");
 		return true;
 	}
 
@@ -924,7 +924,7 @@ bool SSound::readWaveData(std::vector<unsigned char>* pvWaveData, bool& bEndOfSt
     hr = pOptionalSourceReader->ReadSample(iStreamIndex, 0, nullptr, &flags, nullptr, pSample.GetAddressOf());
     if (FAILED(hr))
     {
-        SError::showErrorMessageBox(hr, L"AudioEngine::readWaveData::ReadSample()");
+        SError::showErrorMessageBoxAndLog(hr);
         return true;
     }
 
@@ -938,7 +938,7 @@ bool SSound::readWaveData(std::vector<unsigned char>* pvWaveData, bool& bEndOfSt
         HRESULT hr = pOptionalSourceReader->SetCurrentPosition(GUID_NULL, var);
         if (FAILED(hr))
         {
-            SError::showErrorMessageBox(hr, L"Sound::readWaveData::SetCurrentPosition()");
+            SError::showErrorMessageBoxAndLog(hr);
             return true;
         }
 
@@ -953,7 +953,7 @@ bool SSound::readWaveData(std::vector<unsigned char>* pvWaveData, bool& bEndOfSt
     hr = pSample->ConvertToContiguousBuffer(pBuffer.GetAddressOf());
     if (FAILED(hr))
     {
-        SError::showErrorMessageBox(hr, L"AudioEngine::readWaveData::ConvertToContiguousBuffer()");
+        SError::showErrorMessageBoxAndLog(hr);
         return true;
     }
 
@@ -961,7 +961,7 @@ bool SSound::readWaveData(std::vector<unsigned char>* pvWaveData, bool& bEndOfSt
     hr = pBuffer->Lock(&pLocalAudioData, nullptr, &iLocalAudioDataLength);
     if (FAILED(hr))
     {
-        SError::showErrorMessageBox(hr, L"AudioEngine::readWaveData::Lock()");
+        SError::showErrorMessageBoxAndLog(hr);
         return true;
     }
 
@@ -976,7 +976,7 @@ bool SSound::readWaveData(std::vector<unsigned char>* pvWaveData, bool& bEndOfSt
 
     if (FAILED(hr))
     {
-        SError::showErrorMessageBox(hr, L"AudioEngine::readWaveData::Unlock()");
+        SError::showErrorMessageBoxAndLog(hr);
         return true;
     }
 
@@ -1063,7 +1063,7 @@ bool SSound::readSoundInfo(IMFSourceReader* pSourceReader, WAVEFORMATEX* pFormat
     HRESULT hr = pSourceReader->GetPresentationAttribute(MF_SOURCE_READER_MEDIASOURCE, MF_PD_DURATION, &var);
     if (FAILED(hr))
     {
-        SError::showErrorMessageBox(hr, L"SSound::readSoundInfo::GetPresentationAttribute() [duration]");
+        SError::showErrorMessageBoxAndLog(hr);
         return true;
     }
 
@@ -1084,7 +1084,7 @@ bool SSound::readSoundInfo(IMFSourceReader* pSourceReader, WAVEFORMATEX* pFormat
     {
         // Not critical (may fail on .ogg).
 
-        //SError::showErrorMessageBox(hr, L"SSound::readSoundInfo::GetPresentationAttribute() [bitrate]");
+        //SError::showErrorMessageBoxAndLog(hr, L"SSound::readSoundInfo::GetPresentationAttribute() [bitrate]");
         //return true;
 
         soundInfo.iBitrate = 0;
@@ -1109,7 +1109,7 @@ bool SSound::readSoundInfo(IMFSourceReader* pSourceReader, WAVEFORMATEX* pFormat
     {
         // Not critical (may fail on .wav).
 
-        //SError::showErrorMessageBox(hr, L"SSound::readSoundInfo::GetPresentationAttribute() [vbr]");
+        //SError::showErrorMessageBoxAndLog(hr, L"SSound::readSoundInfo::GetPresentationAttribute() [vbr]");
         //return true;
 
         soundInfo.bUsesVariableBitRate = false;
@@ -1131,7 +1131,7 @@ bool SSound::readSoundInfo(IMFSourceReader* pSourceReader, WAVEFORMATEX* pFormat
     hr = pSourceReader->GetPresentationAttribute(MF_SOURCE_READER_MEDIASOURCE, MF_PD_TOTAL_FILE_SIZE, &var);
     if (FAILED(hr))
     {
-        SError::showErrorMessageBox(hr, L"SSound::readSoundInfo::GetPresentationAttribute() [size]");
+        SError::showErrorMessageBoxAndLog(hr);
         return true;
     }
 
@@ -1150,7 +1150,7 @@ bool SSound::loadFileIntoMemory(const std::wstring &sAudioFilePath, std::vector<
 {
     if (pAudioEngine->bEngineInitialized == false)
     {
-        SError::showErrorMessageBox(L"AudioEngine::loadFileIntoMemory()", L"the audio engine is not initialized.");
+        SError::showErrorMessageBoxAndLog("the audio engine is not initialized.");
         return true;
     }
 
@@ -1164,7 +1164,7 @@ bool SSound::loadFileIntoMemory(const std::wstring &sAudioFilePath, std::vector<
     }
     else
     {
-        SError::showErrorMessageBox(L"AudioEngine::loadFileIntoMemory()", L"the specified file (" + sAudioFilePath +L") does not exist.");
+        SError::showErrorMessageBoxAndLog("the specified file does not exist.");
         return true;
     }
 
@@ -1195,7 +1195,7 @@ bool SSound::loadFileIntoMemory(const std::wstring &sAudioFilePath, std::vector<
         hr = pSourceReader->ReadSample(iStreamIndex, 0, nullptr, &flags, nullptr, pSample.GetAddressOf());
         if (FAILED(hr))
         {
-            SError::showErrorMessageBox(hr, L"AudioEngine::loadFileIntoMemory::ReadSample()");
+            SError::showErrorMessageBoxAndLog(hr);
             return true;
         }
 
@@ -1220,7 +1220,7 @@ bool SSound::loadFileIntoMemory(const std::wstring &sAudioFilePath, std::vector<
         hr = pSample->ConvertToContiguousBuffer(pBuffer.GetAddressOf());
         if (FAILED(hr))
         {
-            SError::showErrorMessageBox(hr, L"AudioEngine::loadFileIntoMemory::ConvertToContiguousBuffer()");
+            SError::showErrorMessageBoxAndLog(hr);
             return true;
         }
 
@@ -1228,7 +1228,7 @@ bool SSound::loadFileIntoMemory(const std::wstring &sAudioFilePath, std::vector<
         hr = pBuffer->Lock(&pLocalAudioData, nullptr, &iLocalAudioDataLength);
         if (FAILED(hr))
         {
-            SError::showErrorMessageBox(hr, L"AudioEngine::loadFileIntoMemory::Lock()");
+            SError::showErrorMessageBoxAndLog(hr);
             return true;
         }
 
@@ -1243,7 +1243,7 @@ bool SSound::loadFileIntoMemory(const std::wstring &sAudioFilePath, std::vector<
 
         if (FAILED(hr))
         {
-            SError::showErrorMessageBox(hr, L"AudioEngine::loadFileIntoMemory::Unlock()");
+            SError::showErrorMessageBoxAndLog(hr);
             return true;
         }
     }
@@ -1257,7 +1257,7 @@ bool SSound::createAsyncReader(const std::wstring &sAudioFilePath, IMFSourceRead
 {
     if (pAudioEngine->bEngineInitialized == false)
     {
-        SError::showErrorMessageBox(L"SSound::createAsyncReader()", L"the audio engine is not initialized.");
+        SError::showErrorMessageBoxAndLog("the audio engine is not initialized.");
         return true;
     }
 
@@ -1271,7 +1271,7 @@ bool SSound::createAsyncReader(const std::wstring &sAudioFilePath, IMFSourceRead
     }
     else
     {
-        SError::showErrorMessageBox(L"SSound::loadFileIntoMemory()", L"the specified file (" + sAudioFilePath + L") does not exist.");
+        SError::showErrorMessageBoxAndLog("the specified file does not exist.");
         return true;
     }
 
@@ -1372,7 +1372,7 @@ bool SSound::loopStream(IMFSourceReader *pAsyncReader, IXAudio2SourceVoice *pSou
                 continue;
             }
 
-            SError::showErrorMessageBox(hr, L"AudioEngine::loopStream::ReadSample()");
+            SError::showErrorMessageBoxAndLog(hr);
             return true;
         }
 
@@ -1412,7 +1412,7 @@ bool SSound::loopStream(IMFSourceReader *pAsyncReader, IXAudio2SourceVoice *pSou
         hr = sourceReaderCallback.sample->ConvertToContiguousBuffer(pMediaBuffer.GetAddressOf());
         if (FAILED(hr))
         {
-            SError::showErrorMessageBox(hr, L"AudioEngine::loopStream::ConvertToContiguousBuffer()");
+            SError::showErrorMessageBoxAndLog(hr);
             return true;
         }
 
@@ -1426,7 +1426,7 @@ bool SSound::loopStream(IMFSourceReader *pAsyncReader, IXAudio2SourceVoice *pSou
         hr = pMediaBuffer->Lock(&pAudioData, nullptr, &iSampleBufferSize);
         if (FAILED(hr))
         {
-            SError::showErrorMessageBox(hr, L"AudioEngine::loopStream::Lock()");
+            SError::showErrorMessageBoxAndLog(hr);
             return true;
         }
 
@@ -1450,7 +1450,7 @@ bool SSound::loopStream(IMFSourceReader *pAsyncReader, IXAudio2SourceVoice *pSou
         hr = pMediaBuffer->Unlock();
         if (FAILED(hr))
         {
-            SError::showErrorMessageBox(hr, L"AudioEngine::loopStream::Unlock()");
+            SError::showErrorMessageBoxAndLog(hr);
             return true;
         }
 
@@ -1510,7 +1510,7 @@ bool SSound::createSourceReader(const std::wstring &sAudioFilePath, SourceReader
         hr = pSourceReaderConfig->SetUnknown(MF_SOURCE_READER_ASYNC_CALLBACK, *pAsyncSourceReaderCallback);
         if (FAILED(hr))
         {
-            SError::showErrorMessageBox(hr, L"AudioEngine::createSourceReader::SetUnknown() [async]");
+            SError::showErrorMessageBoxAndLog(hr);
             return true;
         }
     }
@@ -1520,7 +1520,7 @@ bool SSound::createSourceReader(const std::wstring &sAudioFilePath, SourceReader
         hr = MFCreateSourceReaderFromURL(sAudioFilePath.c_str(), pOptionalSourceReaderConfig.Get(), &pOutSourceReader);
         if (FAILED(hr))
         {
-            SError::showErrorMessageBox(hr, L"AudioEngine::createSourceReader::MFCreateSourceReaderFromURL()");
+            SError::showErrorMessageBoxAndLog(hr);
             return true;
         }
     }
@@ -1529,7 +1529,7 @@ bool SSound::createSourceReader(const std::wstring &sAudioFilePath, SourceReader
         hr = MFCreateSourceReaderFromURL(sAudioFilePath.c_str(), pSourceReaderConfig.Get(), &pOutSourceReader);
         if (FAILED(hr))
         {
-            SError::showErrorMessageBox(hr, L"AudioEngine::createSourceReader::MFCreateSourceReaderFromURL()");
+            SError::showErrorMessageBoxAndLog(hr);
             return true;
         }
     }
@@ -1541,7 +1541,7 @@ bool SSound::createSourceReader(const std::wstring &sAudioFilePath, SourceReader
     hr = pOutSourceReader->SetStreamSelection((DWORD)MF_SOURCE_READER_ALL_STREAMS, false);
     if (FAILED(hr))
     {
-        SError::showErrorMessageBox(hr, L"AudioEngine::createSourceReader::SetStreamSelection()");
+        SError::showErrorMessageBoxAndLog(hr);
         return true;
     }
 
@@ -1552,7 +1552,7 @@ bool SSound::createSourceReader(const std::wstring &sAudioFilePath, SourceReader
     hr = pOutSourceReader->SetStreamSelection(iStreamIndex, true);
     if (FAILED(hr))
     {
-        SError::showErrorMessageBox(hr, L"AudioEngine::createSourceReader::SetStreamSelection()");
+        SError::showErrorMessageBoxAndLog(hr);
         return true;
     }
 
@@ -1563,7 +1563,7 @@ bool SSound::createSourceReader(const std::wstring &sAudioFilePath, SourceReader
     hr = pOutSourceReader->GetNativeMediaType(iStreamIndex, 0, pNativeMediaType.GetAddressOf());
     if(FAILED(hr))
     {
-        SError::showErrorMessageBox(hr, L"AudioEngine::createSourceReader::GetNativeMediaType()");
+        SError::showErrorMessageBoxAndLog(hr);
         return true;
     }
 
@@ -1573,7 +1573,7 @@ bool SSound::createSourceReader(const std::wstring &sAudioFilePath, SourceReader
     hr = pNativeMediaType->GetGUID(MF_MT_MAJOR_TYPE, &majorType);
     if (majorType != MFMediaType_Audio)
     {
-        SError::showErrorMessageBox(L"AudioEngine::createSourceReader::GetGUID() [MF_MT_MAJOR_TYPE]", L"the requested file is not an audio file.");
+        SError::showErrorMessageBoxAndLog("the requested file is not an audio file.");
         return true;
     }
 
@@ -1589,7 +1589,7 @@ bool SSound::createSourceReader(const std::wstring &sAudioFilePath, SourceReader
         hr = MFCreateMediaType(pPartialType.GetAddressOf());
         if (FAILED(hr))
         {
-            SError::showErrorMessageBox(hr, L"AudioEngine::createSourceReader::MFCreateMediaType()");
+            SError::showErrorMessageBoxAndLog(hr);
             return true;
         }
 
@@ -1597,7 +1597,7 @@ bool SSound::createSourceReader(const std::wstring &sAudioFilePath, SourceReader
         hr = pPartialType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Audio);
         if (FAILED(hr))
         {
-            SError::showErrorMessageBox(hr, L"AudioEngine::createSourceReader::SetGUID() [MF_MT_MAJOR_TYPE]");
+            SError::showErrorMessageBoxAndLog(hr);
             return true;
         }
 
@@ -1605,7 +1605,7 @@ bool SSound::createSourceReader(const std::wstring &sAudioFilePath, SourceReader
         hr = pPartialType->SetGUID(MF_MT_SUBTYPE, MFAudioFormat_PCM);
         if (FAILED(hr))
         {
-            SError::showErrorMessageBox(hr, L"AudioEngine::createSourceReader::SetGUID() [MF_MT_SUBTYPE]");
+            SError::showErrorMessageBoxAndLog(hr);
             return true;
         }
 
@@ -1614,7 +1614,7 @@ bool SSound::createSourceReader(const std::wstring &sAudioFilePath, SourceReader
         hr = pOutSourceReader->SetCurrentMediaType(iStreamIndex, NULL, pPartialType.Get());
         if (FAILED(hr))
         {
-            SError::showErrorMessageBox(hr, L"AudioEngine::createSourceReader::SetCurrentMediaType()");
+            SError::showErrorMessageBoxAndLog(hr);
             return true;
         }
     }
@@ -1625,14 +1625,14 @@ bool SSound::createSourceReader(const std::wstring &sAudioFilePath, SourceReader
     hr = pOutSourceReader->GetCurrentMediaType(iStreamIndex, pUncompressedAudioType.GetAddressOf());
     if (FAILED(hr))
     {
-        SError::showErrorMessageBox(hr, L"AudioEngine::createSourceReader::GetCurrentMediaType()");
+        SError::showErrorMessageBoxAndLog(hr);
         return true;
     }
 
     hr = MFCreateWaveFormatExFromMFMediaType(pUncompressedAudioType.Get(), pFormat, &iWaveFormatSize);
     if (FAILED(hr))
     {
-        SError::showErrorMessageBox(hr, L"AudioEngine::createSourceReader::MFCreateWaveFormatExFromMFMediaType()");
+        SError::showErrorMessageBoxAndLog(hr);
         return true;
     }
 
@@ -1641,7 +1641,7 @@ bool SSound::createSourceReader(const std::wstring &sAudioFilePath, SourceReader
     hr = pOutSourceReader->SetStreamSelection(iStreamIndex, true);
     if (FAILED(hr))
     {
-        SError::showErrorMessageBox(hr, L"AudioEngine::createSourceReader::SetStreamSelection()");
+        SError::showErrorMessageBoxAndLog(hr);
         return true;
     }
 

@@ -205,7 +205,7 @@ void SBlurEffect::createResources()
 		IID_PPV_ARGS(&pBlurMap0));
 	if (FAILED(hresult))
 	{
-		SError::showErrorMessageBox(hresult, L"SBlurEffect::createResources::ID3D12Device::CreateCommittedResource() (map 0)");
+		SError::showErrorMessageBoxAndLog(hresult);
 		return;
 	}
 
@@ -220,7 +220,7 @@ void SBlurEffect::createResources()
 		IID_PPV_ARGS(&pBlurMap1));
 	if (FAILED(hresult))
 	{
-		SError::showErrorMessageBox(hresult, L"SBlurEffect::createResources::ID3D12Device::CreateCommittedResource() (map 1)");
+		SError::showErrorMessageBoxAndLog(hresult);
 		return;
 	}
 }

@@ -28,14 +28,14 @@ bool SSoundMix::init()
     HRESULT hr = pAudioEngine->pXAudio2Engine->CreateSubmixVoice(&pSubmixVoice, 2, 44100, 0, 0, 0, 0);
     if (FAILED(hr))
     {
-		SError::showErrorMessageBox(hr, L"SSoundMix::init::CreateSubmixVoice()");
+		SError::showErrorMessageBoxAndLog(hr);
         return true;
     }
 
     hr = pAudioEngine->pXAudio2Engine->CreateSubmixVoice(&pSubmixVoiceFX, 2, 44100, 0, 0, 0, 0);
     if (FAILED(hr))
     {
-		SError::showErrorMessageBox(hr, L"SSoundMix::init::CreateSubmixVoice() [fx]");
+		SError::showErrorMessageBoxAndLog(hr);
         return true;
     }
 
@@ -49,7 +49,7 @@ bool SSoundMix::setVolume(float fVolume)
     HRESULT hr = pSubmixVoice->SetVolume(fVolume);
     if (FAILED(hr))
     {
-		SError::showErrorMessageBox(hr, L"SSoundMix::setVolume::SetVolume()");
+		SError::showErrorMessageBoxAndLog(hr);
         return true;
     }
 
@@ -66,7 +66,7 @@ bool SSoundMix::setFXVolume(float fFXVolume)
         HRESULT hr = pSubmixVoiceFX->SetVolume(fFXVolume);
         if (FAILED(hr))
         {
-			SError::showErrorMessageBox(hr, L"SSoundMix::setFXVolume::SetVolume()");
+			SError::showErrorMessageBoxAndLog(hr);
             return true;
         }
     }
@@ -87,7 +87,7 @@ bool SSoundMix::setAudioEffects(std::vector<SAudioEffect> *pvEffects)
         HRESULT hr = pSubmixVoiceFX->SetEffectChain(NULL);
         if (FAILED(hr))
         {
-			SError::showErrorMessageBox(hr, L"SSoundMix::setAudioEffects::SetEffectChain() [reset]");
+			SError::showErrorMessageBoxAndLog(hr);
             return true;
         }
 
@@ -140,7 +140,7 @@ bool SSoundMix::setAudioEffects(std::vector<SAudioEffect> *pvEffects)
 
         if (FAILED(hr))
         {
-			SError::showErrorMessageBox(hr, L"SSoundMix::setAudioEffects::CreateFX()");
+			SError::showErrorMessageBoxAndLog(hr);
             return true;
         }
     }
@@ -167,7 +167,7 @@ bool SSoundMix::setAudioEffects(std::vector<SAudioEffect> *pvEffects)
     hr = pSubmixVoiceFX->SetEffectChain(&chain);
     if (FAILED(hr))
     {
-		SError::showErrorMessageBox(hr, L"SSoundMix::setAudioEffects::SetEffectChain()");
+		SError::showErrorMessageBoxAndLog(hr);
         return true;
     }
 
@@ -202,7 +202,7 @@ bool SSoundMix::setAudioEffects(std::vector<SAudioEffect> *pvEffects)
 
         if (FAILED(hr))
         {
-			SError::showErrorMessageBox(hr, L"SSoundMix::setAudioEffects::SetEffectParameters()");
+			SError::showErrorMessageBoxAndLog(hr);
             return true;
         }
     }
@@ -217,7 +217,7 @@ bool SSoundMix::setEnableAudioEffect(unsigned int iEffectIndex, bool bEnable)
 {
     if (bEffectsSet == false)
     {
-		SError::showErrorMessageBox(L"Sound::setEnableAudioEffect()", L"no effects added, use setAudioEffects() first.");
+		SError::showErrorMessageBoxAndLog("no effects added, use setAudioEffects() first.");
         return true;
     }
 
@@ -226,7 +226,7 @@ bool SSoundMix::setEnableAudioEffect(unsigned int iEffectIndex, bool bEnable)
         HRESULT hr = pSubmixVoiceFX->EnableEffect(iEffectIndex);
         if (FAILED(hr))
         {
-			SError::showErrorMessageBox(hr, L"SSoundMix::setEnableAudioEffect::EnableEffect()");
+			SError::showErrorMessageBoxAndLog(hr);
             return true;
         }
     }
@@ -235,7 +235,7 @@ bool SSoundMix::setEnableAudioEffect(unsigned int iEffectIndex, bool bEnable)
         HRESULT hr = pSubmixVoiceFX->DisableEffect(iEffectIndex);
         if (FAILED(hr))
         {
-			SError::showErrorMessageBox(hr, L"SSoundMix::setEnableAudioEffect::DisableEffect()");
+			SError::showErrorMessageBoxAndLog(hr);
             return true;
         }
     }
@@ -259,7 +259,7 @@ bool SSoundMix::setAudioEffectParameters(unsigned int iEffectIndex, SAudioEffect
 {
     if (bEffectsSet == false)
     {
-		SError::showErrorMessageBox(L"SSoundMix::setAudioEffectParameters()", L"no effects added, use setAudioEffects() first.");
+		SError::showErrorMessageBoxAndLog("no effects added, use setAudioEffects() first.");
         return true;
     }
 
@@ -286,7 +286,7 @@ bool SSoundMix::setAudioEffectParameters(unsigned int iEffectIndex, SAudioEffect
 
     if (FAILED(hr))
     {
-		SError::showErrorMessageBox(hr, L"SSoundMix::setAudioEffectParameters::SetEffectParameters()");
+		SError::showErrorMessageBoxAndLog(hr);
         return true;
     }
 
