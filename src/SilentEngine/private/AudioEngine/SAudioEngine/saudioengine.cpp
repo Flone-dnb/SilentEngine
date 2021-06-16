@@ -182,9 +182,6 @@ void SAudioEngine::unregister3DAudioComponent(SAudioComponent* pAudioComponent)
 
 void SAudioEngine::update3DSound(SCamera* pPlayerCamera)
 {
-	// called under mtxSpawnDespawn
-
-
 	SVector vCameraLocation = pPlayerCamera->getCameraLocationInWorld();
 	SVector vCameraForwardVector;
 	SVector vCameraUpVector;

@@ -280,6 +280,7 @@ private:
 	void applyNew3DListenerProps(SListenerProps& listenerProps);
 	void apply3DPropsForComponent(SAudioComponent* pAudioComponent, float fDeltaTime = 0.0f);
 
+	// call under mtxDraw
 	void update3DSound(class SCamera* pPlayerCamera);
 
 

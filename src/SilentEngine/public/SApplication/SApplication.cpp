@@ -25,6 +25,12 @@ namespace fs = std::filesystem;
 
 #pragma comment(lib, "Winmm.lib")
 
+// DirectXTK
+#include "DDSTextureLoader.h"
+#include "SimpleMath.h"
+#include "ResourceUploadBatch.h"
+#include "DirectXHelpers.h"
+
 // Custom
 #include "SilentEngine/Private/SError/SError.h"
 #include "SilentEngine/Public/STimer/STimer.h"
@@ -35,7 +41,7 @@ namespace fs = std::filesystem;
 #include "SilentEngine/Public/EntityComponentSystem/SRuntimeMeshComponent/SRuntimeMeshComponent.h"
 #include "SilentEngine/Private/SShader/SShader.h"
 #include "SilentEngine/Private/SMiscHelpers/SMiscHelpers.h"
-#include "SilentEngine/Private/DDSTextureLoader.h"
+#include "SilentEngine/Private/GUI/SGUIObject/SGUIObject.h"
 
 
 SApplication* SApplication::pApp = nullptr;
@@ -88,8 +94,7 @@ SMaterial* SApplication::registerMaterial(const std::string& sMaterialName, bool
 
 	bool bHasUniqueName = true;
 
-	mtxMaterial.lock();
-	mtxSpawnDespawn.lock();
+	std::lock_guard<std::mutex> guard(mtxDraw);
 
 	for (size_t i = 0; i < vRegisteredMaterials.size(); i++)
 	{
@@ -121,8 +126,6 @@ SMaterial* SApplication::registerMaterial(const std::string& sMaterialName, bool
 
 		if (bExpanded)
 		{
-			mtxDraw.lock();
-
 			flushCommandQueue();
 
 			for (size_t i = 0; i < vRegisteredMaterials.size(); i++)
@@ -133,20 +136,12 @@ SMaterial* SApplication::registerMaterial(const std::string& sMaterialName, bool
 			// Recreate cbv heap.
 			createCBVSRVUAVHeap();
 			createViews();
-
-			mtxDraw.unlock();
 		}
-
-		mtxSpawnDespawn.unlock();
-		mtxMaterial.unlock();
 
 		return pMat;
 	}
 	else
 	{
-		mtxSpawnDespawn.unlock();
-		mtxMaterial.unlock();
-
 		bErrorOccurred = true;
 		return nullptr;
 	}
@@ -156,7 +151,7 @@ SMaterial* SApplication::getRegisteredMaterial(const std::string& sMaterialName)
 {
 	SMaterial* pMaterial = nullptr;
 
-	mtxMaterial.lock();
+	std::lock_guard<std::mutex> guard(mtxDraw);
 
 	for (size_t i = 0; i < vRegisteredMaterials.size(); i++)
 	{
@@ -166,8 +161,6 @@ SMaterial* SApplication::getRegisteredMaterial(const std::string& sMaterialName)
 			break;
 		}
 	}
-
-	mtxMaterial.unlock();
 
 	return pMaterial;
 }
@@ -190,7 +183,7 @@ bool SApplication::unregisterMaterial(const std::string& sMaterialName)
 
 	bool bRegistered = false;
 
-	mtxMaterial.lock();
+	std::lock_guard<std::mutex> guard(mtxDraw);
 
 	for (size_t i = 0; i < vRegisteredMaterials.size(); i++)
 	{
@@ -204,22 +197,13 @@ bool SApplication::unregisterMaterial(const std::string& sMaterialName)
 		}
 	}
 
-	mtxMaterial.unlock();
-
 	if (bRegistered == false)
 	{
 		return true;
 	}
 
 
-
 	// Remove material.
-
-	mtxMaterial.lock();
-	mtxSpawnDespawn.lock();
-	mtxDraw.lock();
-
-
 	// Find if any spawned object is using this material.
 
 	std::vector<SComponent*> vAllSpawnedMeshComponents = vAllRenderableSpawnedOpaqueComponents;
@@ -283,11 +267,94 @@ bool SApplication::unregisterMaterial(const std::string& sMaterialName)
 		createViews();
 	}
 
-	mtxSpawnDespawn.unlock();
-	mtxMaterial.unlock();
-	mtxDraw.unlock();
+	return false;
+}
+
+bool SApplication::unloadGUIObject(SGUIObject* pGUIObject)
+{
+	if (pGUIObject == nullptr)
+	{
+		return true;
+	}
+
+	std::lock_guard<std::mutex> guard(mtxDraw);
+
+	// Check if this GUI object is loaded.
+	bool bFound = false;
+	for (size_t i = 0; i < vGUILayers.size(); i++)
+	{
+		for (size_t j = 0; j < vGUILayers[i].vGUIObjects.size(); j++)
+		{
+			if (vGUILayers[i].vGUIObjects[j] == pGUIObject)
+			{
+				delete vGUILayers[i].vGUIObjects[j];
+				vGUILayers[i].vGUIObjects.erase(vGUILayers[i].vGUIObjects.begin() + i);
+				bFound = true;
+
+				if (vGUILayers[i].vGUIObjects.size() == 0 && i != 0)
+				{
+					vGUILayers.erase(vGUILayers.begin() + i);
+				}
+
+				break;
+			}
+		}
+
+		if (bFound)
+		{
+			break;
+		}
+	}
+	
+	if (bFound == false)
+	{
+		return true;
+	}
+
+	// Remove the SRV to this texture.
+
+	flushCommandQueue();
+
+	// Recreate cbv heap.
+	createCBVSRVUAVHeap();
+	createViews();
 
 	return false;
+}
+
+SGUIObject* SApplication::loadGUIObjectFromImage(const std::string& sGUIObjectName, std::wstring_view sPathToImage)
+{
+	SGUIObject* pNewGUIObject = new SGUIObject(sGUIObjectName);
+
+	std::lock_guard<std::mutex> guard(mtxDraw);
+
+	if (pNewGUIObject->loadImage(sPathToImage))
+	{
+		delete pNewGUIObject;
+		return nullptr;
+	}
+
+	// First entry with layer index 0 always exists.
+	pNewGUIObject->iZLayer = 0;
+	vGUILayers[0].vGUIObjects.push_back(pNewGUIObject);
+
+
+	// Add the SRV to this object.
+	
+
+	flushCommandQueue();
+
+	// Recreate cbv heap.
+	createCBVSRVUAVHeap();
+	createViews();
+
+
+	return pNewGUIObject;
+}
+
+std::vector<SGUILayer>* SApplication::getLoadedGUIObjects()
+{
+	return &vGUILayers;
 }
 
 STextureHandle SApplication::loadTextureFromDiskToGPU(std::string sTextureName, std::wstring sPathToTexture, bool& bErrorOccurred)
@@ -308,7 +375,7 @@ STextureHandle SApplication::loadTextureFromDiskToGPU(std::string sTextureName, 
 
 	// See if the texture name is not unique.
 
-	mtxTexture.lock();
+	std::lock_guard<std::mutex> guard(mtxDraw);
 
 	for (size_t i = 0; i < vLoadedTextures.size(); i++)
 	{
@@ -316,13 +383,9 @@ STextureHandle SApplication::loadTextureFromDiskToGPU(std::string sTextureName, 
 		{
 			bErrorOccurred = true;
 
-			mtxTexture.unlock();
-
 			return STextureHandle();
 		}
 	}
-
-	mtxTexture.unlock();
 
 
 
@@ -361,21 +424,18 @@ STextureHandle SApplication::loadTextureFromDiskToGPU(std::string sTextureName, 
 	pTexture->sTextureName = sTextureName;
 	pTexture->sPathToTexture = sPathToTexture;
 
-	mtxTexture.lock();
-	mtxDraw.lock();
-
-	flushCommandQueue();
-	resetCommandList();
+	/*flushCommandQueue();
+	resetCommandList();*/
 	
-	HRESULT hresult = DirectX::CreateDDSTextureFromFile12(pDevice.Get(), pCommandList.Get(), sPathToTexture.c_str(),
-		pTexture->pResource, pTexture->pUploadHeap);
+	DirectX::ResourceUploadBatch resourceUpload(pDevice.Get());
+	resourceUpload.Begin();
+	HRESULT hresult = DirectX::CreateDDSTextureFromFile(pDevice.Get(), resourceUpload, sPathToTexture.c_str(), pTexture->pResource.ReleaseAndGetAddressOf());
+	//HRESULT hresult = DirectX::CreateDDSTextureFromFile12(pDevice.Get(), pCommandList.Get(), sPathToTexture.c_str(),
+	//	pTexture->pResource, pTexture->pUploadHeap);
 
 	if (FAILED(hresult))
 	{
 		SError::showErrorMessageBoxAndLog(hresult);
-
-		mtxDraw.unlock();
-		mtxTexture.unlock();
 
 		bErrorOccurred = true;
 		
@@ -384,11 +444,12 @@ STextureHandle SApplication::loadTextureFromDiskToGPU(std::string sTextureName, 
 		return STextureHandle();
 	}
 
-	if (executeCommandList())
-	{
-		mtxDraw.unlock();
-		mtxTexture.unlock();
+	auto uploadResourcesFinished = resourceUpload.End(pCommandQueue.Get());
 
+	uploadResourcesFinished.wait();
+
+	/*if (executeCommandList())
+	{
 		bErrorOccurred = true;
 
 		delete pTexture;
@@ -398,17 +459,12 @@ STextureHandle SApplication::loadTextureFromDiskToGPU(std::string sTextureName, 
 
 	if (flushCommandQueue())
 	{
-		mtxDraw.unlock();
-		mtxTexture.unlock();
-
 		bErrorOccurred = true;
 
 		delete pTexture;
 
 		return STextureHandle();
-	}
-
-	mtxDraw.unlock();
+	}*/
 
 
 
@@ -420,8 +476,6 @@ STextureHandle SApplication::loadTextureFromDiskToGPU(std::string sTextureName, 
 		SError::showErrorMessageBoxAndLog("the texture size should be a multiple of 4.");
 		
 		delete pTexture;
-
-		mtxTexture.unlock();
 
 		bErrorOccurred = true;
 
@@ -447,18 +501,11 @@ STextureHandle SApplication::loadTextureFromDiskToGPU(std::string sTextureName, 
 
 	// Add the SRV to this texture.
 
-	mtxSpawnDespawn.lock();
-	mtxDraw.lock();
-
 	flushCommandQueue();
 
 	// Recreate cbv heap.
 	createCBVSRVUAVHeap();
 	createViews();
-
-	mtxDraw.unlock();
-	mtxSpawnDespawn.unlock();
-	mtxTexture.unlock();
 
 
 
@@ -503,7 +550,7 @@ std::vector<STextureHandle> SApplication::getLoadedTextures()
 {
 	std::vector<STextureHandle> vTextures;
 
-	mtxTexture.lock();
+	std::lock_guard<std::mutex> guard(mtxDraw);
 
 	for (size_t i = 0; i < vLoadedTextures.size(); i++)
 	{
@@ -516,8 +563,6 @@ std::vector<STextureHandle> SApplication::getLoadedTextures()
 		vTextures.push_back(tex);
 	}
 
-	mtxTexture.unlock();
-
 	return vTextures;
 }
 
@@ -529,9 +574,7 @@ bool SApplication::unloadTextureFromGPU(STextureHandle& textureHandle)
 	}
 
 
-	mtxTexture.lock();
-	mtxSpawnDespawn.lock();
-	mtxDraw.lock();
+	std::lock_guard<std::mutex> guard(mtxDraw);
 
 	// Find if any spawned object is using a material with this texture.
 
@@ -594,10 +637,6 @@ bool SApplication::unloadTextureFromGPU(STextureHandle& textureHandle)
 	// Recreate cbv heap.
 	createCBVSRVUAVHeap();
 	createViews();
-
-	mtxDraw.unlock();
-	mtxSpawnDespawn.unlock();
-	mtxTexture.unlock();
 	
 
 	return false;
@@ -666,6 +705,8 @@ SShader* SApplication::compileCustomShader(const std::wstring& sPathToShaderFile
 
 
 	SShader* pNewShader = new SShader(sPathToShaderFile);
+
+	std::lock_guard<std::mutex> guard(mtxDraw);
 	
 	if (vCustomMaterials.size() > 0)
 	{
@@ -675,10 +716,8 @@ SShader* SApplication::compileCustomShader(const std::wstring& sPathToShaderFile
 
 		createRootSignature(pNewShader->pCustomShaderResources, customProps.customMaterials.bWillUseTextures, customProps.bWillUseInstancing);
 
-		mtxMaterial.lock();
 		pNewShader->pCustomShaderResources->vFrameResourceBundles =
 			createBundledMaterialResource(pNewShader, pNewShader->pCustomShaderResources->vMaterials.size());
-		mtxMaterial.unlock();
 
 		if (pOutCustomResources)
 		{
@@ -710,9 +749,7 @@ SShader* SApplication::compileCustomShader(const std::wstring& sPathToShaderFile
 		return nullptr;
 	}
 
-	mtxShader.lock();
 	vCompiledUserShaders.push_back(pNewShader);
-	mtxShader.unlock();
 
 	return pNewShader;
 }
@@ -726,10 +763,7 @@ bool SApplication::unloadCompiledShaderFromGPU(SShader* pShader)
 {
 	if (pShader == nullptr) return false;
 
-	mtxShader.lock();
-
-	mtxDraw.lock();
-	mtxSpawnDespawn.lock();
+	std::lock_guard<std::mutex> guard(mtxDraw);
 
 	flushCommandQueue();
 
@@ -753,11 +787,6 @@ bool SApplication::unloadCompiledShaderFromGPU(SShader* pShader)
 		}
 	}
 
-	mtxSpawnDespawn.unlock();
-	mtxDraw.unlock();
-
-	mtxShader.unlock();
-
 	if (bFound)
 	{
 		return false;
@@ -780,18 +809,15 @@ SComputeShader* SApplication::registerCustomComputeShader(const std::string& sUn
 
 	SComputeShader* pNewComputeShader = new SComputeShader(pDevice.Get(), pCommandList.Get(), bCompileShadersInRelease, sUniqueShaderName);
 
-	mtxComputeShader.lock();
+	std::lock_guard<std::mutex> guard(mtxDraw);
 	vUserComputeShaders.push_back(pNewComputeShader);
-	mtxComputeShader.unlock();
 
 	return pNewComputeShader;
 }
 
-void SApplication::getRegisteredComputeShaders(std::vector<SComputeShader*>* pvShaders)
+std::vector<SComputeShader*>* SApplication::getRegisteredComputeShaders()
 {
-	mtxComputeShader.lock();
-	pvShaders = &vUserComputeShaders;
-	mtxComputeShader.unlock();
+	return &vUserComputeShaders;
 }
 
 void SApplication::unregisterCustomComputeShader(SComputeShader* pComputeShader)
@@ -803,17 +829,13 @@ void SApplication::unregisterCustomComputeShader(SComputeShader* pComputeShader)
 		return;
 	}
 
-	mtxComputeShader.lock();
+	std::lock_guard<std::mutex> guard(mtxDraw);
 
 	for (size_t i = 0; i < vUserComputeShaders.size(); i++)
 	{
 		if (vUserComputeShaders[i] == pComputeShader)
 		{
-			mtxDraw.lock();
-
 			flushCommandQueue();
-
-			mtxDraw.unlock();
 
 			delete pComputeShader;
 
@@ -822,8 +844,6 @@ void SApplication::unregisterCustomComputeShader(SComputeShader* pComputeShader)
 			break;
 		}
 	}
-
-	mtxComputeShader.unlock();
 }
 
 SLevel* SApplication::getCurrentLevel() const
@@ -843,7 +863,7 @@ bool SApplication::spawnContainerInLevel(SContainer* pContainer)
 		return true;
 	}
 
-	mtxSpawnDespawn.lock();
+	std::lock_guard<std::mutex> guard(mtxDraw);
 
 	bool bHasUniqueName = true;
 
@@ -871,7 +891,6 @@ bool SApplication::spawnContainerInLevel(SContainer* pContainer)
 
 	if (bHasUniqueName == false)
 	{
-		mtxSpawnDespawn.unlock();
 		return true;
 	}
 
@@ -888,7 +907,6 @@ bool SApplication::spawnContainerInLevel(SContainer* pContainer)
 	if (getCurrentLevel()->vSpawnedLightComponents.size() + iLightComponents > MAX_LIGHTS)
 	{
 		SError::showErrorMessageBoxAndLog("exceeded MAX_LIGHTS (this container was not spawned).");
-		mtxSpawnDespawn.unlock();
 		return true;
 	}
 
@@ -902,8 +920,6 @@ bool SApplication::spawnContainerInLevel(SContainer* pContainer)
 
 	// We need 1 CB for each SCT_MESH, SCT_RUNTIME_MESH component.
 	size_t iCBCount = pContainer->getMeshComponentsCount();
-
-	mtxDraw.lock();
 
 	if (iCBCount == 0)
 	{
@@ -950,15 +966,11 @@ bool SApplication::spawnContainerInLevel(SContainer* pContainer)
 
 		if (executeCommandList())
 		{
-			mtxSpawnDespawn.unlock();
-			mtxDraw.unlock();
 			return true;
 		}
 
 		if (flushCommandQueue())
 		{
-			mtxSpawnDespawn.unlock();
-			mtxDraw.unlock();
 			return true;
 		}
 
@@ -974,9 +986,7 @@ bool SApplication::spawnContainerInLevel(SContainer* pContainer)
 		pContainer->getAllMeshComponents(&vAllRenderableSpawnedOpaqueComponents,
 			&vAllRenderableSpawnedTransparentComponents);
 
-		mtxShader.lock();
 		pContainer->addMeshesByShader(&vOpaqueMeshesByCustomShader, &vTransparentMeshesByCustomShader);
-		mtxShader.unlock();
 
 
 		pContainer->registerAll3DSoundComponents();
@@ -1004,9 +1014,6 @@ bool SApplication::spawnContainerInLevel(SContainer* pContainer)
 
 	pContainer->setSpawnedInLevel(true);
 
-	mtxSpawnDespawn.unlock();
-	mtxDraw.unlock();
-
 	return false;
 }
 
@@ -1017,7 +1024,7 @@ void SApplication::despawnContainerFromLevel(SContainer* pContainer)
 		return;
 	}
 	
-	mtxSpawnDespawn.lock();
+	std::lock_guard<std::mutex> guard(mtxDraw);
 
 	// Remove lights.
 	for (size_t i = 0; i < pContainer->vComponents.size(); i++)
@@ -1027,8 +1034,6 @@ void SApplication::despawnContainerFromLevel(SContainer* pContainer)
 
 	// We need 1 for each SCT_MESH, SCT_RUNTIME_MESH component.
 	size_t iCBCount = pContainer->getMeshComponentsCount();
-
-	mtxDraw.lock();
 
 	flushCommandQueue();
 
@@ -1132,9 +1137,7 @@ void SApplication::despawnContainerFromLevel(SContainer* pContainer)
 
 		removeComponentsFromGlobalVectors(pContainer);
 
-		mtxShader.lock();
 		pContainer->removeMeshesByShader(&vOpaqueMeshesByCustomShader, &vTransparentMeshesByCustomShader);
-		mtxShader.unlock();
 
 
 		pContainer->unregisterAll3DSoundComponents();
@@ -1165,9 +1168,6 @@ void SApplication::despawnContainerFromLevel(SContainer* pContainer)
 	{
 		delete pContainer;
 	}
-
-	mtxSpawnDespawn.unlock();
-	mtxDraw.unlock();
 }
 
 bool SApplication::setInitPreferredDisplayAdapter(std::wstring sPreferredDisplayAdapter)
@@ -1261,12 +1261,9 @@ void SApplication::setBackBufferFillColor(SVector vColor)
 
 void SApplication::setEnableWireframeMode(bool bEnable)
 {
-	mtxDraw.lock();
+	std::lock_guard<std::mutex> guard(mtxDraw);
 
-	// Don't change this value is draw() in progress.
 	bUseFillModeWireframe = bEnable;
-
-	mtxDraw.unlock();
 }
 
 void SApplication::setMSAAEnabled(bool bEnable)
@@ -1277,12 +1274,18 @@ void SApplication::setMSAAEnabled(bool bEnable)
 
 		if (bInitCalled)
 		{
-			mtxDraw.lock();
+			std::lock_guard<std::mutex> guard(mtxDraw);
 
 			createPSO();
 			onResize();
 
-			mtxDraw.unlock();
+			for (size_t i = 0; i < vGUILayers.size(); i++)
+			{
+				for (size_t j = 0; j < vGUILayers[i].vGUIObjects.size(); j++)
+				{
+					vGUILayers[i].vGUIObjects[j]->onMSAAChange();
+				}
+			}
 		}
 	}
 }
@@ -1302,13 +1305,18 @@ bool SApplication::setMSAASampleCount(MSAASampleCount eSampleCount)
 
 			if (MSAA_Enabled && bInitCalled)
 			{
-				mtxDraw.lock();
+				std::lock_guard<std::mutex> guard(mtxDraw);
 
 				createPSO();
-
 				onResize();
 
-				mtxDraw.unlock();
+				for (size_t i = 0; i < vGUILayers.size(); i++)
+				{
+					for (size_t j = 0; j < vGUILayers[i].vGUIObjects.size(); j++)
+					{
+						vGUILayers[i].vGUIObjects[j]->onMSAAChange();
+					}
+				}
 			}
 		}
 
@@ -1348,7 +1356,7 @@ bool SApplication::setFullscreenWithCurrentResolution(bool bFullscreen)
 	{
 		if (this->bFullscreen != bFullscreen)
 		{
-			mtxDraw.lock();
+			std::lock_guard<std::mutex> guard(mtxDraw);
 
 			this->bFullscreen = bFullscreen;
 
@@ -1367,7 +1375,6 @@ bool SApplication::setFullscreenWithCurrentResolution(bool bFullscreen)
 			if (FAILED(hresult))
 			{
 				SError::showErrorMessageBoxAndLog(hresult);
-				mtxDraw.unlock();
 				return true;
 			}
 			else
@@ -1375,8 +1382,6 @@ bool SApplication::setFullscreenWithCurrentResolution(bool bFullscreen)
 				// Resize the buffers.
 				onResize();
 			}
-
-			mtxDraw.unlock();
 		}
 
 		return false;
@@ -1416,7 +1421,7 @@ bool SApplication::setScreenResolution(SScreenResolution screenResolution)
 			desc.ScanlineOrdering = iScanlineOrder;
 
 			
-			mtxDraw.lock();
+			std::lock_guard<std::mutex> guard(mtxDraw);
 
 			flushCommandQueue();
 
@@ -1437,8 +1442,6 @@ bool SApplication::setScreenResolution(SScreenResolution screenResolution)
 
 				SetWindowPos(hMainWindow, 0, xPos, yPos, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 			}
-
-			mtxDraw.unlock();
 		}
 		
 		return false;
@@ -2202,6 +2205,14 @@ bool SApplication::onResize()
 		ScissorRect = { 0, 0, iMainWindowWidth, iMainWindowHeight };
 
 
+		for (size_t i = 0; i < vGUILayers.size(); i++)
+		{
+			for (size_t j = 0; j < vGUILayers[i].vGUIObjects.size(); j++)
+			{
+				vGUILayers[i].vGUIObjects[j]->pSpriteBatch->SetViewport(ScreenViewport);
+			}
+		}
+
 
 		camera.setCameraAspectRatio(static_cast<float>(iMainWindowWidth) / iMainWindowHeight);
 		camera.updateViewMatrix();
@@ -2304,7 +2315,7 @@ void SApplication::update()
 
 void SApplication::updateMaterials()
 {
-	mtxMaterial.lock();
+	std::lock_guard<std::mutex> guard(mtxDraw);
 
 	for (size_t i = 0; i < vRegisteredMaterials.size(); i++)
 	{
@@ -2324,8 +2335,6 @@ void SApplication::updateMaterials()
 	// Update material bundles.
 	if (vFrameResources[iCurrentFrameResourceIndex]->vMaterialBundles.size() > 0)
 	{
-		mtxShader.lock();
-
 		for (size_t i = 0; i < vFrameResources[iCurrentFrameResourceIndex]->vMaterialBundles.size(); i++)
 		{
 			for (size_t j = 0; j <
@@ -2347,16 +2356,12 @@ void SApplication::updateMaterials()
 				pMaterial->mtxUpdateMat.unlock();
 			}
 		}
-
-		mtxShader.unlock();
 	}
-
-	mtxMaterial.unlock();
 }
 
 void SApplication::updateObjectCBs()
 {
-	mtxSpawnDespawn.lock();
+	std::lock_guard<std::mutex> guard(mtxDraw);
 
 	SUploadBuffer<SObjectConstants>* pCurrentObjectCB = pCurrentFrameResource->pObjectsCB.get();
 
@@ -2370,8 +2375,6 @@ void SApplication::updateObjectCBs()
 			updateComponentAndChilds(pvRenderableContainers->operator[](i)->vComponents[j], pCurrentObjectCB);
 		}
 	}
-
-	mtxSpawnDespawn.unlock();
 }
 
 void SApplication::updateComponentAndChilds(SComponent* pComponent, SUploadBuffer<SObjectConstants>* pCurrentObjectCB)
@@ -2523,11 +2526,11 @@ void SApplication::updateMainPassCB()
 
 	if (pLevel)
 	{
-		mtxSpawnDespawn.lock();
+		std::lock_guard<std::mutex> guard(mtxDraw);
 
 		size_t iCurrentIndex = 0;
 		size_t iTypeIndex = 0;
-		std::vector<SLightComponentType> vTypes = { SLCT_DIRECTIONAL, SLCT_POINT, SLCT_SPOT };
+		std::vector<SLightComponentType> vTypes = { SLightComponentType::SLCT_DIRECTIONAL, SLightComponentType::SLCT_POINT, SLightComponentType::SLCT_SPOT };
 
 		for (size_t k = 0; k < vTypes.size(); k++)
 		{
@@ -2543,11 +2546,11 @@ void SApplication::updateMainPassCB()
 						mainRenderPassCB.lights[iCurrentIndex] = pLevel->vSpawnedLightComponents[i]->lightProps;
 						iCurrentIndex++;
 
-						if (vTypes[iTypeIndex] == SLCT_DIRECTIONAL)
+						if (vTypes[iTypeIndex] == SLightComponentType::SLCT_DIRECTIONAL)
 						{
 							mainRenderPassCB.iDirectionalLightCount++;
 						}
-						else if (vTypes[iTypeIndex] == SLCT_POINT)
+						else if (vTypes[iTypeIndex] == SLightComponentType::SLCT_POINT)
 						{
 							mainRenderPassCB.iPointLightCount++;
 						}
@@ -2561,8 +2564,6 @@ void SApplication::updateMainPassCB()
 
 			iTypeIndex++;
 		}
-
-		mtxSpawnDespawn.unlock();
 	}
 
 
@@ -2572,7 +2573,7 @@ void SApplication::updateMainPassCB()
 
 void SApplication::draw()
 {
-	mtxDraw.lock();
+	std::lock_guard<std::mutex> guard(mtxDraw);
 
 	Microsoft::WRL::ComPtr<ID3D12CommandAllocator> pCurrentCommandListAllocator = pCurrentFrameResource->pCommandListAllocator;
 
@@ -2582,7 +2583,6 @@ void SApplication::draw()
 	if (FAILED(hresult))
 	{
 		SError::showErrorMessageBoxAndLog(hresult);
-		mtxDraw.unlock();
 		return;
 	}
 
@@ -2602,7 +2602,6 @@ void SApplication::draw()
 	if (FAILED(hresult))
 	{
 		SError::showErrorMessageBoxAndLog(hresult);
-		mtxDraw.unlock();
 		return;
 	}
 
@@ -2662,15 +2661,13 @@ void SApplication::draw()
 
 	iLastFrameDrawCallCount = 0;
 
-	mtxShader.lock();
-
 	drawOpaqueComponents();
 
 	setTransparentPSO();
 
 	drawTransparentComponents();
 
-	mtxShader.unlock();
+	drawGUIObjects();
 
 	transition
 		= CD3DX12_RESOURCE_BARRIER::Transition(getCurrentBackBufferResource(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
@@ -2738,7 +2735,6 @@ void SApplication::draw()
 	if (FAILED(hresult))
 	{
 		SError::showErrorMessageBoxAndLog(hresult);
-		mtxDraw.unlock();
 		return;
 	}
 
@@ -2806,9 +2802,10 @@ void SApplication::draw()
 	if (FAILED(hresult))
 	{
 		SError::showErrorMessageBoxAndLog(hresult);
-		mtxDraw.unlock();
 		return;
 	}
+
+	pDXTKGraphicsMemory->Commit(pCommandQueue.Get());
 	
 	if (iCurrentBackBuffer == (iSwapChainBufferCount - 1))
 	{
@@ -2829,8 +2826,6 @@ void SApplication::draw()
 	pCommandQueue->Signal(pFence.Get(), iCurrentFence);
 
 	mtxFenceUpdate.unlock();
-
-	mtxDraw.unlock();
 }
 
 void SApplication::drawOpaqueComponents()
@@ -2931,6 +2926,48 @@ void SApplication::drawTransparentComponents()
 				pCommandList->SetGraphicsRootConstantBufferView(0, pCurrentFrameResource->pRenderPassCB.get()->getResource()->GetGPUVirtualAddress());
 
 				bUsingCustomResources = false;
+			}
+		}
+	}
+}
+
+void SApplication::drawGUIObjects()
+{
+	for (size_t i = 0; i < vGUILayers.size(); i++)
+	{
+		for (size_t j = 0; j < vGUILayers[i].vGUIObjects.size(); j++)
+		{
+			if (vGUILayers[i].vGUIObjects[j]->bIsVisible)
+			{
+				SGUIObject* pCurrentObject = vGUILayers[i].vGUIObjects[j];
+
+				pCurrentObject->pSpriteBatch->Begin(pCommandList.Get());
+
+				// Draw sprites
+				auto heapHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(pCBVSRVUAVHeap->GetGPUDescriptorHandleForHeapStart());
+				heapHandle.Offset(pCurrentObject->iIndexInHeap, iCBVSRVUAVDescriptorSize);
+
+				DirectX::SimpleMath::Vector2 pos = pCurrentObject->pos;
+				pos.x *= iMainWindowWidth;
+				pos.y *= iMainWindowHeight;
+
+				DirectX::XMUINT2 texSize = DirectX::GetTextureSize(pCurrentObject->pTexture.Get());
+
+				DirectX::SimpleMath::Vector2 origin = pCurrentObject->origin;
+				origin.x *= texSize.x;
+				origin.y *= texSize.y;
+
+				RECT sourceRect;
+				sourceRect.left = static_cast<LONG>(pCurrentObject->sourceRect.getX() * texSize.x);
+				sourceRect.top = static_cast<LONG>(pCurrentObject->sourceRect.getY() * texSize.y);
+				sourceRect.right = static_cast<LONG>(pCurrentObject->sourceRect.getZ() * texSize.x);
+				sourceRect.bottom = static_cast<LONG>(pCurrentObject->sourceRect.getW() * texSize.y);
+
+				pCurrentObject->pSpriteBatch->Draw(heapHandle,
+					texSize, pos, &sourceRect, DirectX::XMLoadFloat4(&pCurrentObject->color), pCurrentObject->fRotationInRad, origin,
+					pCurrentObject->scale, pCurrentObject->effects);
+
+				pCurrentObject->pSpriteBatch->End();
 			}
 		}
 	}
@@ -3315,19 +3352,22 @@ std::array<const CD3DX12_STATIC_SAMPLER_DESC, 3> SApplication::getStaticSamples(
 
 void SApplication::internalPhysicsTickThread()
 {
-	double dToMS = 1000000.0;
-	double dTimeToSleepInNS = 1000.0 / iPhysicsTicksPerSecond * dToMS;
+	double dNSInMS = 1000000.0;
+	double dTimeToSleepInNS = 1000.0 / iPhysicsTicksPerSecond * dNSInMS;
 
 	std::chrono::time_point<std::chrono::steady_clock> timeUserOnPhysicsTick;
 
 
 	while (bTerminatePhysics == false)
 	{
-		timeBeginPeriod(1);
+		if (dTimeToSleepInNS > 0.0)
+		{
+			timeBeginPeriod(1);
 
-		nanosleep(static_cast<long long>(dTimeToSleepInNS));
+			nanosleep(static_cast<long long>(dTimeToSleepInNS));
 
-		timeEndPeriod(1);
+			timeEndPeriod(1);
+		}
 
 
 
@@ -3337,10 +3377,14 @@ void SApplication::internalPhysicsTickThread()
 
 		onPhysicsTick(gamePhysicsTimer.getDeltaTimeBetweenTicksInSec());
 
-#if defined(DEBUG) || defined(_DEBUG)
-		frameStats.fTimeSpentOnUserOnPhysicsTickFunctionInMS
+		float fTimeSpentOnPhysicsTickInMS
 			= static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now() - timeUserOnPhysicsTick).count()
-				/ dToMS);
+				/ dNSInMS);
+
+		dTimeToSleepInNS = (1000.0 / iPhysicsTicksPerSecond - fTimeSpentOnPhysicsTickInMS) * dNSInMS;
+
+#if defined(DEBUG) || defined(_DEBUG)
+		frameStats.fTimeSpentOnUserOnPhysicsTickFunctionInMS = fTimeSpentOnPhysicsTickInMS;
 #endif
 	}
 
@@ -4010,17 +4054,23 @@ bool SApplication::createCBVSRVUAVHeap()
 {
 	UINT iDescCount = static_cast<UINT>(roundUp(vRegisteredMaterials.size(), OBJECT_CB_RESIZE_MULTIPLE)); // for SMaterialConstants
 
+	// --------------------------------------
 	// new stuff per frame resource goes here
 	// make sure to recreate cbv heap (like in the end of the spawnContainerInLevel())
-
+	// --------------------------------------
 
 	UINT iDescriptorCount = iDescCount * iFrameResourcesCount;
 
-
 	iPerFrameResEndOffset = iDescriptorCount;
 
-
 	iDescriptorCount += static_cast<UINT>(vLoadedTextures.size()); // one SRV per texture
+	// get gui item count
+	size_t iGUIItemCount = 0;
+	for (size_t i = 0; i < vGUILayers.size(); i++)
+	{
+		iGUIItemCount += vGUILayers[i].vGUIObjects.size();
+	}
+	iDescriptorCount += static_cast<UINT>(iGUIItemCount); // one SRV per gui item
 	iDescriptorCount += BLUR_VIEW_COUNT; // for blur effect
 
 
@@ -4087,10 +4137,8 @@ void SApplication::createViews()
 	}
 
 
-	int iTextureCount = static_cast<int>(vLoadedTextures.size());
-
 	// Need one SRV per loaded texture.
-	if (iPerFrameResEndOffset + iTextureCount > INT_MAX)
+	if (iPerFrameResEndOffset + vLoadedTextures.size() > INT_MAX)
 	{
 		SError::showErrorMessageBoxAndLog("cannot create SRVs because an overflow will occur.");
 		return;
@@ -4117,11 +4165,37 @@ void SApplication::createViews()
 	}
 
 
+	// GUI SRVs
+	int iCurrentIndex = 0;
+	for (size_t i = 0; i < vGUILayers.size(); i++)
+	{
+		for (size_t j = 0; j < vGUILayers[i].vGUIObjects.size(); j++)
+		{
+			int iIndexInHeap = iPerFrameResEndOffset + static_cast<int>(vLoadedTextures.size()) + iCurrentIndex;
+			auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(pCBVSRVUAVHeap->GetCPUDescriptorHandleForHeapStart());
+
+			handle.Offset(iIndexInHeap, iCBVSRVUAVDescriptorSize);
+
+			DirectX::CreateShaderResourceView(pDevice.Get(), vGUILayers[i].vGUIObjects[j]->pTexture.Get(), handle);
+
+			vGUILayers[i].vGUIObjects[j]->iIndexInHeap = iIndexInHeap;
+
+			iCurrentIndex++;
+		}
+	}
+
+	// get gui item count
+	size_t iGUIItemCount = 0;
+	for (size_t i = 0; i < vGUILayers.size(); i++)
+	{
+		iGUIItemCount += vGUILayers[i].vGUIObjects.size();
+	}
+
 	if (pBlurEffect)
 	{
 		// Need 2 SRV & 2 UAV for blur.
 
-		int iIndexInHeap = iPerFrameResEndOffset + iTextureCount;
+		int iIndexInHeap = iPerFrameResEndOffset + static_cast<int>(vLoadedTextures.size()) + iGUIItemCount;
 
 		auto cpuHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(pCBVSRVUAVHeap->GetCPUDescriptorHandleForHeapStart());
 		cpuHandle.Offset(iIndexInHeap, iCBVSRVUAVDescriptorSize);
@@ -4792,6 +4866,97 @@ void SApplication::removeComponentsFromGlobalVectors(SContainer* pContainer)
 	}
 }
 
+void SApplication::moveGUIObjectToLayer(SGUIObject* pObject, int iNewLayer)
+{
+	if (iNewLayer < 0)
+	{
+		SError::showErrorMessageBoxAndLog("layer value should be positive.");
+		return;
+	}
+
+	std::lock_guard<std::mutex> guard(mtxDraw);
+
+	// Find object.
+	size_t iObjectLayerIndex = 0;
+	size_t iObjectIndex = 0;
+	bool bFound = false;
+	for (size_t i = 0; i < vGUILayers.size(); i++)
+	{
+		for (size_t j = 0; j < vGUILayers[i].vGUIObjects.size(); j++)
+		{
+			if (vGUILayers[i].vGUIObjects[j] == pObject)
+			{
+				iObjectLayerIndex = i;
+				iObjectIndex = j;
+				bFound = true;
+				break;
+			}
+		}
+
+		if (bFound)
+		{
+			break;
+		}
+	}
+
+	if (bFound == false)
+	{
+		SError::showErrorMessageBoxAndLog("could not find the specified GUI object.");
+		return;
+	}
+
+	// See if the GUI layer with this new layer index exists.
+	bFound = false;
+	bool bNeedToInsert = false;
+	size_t iTargetLayerIndex = 0;
+	size_t iInsertIndex = 0;
+	for (size_t i = 0; i < vGUILayers.size(); i++)
+	{
+		if (vGUILayers[i].iLayer > iNewLayer)
+		{
+			bFound = false;
+			bNeedToInsert = true;
+			iInsertIndex = i;
+			break;
+		}
+		else if (vGUILayers[i].iLayer == iNewLayer)
+		{
+			bFound = true;
+			iTargetLayerIndex = i;
+			break;
+		}
+	}
+
+	if (bFound == false)
+	{
+		// Create this new layer.
+
+		if (bNeedToInsert)
+		{
+			vGUILayers.insert(vGUILayers.begin() + iInsertIndex, SGUILayer{ iNewLayer, std::vector<SGUIObject*>() });
+			iTargetLayerIndex = iInsertIndex;
+		}
+		else
+		{
+			vGUILayers.push_back(SGUILayer{ iNewLayer, std::vector<SGUIObject*>() });
+			iTargetLayerIndex = vGUILayers.size() - 1;
+		}
+	}
+
+	// Remove object from current position.
+	SGUIObject* pObjectToMove = vGUILayers[iObjectLayerIndex].vGUIObjects[iObjectIndex];
+	vGUILayers[iObjectLayerIndex].vGUIObjects.erase(vGUILayers[iObjectLayerIndex].vGUIObjects.begin() + iObjectIndex);
+	if (vGUILayers[iObjectLayerIndex].vGUIObjects.size() == 0 && iObjectLayerIndex != 0)
+	{
+		vGUILayers.erase(vGUILayers.begin() + iObjectLayerIndex);
+	}
+
+	// Move object to new layer.
+	vGUILayers[iTargetLayerIndex].vGUIObjects.push_back(pObjectToMove);
+
+	pObjectToMove->iZLayer = iNewLayer;
+}
+
 void SApplication::releaseShader(SShader* pShader)
 {
 	pShader->pVS.Release();
@@ -4842,9 +5007,6 @@ void SApplication::releaseShader(SShader* pShader)
 			showMessageBox(L"Error", L"SApplication::releaseShader() error: custom shader resources root signature ref count is not 0.");
 		}
 
-		mtxMaterial.lock();
-
-
 		for (size_t i = 0; i < vFrameResources.size(); i++)
 		{
 			vFrameResources[i]->removeMaterialBundle(pShader);
@@ -4854,8 +5016,6 @@ void SApplication::releaseShader(SShader* pShader)
 		{
 			delete pShader->pCustomShaderResources->vMaterials[i];
 		}
-
-		mtxMaterial.unlock();
 
 		delete pShader->pCustomShaderResources;
 	}
@@ -4914,7 +5074,7 @@ void SApplication::forceChangeMeshShader(SShader* pOldShader, SShader* pNewShade
 	bool bFoundNew = false;
 	size_t iNewVectorIndex = 0;
 
-	mtxShader.lock();
+	std::lock_guard<std::mutex> guard(mtxDraw);
 
 	for (size_t i = 0; i < pObjectsByShader->size(); i++)
 	{
@@ -4959,7 +5119,6 @@ void SApplication::forceChangeMeshShader(SShader* pOldShader, SShader* pNewShade
 	if (bFound == false)
 	{
 		SError::showErrorMessageBoxAndLog("could not find specified old shader / object.");
-		mtxShader.unlock();
 		return;
 	}
 
@@ -4976,9 +5135,6 @@ void SApplication::forceChangeMeshShader(SShader* pOldShader, SShader* pNewShade
 
 		pObjectsByShader->push_back(so);
 	}
-
-
-	mtxShader.unlock();
 }
 
 void SApplication::saveBackBufferPixels()
@@ -5024,7 +5180,6 @@ void SApplication::executeCustomComputeShaders(bool bBeforeDraw)
 {
 	bool bExecutedAtLeastOne = false;
 
-	mtxComputeShader.lock();
 	for (size_t i = 0; i < vUserComputeShaders.size(); i++)
 	{
 		if (vUserComputeShaders[i]->bExecuteShader && (vUserComputeShaders[i]->bExecuteShaderBeforeDraw == bBeforeDraw))
@@ -5038,7 +5193,6 @@ void SApplication::executeCustomComputeShaders(bool bBeforeDraw)
 			bExecutedAtLeastOne = true;
 		}
 	}
-	mtxComputeShader.unlock();
 
 	if (bBeforeDraw && bExecutedAtLeastOne)
 	{
@@ -5265,7 +5419,7 @@ void SApplication::copyUserComputeResults(SComputeShader* pComputeShader)
 
 bool SApplication::doesComponentExists(SComponent* pComponent)
 {
-	std::lock_guard<std::mutex> lock(mtxSpawnDespawn);
+	std::lock_guard<std::mutex> guard(mtxDraw);
 
 	for (size_t i = 0; i < vAllRenderableSpawnedOpaqueComponents.size(); i++)
 	{
@@ -5288,18 +5442,15 @@ bool SApplication::doesComponentExists(SComponent* pComponent)
 
 bool SApplication::doesComputeShaderExists(SComputeShader* pShader)
 {
-	mtxComputeShader.lock();
+	std::lock_guard<std::mutex> guard(mtxDraw);
 
 	for (size_t i = 0; i < vUserComputeShaders.size(); i++)
 	{
 		if (vUserComputeShaders[i] == pShader)
 		{
-			mtxComputeShader.unlock();
 			return true;
 		}
 	}
-
-	mtxComputeShader.unlock();
 
 	return false;
 }
@@ -5493,6 +5644,8 @@ SApplication::SApplication(HINSTANCE hInstance)
 	ScreenViewport.MinDepth = fMinDepth;
 	ScreenViewport.MaxDepth = fMaxDepth;
 
+	vGUILayers.push_back(SGUILayer{ 0, std::vector<SGUIObject*>() });
+
 #if defined(DEBUG) || defined(_DEBUG)
 	bCompileShadersInRelease = false;
 #else
@@ -5519,11 +5672,6 @@ SApplication::~SApplication()
 			pSwapChain->SetFullscreenState(false, NULL);
 		}
 	}
-
-	mtxSpawnDespawn.lock();
-	mtxSpawnDespawn.unlock();
-
-
 
 	// Clear loaded textures.
 
@@ -5552,6 +5700,8 @@ SApplication::~SApplication()
 	vCompiledUserShaders.clear();
 
 
+	// Clear compute shaders.
+
 	for (size_t i = 0; i < vUserComputeShaders.size(); i++)
 	{
 		delete vUserComputeShaders[i];
@@ -5560,6 +5710,7 @@ SApplication::~SApplication()
 	vUserComputeShaders.clear();
 
 
+	// Clear materials.
 
 	for (size_t i = 0; i < vRegisteredMaterials.size(); i++)
 	{
@@ -5567,6 +5718,19 @@ SApplication::~SApplication()
 	}
 
 	vRegisteredMaterials.clear();
+
+
+	// Clear GUI.
+
+	for (size_t i = 0; i < vGUILayers.size(); i++)
+	{
+		for (size_t j = 0; j < vGUILayers[i].vGUIObjects.size(); j++)
+		{
+			delete vGUILayers[i].vGUIObjects[j];
+		}
+	}
+
+	vGUILayers.clear();
 
 
 	delete pVideoSettings;
@@ -5607,6 +5771,8 @@ bool SApplication::init()
 	{
 		return true;
 	}
+
+	pDXTKGraphicsMemory = std::make_unique<DirectX::GraphicsMemory>(pDevice.Get());
 
 	bInitCalled = true;
 
@@ -6068,9 +6234,9 @@ int SApplication::run()
 #if defined(DEBUG) || defined(_DEBUG)
 				timeOnAudio = std::chrono::steady_clock::now();
 #endif
-				mtxSpawnDespawn.lock();
+				mtxDraw.lock();
 				pAudioEngine->update3DSound(getCamera());
-				mtxSpawnDespawn.unlock();
+				mtxDraw.unlock();
 
 #if defined(DEBUG) || defined(_DEBUG)
 				frameStats.fTimeSpentOn3DAudioUpdateInMS
@@ -6079,9 +6245,7 @@ int SApplication::run()
 #endif
 
 
-
 				update();
-
 
 
 

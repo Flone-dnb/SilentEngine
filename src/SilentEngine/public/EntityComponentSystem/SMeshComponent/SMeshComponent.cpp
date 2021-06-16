@@ -479,7 +479,6 @@ void SMeshComponent::createGeometryBuffers(bool bAddedRemovedIndices)
 		// called in spawnContainerInLevel() (when bSpawnedInLevel == false) and it will have lock already.
 
 		pApp->mtxDraw.lock();
-		pApp->mtxSpawnDespawn.lock();
 		pApp->flushCommandQueue(); // vertex/index buffer may be in use currently
 		pApp->resetCommandList();
 	}
@@ -516,7 +515,6 @@ void SMeshComponent::createGeometryBuffers(bool bAddedRemovedIndices)
 	{
 		pApp->executeCommandList();
 		pApp->flushCommandQueue();
-		pApp->mtxSpawnDespawn.unlock();
 		pApp->mtxDraw.unlock();
 	}
 }

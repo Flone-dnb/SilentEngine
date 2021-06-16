@@ -23,7 +23,7 @@ struct SLightProps
 	float fSpotLightRange = 128.0f; // spot light only
 };
 
-enum SLightComponentType
+enum class SLightComponentType
 {
 	SLCT_DIRECTIONAL = 0,
 	SLCT_SPOT = 1,

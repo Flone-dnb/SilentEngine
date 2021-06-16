@@ -30,6 +30,9 @@
 #include "dxc/dxcapi.h"
 #include <atlbase.h> // Common COM helpers.
 
+// DirectXTK
+#include "GraphicsMemory.h"
+
 // Custom
 #include "SilentEngine/Private/SGameTimer/SGameTimer.h"
 #include "SilentEngine/Private/SRenderItem/SRenderItem.h"
@@ -68,6 +71,8 @@ class SShader;
 class SShaderObjects;
 class SComputeShader;
 class SCameraComponent;
+class SGUIObject;
+class SGUILayer;
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
 
@@ -244,6 +249,38 @@ public:
 		bool            unregisterMaterial                     (const std::string& sMaterialName);
 
 
+	// GUI
+
+		//@@Function
+		/*
+		* desc: loads the specified image from the disk to the GPU memory so it can be used in GUI.
+		* param "sGUIObjectName": a name for this gui object.
+		* param "sPathToImage": path to the image file (png, jpeg, tiff, dds).
+		* return: valid pointer to the hidden GUI object if successful, nullptr otherwise.
+		* remarks: the returned GUI object will be invisible, use SGUIObject::setVisible to show it on the screen.
+		Note that you will need to unload the loaded resource (via SApplication::unloadGUIObject), it won't happen automatically,
+		but all loaded GUI resources will be unloaded in the SApplication's destructor function.
+		It's recommended to use this function in loading moments of your application (ex. loading screen)
+		as this function may drop the framerate a little.
+		*/
+		SGUIObject*    loadGUIObjectFromImage                (const std::string& sGUIObjectName, std::wstring_view sPathToImage);
+		//@@Function
+		/*
+		* desc: returns all loaded GUI objects.
+		* return: valid pointer if successful, nullptr otherwise.
+		*/
+		std::vector<SGUILayer>* getLoadedGUIObjects();
+		//@@Function
+		/*
+		* desc: unloads the given GUI object.
+		* return: false if successful, true if the specified object was not loaded earlier (via SApplication::loadGUIObjectFromImage).
+		* remarks: any pointers to this object will be invalid after this call (the object will be deleted in this function).
+		It's recommended to use this function in loading moments of your application (ex. loading screen)
+		as this function may drop the framerate a little.
+		*/
+		bool           unloadGUIObject                       (SGUIObject* pGUIObject);
+
+
 	// Textures
 
 		//@@Function
@@ -252,7 +289,7 @@ public:
 		* param "sTextureName": unique name of the texture, cannot be empty.
 		* param "sPathToTexture": path to the texture file (only .dds texture format).
 		* param "bErrorOccurred": will be true if an error occurred and the returned handle is invalid, false otherwise.
-		* remarks: note that you will need to unload the loaded textures, it's not gonna happen automatically,
+		* remarks: note that you will need to unload the loaded textures (via SApplication::unloadTextureFromGPU), it won't happen automatically,
 		but all loaded textures will be unloaded in the SApplication's destructor function.
 		You can reuse already loaded textures on any number of materials you want.
 		This struct (STextureHandle) is just a handle to the actual texture so you can make copies of it.
@@ -341,7 +378,7 @@ public:
 		/*
 		* desc: used to retrieve all custom registered compute shaders.
 		*/
-		void            getRegisteredComputeShaders(std::vector<SComputeShader*>* pvShaders);
+		std::vector<SComputeShader*>* getRegisteredComputeShaders();
 
 		//@@Function
 		/*
@@ -765,6 +802,7 @@ private:
 		/*
 		* desc: called when the window size was changed. Resizes the swap chain and buffers.
 		* return: false if successful, true otherwise.
+		* remarks: only call under mtxDraw.
 		*/
 		bool onResize                        ();
 
@@ -799,6 +837,7 @@ private:
 		void draw                            ();
 		void drawOpaqueComponents            ();
 		void drawTransparentComponents       ();
+		void drawGUIObjects                  ();
 		void drawComponent                   (SComponent* pComponent, bool bUsingCustomResources = false);
 		//@@Function
 		/*
@@ -1063,6 +1102,7 @@ private:
 		/*
 		* desc: sets the fence value and waits until all operations prior to this fence point are done.
 		* return: false if successful, true otherwise.
+		* remarks: only call under mtxDraw
 		*/
 		bool  flushCommandQueue               ();
 		//@@Function
@@ -1104,34 +1144,38 @@ private:
 		D3D12_CPU_DESCRIPTOR_HANDLE getDepthStencilViewHandle      () const;
 
 
+	// only call this under mtxDraw
+	void releaseShader(SShader* pShader);
+	void removeShaderFromObjects(SShader* pShader, std::vector<SShaderObjects>* pObjectsByShader);
+	void forceChangeMeshShader(SShader* pOldShader, SShader* pNewShader, SComponent* pComponent, bool bUsesTransparency);
 
-		void showDeviceRemovedReason();
+	void saveBackBufferPixels();
 
-		void removeComponentsFromGlobalVectors(SContainer* pContainer);
+	// Compute shaders.
+	// only call this under mtxDraw
+	void executeCustomComputeShaders(bool bBeforeDraw);
+	void executeCustomComputeShader(SComputeShader* pComputeShader);
+	void doOptionalPauseForUserComputeShaders();
+	void copyUserComputeResults(SComputeShader* pComputeShader);
 
-		void releaseShader(SShader* pShader);
-		void removeShaderFromObjects(SShader* pShader, std::vector<SShaderObjects>* pObjectsByShader);
-		void forceChangeMeshShader(SShader* pOldShader, SShader* pNewShader, SComponent* pComponent, bool bUsesTransparency);
+	// Checks.
+	bool doesComponentExists(SComponent* pComponent);
+	bool doesComputeShaderExists(SComputeShader* pShader);
 
-		void saveBackBufferPixels();
+	// Material bundles.
+	std::vector<SUploadBuffer<SMaterialConstants>*> createBundledMaterialResource(SShader* pShader, size_t iMaterialsCount);
+	SMaterial* registerMaterialBundleElement(const std::string& sMaterialName, bool& bErrorOccurred);
 
-		void executeCustomComputeShaders(bool bBeforeDraw);
-		void executeCustomComputeShader(SComputeShader* pComputeShader);
-		void doOptionalPauseForUserComputeShaders();
-		void copyUserComputeResults(SComputeShader* pComputeShader);
+	// Frustum culling.
+	bool doFrustumCulling(SComponent* pComponent);
+	void doFrustumCullingOnInstancedMesh(SMeshComponent* pMeshComponent, UINT64& iOutVisibleInstanceCount);
 
-		bool doesComponentExists(SComponent* pComponent);
-		bool doesComputeShaderExists(SComputeShader* pShader);
-
-		bool nanosleep(long long ns);
-
-		std::vector<SUploadBuffer<SMaterialConstants>*> createBundledMaterialResource(SShader* pShader, size_t iMaterialsCount);
-		SMaterial* registerMaterialBundleElement(const std::string& sMaterialName, bool& bErrorOccurred);
-
-		void setTransparentPSO();
-
-		bool doFrustumCulling(SComponent* pComponent);
-		void doFrustumCullingOnInstancedMesh(SMeshComponent* pMeshComponent, UINT64& iOutVisibleInstanceCount);
+	// Other.
+	void showDeviceRemovedReason();
+	bool nanosleep(long long ns);
+	void setTransparentPSO();
+	void removeComponentsFromGlobalVectors(SContainer* pContainer);
+	void moveGUIObjectToLayer(SGUIObject* pObject, int iNewLayer);
 
 
 	// -----------------------------------------------------------------
@@ -1144,6 +1188,7 @@ private:
 	friend class SMaterial;
 	friend class SLevel;
 	friend class SError;
+	friend class SGUIObject;
 	friend class SCustomShaderResources;
 
 
@@ -1156,6 +1201,11 @@ private:
 	Microsoft::WRL::ComPtr<IDXGIAdapter3>   pAdapter;
 	Microsoft::WRL::ComPtr<IDXGIOutput>     pOutput;
 	Microsoft::WRL::ComPtr<IDXGISwapChain1> pSwapChain;
+
+
+	// GUI.
+	std::vector<SGUILayer>                   vGUILayers;
+	std::unique_ptr<DirectX::GraphicsMemory> pDXTKGraphicsMemory;
 
 
 	// PSOs
@@ -1228,8 +1278,8 @@ private:
 
 
 	// Buffer formats.
-	DXGI_FORMAT BackBufferFormat            = DXGI_FORMAT_R8G8B8A8_UNORM;
-	DXGI_FORMAT DepthStencilFormat          = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	DXGI_FORMAT BackBufferFormat   = DXGI_FORMAT_R8G8B8A8_UNORM;
+	DXGI_FORMAT DepthStencilFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 
 
 	// Video settings.
@@ -1333,14 +1383,7 @@ private:
 	SGameTimer     gamePhysicsTimer;
 
 	
-	std::mutex     mtxSpawnDespawn;
-	std::mutex     mtxMaterial;
-	std::mutex     mtxComputeShader;
-	std::mutex     mtxUpdateMat;
-	std::mutex     mtxTexture;
-	std::mutex     mtxShader;
 	std::mutex     mtxDraw;
-	std::mutex     mtxUpdateCurrentCamera;
 	std::mutex     mtxFenceUpdate;
 
 

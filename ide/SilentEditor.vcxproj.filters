@@ -154,6 +154,15 @@
     <Filter Include="SilentEngine\Public\EntityComponentSystem\SAudioComponent">
       <UniqueIdentifier>{af860788-a8d2-49a3-9a28-525d92929446}</UniqueIdentifier>
     </Filter>
+    <Filter Include="SilentEngine\Public\GUI">
+      <UniqueIdentifier>{86e84d93-c1be-4c86-904e-904cb12f4be9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SilentEngine\Private\GUI">
+      <UniqueIdentifier>{f9967351-41f2-49d7-a1bf-b5d6f797a620}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SilentEngine\Private\GUI\SGUIObject">
+      <UniqueIdentifier>{0d5f92ac-d165-4756-99d4-6323c71d0b69}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\SilentEngine\public\SApplication\SApplication.cpp">
@@ -266,6 +275,9 @@
     </ClCompile>
     <ClCompile Include="..\src\SilentEngine\Public\EntityComponentSystem\SAudioComponent\SAudioComponent.cpp">
       <Filter>SilentEngine\Public\EntityComponentSystem\SAudioComponent</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SilentEngine\Private\GUI\SGUIObject\SGUIObject.cpp">
+      <Filter>SilentEngine\Private\GUI\SGUIObject</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -385,6 +397,9 @@
     </ClInclude>
     <ClInclude Include="..\src\SilentEngine\Public\EntityComponentSystem\SAudioComponent\SAudioComponent.h">
       <Filter>SilentEngine\Public\EntityComponentSystem\SAudioComponent</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SilentEngine\Private\GUI\SGUIObject\SGUIObject.h">
+      <Filter>SilentEngine\Private\GUI\SGUIObject</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

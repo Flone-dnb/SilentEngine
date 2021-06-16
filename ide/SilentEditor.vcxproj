@@ -94,7 +94,7 @@
       <ConformanceMode>false</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <FloatingPointModel>Fast</FloatingPointModel>
-      <AdditionalIncludeDirectories>../ext/;../src/;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../ext/DirectXTK12/Inc;../ext/;../src/;</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -114,7 +114,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>false</ConformanceMode>
-      <AdditionalIncludeDirectories>../ext/;../src/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../ext/DirectXTK12/Inc;../ext/;../src/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <FloatingPointModel>Fast</FloatingPointModel>
       <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
@@ -143,7 +143,7 @@ copy /Y "$(SolutionDir)..\ext\dxc\dxcompiler.dll" "$(TargetDir)dxcompiler.dll"</
       <ConformanceMode>false</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <FloatingPointModel>Fast</FloatingPointModel>
-      <AdditionalIncludeDirectories>../ext/;../src/;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../ext/DirectXTK12/Inc;../ext/;../src/;</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -167,7 +167,7 @@ copy /Y "$(SolutionDir)..\ext\dxc\dxcompiler.dll" "$(TargetDir)dxcompiler.dll"</
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>false</ConformanceMode>
-      <AdditionalIncludeDirectories>../ext/;../src/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../ext/DirectXTK12/Inc;../ext/;../src/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <FloatingPointModel>Fast</FloatingPointModel>
       <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
@@ -197,6 +197,7 @@ copy /Y "$(SolutionDir)..\ext\dxc\dxcompiler.dll" "$(TargetDir)dxcompiler.dll"</
     <ClCompile Include="..\src\SilentEngine\Private\DDSTextureLoader.cpp" />
     <ClCompile Include="..\src\SilentEngine\Private\EntityComponentSystem\SComponent\SComponent.cpp" />
     <ClCompile Include="..\src\SilentEngine\Private\EntityComponentSystem\SLightComponent\SLightComponent.cpp" />
+    <ClCompile Include="..\src\SilentEngine\Private\GUI\SGUIObject\SGUIObject.cpp" />
     <ClCompile Include="..\src\SilentEngine\Private\SBlurEffect\SBlurEffect.cpp" />
     <ClCompile Include="..\src\SilentEngine\Private\SCustomShaderResources\SCustomShaderResources.cpp" />
     <ClCompile Include="..\src\SilentEngine\private\SError\SError.cpp" />
@@ -235,6 +236,7 @@ copy /Y "$(SolutionDir)..\ext\dxc\dxcompiler.dll" "$(TargetDir)dxcompiler.dll"</
     <ClInclude Include="..\src\SilentEngine\Private\DDSTextureLoader.h" />
     <ClInclude Include="..\src\SilentEngine\Private\EntityComponentSystem\SComponent\SComponent.h" />
     <ClInclude Include="..\src\SilentEngine\Private\EntityComponentSystem\SLightComponent\SLightComponent.h" />
+    <ClInclude Include="..\src\SilentEngine\Private\GUI\SGUIObject\SGUIObject.h" />
     <ClInclude Include="..\src\SilentEngine\Private\SBlurEffect\SBlurEffect.h" />
     <ClInclude Include="..\src\SilentEngine\Private\SCustomShaderResources\SCustomShaderResources.h" />
     <ClInclude Include="..\src\SilentEngine\private\SError\SError.h" />
@@ -266,6 +268,11 @@ copy /Y "$(SolutionDir)..\ext\dxc\dxcompiler.dll" "$(TargetDir)dxcompiler.dll"</
     <ClInclude Include="..\src\SilentEngine\public\STimer\STimer.h" />
     <ClInclude Include="..\src\SilentEngine\public\SVector\SVector.h" />
     <ClInclude Include="..\src\SilentEngine\public\SVideoSettings\SVideoSettings.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ext\DirectXTK12\DirectXTK_Desktop_2019_Win10.vcxproj">
+      <Project>{3e0e8608-cd9b-4c76-af33-29ca38f2c9f0}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -184,7 +184,6 @@ void SRuntimeMeshComponent::setMeshData(const SMeshData& meshData, bool bAddedRe
 
 			SApplication* pApp = SApplication::getApp();
 
-			pApp->mtxSpawnDespawn.lock();
 			mtxDrawComponent.lock();
 
 			pApp->mtxDraw.lock();
@@ -199,7 +198,6 @@ void SRuntimeMeshComponent::setMeshData(const SMeshData& meshData, bool bAddedRe
 			pApp->mtxDraw.unlock();
 
 			mtxDrawComponent.unlock();
-			pApp->mtxSpawnDespawn.unlock();
 		}
 	}
 }
@@ -362,7 +360,6 @@ void SRuntimeMeshComponent::createIndexBuffer()
 		// called in spawnContainerInLevel() (when bSpawnedInLevel == false) and it will have lock already.
 
 		pApp->mtxDraw.lock();
-		pApp->mtxSpawnDespawn.lock();
 		pApp->flushCommandQueue(); // vertex/index buffer may be in use currently
 		pApp->resetCommandList();
 	}
@@ -394,7 +391,6 @@ void SRuntimeMeshComponent::createIndexBuffer()
 	{
 		pApp->executeCommandList();
 		pApp->flushCommandQueue();
-		pApp->mtxSpawnDespawn.unlock();
 		pApp->mtxDraw.unlock();
 	}
 }
