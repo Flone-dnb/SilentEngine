@@ -2701,6 +2701,7 @@ void SApplication::draw()
 
 	if (getCamera()->getCameraEffects().screenBlurEffect.bEnableScreenBlur)
 	{
+		// transitions texture (final back buffer texture) from present to copy_source state.
 		pBlurEffect->addBlurToTexture(pCommandList.Get(), pBlurRootSignature.Get(), pBlurHorizontalPSO.Get(), pBlurVerticalPSO.Get(),
 			getCurrentBackBufferResource(true), getCamera()->getCameraEffects().screenBlurEffect.iBlurStrength);
 
