@@ -253,32 +253,30 @@ public:
 
 		//@@Function
 		/*
-		* desc: loads the specified image from the disk to the GPU memory so it can be used in GUI.
-		* param "sGUIObjectName": a name for this gui object.
-		* param "sPathToImage": path to the image file (png, jpeg, tiff, dds).
-		* return: valid pointer to the hidden GUI object if successful, nullptr otherwise.
-		* remarks: the returned GUI object will be invisible, use SGUIObject::setVisible to show it on the screen.
-		Note that you will need to unload the loaded resource (via SApplication::unloadGUIObject), it won't happen automatically,
-		but all loaded GUI resources will be unloaded in the SApplication's destructor function.
+		* desc: registers a new GUI object that can be used in GUI.
+		* param "pObject": your pointer to the GUI object that you've created and want to register.
+		* remarks: registered object will be invisible, call setVisible(true) when you want to show this GUI object on screen.
+		Note that you will need to unregister this resource (via SApplication::unregisterGUIObject), it won't happen automatically,
+		but all registered GUI resources will be unregistered in the SApplication's destructor function.
 		It's recommended to use this function in loading moments of your application (ex. loading screen)
 		as this function may drop the framerate a little.
 		*/
-		SGUIObject*    loadGUIObjectFromImage                (const std::string& sGUIObjectName, std::wstring_view sPathToImage);
+		void            registerGUIObject                         (SGUIObject* pGUIObject);
 		//@@Function
 		/*
 		* desc: returns all loaded GUI objects.
 		* return: valid pointer if successful, nullptr otherwise.
 		*/
-		std::vector<SGUILayer>* getLoadedGUIObjects();
+		std::vector<SGUILayer>* getLoadedGUIObjects              ();
 		//@@Function
 		/*
-		* desc: unloads the given GUI object.
-		* return: false if successful, true if the specified object was not loaded earlier (via SApplication::loadGUIObjectFromImage).
+		* desc: unregisters the given GUI object and deletes it.
+		* return: false if successful, true if the specified object was not registered earlier (via SApplication::registerGUIObject).
 		* remarks: any pointers to this object will be invalid after this call (the object will be deleted in this function).
 		It's recommended to use this function in loading moments of your application (ex. loading screen)
 		as this function may drop the framerate a little.
 		*/
-		bool           unloadGUIObject                       (SGUIObject* pGUIObject);
+		bool           unregisterGUIObject                       (SGUIObject* pGUIObject);
 
 
 	// Textures
@@ -1176,6 +1174,7 @@ private:
 	void setTransparentPSO();
 	void removeComponentsFromGlobalVectors(SContainer* pContainer);
 	void moveGUIObjectToLayer(SGUIObject* pObject, int iNewLayer);
+	void refreshHeap();
 
 
 	// -----------------------------------------------------------------
@@ -1188,8 +1187,10 @@ private:
 	friend class SMaterial;
 	friend class SLevel;
 	friend class SError;
-	friend class SGUIObject;
 	friend class SCustomShaderResources;
+	friend class SGUIObject;
+	friend class SGUIImage;
+	friend class SGUISimpleText;
 
 
 	static SApplication* pApp;
@@ -1408,4 +1409,3 @@ private:
 
 	bool           bD3DDebugLayerEnabled    = true;
 };
-

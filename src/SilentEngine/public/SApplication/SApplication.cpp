@@ -42,6 +42,8 @@ namespace fs = std::filesystem;
 #include "SilentEngine/Private/SShader/SShader.h"
 #include "SilentEngine/Private/SMiscHelpers/SMiscHelpers.h"
 #include "SilentEngine/Private/GUI/SGUIObject/SGUIObject.h"
+#include "SilentEngine/Public/GUI/SGUISimpleText/SGUISimpleText.h"
+#include "SilentEngine/Public/GUI/SGUIImage/SGUIImage.h"
 
 
 SApplication* SApplication::pApp = nullptr;
@@ -133,7 +135,6 @@ SMaterial* SApplication::registerMaterial(const std::string& sMaterialName, bool
 				vRegisteredMaterials[i]->iUpdateCBInFrameResourceCount = SFRAME_RES_COUNT;
 			}
 
-			// Recreate cbv heap.
 			createCBVSRVUAVHeap();
 			createViews();
 		}
@@ -270,7 +271,7 @@ bool SApplication::unregisterMaterial(const std::string& sMaterialName)
 	return false;
 }
 
-bool SApplication::unloadGUIObject(SGUIObject* pGUIObject)
+bool SApplication::unregisterGUIObject(SGUIObject* pGUIObject)
 {
 	if (pGUIObject == nullptr)
 	{
@@ -322,34 +323,43 @@ bool SApplication::unloadGUIObject(SGUIObject* pGUIObject)
 	return false;
 }
 
-SGUIObject* SApplication::loadGUIObjectFromImage(const std::string& sGUIObjectName, std::wstring_view sPathToImage)
+void SApplication::registerGUIObject(SGUIObject* pGUIObject)
 {
-	SGUIObject* pNewGUIObject = new SGUIObject(sGUIObjectName);
-
-	std::lock_guard<std::mutex> guard(mtxDraw);
-
-	if (pNewGUIObject->loadImage(sPathToImage))
+	if (pGUIObject->checkRequiredResourcesBeforeRegister())
 	{
-		delete pNewGUIObject;
-		return nullptr;
+		return;
 	}
 
-	// First entry with layer index 0 always exists.
-	pNewGUIObject->iZLayer = 0;
-	vGUILayers[0].vGUIObjects.push_back(pNewGUIObject);
+	{
+		std::lock_guard<std::mutex> guard(mtxDraw);
+
+		// First entry with layer index 0 always exists.
+		pGUIObject->bIsRegistered = true;
+		pGUIObject->bIsVisible = false;
+
+		vGUILayers[0].vGUIObjects.push_back(pGUIObject);
 
 
-	// Add the SRV to this object.
-	
+		// Add the SRVs to this object.
 
-	flushCommandQueue();
+		flushCommandQueue();
 
-	// Recreate cbv heap.
-	createCBVSRVUAVHeap();
-	createViews();
+		createCBVSRVUAVHeap();
+		createViews();
 
 
-	return pNewGUIObject;
+		if (pGUIObject->objectType == SGUIType::SGT_SIMPLE_TEXT)
+		{
+			SGUISimpleText* pText = dynamic_cast<SGUISimpleText*>(pGUIObject);
+			pText->initFontResource();
+		}
+	}
+
+	if (pGUIObject->iZLayer != 0)
+	{
+		// locks mtxDraw
+		moveGUIObjectToLayer(pGUIObject, pGUIObject->iZLayer);
+	}
 }
 
 std::vector<SGUILayer>* SApplication::getLoadedGUIObjects()
@@ -2209,7 +2219,7 @@ bool SApplication::onResize()
 		{
 			for (size_t j = 0; j < vGUILayers[i].vGUIObjects.size(); j++)
 			{
-				vGUILayers[i].vGUIObjects[j]->pSpriteBatch->SetViewport(ScreenViewport);
+				vGUILayers[i].vGUIObjects[j]->setViewport(ScreenViewport);
 			}
 		}
 
@@ -2940,35 +2950,78 @@ void SApplication::drawGUIObjects()
 		{
 			if (vGUILayers[i].vGUIObjects[j]->bIsVisible)
 			{
-				SGUIObject* pCurrentObject = vGUILayers[i].vGUIObjects[j];
+				if (vGUILayers[i].vGUIObjects[j]->objectType == SGUIType::SGT_IMAGE)
+				{
+					SGUIImage* pImage = dynamic_cast<SGUIImage*>(vGUILayers[i].vGUIObjects[j]);
 
-				pCurrentObject->pSpriteBatch->Begin(pCommandList.Get());
+					pImage->pSpriteBatch->Begin(pCommandList.Get());
 
-				// Draw sprites
-				auto heapHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(pCBVSRVUAVHeap->GetGPUDescriptorHandleForHeapStart());
-				heapHandle.Offset(pCurrentObject->iIndexInHeap, iCBVSRVUAVDescriptorSize);
+					auto heapHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(pCBVSRVUAVHeap->GetGPUDescriptorHandleForHeapStart());
+					heapHandle.Offset(pImage->iIndexInHeap, iCBVSRVUAVDescriptorSize);
 
-				DirectX::SimpleMath::Vector2 pos = pCurrentObject->pos;
-				pos.x *= iMainWindowWidth;
-				pos.y *= iMainWindowHeight;
+					// Position.
+					DirectX::SimpleMath::Vector2 pos = pImage->pos;
+					pos.x *= iMainWindowWidth;
+					pos.y *= iMainWindowHeight;
 
-				DirectX::XMUINT2 texSize = DirectX::GetTextureSize(pCurrentObject->pTexture.Get());
+					DirectX::XMUINT2 texSize = DirectX::GetTextureSize(pImage->pTexture.Get());
 
-				DirectX::SimpleMath::Vector2 origin = pCurrentObject->origin;
-				origin.x *= texSize.x;
-				origin.y *= texSize.y;
+					// Origin.
+					DirectX::SimpleMath::Vector2 origin = pImage->origin;
+					origin.x *= texSize.x;
+					origin.y *= texSize.y;
 
-				RECT sourceRect;
-				sourceRect.left = static_cast<LONG>(pCurrentObject->sourceRect.getX() * texSize.x);
-				sourceRect.top = static_cast<LONG>(pCurrentObject->sourceRect.getY() * texSize.y);
-				sourceRect.right = static_cast<LONG>(pCurrentObject->sourceRect.getZ() * texSize.x);
-				sourceRect.bottom = static_cast<LONG>(pCurrentObject->sourceRect.getW() * texSize.y);
+					// Source rect.
+					RECT sourceRect;
+					sourceRect.left = static_cast<LONG>(pImage->sourceRect.getX() * texSize.x);
+					sourceRect.top = static_cast<LONG>(pImage->sourceRect.getY() * texSize.y);
+					sourceRect.right = static_cast<LONG>(pImage->sourceRect.getZ() * texSize.x);
+					sourceRect.bottom = static_cast<LONG>(pImage->sourceRect.getW() * texSize.y);
 
-				pCurrentObject->pSpriteBatch->Draw(heapHandle,
-					texSize, pos, &sourceRect, DirectX::XMLoadFloat4(&pCurrentObject->color), pCurrentObject->fRotationInRad, origin,
-					pCurrentObject->scale, pCurrentObject->effects);
+					pImage->pSpriteBatch->Draw(heapHandle,
+						texSize, pos, &sourceRect, DirectX::XMLoadFloat4(&pImage->color), pImage->fRotationInRad, origin,
+						pImage->scale, pImage->effects);
 
-				pCurrentObject->pSpriteBatch->End();
+					pImage->pSpriteBatch->End();
+				}
+				else if (vGUILayers[i].vGUIObjects[j]->objectType == SGUIType::SGT_SIMPLE_TEXT)
+				{
+					SGUISimpleText* pText = dynamic_cast<SGUISimpleText*>(vGUILayers[i].vGUIObjects[j]);
+
+					pText->pSpriteBatch->Begin(pCommandList.Get());
+
+					// Origin.
+					DirectX::SimpleMath::Vector2 texSize = pText->pSpriteFont->MeasureString(pText->sWrappedText.c_str());
+					DirectX::SimpleMath::Vector2 origin = pText->origin;
+					origin.x *= texSize.x;
+					origin.y *= texSize.y;
+
+					// Position.
+					DirectX::SimpleMath::Vector2 pos = pText->pos;
+					pos.x *= iMainWindowWidth;
+					pos.y *= iMainWindowHeight;
+
+					if (pText->bDrawOutline)
+					{
+						pText->pSpriteFont->DrawString(pText->pSpriteBatch.get(), pText->sWrappedText.c_str(),
+							pos + DirectX::SimpleMath::Vector2(1.f, 1.f), DirectX::XMLoadFloat4(&pText->outlineColor), pText->fRotationInRad,
+							origin, pText->scale, pText->effects);
+						pText->pSpriteFont->DrawString(pText->pSpriteBatch.get(), pText->sWrappedText.c_str(),
+							pos + DirectX::SimpleMath::Vector2(-1.f, 1.f), DirectX::XMLoadFloat4(&pText->outlineColor), pText->fRotationInRad,
+							origin, pText->scale, pText->effects);
+						pText->pSpriteFont->DrawString(pText->pSpriteBatch.get(), pText->sWrappedText.c_str(),
+							pos + DirectX::SimpleMath::Vector2(-1.f, -1.f), DirectX::XMLoadFloat4(&pText->outlineColor), pText->fRotationInRad,
+							origin, pText->scale, pText->effects);
+						pText->pSpriteFont->DrawString(pText->pSpriteBatch.get(), pText->sWrappedText.c_str(),
+							pos + DirectX::SimpleMath::Vector2(1.f, -1.f), DirectX::XMLoadFloat4(&pText->outlineColor), pText->fRotationInRad,
+							origin, pText->scale, pText->effects);
+					}
+
+					pText->pSpriteFont->DrawString(pText->pSpriteBatch.get(), pText->sWrappedText.c_str(), pos, DirectX::XMLoadFloat4(&pText->color),
+						pText->fRotationInRad, origin, pText->scale, pText->effects);
+
+					pText->pSpriteBatch->End();
+				}
 			}
 		}
 	}
@@ -4173,13 +4226,39 @@ void SApplication::createViews()
 		for (size_t j = 0; j < vGUILayers[i].vGUIObjects.size(); j++)
 		{
 			int iIndexInHeap = iPerFrameResEndOffset + static_cast<int>(vLoadedTextures.size()) + iCurrentIndex;
-			auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(pCBVSRVUAVHeap->GetCPUDescriptorHandleForHeapStart());
 
-			handle.Offset(iIndexInHeap, iCBVSRVUAVDescriptorSize);
+			if (vGUILayers[i].vGUIObjects[j]->objectType == SGUIType::SGT_IMAGE)
+			{
+				SGUIImage* pText = dynamic_cast<SGUIImage*>(vGUILayers[i].vGUIObjects[j]);
 
-			DirectX::CreateShaderResourceView(pDevice.Get(), vGUILayers[i].vGUIObjects[j]->pTexture.Get(), handle);
+				auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(pCBVSRVUAVHeap->GetCPUDescriptorHandleForHeapStart());
 
-			vGUILayers[i].vGUIObjects[j]->iIndexInHeap = iIndexInHeap;
+				handle.Offset(iIndexInHeap, iCBVSRVUAVDescriptorSize);
+
+				DirectX::CreateShaderResourceView(pDevice.Get(), pText->pTexture.Get(), handle);
+
+				pText->iIndexInHeap = iIndexInHeap;
+			}
+			else if (vGUILayers[i].vGUIObjects[j]->objectType == SGUIType::SGT_SIMPLE_TEXT)
+			{
+				SGUISimpleText* pText = dynamic_cast<SGUISimpleText*>(vGUILayers[i].vGUIObjects[j]);
+
+				auto cpuHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(pCBVSRVUAVHeap->GetCPUDescriptorHandleForHeapStart());
+				cpuHandle.Offset(iIndexInHeap, iCBVSRVUAVDescriptorSize);
+
+				auto gpuHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(pCBVSRVUAVHeap->GetGPUDescriptorHandleForHeapStart());
+				gpuHandle.Offset(iIndexInHeap, iCBVSRVUAVDescriptorSize);
+
+				pText->cpuHandle = cpuHandle;
+				pText->gpuHandle = gpuHandle;
+
+				if (pText->bInitFontCalled)
+				{
+					// already registered, initFontResources() was called and now referencing wrong cpu/gpu handles
+					// refresh them
+					pText->initFontResource();
+				}
+			}
 
 			iCurrentIndex++;
 		}
@@ -4956,6 +5035,16 @@ void SApplication::moveGUIObjectToLayer(SGUIObject* pObject, int iNewLayer)
 	vGUILayers[iTargetLayerIndex].vGUIObjects.push_back(pObjectToMove);
 
 	pObjectToMove->iZLayer = iNewLayer;
+}
+
+void SApplication::refreshHeap()
+{
+	std::lock_guard<std::mutex> guard(mtxDraw);
+
+	flushCommandQueue();
+
+	createCBVSRVUAVHeap();
+	createViews();
 }
 
 void SApplication::releaseShader(SShader* pShader)

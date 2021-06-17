@@ -163,6 +163,12 @@
     <Filter Include="SilentEngine\Private\GUI\SGUIObject">
       <UniqueIdentifier>{0d5f92ac-d165-4756-99d4-6323c71d0b69}</UniqueIdentifier>
     </Filter>
+    <Filter Include="SilentEngine\Public\GUI\SGUIImage">
+      <UniqueIdentifier>{917841eb-8e3c-4911-9a14-40b147fc09ba}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SilentEngine\Public\GUI\SGUISimpleText">
+      <UniqueIdentifier>{9acafef8-2e03-44cf-b32b-fb52e6126d3f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\SilentEngine\public\SApplication\SApplication.cpp">
@@ -278,6 +284,12 @@
     </ClCompile>
     <ClCompile Include="..\src\SilentEngine\Private\GUI\SGUIObject\SGUIObject.cpp">
       <Filter>SilentEngine\Private\GUI\SGUIObject</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SilentEngine\Public\GUI\SGUIImage\SGUIImage.cpp">
+      <Filter>SilentEngine\Public\GUI\SGUIImage</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SilentEngine\Public\GUI\SGUISimpleText\SGUISimpleText.cpp">
+      <Filter>SilentEngine\Public\GUI\SGUISimpleText</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -400,6 +412,12 @@
     </ClInclude>
     <ClInclude Include="..\src\SilentEngine\Private\GUI\SGUIObject\SGUIObject.h">
       <Filter>SilentEngine\Private\GUI\SGUIObject</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SilentEngine\Public\GUI\SGUIImage\SGUIImage.h">
+      <Filter>SilentEngine\Public\GUI\SGUIImage</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SilentEngine\Public\GUI\SGUISimpleText\SGUISimpleText.h">
+      <Filter>SilentEngine\Public\GUI\SGUISimpleText</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

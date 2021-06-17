@@ -8,10 +8,7 @@
 #pragma once
 
 // STL
-#include <string>
-#include <vector>
 #include <string_view>
-#include <mutex>
 
 // DirectX
 #include <wrl.h> // smart pointers
@@ -33,6 +30,13 @@ public:
 	std::vector<SGUIObject*> vGUIObjects;
 };
 
+enum class SGUIType
+{
+	SGT_NONE,
+	SGT_IMAGE,
+	SGT_SIMPLE_TEXT,
+};
+
 //@@Class
 /*
 This class is a base class for all GUI objects.
@@ -43,6 +47,8 @@ public:
 	SGUIObject() = delete;
 	SGUIObject(const SGUIObject&) = delete;
 	SGUIObject& operator= (const SGUIObject&) = delete;
+
+	virtual ~SGUIObject();
 
 
 	//@@Function
@@ -78,7 +84,7 @@ public:
 	//@@Function
 	/*
 	* desc: use to specify the rectangle (in order: left, top, right, bottom corner) for drawing just part of a GUI object (in normalized range: [0, 1]).
-	* remarks: for example, passing the (x: 0.0f, y: 0.0f, z: 0.5f, w: 0.5f) will cut the GUI object to render only left-top corner of the object
+	* remarks: does not have any effect on SGUISimpleText. Example, passing the (x: 0.0f, y: 0.0f, z: 0.5f, w: 0.5f) will cut the GUI object to render only left-top corner of the object
 	(all relative to top-left corner, not the origin).
 	*/
 	void setCut  (const SVector& vSourceRect);
@@ -138,31 +144,20 @@ public:
 	*/
 	int     getZLayer () const;
 
-
-	virtual ~SGUIObject();
-
 protected:
+
+	friend class SApplication;
 
 	//@@Function
 	SGUIObject(const std::string& sObjectName);
 
-	void onResize();
-	void onMSAAChange();
+	virtual void setViewport(D3D12_VIEWPORT viewport) = 0;
+	virtual void onMSAAChange() = 0;
+	virtual bool checkRequiredResourcesBeforeRegister() = 0;
 
-	//@@Function
-	/*
-	* desc: loads an image to be used in GUI.
-	* return: false if successful, true otherwise.
-	*/
-	bool loadImage(std::wstring_view sPathToImage);
+	SGUIType objectType;
+	bool bIsRegistered;
 
-private:
-
-	friend class SApplication;
-
-	std::unique_ptr<DirectX::SpriteBatch>  pSpriteBatch = nullptr;
-
-	Microsoft::WRL::ComPtr<ID3D12Resource> pTexture;
 	DirectX::SimpleMath::Vector2 origin;
 	DirectX::SimpleMath::Vector2 pos;
 	SVector sourceRect;
@@ -170,12 +165,8 @@ private:
 	DirectX::XMFLOAT4 color;
 	DirectX::SpriteEffects effects;
 
-	std::mutex   mtxSprite;
-
 	std::string  sObjectName;
-	std::wstring sPathToTexture;
 
-	int          iIndexInHeap;
 	int          iZLayer;
 
 	float        fRotationInRad;
