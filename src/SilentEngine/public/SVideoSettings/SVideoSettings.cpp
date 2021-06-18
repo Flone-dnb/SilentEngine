@@ -79,7 +79,7 @@ TEX_FILTER_MODE SVideoSettings::getTextureFilterMode()
 	return pApp->textureFilterIndex;
 }
 
-void SVideoSettings::setBackBufferFillColor(SVector vColor)
+void SVideoSettings::setBackBufferFillColor(const SVector& vColor)
 {
 	pApp->setBackBufferFillColor(vColor);
 }

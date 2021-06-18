@@ -1268,7 +1268,7 @@ bool SApplication::setInitPhysicsTicksPerSecond(int iTicksPerSecond)
 	}
 }
 
-void SApplication::setBackBufferFillColor(SVector vColor)
+void SApplication::setBackBufferFillColor(const SVector& vColor)
 {
 	backBufferFillColor[0] = vColor.getX();
 	backBufferFillColor[1] = vColor.getY();
@@ -3020,26 +3020,36 @@ void SApplication::drawGUIObjects()
 					pos.x *= iMainWindowWidth;
 					pos.y *= iMainWindowHeight;
 
-					if (pText->bDrawOutline)
-					{
-						pText->pSpriteFont->DrawString(pText->pSpriteBatch.get(), pText->sWrappedText.c_str(),
-							pos + DirectX::SimpleMath::Vector2(1.f, 1.f), DirectX::XMLoadFloat4(&pText->outlineColor), pText->fRotationInRad,
-							origin, pText->scale);
-						pText->pSpriteFont->DrawString(pText->pSpriteBatch.get(), pText->sWrappedText.c_str(),
-							pos + DirectX::SimpleMath::Vector2(-1.f, 1.f), DirectX::XMLoadFloat4(&pText->outlineColor), pText->fRotationInRad,
-							origin, pText->scale);
-						pText->pSpriteFont->DrawString(pText->pSpriteBatch.get(), pText->sWrappedText.c_str(),
-							pos + DirectX::SimpleMath::Vector2(-1.f, -1.f), DirectX::XMLoadFloat4(&pText->outlineColor), pText->fRotationInRad,
-							origin, pText->scale);
-						pText->pSpriteFont->DrawString(pText->pSpriteBatch.get(), pText->sWrappedText.c_str(),
-							pos + DirectX::SimpleMath::Vector2(1.f, -1.f), DirectX::XMLoadFloat4(&pText->outlineColor), pText->fRotationInRad,
-							origin, pText->scale);
-					}
-
 					// Scaling.
 					DirectX::XMFLOAT2 scaling = pText->scale;
 					scaling.x *= pText->screenScale.x;
 					scaling.y *= pText->screenScale.y;
+
+					if (pText->bDrawOutline)
+					{
+						pText->pSpriteFont->DrawString(pText->pSpriteBatch.get(), pText->sWrappedText.c_str(),
+							pos + DirectX::SimpleMath::Vector2(1.f, 1.f), DirectX::XMLoadFloat4(&pText->outlineColor), pText->fRotationInRad,
+							origin, scaling);
+						pText->pSpriteFont->DrawString(pText->pSpriteBatch.get(), pText->sWrappedText.c_str(),
+							pos + DirectX::SimpleMath::Vector2(-1.f, 1.f), DirectX::XMLoadFloat4(&pText->outlineColor), pText->fRotationInRad,
+							origin, scaling);
+						pText->pSpriteFont->DrawString(pText->pSpriteBatch.get(), pText->sWrappedText.c_str(),
+							pos + DirectX::SimpleMath::Vector2(-1.f, -1.f), DirectX::XMLoadFloat4(&pText->outlineColor), pText->fRotationInRad,
+							origin, scaling);
+						pText->pSpriteFont->DrawString(pText->pSpriteBatch.get(), pText->sWrappedText.c_str(),
+							pos + DirectX::SimpleMath::Vector2(1.f, -1.f), DirectX::XMLoadFloat4(&pText->outlineColor), pText->fRotationInRad,
+							origin, scaling);
+					}
+
+					if (pText->bDrawShadow)
+					{
+						pText->pSpriteFont->DrawString(pText->pSpriteBatch.get(), pText->sWrappedText.c_str(),
+							pos + DirectX::SimpleMath::Vector2(1.f, 1.f), DirectX::Colors::Black, pText->fRotationInRad,
+							origin, scaling);
+						pText->pSpriteFont->DrawString(pText->pSpriteBatch.get(), pText->sWrappedText.c_str(),
+							pos + DirectX::SimpleMath::Vector2(-1.f, 1.f), DirectX::Colors::Black, pText->fRotationInRad,
+							origin, scaling);
+					}
 
 					pText->pSpriteFont->DrawString(pText->pSpriteBatch.get(), pText->sWrappedText.c_str(), pos, DirectX::XMLoadFloat4(&pText->color),
 						pText->fRotationInRad, origin, scaling);

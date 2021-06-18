@@ -35,6 +35,7 @@ SGUISimpleText::SGUISimpleText(const std::string& sObjectName) : SGUIObject(sObj
 	bDrawOutline = false;
 	bAlignTextAtCenter = false;
 	bInitFontCalled = false;
+	bDrawShadow = false;
 }
 
 SGUISimpleText::~SGUISimpleText()
@@ -99,6 +100,11 @@ void SGUISimpleText::setDrawTextOutline(bool bDrawOutline, const SVector& vOutli
 {
 	this->bDrawOutline = bDrawOutline;
 	this->outlineColor = DirectX::XMFLOAT4(vOutlineColor.getX(), vOutlineColor.getY(), vOutlineColor.getZ(), vOutlineColor.getW());
+}
+
+void SGUISimpleText::setDrawTextShadow(bool bDrawTextShadow)
+{
+	bDrawShadow = bDrawTextShadow;
 }
 
 void SGUISimpleText::setWordWrapMaxLineWidth(float fMaxLineWidth, bool bAlignTextAtCenter)

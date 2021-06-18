@@ -57,6 +57,12 @@ public:
 
 	//@@Function
 	/*
+	* desc: sets the text shadow rendering.
+	*/
+	void setDrawTextShadow(bool bDrawTextShadow);
+
+	//@@Function
+	/*
 	* desc: sets the max. line width for text wrapping (in normalized range: [0.0, 1.0] that represents the screen in pixels).
 	* param "fMaxLineWidth": max. width to wrap text, pass 0.0f to disable wrapping.
 	* param "bAlignTextAtCenter": horizontal text alignment.
@@ -106,6 +112,7 @@ private:
 	float fMaxLineWidth;
 
 	bool bDrawOutline;
+	bool bDrawShadow;
 	bool bAlignTextAtCenter;
 	bool bInitFontCalled;
 };

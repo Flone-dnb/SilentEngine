@@ -956,7 +956,7 @@ private:
 		* desc: used to set the "background" color of the world.
 		* param "vColor": the vector that contains the color in XYZ as RGB.
 		*/
-		void setBackBufferFillColor               (SVector vColor);
+		void setBackBufferFillColor               (const SVector& vColor);
 		//@@Function
 		/*
 		* desc: used to enable/disable wireframe display mode.
