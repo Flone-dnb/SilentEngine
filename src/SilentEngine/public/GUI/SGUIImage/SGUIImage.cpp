@@ -118,6 +118,7 @@ bool SGUIImage::loadImage(std::wstring_view sPathToImage)
 
 	pSpriteBatch->SetViewport(pApp->ScreenViewport);
 
+	recalculateSizeToKeepScaling();
 
 	sPathToTexture = sPathToImage;
 
@@ -130,11 +131,39 @@ bool SGUIImage::loadImage(std::wstring_view sPathToImage)
 	return false;
 }
 
+void SGUIImage::setCut(const SVector& vSourceRect)
+{
+	if (vSourceRect.getX() < 0.0f || vSourceRect.getX() > 1.0f || vSourceRect.getY() < 0.0f || vSourceRect.getY() > 1.0f ||
+		vSourceRect.getZ() < 0.0f || vSourceRect.getZ() > 1.0f || vSourceRect.getW() < 0.0f || vSourceRect.getW() > 1.0f)
+	{
+		SError::showErrorMessageBoxAndLog("cut values should be normalized.");
+		return;
+	}
+
+	sourceRect = vSourceRect;
+}
+
+SVector SGUIImage::getSizeInPixels() const
+{
+	if (pTexture)
+	{
+		DirectX::XMUINT2 texSize = DirectX::GetTextureSize(pTexture.Get());
+
+		return SVector(texSize.x, texSize.y);
+	}
+	else
+	{
+		return SVector();
+	}
+}
+
 void SGUIImage::setViewport(D3D12_VIEWPORT viewport)
 {
 	if (pSpriteBatch)
 	{
 		pSpriteBatch->SetViewport(viewport);
+		
+		recalculateSizeToKeepScaling();
 	}
 }
 
@@ -154,7 +183,33 @@ bool SGUIImage::checkRequiredResourcesBeforeRegister()
 		return true;
 	}
 
+	recalculateSizeToKeepScaling();
+
     return false;
+}
+
+void SGUIImage::recalculateSizeToKeepScaling()
+{
+	if (vSizeToKeep.getX() < 0.0f || vSizeToKeep.getY() < 0.0f)
+	{
+		return;
+	}
+
+	if (pTexture == nullptr)
+	{
+		return;
+	}
+
+	float fTargetWidth = vSizeToKeep.getX() * SApplication::getApp()->iMainWindowWidth;
+	float fTargetHeight = vSizeToKeep.getY() * SApplication::getApp()->iMainWindowHeight;
+
+	DirectX::XMUINT2 texSize = DirectX::GetTextureSize(pTexture.Get());
+
+	texSize.x *= scale.x;
+	texSize.y *= scale.y;
+
+	screenScale.x = fTargetWidth / texSize.x;
+	screenScale.y = fTargetHeight / texSize.y;
 }
 
 SGUIImage::~SGUIImage()
@@ -166,4 +221,5 @@ SGUIImage::SGUIImage(const std::string& sObjectName) : SGUIObject(sObjectName)
 	objectType = SGUIType::SGT_IMAGE;
 
 	iIndexInHeap = -1;
+	sourceRect = { 0.0f, 0.0f, 1.0f, 1.0f };
 }

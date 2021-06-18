@@ -91,6 +91,7 @@ void SGUISimpleText::setText(const std::wstring& sText)
 	if (pSpriteFont)
 	{
 		sWrappedText = wrapText();
+		recalculateSizeToKeepScaling();
 	}
 }
 
@@ -122,11 +123,27 @@ std::wstring SGUISimpleText::getText() const
 	return sRawText;
 }
 
+SVector SGUISimpleText::getSizeInPixels() const
+{
+	if (pSpriteFont)
+	{
+		DirectX::SimpleMath::Vector2 texSize = DirectX::SimpleMath::Vector2(pSpriteFont->MeasureString(sWrappedText.c_str(), false));
+
+		return SVector(texSize.x, texSize.y);
+	}
+	else
+	{
+		return SVector();
+	}
+}
+
 void SGUISimpleText::setViewport(D3D12_VIEWPORT viewport)
 {
 	if (pSpriteBatch)
 	{
 		pSpriteBatch->SetViewport(viewport);
+
+		recalculateSizeToKeepScaling();
 	}
 }
 
@@ -148,6 +165,30 @@ bool SGUISimpleText::checkRequiredResourcesBeforeRegister()
 	}
 
 	return false;
+}
+
+void SGUISimpleText::recalculateSizeToKeepScaling()
+{
+	if (vSizeToKeep.getX() < 0.0f || vSizeToKeep.getY() < 0.0f)
+	{
+		return;
+	}
+
+	if (pSpriteFont == nullptr)
+	{
+		return;
+	}
+
+	float fTargetWidth = vSizeToKeep.getX() * SApplication::getApp()->iMainWindowWidth;
+	float fTargetHeight = vSizeToKeep.getY() * SApplication::getApp()->iMainWindowHeight;
+
+	DirectX::SimpleMath::Vector2 texSize = DirectX::SimpleMath::Vector2(pSpriteFont->MeasureString(sWrappedText.c_str(), false));
+
+	texSize.x *= scale.x;
+	texSize.y *= scale.y;
+
+	screenScale.x = fTargetWidth / texSize.x;
+	screenScale.y = fTargetHeight / texSize.y;
 }
 
 std::wstring SGUISimpleText::wrapText()
@@ -256,4 +297,6 @@ void SGUISimpleText::initFontResource()
 	bInitFontCalled = true;
 
 	sWrappedText = wrapText();
+
+	recalculateSizeToKeepScaling();
 }

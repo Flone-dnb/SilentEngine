@@ -39,11 +39,26 @@ public:
 	*/
 	bool loadImage(std::wstring_view sPathToImage);
 
+	//@@Function
+	/*
+	* desc: use to specify the rectangle (in order: left, top, right, bottom corner) for drawing just part of a GUI object (in normalized range: [0, 1]).
+	* remarks: for example, passing the (x: 0.0f, y: 0.0f, z: 0.5f, w: 0.5f) will cut the GUI object to render only left-top corner of the object
+	(all relative to top-left corner, not the origin).
+	*/
+	void setCut(const SVector& vSourceRect);
+
+	//@@Function
+	/*
+	* desc: returns the size of the GUI object without scaling.
+	*/
+	virtual SVector getSizeInPixels() const;
+
 protected:
 
 	virtual void setViewport(D3D12_VIEWPORT viewport) override;
 	virtual void onMSAAChange() override;
 	virtual bool checkRequiredResourcesBeforeRegister() override;
+	virtual void recalculateSizeToKeepScaling() override;
 
 private:
 
@@ -51,6 +66,8 @@ private:
 
 	std::unique_ptr<DirectX::SpriteBatch>  pSpriteBatch = nullptr;
 	Microsoft::WRL::ComPtr<ID3D12Resource> pTexture;
+
+	SVector sourceRect;
 
 	std::mutex   mtxSprite;
 

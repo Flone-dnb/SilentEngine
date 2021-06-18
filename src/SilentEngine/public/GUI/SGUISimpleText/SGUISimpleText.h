@@ -70,11 +70,18 @@ public:
 	*/
 	std::wstring getText() const;
 
+	//@@Function
+	/*
+	* desc: returns the size of the GUI object without scaling.
+	*/
+	virtual SVector getSizeInPixels() const;
+
 protected:
 
 	virtual void setViewport(D3D12_VIEWPORT viewport) override;
 	virtual void onMSAAChange() override;
 	virtual bool checkRequiredResourcesBeforeRegister() override;
+	virtual void recalculateSizeToKeepScaling() override;
 
 private:
 

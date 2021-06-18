@@ -330,6 +330,12 @@ void SApplication::registerGUIObject(SGUIObject* pGUIObject)
 		return;
 	}
 
+	if (pGUIObject->vSizeToKeep.getX() < 0.0f || pGUIObject->vSizeToKeep.getY() < 0.0f)
+	{
+		SError::showErrorMessageBoxAndLog("you need to specify the size to keep using setSizeToKeep().");
+		return;
+	}
+
 	{
 		std::lock_guard<std::mutex> guard(mtxDraw);
 
@@ -2978,9 +2984,14 @@ void SApplication::drawGUIObjects()
 					sourceRect.right = static_cast<LONG>(pImage->sourceRect.getZ() * texSize.x);
 					sourceRect.bottom = static_cast<LONG>(pImage->sourceRect.getW() * texSize.y);
 
+					// Scaling.
+					DirectX::XMFLOAT2 scaling = pImage->scale;
+					scaling.x *= pImage->screenScale.x;
+					scaling.y *= pImage->screenScale.y;
+
 					pImage->pSpriteBatch->Draw(heapHandle,
 						texSize, pos, &sourceRect, DirectX::XMLoadFloat4(&pImage->color), pImage->fRotationInRad, origin,
-						pImage->scale, pImage->effects);
+						scaling);
 
 					pImage->pSpriteBatch->End();
 				}
@@ -3005,20 +3016,25 @@ void SApplication::drawGUIObjects()
 					{
 						pText->pSpriteFont->DrawString(pText->pSpriteBatch.get(), pText->sWrappedText.c_str(),
 							pos + DirectX::SimpleMath::Vector2(1.f, 1.f), DirectX::XMLoadFloat4(&pText->outlineColor), pText->fRotationInRad,
-							origin, pText->scale, pText->effects);
+							origin, pText->scale);
 						pText->pSpriteFont->DrawString(pText->pSpriteBatch.get(), pText->sWrappedText.c_str(),
 							pos + DirectX::SimpleMath::Vector2(-1.f, 1.f), DirectX::XMLoadFloat4(&pText->outlineColor), pText->fRotationInRad,
-							origin, pText->scale, pText->effects);
+							origin, pText->scale);
 						pText->pSpriteFont->DrawString(pText->pSpriteBatch.get(), pText->sWrappedText.c_str(),
 							pos + DirectX::SimpleMath::Vector2(-1.f, -1.f), DirectX::XMLoadFloat4(&pText->outlineColor), pText->fRotationInRad,
-							origin, pText->scale, pText->effects);
+							origin, pText->scale);
 						pText->pSpriteFont->DrawString(pText->pSpriteBatch.get(), pText->sWrappedText.c_str(),
 							pos + DirectX::SimpleMath::Vector2(1.f, -1.f), DirectX::XMLoadFloat4(&pText->outlineColor), pText->fRotationInRad,
-							origin, pText->scale, pText->effects);
+							origin, pText->scale);
 					}
 
+					// Scaling.
+					DirectX::XMFLOAT2 scaling = pText->scale;
+					scaling.x *= pText->screenScale.x;
+					scaling.y *= pText->screenScale.y;
+
 					pText->pSpriteFont->DrawString(pText->pSpriteBatch.get(), pText->sWrappedText.c_str(), pos, DirectX::XMLoadFloat4(&pText->color),
-						pText->fRotationInRad, origin, pText->scale, pText->effects);
+						pText->fRotationInRad, origin, scaling);
 
 					pText->pSpriteBatch->End();
 				}

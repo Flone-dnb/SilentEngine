@@ -115,7 +115,9 @@ public:
 		/*
 		* desc: disables the D3D12 debug layer. The D3D12 debug layer helps to debug D3D functions
 		and shows in the Output tab a detailed description of the warnings and errors.
-		D3D functions operate on the engine level so end users don't need to care about them.
+		D3D functions operate on the engine level so end users don't need to care about them,
+		but if you disable the D3D debug layer and stumble upon an engine error, a warning or not a critical engine error, you might
+		not even know about an error in the engine and so in your game.
 		All debug build will have the D3D debug layer enabled, release build will not.
 		As you might guess, the D3D debug layer comes with some overhead which can slow things down
 		and even completely destroy your game's performance. You can disable the D3D debug

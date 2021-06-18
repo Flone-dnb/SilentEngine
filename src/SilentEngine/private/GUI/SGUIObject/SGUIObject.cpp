@@ -16,18 +16,35 @@
 SGUIObject::SGUIObject(const std::string& sObjectName)
 {
 	this->sObjectName = sObjectName;
+
 	iZLayer = 0;
 	fRotationInRad = 0.0f;
+
+	vSizeToKeep = SVector(-1.0f, -1.0f);
+
 	scale = DirectX::XMFLOAT2(1.0f, 1.0f);
+	screenScale = DirectX::XMFLOAT2(1.0f, 1.0f);
 	color = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 	pos = DirectX::SimpleMath::Vector2(0.5f, 0.5f);
 	origin = DirectX::SimpleMath::Vector2(0.5f, 0.5f);
-	sourceRect = { 0.0f, 0.0f, 1.0f, 1.0f };
-	effects = DirectX::SpriteEffects::SpriteEffects_None;
+
 	bIsVisible = false;
 	bIsRegistered = false;
 
 	objectType = SGUIType::SGT_NONE;
+}
+
+void SGUIObject::setSizeToKeep(const SVector& vSizeToKeep)
+{
+	if (vSizeToKeep.getX() < 0.0f || vSizeToKeep.getX() > 1.0f || vSizeToKeep.getY() < 0.0f || vSizeToKeep.getY() > 1.0f)
+	{
+		SError::showErrorMessageBoxAndLog("size values should be normalized.");
+		return;
+	}
+
+	this->vSizeToKeep = vSizeToKeep;
+
+	recalculateSizeToKeepScaling();
 }
 
 void SGUIObject::setVisible(bool bIsVisible)
@@ -59,38 +76,6 @@ void SGUIObject::setScale(const SVector& vScale)
 void SGUIObject::setTint(const SVector& vColor)
 {
 	color = DirectX::XMFLOAT4(vColor.getX(), vColor.getY(), vColor.getZ(), vColor.getW());
-}
-
-void SGUIObject::setFlip(bool bFlipHorizontally, bool bFlipVertically)
-{
-	if (bFlipHorizontally && bFlipVertically)
-	{
-		effects = DirectX::SpriteEffects::SpriteEffects_FlipBoth;
-	}
-	else if (bFlipHorizontally)
-	{
-		effects = DirectX::SpriteEffects::SpriteEffects_FlipHorizontally;
-	}
-	else if (bFlipVertically)
-	{
-		effects = DirectX::SpriteEffects::SpriteEffects_FlipVertically;
-	}
-	else
-	{
-		effects = DirectX::SpriteEffects::SpriteEffects_None;
-	}
-}
-
-void SGUIObject::setCut(const SVector& vSourceRect)
-{
-	if (vSourceRect.getX() < 0.0f || vSourceRect.getX() > 1.0f || vSourceRect.getY() < 0.0f || vSourceRect.getY() > 1.0f ||
-		vSourceRect.getZ() < 0.0f || vSourceRect.getZ() > 1.0f || vSourceRect.getW() < 0.0f || vSourceRect.getW() > 1.0f)
-	{
-		SError::showErrorMessageBoxAndLog("cut values should be normalized.");
-		return;
-	}
-
-	sourceRect = vSourceRect;
 }
 
 void SGUIObject::setCustomOrigin(const SVector& vOrigin)
@@ -149,30 +134,6 @@ SVector SGUIObject::getTint() const
 SVector SGUIObject::getOrigin() const
 {
 	return SVector(origin.x, origin.y);
-}
-
-void SGUIObject::getFlip(bool& bFlippedHorizontally, bool& bFlippedVertically) const
-{
-	if (effects == DirectX::SpriteEffects::SpriteEffects_None)
-	{
-		bFlippedHorizontally = false;
-		bFlippedVertically = false;
-	}
-	else if (effects == DirectX::SpriteEffects::SpriteEffects_FlipBoth)
-	{
-		bFlippedHorizontally = true;
-		bFlippedVertically = true;
-	}
-	else if (effects == DirectX::SpriteEffects::SpriteEffects_FlipHorizontally)
-	{
-		bFlippedHorizontally = true;
-		bFlippedVertically = false;
-	}
-	else if (effects == DirectX::SpriteEffects::SpriteEffects_FlipVertically)
-	{
-		bFlippedHorizontally = false;
-		bFlippedVertically = true;
-	}
 }
 
 int SGUIObject::getZLayer() const

@@ -53,6 +53,16 @@ public:
 
 	//@@Function
 	/*
+	* desc: use to set the size (in normalized range: [0, 1]) that this GUI object should keep relative to the screen resolution.
+	* remarks: note that 'size to keep' ignores rotation! Setting the size to (0.5f, 1.0f) will tell the object to keep its
+	size as half of the screen, so on 1920x1080 resolution
+	the size of this object will be 960x1080, and on the 800x600 resolution, its size will be 400x600. The size is measured from the top-left corner
+	of the object. To keep the specified size, the object will use an additional scaling (on top of the scale passed in setScale()) to maintain the
+	specified size.
+	*/
+	void setSizeToKeep(const SVector& vSizeToKeep);
+	//@@Function
+	/*
 	* desc: use to show or hide the GUI object from the screen.
 	*/
 	void setVisible(bool bIsVisible);
@@ -64,6 +74,7 @@ public:
 	//@@Function
 	/*
 	* desc: use to set the rotation in degrees.
+	* remarks: note that 'size to keep' ignores rotation!
 	*/
 	void setRotation(float fRotationInDeg);
 	//@@Function
@@ -76,18 +87,6 @@ public:
 	* desc: use to set the tinting in RGBA format, white (1, 1, 1, 1) for no tinting.
 	*/
 	void setTint (const SVector& vColor);
-	//@@Function
-	/*
-	* desc: use to flip the GUI object.
-	*/
-	void setFlip(bool bFlipHorizontally, bool bFlipVertically);
-	//@@Function
-	/*
-	* desc: use to specify the rectangle (in order: left, top, right, bottom corner) for drawing just part of a GUI object (in normalized range: [0, 1]).
-	* remarks: does not have any effect on SGUISimpleText. Example, passing the (x: 0.0f, y: 0.0f, z: 0.5f, w: 0.5f) will cut the GUI object to render only left-top corner of the object
-	(all relative to top-left corner, not the origin).
-	*/
-	void setCut  (const SVector& vSourceRect);
 	//@@Function
 	/*
 	* desc: use to set the custom origin of the GUI object (in normalized range: [0, 1]),
@@ -135,14 +134,14 @@ public:
 	SVector getOrigin () const;
 	//@@Function
 	/*
-	* desc: returns the flip state of the object.
-	*/
-	void    getFlip   (bool& bFlippedHorizontally, bool& bFlippedVertically) const;
-	//@@Function
-	/*
 	* desc: returns the Z-layer value of this object.
 	*/
 	int     getZLayer () const;
+	//@@Function
+	/*
+	* desc: returns the size of the GUI object without scaling.
+	*/
+	virtual SVector getSizeInPixels() const = 0;
 
 protected:
 
@@ -154,16 +153,17 @@ protected:
 	virtual void setViewport(D3D12_VIEWPORT viewport) = 0;
 	virtual void onMSAAChange() = 0;
 	virtual bool checkRequiredResourcesBeforeRegister() = 0;
+	virtual void recalculateSizeToKeepScaling() = 0;
 
 	SGUIType objectType;
 	bool bIsRegistered;
 
 	DirectX::SimpleMath::Vector2 origin;
 	DirectX::SimpleMath::Vector2 pos;
-	SVector sourceRect;
 	DirectX::XMFLOAT2 scale;
+	DirectX::XMFLOAT2 screenScale; // used for 'size to keep'
 	DirectX::XMFLOAT4 color;
-	DirectX::SpriteEffects effects;
+	SVector vSizeToKeep;
 
 	std::string  sObjectName;
 
