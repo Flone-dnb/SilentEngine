@@ -880,6 +880,11 @@ private:
 		called only after calling the SApplication::run().
 		*/
 		bool getLastFrameDrawCallCount       (unsigned long long* iDrawCallCount) const;
+		//@@Function
+		/*
+		* desc: enable/disable GUI rendering.
+		*/
+		void setDrawGUI                      (bool bDraw);
 
 
 	// Multisampling
@@ -1209,6 +1214,7 @@ private:
 	// GUI.
 	std::vector<SGUILayer>                   vGUILayers;
 	std::unique_ptr<DirectX::GraphicsMemory> pDXTKGraphicsMemory;
+	bool                                     bDrawGUI = true;
 
 
 	// PSOs

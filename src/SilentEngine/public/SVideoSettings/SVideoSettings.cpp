@@ -19,6 +19,11 @@ void SVideoSettings::setFPSLimit(float fFPSLimit)
 	pApp->setFPSLimit(fFPSLimit);
 }
 
+void SVideoSettings::setDrawGUI(bool bDrawGUI)
+{
+	pApp->setDrawGUI(bDrawGUI);
+}
+
 void SVideoSettings::setMSAAEnabled(bool bEnable)
 {
 	pApp->setMSAAEnabled(bEnable);

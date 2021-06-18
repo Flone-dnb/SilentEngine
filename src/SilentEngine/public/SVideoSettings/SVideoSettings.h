@@ -99,6 +99,11 @@ public:
 	* remarks: set fFPSLimit to 0 to disable FPS limit.
 	*/
 	void      setFPSLimit                          (float fFPSLimit);
+	//@@Function
+	/*
+	* desc: enable/disable GUI rendering.
+	*/
+	void      setDrawGUI                           (bool bDrawGUI);
 
 
 	// MSAA

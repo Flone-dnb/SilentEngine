@@ -1998,6 +1998,11 @@ bool SApplication::getLastFrameDrawCallCount(unsigned long long* iDrawCallCount)
 	}
 }
 
+void SApplication::setDrawGUI(bool bDraw)
+{
+	bDrawGUI = bDraw;
+}
+
 float SApplication::getScreenAspectRatio() const
 {
 	return static_cast<float>(iMainWindowWidth) / iMainWindowHeight;
@@ -2683,7 +2688,10 @@ void SApplication::draw()
 
 	drawTransparentComponents();
 
-	drawGUIObjects();
+	if (bDrawGUI)
+	{
+		drawGUIObjects();
+	}
 
 	transition
 		= CD3DX12_RESOURCE_BARRIER::Transition(getCurrentBackBufferResource(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
