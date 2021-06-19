@@ -9,6 +9,7 @@
 
 // STL
 #include <string>
+#include <mutex>
 
 // DirectX
 #include "SilentEngine/Private/d3dx12.h"
@@ -80,21 +81,23 @@ public:
 	/*
 	* desc: returns the size of the GUI object without scaling.
 	*/
-	virtual SVector getSizeInPixels() const;
+	virtual SVector getSizeInPixels() override;
 
 protected:
 
 	virtual void setViewport(D3D12_VIEWPORT viewport) override;
 	virtual void onMSAAChange() override;
 	virtual bool checkRequiredResourcesBeforeRegister() override;
+	// call under mtxSprite
 	virtual void recalculateSizeToKeepScaling() override;
+	virtual SVector getFullSizeInPixels() override;
 
 private:
 
 	friend class SApplication;
 
 	std::wstring wrapText();
-	
+
 	void initFontResource();
 
 	std::unique_ptr<DirectX::SpriteBatch> pSpriteBatch = nullptr;
@@ -102,6 +105,8 @@ private:
 
 	CD3DX12_CPU_DESCRIPTOR_HANDLE cpuHandle;
 	CD3DX12_GPU_DESCRIPTOR_HANDLE gpuHandle;
+
+	std::mutex mtxSprite;
 
 	DirectX::XMFLOAT4 outlineColor;
 
@@ -116,4 +121,3 @@ private:
 	bool bAlignTextAtCenter;
 	bool bInitFontCalled;
 };
-

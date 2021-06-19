@@ -143,13 +143,13 @@ void SGUIImage::setCut(const SVector& vSourceRect)
 	sourceRect = vSourceRect;
 }
 
-SVector SGUIImage::getSizeInPixels() const
+SVector SGUIImage::getSizeInPixels()
 {
 	if (pTexture)
 	{
 		DirectX::XMUINT2 texSize = DirectX::GetTextureSize(pTexture.Get());
 
-		return SVector(texSize.x, texSize.y);
+		return SVector(static_cast<float>(texSize.x), static_cast<float>(texSize.y));
 	}
 	else
 	{
@@ -159,6 +159,8 @@ SVector SGUIImage::getSizeInPixels() const
 
 void SGUIImage::setViewport(D3D12_VIEWPORT viewport)
 {
+	std::lock_guard<std::mutex> guard(mtxSprite);
+
 	if (pSpriteBatch)
 	{
 		pSpriteBatch->SetViewport(viewport);
@@ -177,6 +179,8 @@ void SGUIImage::onMSAAChange()
 
 bool SGUIImage::checkRequiredResourcesBeforeRegister()
 {
+	std::lock_guard<std::mutex> guard(mtxSprite);
+
 	if (pTexture == nullptr)
 	{
 		SError::showErrorMessageBoxAndLog("an image resource is required to register the SGUIImage object, use loadImage() first.");
@@ -205,11 +209,23 @@ void SGUIImage::recalculateSizeToKeepScaling()
 
 	DirectX::XMUINT2 texSize = DirectX::GetTextureSize(pTexture.Get());
 
-	texSize.x *= scale.x;
-	texSize.y *= scale.y;
+	texSize.x *= static_cast<uint32_t>(scale.x);
+	texSize.y *= static_cast<uint32_t>(scale.y);
 
 	screenScale.x = fTargetWidth / texSize.x;
 	screenScale.y = fTargetHeight / texSize.y;
+}
+
+SVector SGUIImage::getFullSizeInPixels()
+{
+	std::lock_guard<std::mutex> guard(mtxSprite);
+
+	DirectX::XMUINT2 texSize = DirectX::GetTextureSize(pTexture.Get());
+
+	texSize.x *= static_cast<uint32_t>(scale.x);
+	texSize.y *= static_cast<uint32_t>(scale.y);
+
+	return SVector(static_cast<float>(texSize.x), static_cast<float>(texSize.y));
 }
 
 SGUIImage::~SGUIImage()

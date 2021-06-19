@@ -44,6 +44,7 @@ namespace fs = std::filesystem;
 #include "SilentEngine/Private/GUI/SGUIObject/SGUIObject.h"
 #include "SilentEngine/Public/GUI/SGUISimpleText/SGUISimpleText.h"
 #include "SilentEngine/Public/GUI/SGUIImage/SGUIImage.h"
+#include "SilentEngine/Public/GUI/SGUILayout/SGUILayout.h"
 
 
 SApplication* SApplication::pApp = nullptr;
@@ -179,7 +180,6 @@ bool SApplication::unregisterMaterial(const std::string& sMaterialName)
 	}
 
 
-
 	// Is this material registered?
 
 	bool bRegistered = false;
@@ -278,6 +278,28 @@ bool SApplication::unregisterGUIObject(SGUIObject* pGUIObject)
 		return true;
 	}
 
+	if (pGUIObject->bIsRegistered == false)
+	{
+		return true;
+	}
+
+	if (pGUIObject->objectType == SGUIType::SGT_LAYOUT)
+	{
+		SGUILayout* pLayout = dynamic_cast<SGUILayout*>(pGUIObject);
+		
+		if (pLayout->getChilds()->size() != 0)
+		{
+			SError::showErrorMessageBoxAndLog("can't unregister a layout with childs, remove all childs from this layout first, then unregister the layout.");
+			return true;
+		}
+	}
+
+	if (pGUIObject->layoutData.pLayout)
+	{
+		SError::showErrorMessageBoxAndLog("can't unregister an object that is in a layout, remove the object from the layout first, and only then unregister the object.");
+		return true;
+	}
+
 	std::lock_guard<std::mutex> guard(mtxDraw);
 
 	// Check if this GUI object is loaded.
@@ -323,14 +345,19 @@ bool SApplication::unregisterGUIObject(SGUIObject* pGUIObject)
 	return false;
 }
 
-void SApplication::registerGUIObject(SGUIObject* pGUIObject)
+void SApplication::registerGUIObject(SGUIObject* pGUIObject, bool bWillBeUsedInLayout)
 {
+	if (pGUIObject->bIsRegistered)
+	{
+		return;
+	}
+
 	if (pGUIObject->checkRequiredResourcesBeforeRegister())
 	{
 		return;
 	}
 
-	if (pGUIObject->vSizeToKeep.getX() < 0.0f || pGUIObject->vSizeToKeep.getY() < 0.0f)
+	if (bWillBeUsedInLayout == false && (pGUIObject->vSizeToKeep.getX() < 0.0f || pGUIObject->vSizeToKeep.getY() < 0.0f))
 	{
 		SError::showErrorMessageBoxAndLog("you need to specify the size to keep using setSizeToKeep().");
 		return;
@@ -339,10 +366,11 @@ void SApplication::registerGUIObject(SGUIObject* pGUIObject)
 	{
 		std::lock_guard<std::mutex> guard(mtxDraw);
 
-		// First entry with layer index 0 always exists.
 		pGUIObject->bIsRegistered = true;
 		pGUIObject->bIsVisible = false;
+		pGUIObject->bToBeUsedInLayout = bWillBeUsedInLayout;
 
+		// First entry with layer index 0 always exists.
 		vGUILayers[0].vGUIObjects.push_back(pGUIObject);
 
 
@@ -358,6 +386,14 @@ void SApplication::registerGUIObject(SGUIObject* pGUIObject)
 		{
 			SGUISimpleText* pText = dynamic_cast<SGUISimpleText*>(pGUIObject);
 			pText->initFontResource();
+		}
+
+		if (bWillBeUsedInLayout)
+		{
+			pGUIObject->pos = DirectX::XMFLOAT2(0.5f, 0.5f);
+			pGUIObject->vSizeToKeep = SVector(1.0f, 1.0f);
+			pGUIObject->scale = DirectX::XMFLOAT2(1.0f, 1.0f);
+			pGUIObject->screenScale = DirectX::XMFLOAT2(1.0f, 1.0f);
 		}
 	}
 
@@ -2962,7 +2998,7 @@ void SApplication::drawGUIObjects()
 	{
 		for (size_t j = 0; j < vGUILayers[i].vGUIObjects.size(); j++)
 		{
-			if (vGUILayers[i].vGUIObjects[j]->bIsVisible)
+			if (vGUILayers[i].vGUIObjects[j]->isVisible())
 			{
 				if (vGUILayers[i].vGUIObjects[j]->objectType == SGUIType::SGT_IMAGE)
 				{
@@ -2974,7 +3010,8 @@ void SApplication::drawGUIObjects()
 					heapHandle.Offset(pImage->iIndexInHeap, iCBVSRVUAVDescriptorSize);
 
 					// Position.
-					DirectX::SimpleMath::Vector2 pos = pImage->pos;
+					SVector position = pImage->getFullPosition();
+					DirectX::SimpleMath::Vector2 pos = DirectX::SimpleMath::Vector2(position.getX(), position.getY());
 					pos.x *= iMainWindowWidth;
 					pos.y *= iMainWindowHeight;
 
@@ -2993,9 +3030,10 @@ void SApplication::drawGUIObjects()
 					sourceRect.bottom = static_cast<LONG>(pImage->sourceRect.getW() * texSize.y);
 
 					// Scaling.
-					DirectX::XMFLOAT2 scaling = pImage->scale;
-					scaling.x *= pImage->screenScale.x;
-					scaling.y *= pImage->screenScale.y;
+					DirectX::XMFLOAT2 scaling = pImage->scale; // usual scale
+					SVector screenScaling = pImage->getFullScreenScaling();
+					scaling.x *= screenScaling.getX();
+					scaling.y *= screenScaling.getY();
 
 					pImage->pSpriteBatch->Draw(heapHandle,
 						texSize, pos, &sourceRect, DirectX::XMLoadFloat4(&pImage->color), pImage->fRotationInRad, origin,
@@ -3016,14 +3054,16 @@ void SApplication::drawGUIObjects()
 					origin.y *= texSize.y;
 
 					// Position.
-					DirectX::SimpleMath::Vector2 pos = pText->pos;
+					SVector position = pText->getFullPosition();
+					DirectX::SimpleMath::Vector2 pos = DirectX::SimpleMath::Vector2(position.getX(), position.getY());
 					pos.x *= iMainWindowWidth;
 					pos.y *= iMainWindowHeight;
 
 					// Scaling.
 					DirectX::XMFLOAT2 scaling = pText->scale;
-					scaling.x *= pText->screenScale.x;
-					scaling.y *= pText->screenScale.y;
+					SVector screenScaling = pText->getFullScreenScaling();
+					scaling.x *= screenScaling.getX();
+					scaling.y *= screenScaling.getY();
 
 					if (pText->bDrawOutline)
 					{

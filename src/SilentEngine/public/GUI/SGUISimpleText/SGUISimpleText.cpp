@@ -44,6 +44,8 @@ SGUISimpleText::~SGUISimpleText()
 
 bool SGUISimpleText::setFont(const std::wstring& sPathToSprintFont)
 {
+	std::lock_guard<std::mutex> guard(mtxSprite);
+
 	// See if the texture name is empty.
 
 	if (sPathToSprintFont == L"")
@@ -87,6 +89,8 @@ bool SGUISimpleText::setFont(const std::wstring& sPathToSprintFont)
 
 void SGUISimpleText::setText(const std::wstring& sText)
 {
+	std::lock_guard<std::mutex> guard(mtxSprite);
+
 	this->sRawText = sText;
 
 	if (pSpriteFont)
@@ -109,6 +113,8 @@ void SGUISimpleText::setDrawTextShadow(bool bDrawTextShadow)
 
 void SGUISimpleText::setWordWrapMaxLineWidth(float fMaxLineWidth, bool bAlignTextAtCenter)
 {
+	std::lock_guard<std::mutex> guard(mtxSprite);
+
 	if (fMaxLineWidth < 0.0f || fMaxLineWidth > 1.0f)
 	{
 		SError::showErrorMessageBoxAndLog("max line width should be in normalized range: [0.0f, 1.0f].");
@@ -129,8 +135,10 @@ std::wstring SGUISimpleText::getText() const
 	return sRawText;
 }
 
-SVector SGUISimpleText::getSizeInPixels() const
+SVector SGUISimpleText::getSizeInPixels()
 {
+	std::lock_guard<std::mutex> guard(mtxSprite);
+
 	if (pSpriteFont)
 	{
 		DirectX::SimpleMath::Vector2 texSize = DirectX::SimpleMath::Vector2(pSpriteFont->MeasureString(sWrappedText.c_str(), false));
@@ -145,6 +153,8 @@ SVector SGUISimpleText::getSizeInPixels() const
 
 void SGUISimpleText::setViewport(D3D12_VIEWPORT viewport)
 {
+	std::lock_guard<std::mutex> guard(mtxSprite);
+
 	if (pSpriteBatch)
 	{
 		pSpriteBatch->SetViewport(viewport);
@@ -155,6 +165,8 @@ void SGUISimpleText::setViewport(D3D12_VIEWPORT viewport)
 
 void SGUISimpleText::onMSAAChange()
 {
+	std::lock_guard<std::mutex> guard(mtxSprite);
+
 	if (pSpriteBatch)
 	{
 		SApplication::getApp()->refreshHeap();
@@ -195,6 +207,16 @@ void SGUISimpleText::recalculateSizeToKeepScaling()
 
 	screenScale.x = fTargetWidth / texSize.x;
 	screenScale.y = fTargetHeight / texSize.y;
+}
+
+SVector SGUISimpleText::getFullSizeInPixels()
+{
+	DirectX::SimpleMath::Vector2 texSize = DirectX::SimpleMath::Vector2(pSpriteFont->MeasureString(sWrappedText.c_str(), false));
+
+	texSize.x *= scale.x;
+	texSize.y *= scale.y;
+
+	return SVector(texSize.x, texSize.y);
 }
 
 std::wstring SGUISimpleText::wrapText()
@@ -263,7 +285,7 @@ std::wstring SGUISimpleText::wrapText()
 		if (fCurrentLineWidth < fWindowMaxLineWidth - fDeltaInPixels)
 		{
 			float fNeedToAdd = fWindowMaxLineWidth - fCurrentLineWidth;
-			size_t iAddCount = fNeedToAdd / fSpaceWidth / 2;
+			size_t iAddCount = static_cast<size_t>(fNeedToAdd / fSpaceWidth / 2.0);
 
 			for (size_t i = 0; i < iAddCount; i++)
 			{

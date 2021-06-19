@@ -217,6 +217,7 @@ copy /Y "$(SolutionDir)..\ext\dxc\dxcompiler.dll" "$(TargetDir)dxcompiler.dll"</
     <ClCompile Include="..\src\SilentEngine\Public\EntityComponentSystem\STargetComponent\STargetComponent.cpp" />
     <ClCompile Include="..\src\SilentEngine\Public\FileImport\SFormatOBJImporter\SFormatOBJImporter.cpp" />
     <ClCompile Include="..\src\SilentEngine\Public\GUI\SGUIImage\SGUIImage.cpp" />
+    <ClCompile Include="..\src\SilentEngine\Public\GUI\SGUILayout\SGUILayout.cpp" />
     <ClCompile Include="..\src\SilentEngine\Public\GUI\SGUISimpleText\SGUISimpleText.cpp" />
     <ClCompile Include="..\src\SilentEngine\public\SApplication\SApplication.cpp" />
     <ClCompile Include="..\src\SilentEngine\Public\SCamera\SCamera.cpp" />
@@ -259,6 +260,7 @@ copy /Y "$(SolutionDir)..\ext\dxc\dxcompiler.dll" "$(TargetDir)dxcompiler.dll"</
     <ClInclude Include="..\src\SilentEngine\Public\EntityComponentSystem\STargetComponent\STargetComponent.h" />
     <ClInclude Include="..\src\SilentEngine\Public\FileImport\SFormatOBJImporter\SFormatOBJImporter.h" />
     <ClInclude Include="..\src\SilentEngine\Public\GUI\SGUIImage\SGUIImage.h" />
+    <ClInclude Include="..\src\SilentEngine\Public\GUI\SGUILayout\SGUILayout.h" />
     <ClInclude Include="..\src\SilentEngine\Public\GUI\SGUISimpleText\SGUISimpleText.h" />
     <ClInclude Include="..\src\SilentEngine\public\SApplication\SApplication.h" />
     <ClInclude Include="..\src\SilentEngine\Public\SCamera\SCamera.h" />

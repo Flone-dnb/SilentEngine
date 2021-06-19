@@ -35,6 +35,15 @@ enum class SGUIType
 	SGT_NONE,
 	SGT_IMAGE,
 	SGT_SIMPLE_TEXT,
+	SGT_LAYOUT,
+};
+
+class SGUILayout;
+
+struct SLayoutData
+{
+	SGUILayout* pLayout;
+	int iRatio;
 };
 
 //@@Class
@@ -64,6 +73,7 @@ public:
 	//@@Function
 	/*
 	* desc: use to show or hide the GUI object from the screen.
+	* remarks: if this object is a layout, it will change the visibility of all childs.
 	*/
 	void setVisible(bool bIsVisible);
 	//@@Function
@@ -105,6 +115,7 @@ public:
 	//@@Function
 	/*
 	* desc: returns true if the GUI object is visible, false if hidden.
+	* remarks: if in a layout, the layout's visibility will be included.
 	*/
 	bool isVisible      () const;
 	//@@Function
@@ -141,11 +152,21 @@ public:
 	/*
 	* desc: returns the size of the GUI object without scaling.
 	*/
-	virtual SVector getSizeInPixels() const = 0;
+	virtual SVector getSizeInPixels() = 0;
+
+	//@@Function
+	/*
+	* desc: returns the parent layout if this object, nullptr if no layout was set.
+	*/
+	SGUILayout* getLayout() const;
 
 protected:
 
 	friend class SApplication;
+	friend class SGUILayout;
+
+	SVector getFullScreenScaling();
+	SVector getFullPosition();
 
 	//@@Function
 	SGUIObject(const std::string& sObjectName);
@@ -154,14 +175,19 @@ protected:
 	virtual void onMSAAChange() = 0;
 	virtual bool checkRequiredResourcesBeforeRegister() = 0;
 	virtual void recalculateSizeToKeepScaling() = 0;
+	// including scale (but not screenScale), used in layout's recalculateSizeToKeepScaling() to calculate screenScale for this object
+	virtual SVector getFullSizeInPixels() = 0;
+
+
+	SLayoutData layoutData;
 
 	SGUIType objectType;
-	bool bIsRegistered;
 
 	DirectX::SimpleMath::Vector2 origin;
 	DirectX::SimpleMath::Vector2 pos;
 	DirectX::XMFLOAT2 scale;
 	DirectX::XMFLOAT2 screenScale; // used for 'size to keep'
+	DirectX::XMFLOAT2 layoutScreenScale; // used for 'size to keep' when in layout
 	DirectX::XMFLOAT4 color;
 	SVector vSizeToKeep;
 
@@ -171,6 +197,8 @@ protected:
 
 	float        fRotationInRad;
 
+	bool         bIsRegistered;
 	bool         bIsVisible;
+	bool         bToBeUsedInLayout;
 };
 

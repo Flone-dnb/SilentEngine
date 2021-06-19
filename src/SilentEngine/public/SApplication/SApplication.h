@@ -257,13 +257,15 @@ public:
 		/*
 		* desc: registers a new GUI object that can be used in GUI.
 		* param "pObject": your pointer to the GUI object that you've created and want to register.
+		* param "bWillBeUsedInLayout": specify 'true' if this object will be a child of some layout, this bypasses the setSizeToKeep() check,
+		so you don't have to specify it because the layout will manage the size of this object.
 		* remarks: registered object will be invisible, call setVisible(true) when you want to show this GUI object on screen.
 		Note that you will need to unregister this resource (via SApplication::unregisterGUIObject), it won't happen automatically,
 		but all registered GUI resources will be unregistered in the SApplication's destructor function.
 		It's recommended to use this function in loading moments of your application (ex. loading screen)
 		as this function may drop the framerate a little.
 		*/
-		void            registerGUIObject                         (SGUIObject* pGUIObject);
+		void            registerGUIObject                         (SGUIObject* pGUIObject, bool bWillBeUsedInLayout);
 		//@@Function
 		/*
 		* desc: returns all loaded GUI objects.

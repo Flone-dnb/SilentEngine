@@ -51,14 +51,16 @@ public:
 	/*
 	* desc: returns the size of the GUI object without scaling.
 	*/
-	virtual SVector getSizeInPixels() const;
+	virtual SVector getSizeInPixels();
 
 protected:
 
 	virtual void setViewport(D3D12_VIEWPORT viewport) override;
 	virtual void onMSAAChange() override;
 	virtual bool checkRequiredResourcesBeforeRegister() override;
+	// call under mtxSprite
 	virtual void recalculateSizeToKeepScaling() override;
+	virtual SVector getFullSizeInPixels() override;
 
 private:
 
