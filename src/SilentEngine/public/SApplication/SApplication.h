@@ -140,7 +140,7 @@ public:
 		* return: false if successful, true otherwise.
 		* remarks: should be called before SApplication::run().
 		*/
-		bool            init								   ();
+		bool            init								   (const std::wstring& sMainWindowClassName = L"MainWindow");
 		//@@Function
 		/*
 		* desc: starts all essential engine systems, the main window will now process window messages, render new frames and etc.
@@ -342,7 +342,7 @@ public:
 		Textures should be loaded sequentially (don't have any other textures in between).
 		* param "pOutCreatedMaterials": (optional) pass an empty pointer to get a reference to the created resources (if successful).
 		* return: valid pointer if the shader was found and compiled, nullptr otherwise.
-		* remarks: You will need to call unloadCompiledShaderFromGPU() later when you don't need this shader anymore -
+		* remarks: you will need to call unloadCompiledShaderFromGPU() later when you don't need this shader anymore -
 		this will not happen automatically, but all shaders will be unloaded in the SApplication destructor function.
 		It's recommended to use this function in loading moments of your application (ex. loading screen)
 		as this function may drop the framerate a little.
@@ -354,7 +354,7 @@ public:
 		/*
 		* desc: used to retrieve all compiled custom shaders.
 		*/
-		void            getCompiledCustomShaders              (std::vector<SShader*>* pvShaders);
+		std::vector<SShader*>* getCompiledCustomShaders       ();
 
 		//@@Function
 		/*
@@ -1346,6 +1346,7 @@ private:
 
 	
 	// Windows stuff.
+	std::wstring   sMainWindowClassName;
 	HINSTANCE      hApplicationInstance     = nullptr;
 	HWND           hMainWindow              = nullptr;
 	SMouseKey      pressedMouseKey = SMouseKey();

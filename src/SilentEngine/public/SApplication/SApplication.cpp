@@ -806,9 +806,9 @@ SShader* SApplication::compileCustomShader(const std::wstring& sPathToShaderFile
 	return pNewShader;
 }
 
-void SApplication::getCompiledCustomShaders(std::vector<SShader*>* pvShaders)
+std::vector<SShader*>* SApplication::getCompiledCustomShaders()
 {
-	pvShaders = &vCompiledUserShaders;
+	return &vCompiledUserShaders;
 }
 
 bool SApplication::unloadCompiledShaderFromGPU(SShader* pShader)
@@ -3535,7 +3535,7 @@ bool SApplication::createMainWindow()
 	wc.hCursor       = LoadCursor(0, IDC_ARROW);
 	wc.hbrBackground = (HBRUSH)GetStockObject(NULL_BRUSH);
 	wc.lpszMenuName  = 0;
-	wc.lpszClassName = L"MainWindow";
+	wc.lpszClassName = sMainWindowClassName.c_str();
 	wc.hIcon		 = LoadIcon(NULL, IDI_APPLICATION);
 	wc.hIconSm       = LoadIcon(NULL, IDI_APPLICATION);
 	wc.cbSize        = sizeof(wc);
@@ -3553,7 +3553,7 @@ bool SApplication::createMainWindow()
 	int iWidth  = R.right - R.left;
 	int iHeight = R.bottom - R.top;
 
-	hMainWindow = CreateWindow(L"MainWindow", sMainWindowTitle.c_str(), 
+	hMainWindow = CreateWindow(sMainWindowClassName.c_str(), sMainWindowTitle.c_str(),
 		bHideTitleBar ? WS_POPUP : WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, iWidth, iHeight, 0, 0, hApplicationInstance, 0);
 	if( !hMainWindow )
 	{
@@ -3863,12 +3863,15 @@ bool SApplication::getFirstOutputDisplay(IDXGIOutput*& pOutput)
 	{
 		IDXGIOutput* pOutput1 = nullptr;
 
-		if (pAdapter->EnumOutputs(outputIndex, &pOutput1) == DXGI_ERROR_NOT_FOUND)
-		{
-			// No more adapters to enumerate.
+		HRESULT hr = pAdapter->EnumOutputs(outputIndex, &pOutput1);
+		if (hr == DXGI_ERROR_NOT_FOUND)
+		{	// No more adapters to enumerate.
 			break;
 		}
-
+		else if (FAILED(hr))
+		{
+			SError::showErrorMessageBoxAndLog(hr);
+		}
 
 		pOutput = pOutput1;
 
@@ -4349,7 +4352,7 @@ void SApplication::createViews()
 	{
 		// Need 2 SRV & 2 UAV for blur.
 
-		int iIndexInHeap = iPerFrameResEndOffset + static_cast<int>(vLoadedTextures.size()) + iGUIItemCount;
+		int iIndexInHeap = iPerFrameResEndOffset + static_cast<int>(vLoadedTextures.size() + iGUIItemCount);
 
 		auto cpuHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(pCBVSRVUAVHeap->GetCPUDescriptorHandleForHeapStart());
 		cpuHandle.Offset(iIndexInHeap, iCBVSRVUAVDescriptorSize);
@@ -4576,6 +4579,10 @@ bool SApplication::createPSO(SShader* pPSOsForCustomShader)
 		if (pPSOsForCustomShader->pCustomShaderResources)
 		{
 			psoDesc.pRootSignature = pPSOsForCustomShader->pCustomShaderResources->pCustomRootSignature.Get();
+		}
+		else
+		{
+			psoDesc.pRootSignature = pRootSignature.Get();
 		}
 	}
 	else
@@ -5917,8 +5924,10 @@ void SApplication::initCompileShadersInRelease()
 	bCompileShadersInRelease = true;
 }
 
-bool SApplication::init()
+bool SApplication::init(const std::wstring& sMainWindowClassName)
 {
+	this->sMainWindowClassName = sMainWindowClassName;
+
 	// Create Output and ask it about screen resolution.
 	if (initD3DFirstStage())
 	{

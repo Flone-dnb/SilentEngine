@@ -132,6 +132,14 @@ copy /Y "$(SolutionDir)..\ext\dxc\dxcompiler.dll" "$(TargetDir)dxcompiler.dll"</
       <Message>
       </Message>
     </PostBuildEvent>
+    <PreLinkEvent>
+      <Command>@ECHO ON
+@ECHO "$(VC_ExecutablePath_x86)\lib.exe" /out:"$(OutDir)$(ProjectName).lib" "$(IntermediateOutputPath)*.obj"
+"$(VC_ExecutablePath_x86)\lib.exe" /out:"$(OutDir)$(ProjectName).lib" "$(IntermediateOutputPath)*.obj"</Command>
+    </PreLinkEvent>
+    <PreLinkEvent>
+      <Message>Generate .lib file.</Message>
+    </PreLinkEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>

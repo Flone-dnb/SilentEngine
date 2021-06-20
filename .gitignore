@@ -1,6 +1,11 @@
 .vs/
 ide/.vs/
 ide/x64/
+tests/.vs/
+tests/x64/
+tests/shaders/*
+tests/last_error.log
+tests/_temp_shaders_pdb
 ide/*.pdb
 ide/_temp_shaders_pdb/
 ide/last_error.log

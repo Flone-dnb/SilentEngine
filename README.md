@@ -6,7 +6,7 @@ TODO
 
 - [DirectXShaderCompiler](https://github.com/microsoft/DirectXShaderCompiler)
 - [DirectXTK12](https://github.com/microsoft/DirectXTK12)
-
+- [Catch2](https://github.com/catchorg/Catch2)
 
 # License
 
