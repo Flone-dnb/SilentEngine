@@ -73,7 +73,7 @@ bool SProfiler::initNeededGUIObjects()
 	pFPSText->setDrawTextOutline(true, SVector());
 	pFPSText->setText(L"FPS: 0");
 	pFPSText->setCustomOrigin(SVector(0.0f, 0.0f));
-	pFPSText->setPosition(SVector(0.1f, 0.24f));
+	pFPSText->setPosition(SVector(0.275f, 0.20f));
 	pFPSText->setSizeToKeep(SVector(0.1f, 0.06f));
 	pApp->registerGUIObject(pFPSText, false);
 
