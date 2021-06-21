@@ -3025,6 +3025,7 @@ void SApplication::drawGUIObjects()
 						scaling);
 
 					pImage->pSpriteBatch->End();
+					iLastFrameDrawCallCount++;
 				}
 				else if (vGUILayers[i].vGUIObjects[j]->objectType == SGUIType::SGT_SIMPLE_TEXT)
 				{
@@ -3080,6 +3081,7 @@ void SApplication::drawGUIObjects()
 						pText->fRotationInRad, origin, scaling);
 
 					pText->pSpriteBatch->End();
+					iLastFrameDrawCallCount++;
 				}
 			}
 		}
