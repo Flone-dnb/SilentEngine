@@ -51,14 +51,14 @@ bool SProfiler::initNeededGUIObjects()
 {
 	// Register layouts.
 
-	pNameLayout = new SGUILayout("profiler name layout", 0.25f, 0.5f, SLayoutType::SLT_VERTICAL);
+	pNameLayout = new SGUILayout("profiler name layout", 0.4f, 0.5f, SLayoutType::SLT_VERTICAL, false);
 	pNameLayout->bIsSProfilerObject = true;
 	pNameLayout->setPosition(SVector(0.4f, 0.5f));
 	pNameLayout->setZLayer(INT_MAX);
 
-	pValueLayout = new SGUILayout("profiler value layout", 0.15f, 0.5f, SLayoutType::SLT_VERTICAL);
+	pValueLayout = new SGUILayout("profiler value layout", 0.1f, 0.5f, SLayoutType::SLT_VERTICAL, false);
 	pValueLayout->bIsSProfilerObject = true;
-	pValueLayout->setPosition(SVector(0.6f, 0.5f));
+	pValueLayout->setPosition(SVector(0.7f, 0.5f));
 	pValueLayout->setZLayer(INT_MAX);
 
 	pApp->registerGUIObject(pNameLayout, false);
@@ -73,7 +73,7 @@ bool SProfiler::initNeededGUIObjects()
 	pFPSText->setDrawTextOutline(true, SVector());
 	pFPSText->setText(L"FPS: 0");
 	pFPSText->setCustomOrigin(SVector(0.0f, 0.0f));
-	pFPSText->setPosition(SVector(0.275f, 0.20f));
+	pFPSText->setPosition(SVector(0.2f, 0.20f));
 	pFPSText->setSizeToKeep(SVector(0.1f, 0.06f));
 	pApp->registerGUIObject(pFPSText, false);
 
@@ -284,9 +284,10 @@ bool SProfiler::initNeededGUIObjects()
 	return false;
 }
 
-void SProfiler::showOnScreen(bool bShow)
+void SProfiler::showOnScreen(bool bShow, float fDataUpdateIntervalInMS)
 {
 	bFrameStatsShownOnScreen = bShow;
+	fUpdateGUIIntervalInMS = fDataUpdateIntervalInMS;
 
 	updateFrameStatsOnScreen();
 
@@ -329,26 +330,35 @@ void SProfiler::updateFrameStatsOnScreen()
 {
 	if (bFrameStatsShownOnScreen)
 	{
-		// Update values.
+		float fTime = 0.0f;
+		getTimeElapsedFromStart(&fTime);
+		fTime *= 1000.0f; // to ms
 
-		int iFPS = 0;
-		getFPS(&iFPS);
+		if (fTime - fUpdateGUIIntervalInMS > fLastCheckTime)
+		{
+			// Update values.
 
-		pFPSText->setText(L"FPS: " + std::to_wstring(iFPS));
+			int iFPS = 0;
+			getFPS(&iFPS);
 
-		std::vector<SLayoutChild>* pvValues = pValueLayout->getChilds();
+			pFPSText->setText(L"FPS: " + std::to_wstring(iFPS));
 
-		const size_t iPrecision = 1;
+			std::vector<SLayoutChild>* pvValues = pValueLayout->getChilds();
 
-		dynamic_cast<SGUISimpleText*>(pvValues->operator[](0).pChild)->setText(floatToWstring(lastFrameStats.fTimeSpentOnWindowsMessagesInMS, iPrecision));
-		dynamic_cast<SGUISimpleText*>(pvValues->operator[](1).pChild)->setText(floatToWstring(lastFrameStats.fTimeSpentOnUserOnTickFunctionInMS, iPrecision));
-		dynamic_cast<SGUISimpleText*>(pvValues->operator[](2).pChild)->setText(floatToWstring(lastFrameStats.fTimeSpentOn3DAudioUpdateInMS, iPrecision));
-		dynamic_cast<SGUISimpleText*>(pvValues->operator[](3).pChild)->setText(floatToWstring(lastFrameStats.fTimeSpentWaitingForGPUInUpdateInMS, iPrecision));
-		dynamic_cast<SGUISimpleText*>(pvValues->operator[](4).pChild)->setText(floatToWstring(lastFrameStats.fTimeSpentOnUpdateInMS, iPrecision));
-		dynamic_cast<SGUISimpleText*>(pvValues->operator[](5).pChild)->setText(floatToWstring(lastFrameStats.fTimeSpentOnCPUDrawInMS, iPrecision));
-		dynamic_cast<SGUISimpleText*>(pvValues->operator[](6).pChild)->setText(floatToWstring(lastFrameStats.fTimeSpentOnFPSCalcInMS, iPrecision));
-		dynamic_cast<SGUISimpleText*>(pvValues->operator[](7).pChild)->setText(floatToWstring(lastFrameStats.fTimeSpentInFPSLimitSleepInMS, iPrecision));
-		dynamic_cast<SGUISimpleText*>(pvValues->operator[](8).pChild)->setText(floatToWstring(lastFrameStats.fTimeSpentOnUserPhysicsTickFunctionInMS, iPrecision));
+			const size_t iPrecision = 1;
+
+			dynamic_cast<SGUISimpleText*>(pvValues->operator[](0).pChild)->setText(floatToWstring(lastFrameStats.fTimeSpentOnWindowsMessagesInMS, iPrecision));
+			dynamic_cast<SGUISimpleText*>(pvValues->operator[](1).pChild)->setText(floatToWstring(lastFrameStats.fTimeSpentOnUserOnTickFunctionInMS, iPrecision));
+			dynamic_cast<SGUISimpleText*>(pvValues->operator[](2).pChild)->setText(floatToWstring(lastFrameStats.fTimeSpentOn3DAudioUpdateInMS, iPrecision));
+			dynamic_cast<SGUISimpleText*>(pvValues->operator[](3).pChild)->setText(floatToWstring(lastFrameStats.fTimeSpentWaitingForGPUInUpdateInMS, iPrecision));
+			dynamic_cast<SGUISimpleText*>(pvValues->operator[](4).pChild)->setText(floatToWstring(lastFrameStats.fTimeSpentOnUpdateInMS, iPrecision));
+			dynamic_cast<SGUISimpleText*>(pvValues->operator[](5).pChild)->setText(floatToWstring(lastFrameStats.fTimeSpentOnCPUDrawInMS, iPrecision));
+			dynamic_cast<SGUISimpleText*>(pvValues->operator[](6).pChild)->setText(floatToWstring(lastFrameStats.fTimeSpentOnFPSCalcInMS, iPrecision));
+			dynamic_cast<SGUISimpleText*>(pvValues->operator[](7).pChild)->setText(floatToWstring(lastFrameStats.fTimeSpentInFPSLimitSleepInMS, iPrecision));
+			dynamic_cast<SGUISimpleText*>(pvValues->operator[](8).pChild)->setText(floatToWstring(lastFrameStats.fTimeSpentOnUserPhysicsTickFunctionInMS, iPrecision));
+			
+			fLastCheckTime = fTime;
+		}
 	}
 }
 

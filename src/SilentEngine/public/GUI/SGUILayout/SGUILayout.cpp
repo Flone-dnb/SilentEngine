@@ -11,10 +11,11 @@
 #include "SilentEngine/Private/SError/SError.h"
 #include "SilentEngine/Public/SApplication/SApplication.h"
 
-SGUILayout::SGUILayout(const std::string& sObjectName, float fWidth, float fHeight, SLayoutType layoutType) : SGUIObject(sObjectName)
+SGUILayout::SGUILayout(const std::string& sObjectName, float fWidth, float fHeight, SLayoutType layoutType, bool bStretchItems) : SGUIObject(sObjectName)
 {
 	objectType = SGUIType::SGT_LAYOUT;
 	this->layoutType = layoutType;
+	this->bStretchItems = bStretchItems;
 
 	if (fWidth < 0.0f || fWidth > 1.0f || fHeight < 0.0f || fHeight > 1.0f)
 	{
@@ -183,32 +184,93 @@ void SGUILayout::recalculateSizeToKeepScaling()
 		DirectX::XMFLOAT2 vChildPos = pos;
 		vChildPos.x -= fWidth / 2.0f;
 		vChildPos.y -= fHeight / 2.0f;
+
 		DirectX::XMFLOAT2 vScreenScale = DirectX::XMFLOAT2(1.0f, 1.0f);
 
-		SVector vChildSize = vChilds[i].pChild->getFullSizeInPixels();
-
-		if (layoutType == SLayoutType::SLT_HORIZONTAL)
+		if (bStretchItems)
 		{
-			vScreenScale.y = fFullHeight / vChildSize.getY();
-			vScreenScale.x = (fFullWidth * (vChilds[i].iRatio / static_cast<float>(iFullRatio))) / vChildSize.getX();
+			SVector vChildSize = vChilds[i].pChild->getFullSizeInPixels();
 
-			vChildPos.y += fHeight / 2.0f;
-			vChildPos.x += fPosBefore + fWidth * (vChilds[i].iRatio / static_cast<float>(iFullRatio)) / 2.0f;
+			if (layoutType == SLayoutType::SLT_HORIZONTAL)
+			{
+				vScreenScale.y = fFullHeight / vChildSize.getY();
+				vScreenScale.x = (fFullWidth * (vChilds[i].iRatio / static_cast<float>(iFullRatio))) / vChildSize.getX();
 
-			fPosBefore = fPosBefore + fWidth * (vChilds[i].iRatio / static_cast<float>(iFullRatio));
+				vChildPos.y += fHeight / 2.0f;
+				vChildPos.x += fPosBefore + fWidth * (vChilds[i].iRatio / static_cast<float>(iFullRatio)) / 2.0f;
+
+				fPosBefore = fPosBefore + fWidth * (vChilds[i].iRatio / static_cast<float>(iFullRatio));
+			}
+			else
+			{
+				vScreenScale.x = fFullWidth / vChildSize.getX();
+				vScreenScale.y = (fFullHeight * (vChilds[i].iRatio / static_cast<float>(iFullRatio))) / vChildSize.getY();
+
+				vChildPos.y += fPosBefore + fHeight * (vChilds[i].iRatio / static_cast<float>(iFullRatio)) / 2.0f;
+				vChildPos.x += fWidth / 2.0f;
+
+				fPosBefore = fPosBefore + fHeight * (vChilds[i].iRatio / static_cast<float>(iFullRatio));
+			}
+
+			vChilds[i].pChild->layoutScreenScale = vScreenScale;
 		}
 		else
 		{
-			vScreenScale.x = fFullWidth / vChildSize.getX();
-			vScreenScale.y = (fFullHeight * (vChilds[i].iRatio / static_cast<float>(iFullRatio))) / vChildSize.getY();
+			SVector texSize = vChilds[i].pChild->getFullSizeInPixels();
+			texSize.setX(texSize.getX() * vChilds[i].pChild->scale.x);
+			texSize.setY(texSize.getY() * vChilds[i].pChild->scale.y);
 
-			vChildPos.y += fPosBefore + fHeight * (vChilds[i].iRatio / static_cast<float>(iFullRatio)) / 2.0f;
-			vChildPos.x += fWidth / 2.0f;
+			if (layoutType == SLayoutType::SLT_HORIZONTAL)
+			{
+				if (i == 0)
+				{
+					fPosBefore = pos.x - (fWidth / 2.0f);
+				}
 
-			fPosBefore = fPosBefore + fHeight * (vChilds[i].iRatio / static_cast<float>(iFullRatio));
+				//vScreenScale.y = fFullHeight / texSize.getY();
+				//vScreenScale.x = vScreenScale.y;
+
+				//vChildPos.y += fHeight / 2.0f; // y center of the layout
+				vChildPos.x = fPosBefore;
+
+				texSize = vChilds[i].pChild->getFullSizeInPixels();
+				texSize.setX(texSize.getX() / res.iWidth);
+				texSize.setY(texSize.getY() / res.iHeight);
+				texSize.setX(texSize.getX() * vChilds[i].pChild->scale.x);
+				texSize.setY(texSize.getY() * vChilds[i].pChild->scale.y);
+
+				vChildPos.x += texSize.getX() / 2.0f; // origin
+
+				fPosBefore += texSize.getX();// *vScreenScale.x;
+			}
+			else
+			{
+				if (i == 0)
+				{
+					fPosBefore = pos.y - (fHeight / 2.0f);
+				}
+
+				//vScreenScale.x = fFullWidth / texSize.getX();
+				//vScreenScale.y = vScreenScale.x;
+
+				//vChildPos.x += fWidth / 2.0f; // x center of the layout
+				vChildPos.y = fPosBefore;
+
+				texSize = vChilds[i].pChild->getFullSizeInPixels();
+				texSize.setX(texSize.getX() / res.iWidth);
+				texSize.setY(texSize.getY() / res.iHeight);
+				texSize.setX(texSize.getX() * vChilds[i].pChild->scale.x);
+				texSize.setY(texSize.getY() * vChilds[i].pChild->scale.y);
+
+				vChildPos.y += texSize.getY() / 2.0f; // origin
+
+				fPosBefore += texSize.getY();// *vScreenScale.y;
+			}
+
+			vChilds[i].pChild->origin = DirectX::SimpleMath::Vector2(0.0f, 0.0f);
+			vChilds[i].pChild->layoutScreenScale = DirectX::XMFLOAT2(1.0f, 1.0f);
 		}
 
-		vChilds[i].pChild->layoutScreenScale = vScreenScale;
 		vChilds[i].pChild->pos = vChildPos - pos; // offset from the center of the layout
 	}
 }

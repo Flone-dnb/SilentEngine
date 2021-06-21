@@ -107,7 +107,7 @@ public:
 	/*
 	* desc: used to show SFrameStats on the screen.
 	*/
-	void     showOnScreen              (bool bShow);
+	void     showOnScreen              (bool bShow, float fDataUpdateIntervalInMS = 100.0f);
 	//@@Function
 	/*
 	* desc: returns 'true' if the last call to the showOnScreen() was with 'true' value.
@@ -158,7 +158,9 @@ private:
 	SGUILayout* pNameLayout = nullptr; // for showOnScreen()
 	SGUILayout* pValueLayout = nullptr; // for showOnScreen()
 	SGUISimpleText* pFPSText = nullptr;
-	bool        bFrameStatsShownOnScreen = false;
+	float fUpdateGUIIntervalInMS = 100.0f;
+	float fLastCheckTime = 0.0f;
+	bool bFrameStatsShownOnScreen = false;
 #endif
 
 	float fTimeSpentWaitingForGPUBetweenFramesInMS = 0.0f;

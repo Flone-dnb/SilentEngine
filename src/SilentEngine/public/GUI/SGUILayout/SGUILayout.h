@@ -38,9 +38,14 @@ public:
 	//@@Function
 	/*
 	* desc: creates a layout with the specified width and height (in normalized range: [0, 1]).
+	* param "sObjectName": name of this object.
+	* param "fWidth": width to keep of this layout (in normalized range: [0, 1]).
+	* param "fHeight": height to keep of this layout (in normalized range: [0, 1]).
+	* param "layoutType": type of this layout.
+	* param "bStretchItems": whether to stretch layout items so they will fill the whole layout space or don't stretch them to keep their original size.
 	* remarks: if this layout will be used in another layout the width and the height will be ignored.
 	*/
-	SGUILayout(const std::string& sObjectName, float fWidth, float fHeight, SLayoutType layoutType);
+	SGUILayout(const std::string& sObjectName, float fWidth, float fHeight, SLayoutType layoutType, bool bStretchItems);
 	SGUILayout() = delete;
 	SGUILayout(const SGUILayout&) = delete;
 	SGUILayout& operator= (const SGUILayout&) = delete;
@@ -100,4 +105,6 @@ protected:
 	float fHeight;
 
 	std::mutex mtxChilds;
+
+	bool bStretchItems;
 };
