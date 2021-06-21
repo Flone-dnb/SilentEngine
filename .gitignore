@@ -1,6 +1,8 @@
 .vs/
 ide/.vs/
 ide/x64/
+ide/shaders/
+ide/res/
 tests/.vs/
 tests/x64/
 tests/shaders/*

@@ -50,6 +50,7 @@
 #include "SilentEngine/Public/SCamera/SCamera.h"
 #include "SilentEngine/Private/SCustomShaderResources/SCustomShaderResources.h"
 #include "SilentEngine/Private/AudioEngine/SAudioEngine/SAudioEngine.h"
+#include "SilentEngine/Private/GUI/SGUIObject/SGUIObject.h"
 
 // Other
 #include <Windows.h>
@@ -270,6 +271,9 @@ public:
 		/*
 		* desc: returns all loaded GUI objects.
 		* return: valid pointer if successful, nullptr otherwise.
+		* remarks: in debug mode, some GUI objects will be created by the SProfiler for the SProfiler::showOnScreen() function,
+		an attempt to delete such objects will result in an error (unregisterGUIObject() will return 'true'). You can
+		check if the GUI object was created by the SProfiler using the SGUIObject::isProfilerObject() function.
 		*/
 		std::vector<SGUILayer>* getLoadedGUIObjects              ();
 		//@@Function
@@ -277,6 +281,9 @@ public:
 		* desc: unregisters the given GUI object and deletes it.
 		* return: false if successful, true if the specified object was not registered earlier (via SApplication::registerGUIObject).
 		* remarks: any pointers to this object will be invalid after this call (the object will be deleted in this function).
+		In debug mode, some GUI objects will be created by the SProfiler for the SProfiler::showOnScreen() function,
+		an attempt to delete such objects will result in an error (unregisterGUIObject() will return 'true'). You can
+		check if the GUI object was created by the SProfiler using the SGUIObject::isProfilerObject() function.
 		It's recommended to use this function in loading moments of your application (ex. loading screen)
 		as this function may drop the framerate a little.
 		*/
@@ -446,12 +453,6 @@ public:
 		* param "sTitleText": text to set in the window title.
 		*/
 		void            setWindowTitleText                     (const std::wstring& sTitleText);
-		//@@Function
-		/*
-		* desc: used to show/hide window title bar (only visible when fullscreen is disabled).
-		* remarks: title bar is hidden by default. Should be called before init().
-		*/
-		bool            setInitShowWindowTitleBar(bool bShowTitleBar);
 		//@@Function
 		/*
 		* desc: used to set the number of physics ticks per second (i.e. the number of times the onPhysicsTick() function will be called per second)
@@ -923,13 +924,7 @@ private:
 
 	// Screen
 
-		//@@Function
-		/*
-		* desc: used to switch between fullscreen and windowed modes.
-		* param "bFullscreen": true for fullscreen mode, false for windowed.
-		* return: false if successful, true otherwise.
-		*/
-		bool setFullscreenWithCurrentResolution   (bool bFullScreen);
+		//bool setFullscreen   (bool bFullScreen);
 		//@@Function
 		/*
 		* desc: used to set the screen resolution.
@@ -1217,6 +1212,7 @@ private:
 	std::vector<SGUILayer>                   vGUILayers;
 	std::unique_ptr<DirectX::GraphicsMemory> pDXTKGraphicsMemory;
 	bool                                     bDrawGUI = true;
+	std::wstring                             sPathToDefaultFont = L"res/default_font.spritefont";
 
 
 	// PSOs
@@ -1323,7 +1319,7 @@ private:
 
 
 	// Screen.
-	bool           bFullscreen              = false;
+	bool           bFullscreen              = true;
 	bool           bSaveBackBufferPixelsForUser = false;
 	unsigned char* pPixels = nullptr;
 	Microsoft::WRL::ComPtr<ID3D12Resource> pPixelsReadBackBuffer;

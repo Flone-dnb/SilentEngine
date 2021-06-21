@@ -17,6 +17,13 @@ SGUILayout* SGUIObject::getLayout() const
 	return layoutData.pLayout;
 }
 
+#if defined(DEBUG) || defined(_DEBUG)
+bool SGUIObject::isProfilerObject() const
+{
+	return bIsSProfilerObject;
+}
+#endif
+
 SVector SGUIObject::getFullScreenScaling()
 {
 	if (layoutData.pLayout)
@@ -68,6 +75,10 @@ SGUIObject::SGUIObject(const std::string& sObjectName)
 	bToBeUsedInLayout = false;
 
 	objectType = SGUIType::SGT_NONE;
+
+#if defined(DEBUG) || defined(_DEBUG)
+	bIsSProfilerObject = false;
+#endif
 }
 
 void SGUIObject::setSizeToKeep(const SVector& vSizeToKeep)

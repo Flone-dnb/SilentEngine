@@ -38,9 +38,7 @@ private:
 	float fCtrlSpeedMult = 0.25f;
 	float fMouseSensitivity = 0.1f;
 
-
 	bool bWPressed = false, bSPressed = false, bDPressed = false, bAPressed = false, bEPressed = false, bQPressed = false;
-
 
 	bool bShiftPressed = false;
 	bool bCtrlPressed = false;

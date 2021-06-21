@@ -21,14 +21,15 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 	//app.initDisableD3DDebugLayer(); // not recommended, but uncomment for more fps in debug build
 
 	app.setWindowTitleText(L"Silent Editor");
-	app.setInitShowWindowTitleBar(true);
+
+	app.getVideoSettings()->setInitFullscreen(false); // only for windowed apps, don't use this in your games
 
 	if (app.init())
 	{
 		return 1;
 	}
 
-	app.setShowFrameStatsInWindowTitle(true);
+	app.setShowFrameStatsInWindowTitle(true); // only for windowed apps, don't use this in your games
 	app.getVideoSettings()->setFPSLimit(120.0f);
 
 	return app.run();

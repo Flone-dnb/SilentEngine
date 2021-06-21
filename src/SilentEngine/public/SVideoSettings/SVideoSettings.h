@@ -147,13 +147,8 @@ public:
 	* return: false if successful, true otherwise.
 	*/
 	bool      setScreenResolution                  (SScreenResolution screenResolution);
-	//@@Function
-	/*
-	* desc: used to switch between fullscreen and windowed modes.
-	* param "bFullscreen": true for fullscreen mode, false for windowed.
-	* return: false if successful, true otherwise.
-	*/
-	bool      setFullscreenWithCurrentResolution   (bool bFullscreen);
+
+	//bool      setFullscreen   (bool bFullscreen);
 
 	//@@Function
 	/*

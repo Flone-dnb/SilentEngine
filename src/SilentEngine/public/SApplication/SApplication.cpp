@@ -41,7 +41,6 @@ namespace fs = std::filesystem;
 #include "SilentEngine/Public/EntityComponentSystem/SRuntimeMeshComponent/SRuntimeMeshComponent.h"
 #include "SilentEngine/Private/SShader/SShader.h"
 #include "SilentEngine/Private/SMiscHelpers/SMiscHelpers.h"
-#include "SilentEngine/Private/GUI/SGUIObject/SGUIObject.h"
 #include "SilentEngine/Public/GUI/SGUISimpleText/SGUISimpleText.h"
 #include "SilentEngine/Public/GUI/SGUIImage/SGUIImage.h"
 #include "SilentEngine/Public/GUI/SGUILayout/SGUILayout.h"
@@ -282,6 +281,13 @@ bool SApplication::unregisterGUIObject(SGUIObject* pGUIObject)
 	{
 		return true;
 	}
+
+#if defined(DEBUG) || defined(_DEBUG)
+	if (pGUIObject->bIsSProfilerObject)
+	{
+		return true;
+	}
+#endif
 
 	if (pGUIObject->objectType == SGUIType::SGT_LAYOUT)
 	{
@@ -1254,6 +1260,7 @@ bool SApplication::setInitFullscreen(bool bFullscreen)
 {
 	if (bInitCalled == false)
 	{
+		bHideTitleBar = bFullscreen;
 		this->bFullscreen = bFullscreen;
 		return false;
 	}
@@ -1401,49 +1408,50 @@ MSAASampleCount SApplication::getMSAASampleCount() const
 
 	return sampleCount;
 }
-
-bool SApplication::setFullscreenWithCurrentResolution(bool bFullscreen)
-{
-	if (bInitCalled)
-	{
-		if (this->bFullscreen != bFullscreen)
-		{
-			std::lock_guard<std::mutex> guard(mtxDraw);
-
-			this->bFullscreen = bFullscreen;
-
-			HRESULT hresult;
-
-			if (bFullscreen)
-			{
-				hresult = pSwapChain->SetFullscreenState(bFullscreen, pOutput.Get());
-			}
-			else
-			{
-				// From docs: "pTarget - If you pass FALSE to Fullscreen, you must set this parameter to NULL."
-				hresult = pSwapChain->SetFullscreenState(bFullscreen, NULL);
-			}
-
-			if (FAILED(hresult))
-			{
-				SError::showErrorMessageBoxAndLog(hresult);
-				return true;
-			}
-			else
-			{
-				// Resize the buffers.
-				onResize();
-			}
-		}
-
-		return false;
-	}
-	else
-	{
-		SError::showErrorMessageBoxAndLog("init() should be called first.");
-		return true;
-	}
-}
+//
+//bool SApplication::setFullscreen(bool bFullscreen)
+//{
+//	if (bInitCalled)
+//	{
+//		if (this->bFullscreen != bFullscreen)
+//		{
+//			std::lock_guard<std::mutex> guard(mtxDraw);
+//
+//			this->bFullscreen = bFullscreen;
+//
+//			HRESULT hresult;
+//
+//			if (bFullscreen)
+//			{
+//				// ?
+//				//hresult = pSwapChain->SetFullscreenState(bFullscreen, pOutput.Get());
+//			}
+//			else
+//			{
+//				// From docs: "pTarget - If you pass FALSE to Fullscreen, you must set this parameter to NULL."
+//				//hresult = pSwapChain->SetFullscreenState(bFullscreen, NULL);
+//			}
+//
+//			if (FAILED(hresult))
+//			{
+//				SError::showErrorMessageBoxAndLog(hresult);
+//				return true;
+//			}
+//			else
+//			{
+//				// Resize the buffers.
+//				onResize();
+//			}
+//		}
+//
+//		return false;
+//	}
+//	else
+//	{
+//		SError::showErrorMessageBoxAndLog("init() should be called first.");
+//		return true;
+//	}
+//}
 
 bool SApplication::setScreenResolution(SScreenResolution screenResolution)
 {
@@ -1463,21 +1471,21 @@ bool SApplication::setScreenResolution(SScreenResolution screenResolution)
 
 			getScreenParams(true);
 
-			DXGI_MODE_DESC desc;
+			/*DXGI_MODE_DESC desc;
 			desc.Format = BackBufferFormat;
 			desc.Width  = iMainWindowWidth;
 			desc.Height = iMainWindowHeight;
 			desc.RefreshRate.Numerator   = iRefreshRateNumerator;
 			desc.RefreshRate.Denominator = iRefreshRateDenominator;
 			desc.Scaling = iScaling;
-			desc.ScanlineOrdering = iScanlineOrder;
+			desc.ScanlineOrdering = iScanlineOrder;*/
 
 			
 			std::lock_guard<std::mutex> guard(mtxDraw);
 
 			flushCommandQueue();
 
-			pSwapChain->ResizeTarget(&desc);
+			//pSwapChain->ResizeTarget(&desc);
 
 			// Resize the buffers.
 			onResize();
@@ -1597,20 +1605,6 @@ void SApplication::setWindowTitleText(const std::wstring& sTitleText)
 		{
 			SetWindowText(hMainWindow, sTitleText.c_str());
 		}
-	}
-}
-
-bool SApplication::setInitShowWindowTitleBar(bool bShowTitleBar)
-{
-	if (bInitCalled == false)
-	{
-		bHideTitleBar = !bShowTitleBar;
-		return false;
-	}
-	else
-	{
-		SError::showErrorMessageBoxAndLog("this function should be called before init().");
-		return true;
 	}
 }
 
@@ -2843,22 +2837,13 @@ void SApplication::draw()
 		SyncInterval = 1;
 	}
 
-	if (bFullscreen)
+	if (bVSyncEnabled)
 	{
-		// The DXGI_PRESENT_ALLOW_TEARING flag cannot be used in an application that is currently in full screen
-		// exclusive mode (set by calling SetFullscreenState(TRUE)). It can only be used in windowed mode.
 		hresult = pSwapChain->Present(SyncInterval, 0);
 	}
 	else
 	{
-		if (bVSyncEnabled)
-		{
-			hresult = pSwapChain->Present(SyncInterval, 0);
-		}
-		else
-		{
-			hresult = pSwapChain->Present(0, DXGI_PRESENT_ALLOW_TEARING);
-		}
+		hresult = pSwapChain->Present(0, DXGI_PRESENT_ALLOW_TEARING);
 	}
 	if (FAILED(hresult))
 	{
@@ -3512,7 +3497,7 @@ void SApplication::internalPhysicsTickThread()
 		dTimeToSleepInNS = (1000.0 / iPhysicsTicksPerSecond - fTimeSpentOnPhysicsTickInMS) * dNSInMS;
 
 #if defined(DEBUG) || defined(_DEBUG)
-		frameStats.fTimeSpentOnUserOnPhysicsTickFunctionInMS = fTimeSpentOnPhysicsTickInMS;
+		frameStats.fTimeSpentOnUserPhysicsTickFunctionInMS = fTimeSpentOnPhysicsTickInMS;
 #endif
 	}
 
@@ -3990,7 +3975,7 @@ bool SApplication::createSwapChain()
 
 	// If the size of the back buffer is not equal to the target output: stretch.
 	desc.Scaling    = DXGI_SCALING_STRETCH;
-	desc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+	desc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;
 	desc.AlphaMode  = DXGI_ALPHA_MODE_UNSPECIFIED;
 
 	if (bVSyncEnabled)
@@ -4007,7 +3992,7 @@ bool SApplication::createSwapChain()
 	fdesc.RefreshRate.Denominator = iRefreshRateDenominator;
 	fdesc.Scaling = iScaling;
 	fdesc.ScanlineOrdering = iScanlineOrder;
-	fdesc.Windowed = !bFullscreen;
+	fdesc.Windowed = true;
 
 	// Note: Swap chain uses queue to perform flush.
 	HRESULT hresult = pFactory->CreateSwapChainForHwnd(pCommandQueue.Get(), hMainWindow, &desc, &fdesc, pOutput.Get(), pSwapChain.GetAddressOf());
@@ -6025,6 +6010,23 @@ bool SApplication::init(const std::wstring& sMainWindowClassName)
 		return true;
 	}
 
+	// Check default font.
+
+	std::ifstream defaultFontFile(sPathToDefaultFont);
+	if (defaultFontFile.is_open() == false)
+	{
+		SError::showErrorMessageBoxAndLog("can't find default engine font at res/default_font.spritefont.");
+		return true;
+	}
+
+#if defined(DEBUG) || defined(_DEBUG)
+	// Init SProfiler GUI.
+
+	if (pProfiler->initNeededGUIObjects())
+	{
+		return true;
+	}
+#endif
 
 	return false;
 }
@@ -6044,14 +6046,14 @@ LRESULT SApplication::msgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 		if (bInitCalled)
 		{
-			if( wParam == SIZE_MINIMIZED )
+			if( wParam == SIZE_MINIMIZED)
 			{
 				bWindowMaximized = false;
 				bWindowMinimized = true;
 
 				onMinimizeEvent();
 			}
-			else if( wParam == SIZE_MAXIMIZED )
+			else if( wParam == SIZE_MAXIMIZED)
 			{
 				bWindowMaximized = true;
 				bWindowMinimized = false;

@@ -207,6 +207,30 @@ void SGUISimpleText::recalculateSizeToKeepScaling()
 
 	screenScale.x = fTargetWidth / texSize.x;
 	screenScale.y = fTargetHeight / texSize.y;
+
+	// do not stretch the text
+	if (screenScale.x >= 1.0f)
+	{
+		if (screenScale.x > screenScale.y)
+		{
+			screenScale.x = screenScale.y;
+		}
+		else
+		{
+			screenScale.y = screenScale.x;
+		}
+	}
+	else
+	{
+		if (screenScale.x < screenScale.y)
+		{
+			screenScale.y = screenScale.x;
+		}
+		else
+		{
+			screenScale.x = screenScale.y;
+		}
+	}
 }
 
 SVector SGUISimpleText::getFullSizeInPixels()

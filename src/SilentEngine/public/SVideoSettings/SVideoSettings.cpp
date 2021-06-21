@@ -49,10 +49,10 @@ bool SVideoSettings::setScreenResolution(SScreenResolution screenResolution)
 	return pApp->setScreenResolution(screenResolution);
 }
 
-bool SVideoSettings::setFullscreenWithCurrentResolution(bool bFullscreen)
-{
-	return pApp->setFullscreenWithCurrentResolution(bFullscreen);
-}
+//bool SVideoSettings::setFullscreen(bool bFullscreen)
+//{
+//	return pApp->setFullscreen(bFullscreen);
+//}
 
 bool SVideoSettings::getCurrentScreenResolution(SScreenResolution* pScreenResolution)
 {

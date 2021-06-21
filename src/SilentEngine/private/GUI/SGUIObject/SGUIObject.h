@@ -160,10 +160,20 @@ public:
 	*/
 	SGUILayout* getLayout() const;
 
+#if defined(DEBUG) || defined(_DEBUG)
+	//@@Function
+	/*
+	* desc: whether this object was created by the SProfiler or not.
+	* remarks: this function is only available in the debug mode.
+	*/
+	bool isProfilerObject() const;
+#endif
+
 protected:
 
 	friend class SApplication;
 	friend class SGUILayout;
+	friend class SProfiler;
 
 	SVector getFullScreenScaling();
 	SVector getFullPosition();
@@ -200,5 +210,8 @@ protected:
 	bool         bIsRegistered;
 	bool         bIsVisible;
 	bool         bToBeUsedInLayout;
+#if defined(DEBUG) || defined(_DEBUG)
+	bool         bIsSProfilerObject;
+#endif
 };
 

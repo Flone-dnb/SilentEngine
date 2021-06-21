@@ -47,7 +47,6 @@ void EditorApplication::onMouseDown(SMouseKey mouseKey, int iMouseXPos, int iMou
 	else if (mouseKey.getButton() == SMouseButton::SMB_MIDDLE)
 	{
 		bMMBPressed = true;
-
 		getVideoSettings()->setEnableWireframeMode(!getVideoSettings()->isWireframeModeEnabled());
 	}
 }

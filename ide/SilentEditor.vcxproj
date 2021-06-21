@@ -101,7 +101,12 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PostBuildEvent>
-      <Command>copy /Y "$(SolutionDir)..\ext\dxc\dxil.dll" "$(TargetDir)dxil.dll"</Command>
+      <Command>copy /Y "$(SolutionDir)..\ext\dxc\dxil.dll" "$(TargetDir)dxil.dll"
+copy /Y "$(SolutionDir)..\ext\dxc\dxcompiler.dll" "$(TargetDir)dxcompiler.dll"
+XCOPY "$(SolutionDir)..\shaders" "$(SolutionDir)shaders\" /S /Y
+XCOPY "$(SolutionDir)..\res" "$(SolutionDir)res\" /S /Y
+XCOPY "$(SolutionDir)..\shaders" "$(TargetDir)shaders\" /S /Y
+XCOPY "$(SolutionDir)..\res" "$(TargetDir)res\" /S /Y</Command>
     </PostBuildEvent>
     <PostBuildEvent>
       <Message>
@@ -126,7 +131,11 @@
     </Link>
     <PostBuildEvent>
       <Command>copy /Y "$(SolutionDir)..\ext\dxc\dxil.dll" "$(TargetDir)dxil.dll"
-copy /Y "$(SolutionDir)..\ext\dxc\dxcompiler.dll" "$(TargetDir)dxcompiler.dll"</Command>
+copy /Y "$(SolutionDir)..\ext\dxc\dxcompiler.dll" "$(TargetDir)dxcompiler.dll"
+XCOPY "$(SolutionDir)..\shaders" "$(SolutionDir)shaders\" /S /Y
+XCOPY "$(SolutionDir)..\res" "$(SolutionDir)res\" /S /Y
+XCOPY "$(SolutionDir)..\shaders" "$(TargetDir)shaders\" /S /Y
+XCOPY "$(SolutionDir)..\res" "$(TargetDir)res\" /S /Y</Command>
     </PostBuildEvent>
     <PostBuildEvent>
       <Message>
@@ -160,7 +169,12 @@ copy /Y "$(SolutionDir)..\ext\dxc\dxcompiler.dll" "$(TargetDir)dxcompiler.dll"</
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PostBuildEvent>
-      <Command>copy /Y "$(SolutionDir)..\ext\dxc\dxil.dll" "$(TargetDir)dxil.dll"</Command>
+      <Command>copy /Y "$(SolutionDir)..\ext\dxc\dxil.dll" "$(TargetDir)dxil.dll"
+copy /Y "$(SolutionDir)..\ext\dxc\dxcompiler.dll" "$(TargetDir)dxcompiler.dll"
+XCOPY "$(SolutionDir)..\shaders" "$(SolutionDir)shaders\" /S /Y
+XCOPY "$(SolutionDir)..\res" "$(SolutionDir)res\" /S /Y
+XCOPY "$(SolutionDir)..\shaders" "$(TargetDir)shaders\" /S /Y
+XCOPY "$(SolutionDir)..\res" "$(TargetDir)res\" /S /Y</Command>
     </PostBuildEvent>
     <PostBuildEvent>
       <Message>
@@ -188,7 +202,11 @@ copy /Y "$(SolutionDir)..\ext\dxc\dxcompiler.dll" "$(TargetDir)dxcompiler.dll"</
     </Link>
     <PostBuildEvent>
       <Command>copy /Y "$(SolutionDir)..\ext\dxc\dxil.dll" "$(TargetDir)dxil.dll"
-copy /Y "$(SolutionDir)..\ext\dxc\dxcompiler.dll" "$(TargetDir)dxcompiler.dll"</Command>
+copy /Y "$(SolutionDir)..\ext\dxc\dxcompiler.dll" "$(TargetDir)dxcompiler.dll"
+XCOPY "$(SolutionDir)..\shaders" "$(SolutionDir)shaders\" /S /Y
+XCOPY "$(SolutionDir)..\res" "$(SolutionDir)res\" /S /Y
+XCOPY "$(SolutionDir)..\shaders" "$(TargetDir)shaders\" /S /Y
+XCOPY "$(SolutionDir)..\res" "$(TargetDir)res\" /S /Y</Command>
     </PostBuildEvent>
     <PostBuildEvent>
       <Message>
