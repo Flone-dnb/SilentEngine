@@ -282,12 +282,12 @@ bool SApplication::unregisterGUIObject(SGUIObject* pGUIObject)
 		return true;
 	}
 
-#if defined(DEBUG) || defined(_DEBUG)
-	if (pGUIObject->bIsSProfilerObject)
-	{
-		return true;
-	}
-#endif
+//#if defined(DEBUG) || defined(_DEBUG)
+//	if (pGUIObject->bIsSystemObject)
+//	{
+//		return true;
+//	}
+//#endif
 
 	if (pGUIObject->objectType == SGUIType::SGT_LAYOUT)
 	{
@@ -310,6 +310,46 @@ bool SApplication::unregisterGUIObject(SGUIObject* pGUIObject)
 
 	// Check if this GUI object is loaded.
 	bool bFound = false;
+
+#if defined(DEBUG) || defined(_DEBUG)
+	if (pGUIObject->objectType == SGUIType::SGT_LAYOUT)
+	{
+		SGUILayout* pLayout = dynamic_cast<SGUILayout*>(pGUIObject);
+
+		for (size_t i = 0; i < vGUILayers.size(); i++)
+		{
+			for (size_t j = 0; j < vGUILayers[i].vGUIObjects.size(); j++)
+			{
+				if (vGUILayers[i].vGUIObjects[j] == pLayout->pDebugLayoutFillImage)
+				{
+					delete vGUILayers[i].vGUIObjects[j];
+					vGUILayers[i].vGUIObjects.erase(vGUILayers[i].vGUIObjects.begin() + i);
+					bFound = true;
+
+					if (vGUILayers[i].vGUIObjects.size() == 0 && i != 0)
+					{
+						vGUILayers.erase(vGUILayers.begin() + i);
+					}
+
+					break;
+				}
+			}
+
+			if (bFound)
+			{
+				break;
+			}
+		}
+
+		if (bFound == false)
+		{
+			return true;
+		}
+	}
+#endif
+
+	bFound = false;
+
 	for (size_t i = 0; i < vGUILayers.size(); i++)
 	{
 		for (size_t j = 0; j < vGUILayers[i].vGUIObjects.size(); j++)
@@ -408,6 +448,19 @@ void SApplication::registerGUIObject(SGUIObject* pGUIObject, bool bWillBeUsedInL
 		// locks mtxDraw
 		moveGUIObjectToLayer(pGUIObject, pGUIObject->iZLayer);
 	}
+
+#if defined(DEBUG) || defined(_DEBUG)
+	if (pGUIObject->objectType == SGUIType::SGT_LAYOUT)
+	{
+		SGUILayout* pLayout = dynamic_cast<SGUILayout*>(pGUIObject);
+		registerGUIObject(pLayout->pDebugLayoutFillImage, false);
+		if (pGUIObject->iZLayer != 0)
+		{
+			// locks mtxDraw
+			moveGUIObjectToLayer(pLayout->pDebugLayoutFillImage, pGUIObject->iZLayer);
+		}
+	}
+#endif
 }
 
 std::vector<SGUILayer>* SApplication::getLoadedGUIObjects()
@@ -5022,87 +5075,101 @@ void SApplication::moveGUIObjectToLayer(SGUIObject* pObject, int iNewLayer)
 		return;
 	}
 
-	std::lock_guard<std::mutex> guard(mtxDraw);
-
-	// Find object.
-	size_t iObjectLayerIndex = 0;
-	size_t iObjectIndex = 0;
-	bool bFound = false;
-	for (size_t i = 0; i < vGUILayers.size(); i++)
 	{
-		for (size_t j = 0; j < vGUILayers[i].vGUIObjects.size(); j++)
+		std::lock_guard<std::mutex> guard(mtxDraw);
+
+		// Find object.
+		size_t iObjectLayerIndex = 0;
+		size_t iObjectIndex = 0;
+		bool bFound = false;
+		for (size_t i = 0; i < vGUILayers.size(); i++)
 		{
-			if (vGUILayers[i].vGUIObjects[j] == pObject)
+			for (size_t j = 0; j < vGUILayers[i].vGUIObjects.size(); j++)
 			{
-				iObjectLayerIndex = i;
-				iObjectIndex = j;
-				bFound = true;
+				if (vGUILayers[i].vGUIObjects[j] == pObject)
+				{
+					iObjectLayerIndex = i;
+					iObjectIndex = j;
+					bFound = true;
+					break;
+				}
+			}
+
+			if (bFound)
+			{
 				break;
 			}
 		}
 
-		if (bFound)
+		if (bFound == false)
 		{
-			break;
+			SError::showErrorMessageBoxAndLog("could not find the specified GUI object.");
+			return;
 		}
+
+		// See if the GUI layer with this new layer index exists.
+		bFound = false;
+		bool bNeedToInsert = false;
+		size_t iTargetLayerIndex = 0;
+		size_t iInsertIndex = 0;
+		for (size_t i = 0; i < vGUILayers.size(); i++)
+		{
+			if (vGUILayers[i].iLayer > iNewLayer)
+			{
+				bFound = false;
+				bNeedToInsert = true;
+				iInsertIndex = i;
+				break;
+			}
+			else if (vGUILayers[i].iLayer == iNewLayer)
+			{
+				bFound = true;
+				iTargetLayerIndex = i;
+				break;
+			}
+		}
+
+		if (bFound == false)
+		{
+			// Create this new layer.
+
+			if (bNeedToInsert)
+			{
+				vGUILayers.insert(vGUILayers.begin() + iInsertIndex, SGUILayer{ iNewLayer, std::vector<SGUIObject*>() });
+				iTargetLayerIndex = iInsertIndex;
+			}
+			else
+			{
+				vGUILayers.push_back(SGUILayer{ iNewLayer, std::vector<SGUIObject*>() });
+				iTargetLayerIndex = vGUILayers.size() - 1;
+			}
+		}
+
+		// Remove object from current position.
+		SGUIObject* pObjectToMove = vGUILayers[iObjectLayerIndex].vGUIObjects[iObjectIndex];
+		vGUILayers[iObjectLayerIndex].vGUIObjects.erase(vGUILayers[iObjectLayerIndex].vGUIObjects.begin() + iObjectIndex);
+		if (vGUILayers[iObjectLayerIndex].vGUIObjects.size() == 0 && iObjectLayerIndex != 0)
+		{
+			vGUILayers.erase(vGUILayers.begin() + iObjectLayerIndex);
+		}
+
+		// Move object to new layer.
+		vGUILayers[iTargetLayerIndex].vGUIObjects.push_back(pObjectToMove);
+
+		pObjectToMove->iZLayer = iNewLayer;
 	}
 
-	if (bFound == false)
+#if defined(DEBUG) || defined(_DEBUG)
+	if (pObject->objectType == SGUIType::SGT_LAYOUT)
 	{
-		SError::showErrorMessageBoxAndLog("could not find the specified GUI object.");
-		return;
-	}
+		SGUILayout* pLayout = dynamic_cast<SGUILayout*>(pObject);
 
-	// See if the GUI layer with this new layer index exists.
-	bFound = false;
-	bool bNeedToInsert = false;
-	size_t iTargetLayerIndex = 0;
-	size_t iInsertIndex = 0;
-	for (size_t i = 0; i < vGUILayers.size(); i++)
-	{
-		if (vGUILayers[i].iLayer > iNewLayer)
+		if (pLayout->pDebugLayoutFillImage->bIsRegistered)
 		{
-			bFound = false;
-			bNeedToInsert = true;
-			iInsertIndex = i;
-			break;
-		}
-		else if (vGUILayers[i].iLayer == iNewLayer)
-		{
-			bFound = true;
-			iTargetLayerIndex = i;
-			break;
+			moveGUIObjectToLayer(pLayout->pDebugLayoutFillImage, iNewLayer);
 		}
 	}
-
-	if (bFound == false)
-	{
-		// Create this new layer.
-
-		if (bNeedToInsert)
-		{
-			vGUILayers.insert(vGUILayers.begin() + iInsertIndex, SGUILayer{ iNewLayer, std::vector<SGUIObject*>() });
-			iTargetLayerIndex = iInsertIndex;
-		}
-		else
-		{
-			vGUILayers.push_back(SGUILayer{ iNewLayer, std::vector<SGUIObject*>() });
-			iTargetLayerIndex = vGUILayers.size() - 1;
-		}
-	}
-
-	// Remove object from current position.
-	SGUIObject* pObjectToMove = vGUILayers[iObjectLayerIndex].vGUIObjects[iObjectIndex];
-	vGUILayers[iObjectLayerIndex].vGUIObjects.erase(vGUILayers[iObjectLayerIndex].vGUIObjects.begin() + iObjectIndex);
-	if (vGUILayers[iObjectLayerIndex].vGUIObjects.size() == 0 && iObjectLayerIndex != 0)
-	{
-		vGUILayers.erase(vGUILayers.begin() + iObjectLayerIndex);
-	}
-
-	// Move object to new layer.
-	vGUILayers[iTargetLayerIndex].vGUIObjects.push_back(pObjectToMove);
-
-	pObjectToMove->iZLayer = iNewLayer;
+#endif
 }
 
 void SApplication::refreshHeap()

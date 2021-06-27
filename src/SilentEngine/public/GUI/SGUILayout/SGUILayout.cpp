@@ -11,11 +11,16 @@
 #include "SilentEngine/Private/SError/SError.h"
 #include "SilentEngine/Public/SApplication/SApplication.h"
 
-SGUILayout::SGUILayout(const std::string& sObjectName, float fWidth, float fHeight, SLayoutType layoutType, bool bStretchItems) : SGUIObject(sObjectName)
+#if defined(DEBUG) || defined(_DEBUG)
+#include <fstream>
+#include "SilentEngine/Public/GUI/SGUIImage/SGUIImage.h"
+#endif
+
+SGUILayout::SGUILayout(const std::string& sObjectName, float fWidth, float fHeight, SLayoutType layoutType, bool bExpandItems) : SGUIObject(sObjectName)
 {
 	objectType = SGUIType::SGT_LAYOUT;
 	this->layoutType = layoutType;
-	this->bStretchItems = bStretchItems;
+	this->bExpandItems = bExpandItems;
 
 	if (fWidth < 0.0f || fWidth > 1.0f || fHeight < 0.0f || fHeight > 1.0f)
 	{
@@ -28,6 +33,23 @@ SGUILayout::SGUILayout(const std::string& sObjectName, float fWidth, float fHeig
 	this->layoutType = layoutType;
 
 	vSizeToKeep = SVector(fWidth, fHeight);
+
+#if defined(DEBUG) || defined(_DEBUG)
+	pDebugLayoutFillImage = new SGUIImage("layout debug image");
+
+	const std::wstring sSampleTexPath = L"res/square_tex.png";
+
+	std::ifstream debugImage(sSampleTexPath);
+	if (debugImage.is_open() == false)
+	{
+		SError::showErrorMessageBoxAndLog("could not find the 'square_tex.png' texture in the 'res' folder.");
+	}
+	debugImage.close();
+
+	pDebugLayoutFillImage->loadImage(sSampleTexPath);
+	pDebugLayoutFillImage->setSizeToKeep(SVector(fWidth, fHeight));
+	pDebugLayoutFillImage->bIsSystemObject = true;
+#endif
 }
 
 SGUILayout::~SGUILayout()
@@ -83,6 +105,44 @@ void SGUILayout::addChild(SGUIObject* pChildObject, int iRatio)
 	}
 }
 
+void SGUILayout::setPosition(const SVector& vPos)
+{
+	SGUIObject::setPosition(vPos);
+
+#if defined(DEBUG) || defined(_DEBUG)
+	pDebugLayoutFillImage->setPosition(vPos);
+#endif
+}
+
+void SGUILayout::setScale(const SVector& vScale)
+{
+	SGUIObject::setScale(vScale);
+
+#if defined(DEBUG) || defined(_DEBUG)
+	pDebugLayoutFillImage->setScale(vScale);
+#endif
+}
+
+void SGUILayout::setRotation(float fRotationInDeg)
+{
+	SError::showErrorMessageBoxAndLog("rotation is not allowed in layouts.");
+}
+
+#if defined(DEBUG) || defined(_DEBUG)
+void SGUILayout::setDrawDebugLayoutFillImage(bool bDraw, const SVector& vFillImageColor)
+{
+	if (bIsRegistered == false)
+	{
+		SError::showErrorMessageBoxAndLog("this function can only be called after the layout is registered.");
+	}
+
+	SVector vColor = vFillImageColor;
+	vColor.setW(0.5f);
+	pDebugLayoutFillImage->setTint(vColor);
+	pDebugLayoutFillImage->setVisible(bDraw);
+}
+#endif
+
 bool SGUILayout::removeChild(SGUIObject* pChildObject)
 {
 	std::lock_guard<std::mutex> guard(mtxChilds);
@@ -94,6 +154,7 @@ bool SGUILayout::removeChild(SGUIObject* pChildObject)
 		{
 			vChilds.erase(vChilds.begin() + i);
 			pChildObject->layoutData.pLayout = nullptr;
+			pChildObject->bIsVisible = false;
 
 			if (bIsRegistered)
 			{
@@ -115,6 +176,7 @@ void SGUILayout::removeAllChilds()
 	{
 		vChilds[i].pChild->layoutData.pLayout = nullptr;
 		vChilds[i].pChild->screenScale = DirectX::XMFLOAT2(1.0f, 1.0f);
+		vChilds[i].pChild->bIsVisible = false;
 	}
 
 	vChilds.clear();
@@ -174,6 +236,11 @@ void SGUILayout::recalculateSizeToKeepScaling()
 	int iFullRatio = 0;
 	for (size_t i = 0; i < vChilds.size(); i++)
 	{
+		if (bExpandItems == false)
+		{
+			vChilds[i].iRatio = 1; // ignore ratios
+		}
+
 		iFullRatio += vChilds[i].iRatio;
 	}
 
@@ -187,86 +254,55 @@ void SGUILayout::recalculateSizeToKeepScaling()
 
 		DirectX::XMFLOAT2 vScreenScale = DirectX::XMFLOAT2(1.0f, 1.0f);
 
-		if (bStretchItems)
+		SVector vChildSize = vChilds[i].pChild->getFullSizeInPixels();
+
+		if (layoutType == SLayoutType::SLT_HORIZONTAL)
 		{
-			SVector vChildSize = vChilds[i].pChild->getFullSizeInPixels();
+			vScreenScale.y = fFullHeight / vChildSize.getY();
+			vScreenScale.x = (fFullWidth * (vChilds[i].iRatio / static_cast<float>(iFullRatio))) / vChildSize.getX();
 
-			if (layoutType == SLayoutType::SLT_HORIZONTAL)
+			if (bExpandItems)
 			{
-				vScreenScale.y = fFullHeight / vChildSize.getY();
-				vScreenScale.x = (fFullWidth * (vChilds[i].iRatio / static_cast<float>(iFullRatio))) / vChildSize.getX();
-
-				vChildPos.y += fHeight / 2.0f;
 				vChildPos.x += fPosBefore + fWidth * (vChilds[i].iRatio / static_cast<float>(iFullRatio)) / 2.0f;
-
-				fPosBefore = fPosBefore + fWidth * (vChilds[i].iRatio / static_cast<float>(iFullRatio));
+				vChildPos.y += fHeight / 2.0f;
 			}
 			else
 			{
-				vScreenScale.x = fFullWidth / vChildSize.getX();
-				vScreenScale.y = (fFullHeight * (vChilds[i].iRatio / static_cast<float>(iFullRatio))) / vChildSize.getY();
+				vChildPos.x += fPosBefore;
 
-				vChildPos.y += fPosBefore + fHeight * (vChilds[i].iRatio / static_cast<float>(iFullRatio)) / 2.0f;
-				vChildPos.x += fWidth / 2.0f;
-
-				fPosBefore = fPosBefore + fHeight * (vChilds[i].iRatio / static_cast<float>(iFullRatio));
+				vChilds[i].pChild->vSizeToKeep = SVector(fWidth * (vChilds[i].iRatio / static_cast<float>(iFullRatio)), fHeight);
+				vChilds[i].pChild->recalculateSizeToKeepScaling();
 			}
 
+			fPosBefore += fWidth * (vChilds[i].iRatio / static_cast<float>(iFullRatio));
+		}
+		else
+		{
+			vScreenScale.x = fFullWidth / vChildSize.getX();
+			vScreenScale.y = (fFullHeight * (vChilds[i].iRatio / static_cast<float>(iFullRatio))) / vChildSize.getY();
+
+			if (bExpandItems)
+			{
+				vChildPos.x += fWidth / 2.0f;
+				vChildPos.y += fPosBefore + fHeight * (vChilds[i].iRatio / static_cast<float>(iFullRatio)) / 2.0f;
+			}
+			else
+			{
+				vChildPos.y += fPosBefore;
+
+				vChilds[i].pChild->vSizeToKeep = SVector(fWidth, fHeight * (vChilds[i].iRatio / static_cast<float>(iFullRatio)));
+				vChilds[i].pChild->recalculateSizeToKeepScaling();
+			}
+
+			fPosBefore += fHeight * (vChilds[i].iRatio / static_cast<float>(iFullRatio));
+		}
+
+		if (bExpandItems)
+		{
 			vChilds[i].pChild->layoutScreenScale = vScreenScale;
 		}
 		else
 		{
-			SVector texSize = vChilds[i].pChild->getFullSizeInPixels();
-			texSize.setX(texSize.getX() * vChilds[i].pChild->scale.x);
-			texSize.setY(texSize.getY() * vChilds[i].pChild->scale.y);
-
-			if (layoutType == SLayoutType::SLT_HORIZONTAL)
-			{
-				if (i == 0)
-				{
-					fPosBefore = pos.x - (fWidth / 2.0f);
-				}
-
-				//vScreenScale.y = fFullHeight / texSize.getY();
-				//vScreenScale.x = vScreenScale.y;
-
-				//vChildPos.y += fHeight / 2.0f; // y center of the layout
-				vChildPos.x = fPosBefore;
-
-				texSize = vChilds[i].pChild->getFullSizeInPixels();
-				texSize.setX(texSize.getX() / res.iWidth);
-				texSize.setY(texSize.getY() / res.iHeight);
-				texSize.setX(texSize.getX() * vChilds[i].pChild->scale.x);
-				texSize.setY(texSize.getY() * vChilds[i].pChild->scale.y);
-
-				vChildPos.x += texSize.getX() / 2.0f; // origin
-
-				fPosBefore += texSize.getX();// *vScreenScale.x;
-			}
-			else
-			{
-				if (i == 0)
-				{
-					fPosBefore = pos.y - (fHeight / 2.0f);
-				}
-
-				//vScreenScale.x = fFullWidth / texSize.getX();
-				//vScreenScale.y = vScreenScale.x;
-
-				//vChildPos.x += fWidth / 2.0f; // x center of the layout
-				vChildPos.y = fPosBefore;
-
-				texSize = vChilds[i].pChild->getFullSizeInPixels();
-				texSize.setX(texSize.getX() / res.iWidth);
-				texSize.setY(texSize.getY() / res.iHeight);
-				texSize.setX(texSize.getX() * vChilds[i].pChild->scale.x);
-				texSize.setY(texSize.getY() * vChilds[i].pChild->scale.y);
-
-				vChildPos.y += texSize.getY() / 2.0f; // origin
-
-				fPosBefore += texSize.getY();// *vScreenScale.y;
-			}
-
 			vChilds[i].pChild->origin = DirectX::SimpleMath::Vector2(0.0f, 0.0f);
 			vChilds[i].pChild->layoutScreenScale = DirectX::XMFLOAT2(1.0f, 1.0f);
 		}

@@ -208,6 +208,11 @@ void SGUISimpleText::recalculateSizeToKeepScaling()
 	screenScale.x = fTargetWidth / texSize.x;
 	screenScale.y = fTargetHeight / texSize.y;
 
+	if (screenScale.x < 1.0f && fMaxLineWidth > 0.001f)
+	{
+
+	}
+
 	// do not stretch the text
 	if (screenScale.x >= 1.0f)
 	{

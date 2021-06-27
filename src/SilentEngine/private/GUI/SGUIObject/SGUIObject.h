@@ -80,18 +80,18 @@ public:
 	/*
 	* desc: use to set the position of the object (in normalized range: [0, 1]) on the screen.
 	*/
-	void setPosition(const SVector& vPos);
+	virtual void setPosition(const SVector& vPos);
 	//@@Function
 	/*
 	* desc: use to set the rotation in degrees.
 	* remarks: note that 'size to keep' ignores rotation!
 	*/
-	void setRotation(float fRotationInDeg);
+	virtual void setRotation(float fRotationInDeg);
 	//@@Function
 	/*
 	* desc: use to set the scaling of the GUI object.
 	*/
-	void setScale(const SVector& vScale);
+	virtual void setScale(const SVector& vScale);
 	//@@Function
 	/*
 	* desc: use to set the tinting in RGBA format, white (1, 1, 1, 1) for no tinting.
@@ -163,10 +163,10 @@ public:
 #if defined(DEBUG) || defined(_DEBUG)
 	//@@Function
 	/*
-	* desc: whether this object was created by the SProfiler or not.
-	* remarks: this function is only available in the debug mode.
+	* desc: whether this object was created by the SProfiler or other engine class or not.
+	* remarks: system objects are used by the engine and can't be deleted. This function is only available in the debug mode.
 	*/
-	bool isProfilerObject() const;
+	bool isSystemObject() const;
 #endif
 
 protected:
@@ -211,7 +211,7 @@ protected:
 	bool         bIsVisible;
 	bool         bToBeUsedInLayout;
 #if defined(DEBUG) || defined(_DEBUG)
-	bool         bIsSProfilerObject;
+	bool         bIsSystemObject;
 #endif
 };
 

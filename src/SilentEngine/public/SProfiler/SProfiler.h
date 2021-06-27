@@ -155,9 +155,9 @@ private:
 
 	SFrameStats lastFrameStats;
 	std::mutex mtxFrameStats;
-	SGUILayout* pNameLayout = nullptr; // for showOnScreen()
-	SGUILayout* pValueLayout = nullptr; // for showOnScreen()
 	SGUISimpleText* pFPSText = nullptr;
+	SGUILayout* pLayoutNames = nullptr;
+	SGUILayout* pLayoutValues = nullptr;
 	float fUpdateGUIIntervalInMS = 100.0f;
 	float fLastCheckTime = 0.0f;
 	bool bFrameStatsShownOnScreen = false;

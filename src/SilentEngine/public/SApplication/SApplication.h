@@ -281,9 +281,9 @@ public:
 		* desc: unregisters the given GUI object and deletes it.
 		* return: false if successful, true if the specified object was not registered earlier (via SApplication::registerGUIObject).
 		* remarks: any pointers to this object will be invalid after this call (the object will be deleted in this function).
-		In debug mode, some GUI objects will be created by the SProfiler for the SProfiler::showOnScreen() function,
+		In debug mode, some GUI objects (called system objects) will be created by the SProfiler or other engine class (for the SProfiler::showOnScreen() function for example),
 		an attempt to delete such objects will result in an error (unregisterGUIObject() will return 'true'). You can
-		check if the GUI object was created by the SProfiler using the SGUIObject::isProfilerObject() function.
+		check if the GUI object is a system object by using the SGUIObject::isSystemObject() function.
 		It's recommended to use this function in loading moments of your application (ex. loading screen)
 		as this function may drop the framerate a little.
 		*/

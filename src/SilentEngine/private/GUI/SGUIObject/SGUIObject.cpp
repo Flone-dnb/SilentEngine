@@ -18,18 +18,28 @@ SGUILayout* SGUIObject::getLayout() const
 }
 
 #if defined(DEBUG) || defined(_DEBUG)
-bool SGUIObject::isProfilerObject() const
+bool SGUIObject::isSystemObject() const
 {
-	return bIsSProfilerObject;
+	return bIsSystemObject;
 }
 #endif
 
 SVector SGUIObject::getFullScreenScaling()
 {
-	if (layoutData.pLayout)
+	if (layoutData.pLayout && layoutData.pLayout->bExpandItems)
 	{
-		auto scaling = SVector(layoutScreenScale.x, layoutScreenScale.y) * layoutData.pLayout->getFullScreenScaling();
-		return scaling;
+		if (layoutData.pLayout->bExpandItems)
+		{
+			auto scaling = SVector(layoutScreenScale.x, layoutScreenScale.y) * layoutData.pLayout->getFullScreenScaling();
+			return scaling;
+		}
+		else
+		{
+			// !!!
+			// probably need to include '* layoutData.pLayout->getFullScreenScaling()' here when layout inside of layout is implemented
+			// !!!
+			return SVector(screenScale.x, screenScale.y);
+		}
 	}
 	else
 	{
@@ -77,7 +87,7 @@ SGUIObject::SGUIObject(const std::string& sObjectName)
 	objectType = SGUIType::SGT_NONE;
 
 #if defined(DEBUG) || defined(_DEBUG)
-	bIsSProfilerObject = false;
+	bIsSystemObject = false;
 #endif
 }
 

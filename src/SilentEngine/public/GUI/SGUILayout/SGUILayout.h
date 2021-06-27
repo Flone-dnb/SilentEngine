@@ -14,6 +14,10 @@
 // Custom
 #include "SilentEngine/Private/GUI/SGUIObject/SGUIObject.h"
 
+#if defined(DEBUG) || defined(_DEBUG)
+class SGUIImage;
+#endif
+
 struct SLayoutChild
 {
 	SGUIObject* pChild;
@@ -42,10 +46,10 @@ public:
 	* param "fWidth": width to keep of this layout (in normalized range: [0, 1]).
 	* param "fHeight": height to keep of this layout (in normalized range: [0, 1]).
 	* param "layoutType": type of this layout.
-	* param "bStretchItems": whether to stretch layout items so they will fill the whole layout space or don't stretch them to keep their original size.
+	* param "bExpandItems": whether to stretch layout items so they will fill the whole layout space or don't stretch them to keep their original size.
 	* remarks: if this layout will be used in another layout the width and the height will be ignored.
 	*/
-	SGUILayout(const std::string& sObjectName, float fWidth, float fHeight, SLayoutType layoutType, bool bStretchItems);
+	SGUILayout(const std::string& sObjectName, float fWidth, float fHeight, SLayoutType layoutType, bool bExpandItems);
 	SGUILayout() = delete;
 	SGUILayout(const SGUILayout&) = delete;
 	SGUILayout& operator= (const SGUILayout&) = delete;
@@ -55,22 +59,53 @@ public:
 	/*
 	* desc: adds the object as a child to this layout.
 	* param "pChildObject": child object to add.
-	* param "fRatio": the ratio that this child object will take in the layout.
+	* param "fRatio": the ratio that this child object will take in the layout. Ignored when 'bExpandItems' is 'false'.
 	* remarks: for example, add 2 child objects with ratios 1 and 1, this means that the first one will take 50% of the layout space,
 	and the second one also takes 50% of the layout space. Another example, add 2 child objects with ratios 2 and 1, this means that the first
 	one will take (2 / (2 + 1)) = 66% of the layout space, and the other one 33% of the layout space.
 	*/
 	void addChild(SGUIObject* pChildObject, int iRatio);
+
+	//@@Function
+	/*
+	* desc: use to set the position of the object (in normalized range: [0, 1]) on the screen.
+	*/
+	virtual void setPosition(const SVector& vPos) override;
+
+	//@@Function
+	/*
+	* desc: use to set the scaling of the GUI object.
+	*/
+	virtual void setScale(const SVector& vScale) override;
+
+	//@@Function
+	/*
+	* desc: use to set the rotation in degrees.
+	* remarks: note that 'size to keep' ignores rotation!
+	*/
+	virtual void setRotation(float fRotationInDeg) override;
+
+#if defined(DEBUG) || defined(_DEBUG)
+	//@@Function
+	/*
+	* desc: draws an image filling the whole layout zone to help visualize the layout bounds.
+	* return: this function is only available in the debug mode.
+	*/
+	void setDrawDebugLayoutFillImage(bool bDraw, const SVector& vFillImageColor);
+#endif
+
 	//@@Function
 	/*
 	* desc: removes the object from this layout.
 	* return: false if successful, true if the object is not a child of this layout.
+	* remarks: the child will be invisible after this call.
 	*/
 	bool removeChild(SGUIObject* pChildObject);
 
 	//@@Function
 	/*
 	* desc: removes all childs from this layout.
+	* remarks: all childs will be invisible after this call.
 	*/
 	void removeAllChilds();
 
@@ -89,6 +124,7 @@ public:
 protected:
 
 	friend class SGUIObject;
+	friend class SApplication;
 
 	virtual void setViewport(D3D12_VIEWPORT viewport) override;
 	virtual void onMSAAChange() override;
@@ -99,6 +135,10 @@ protected:
 
 	std::vector<SLayoutChild> vChilds;
 
+#if defined(DEBUG) || defined(_DEBUG)
+	SGUIImage* pDebugLayoutFillImage = nullptr;
+#endif
+
 	SLayoutType layoutType;
 
 	float fWidth;
@@ -106,5 +146,5 @@ protected:
 
 	std::mutex mtxChilds;
 
-	bool bStretchItems;
+	bool bExpandItems;
 };
