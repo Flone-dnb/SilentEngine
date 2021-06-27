@@ -6442,13 +6442,13 @@ int SApplication::run()
 				{
 					bTimeWindowsMessageStarted = false;
 
-					frameStats.fTimeSpentOnWindowsMessagesInMS
+					frameStats.fTimeSpentOnWindowMessagesInMS
 						= static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now() - timeWindowsMessage).count()
 							/ dToMS);
 				}
 				else
 				{
-					frameStats.fTimeSpentOnWindowsMessagesInMS = 0.0f;
+					frameStats.fTimeSpentOnWindowMessagesInMS = 0.0f;
 				}
 
 #endif

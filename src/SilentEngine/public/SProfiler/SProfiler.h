@@ -20,7 +20,7 @@ struct SFrameStats
 	// we handle all messages before drawing a frame
 	// this includes user input handling, like onMouseMove() or onKeyboardButtonDown()
 	// this is the first thing that we will do before drawing a frame
-	float fTimeSpentOnWindowsMessagesInMS = 0.0f;
+	float fTimeSpentOnWindowMessagesInMS = 0.0f;
 	// on tick is called before drawing a frame
 	// this is the second thing that we will do before drawing a frame
 	float fTimeSpentOnUserOnTickFunctionInMS = 0.0f;

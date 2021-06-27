@@ -66,7 +66,7 @@ bool SProfiler::initNeededGUIObjects()
 	pFPSText->bIsSystemObject = true;
 	pFPSText->setFont(pApp->sPathToDefaultFont);
 	pFPSText->setZLayer(INT_MAX);
-	pFPSText->setDrawTextOutline(true, SVector());
+	pFPSText->setDrawTextOutline(true, SVector(0.0f, 0.0f, 0.0f, 1.0f));
 	pFPSText->setText(L"FPS: 0");
 	pFPSText->setCustomOrigin(SVector(0.0f, 0.0f));
 	pFPSText->setPosition(SVector(fNameXPos, 0.1f));
@@ -77,7 +77,7 @@ bool SProfiler::initNeededGUIObjects()
 	// Fill names.
 
 	std::vector<std::wstring> vText = {
-		L"Time spent on Windows messages (ms):",
+		L"Time spent on window messages (ms):",
 		L"Time spent on user Tick function (ms):",
 		L"Time spent on 3D audio update (ms):",
 		L"Time spent waiting for GPU in 'update()' (ms):",
@@ -198,7 +198,7 @@ void SProfiler::updateFrameStatsOnScreen()
 
 			std::vector<SLayoutChild>* pLayoutChilds = pLayoutValues->getChilds();
 
-			dynamic_cast<SGUISimpleText*>(pLayoutChilds->operator[](0).pChild)->setText(floatToWstring(lastFrameStats.fTimeSpentOnWindowsMessagesInMS, iPrecision));
+			dynamic_cast<SGUISimpleText*>(pLayoutChilds->operator[](0).pChild)->setText(floatToWstring(lastFrameStats.fTimeSpentOnWindowMessagesInMS, iPrecision));
 			dynamic_cast<SGUISimpleText*>(pLayoutChilds->operator[](1).pChild)->setText(floatToWstring(lastFrameStats.fTimeSpentOnUserOnTickFunctionInMS, iPrecision));
 			dynamic_cast<SGUISimpleText*>(pLayoutChilds->operator[](2).pChild)->setText(floatToWstring(lastFrameStats.fTimeSpentOn3DAudioUpdateInMS, iPrecision));
 			dynamic_cast<SGUISimpleText*>(pLayoutChilds->operator[](3).pChild)->setText(floatToWstring(lastFrameStats.fTimeSpentWaitingForGPUInUpdateInMS, iPrecision));
