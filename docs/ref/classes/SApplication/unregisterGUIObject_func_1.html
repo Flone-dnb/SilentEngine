@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../../doc.css">
+    <title>unregisterGUIObject - Silent Engine Documentation</title>
+</head>
+<body>
+    <div class="nav_panel">
+        <a class="cpp_link_title" href="../../classes/index.html"> Classes </a>
+		<br>
+		<a class="cpp_link_title" href="../../structs/index.html"> Structs </a>
+		<br>
+    </div>
+    
+	<div class="cpp_doc">
+		<h3 class="cpp_object"> unregisterGUIObject </h3>
+		<div class="cpp_codeobject_desc"> unregisters the given GUI object and deletes it.    	 </div>
+		<br>
+		<code class="cpp_func_line_code"> bool   unregisterGUIObject(SGUIObject* pGUIObject); </code>
+		<br>
+		<br>
+		----------------------------------------------
+		<br>
+		<br>
+		<div class="cpp_func_param"> Return Value </div>
+		<br>
+		<div class="cpp_func_param_desc"> false if successful, true if the specified object was not registered earlier (via SApplication::registerGUIObject).    	 </div>
+		<br>
+		<div class="cpp_func_param"> Remarks </div>
+		<br>
+		<div class="cpp_func_param_desc"> any pointers to this object will be invalid after this call (the object will be deleted in this function).     In debug mode, some GUI objects (called system objects) will be created by the SProfiler or other engine class (for the SProfiler::showOnScreen() function for example),     an attempt to delete such objects will result in an error (unregisterGUIObject() will return 'true'). You can     check if the GUI object is a system object by using the SGUIObject::isSystemObject() function.     It's recommended to use this function in loading moments of your application (ex. loading screen)     as this function may drop the framerate a little.    	 </div>
+		<br>
+		
+	</div>
+</body>
+</html>

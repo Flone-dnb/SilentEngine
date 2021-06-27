@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../../doc.css">
-    <title>init - Silent Engine Documentation</title>
+    <title>loadImage - Silent Engine Documentation</title>
 </head>
 <body>
     <div class="nav_panel">
@@ -15,10 +15,10 @@
     </div>
     
 	<div class="cpp_doc">
-		<h3 class="cpp_object"> init </h3>
-		<div class="cpp_codeobject_desc"> initializes all essential engine systems, creates the main window, starts Direct 3D rendering.     Some functions (that contain &quot;init&quot; in their names like &quot;...Init...()&quot;) can only be called before this function.    	 </div>
+		<h3 class="cpp_object"> loadImage </h3>
+		<div class="cpp_codeobject_desc"> loads an image to be used in GUI (png, jpeg, tiff, dds). </div>
 		<br>
-		<code class="cpp_func_line_code"> bool   init(const std::wstring&amp; sMainWindowClassName = L&quot;MainWindow&quot;); </code>
+		<code class="cpp_func_line_code"> bool loadImage(std::wstring_view sPathToImage); </code>
 		<br>
 		<br>
 		----------------------------------------------
@@ -26,11 +26,11 @@
 		<br>
 		<div class="cpp_func_param"> Return Value </div>
 		<br>
-		<div class="cpp_func_param_desc"> false if successful, true otherwise.    	 </div>
+		<div class="cpp_func_param_desc"> false if successful, true otherwise. </div>
 		<br>
 		<div class="cpp_func_param"> Remarks </div>
 		<br>
-		<div class="cpp_func_param_desc"> should be called before SApplication::run().    	 </div>
+		<div class="cpp_func_param_desc"> you can call this function again after the GUI object was registered to set a new image without needing to register again. </div>
 		<br>
 		
 	</div>

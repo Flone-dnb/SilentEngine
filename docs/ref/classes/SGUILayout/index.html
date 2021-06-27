@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../../doc.css">
+    <title>SGUILayout - Silent Engine Documentation</title>
+</head>
+<body>
+    <div class="nav_panel">
+        <a class="cpp_link_title" href="../../classes/index.html"> Classes </a>
+		<br>
+		<a class="cpp_link_title" href="../../structs/index.html"> Structs </a>
+		<br>
+    </div>
+    
+	<div class="cpp_doc">
+		<h3 class="cpp_object"> SGUILayout </h3>
+		<code class="cpp_codeobject"> class SGUILayout : public SGUIObject </code>
+		<br>
+		<br>
+		<div class="cpp_codeobject_desc">   This class represents a layout that can have child GUI object.  Layout positions all childs horizontally or vertically and forces them to maintain the specified proportions relative to each other.  </div>
+		<br>
+		<div class="cpp_codeobject_path"> #include "Public/GUI/SGUILayout/SGUILayout.h" </div>
+		<br>
+		<br>
+		<details open class="cpp_details">
+			<br>
+			<summary class="cpp_summary"> Public: </summary>
+			<div class="cpp_func_container">
+				<code class="cpp_function"> <code class="cpp_func_name"><a class="cpp_link" href="SGUILayout_func_1.html">SGUILayout</a></code>(const std::string&amp; sObjectName, float fWidth, float fHeight, SLayoutType layoutType, bool bExpandItems); </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="addChild_func_1.html">addChild</a></code>(SGUIObject* pChildObject, int iRatio); </code>
+				<br>
+				<code class="cpp_function"> virtual void <code class="cpp_func_name"><a class="cpp_link" href="setPosition_func_1.html">setPosition</a></code>(const <a class="cpp_link_ref" href="../SVector/index.html">SVector</a>&amp; vPos) override; </code>
+				<br>
+				<code class="cpp_function"> virtual void <code class="cpp_func_name"><a class="cpp_link" href="setScale_func_1.html">setScale</a></code>(const <a class="cpp_link_ref" href="../SVector/index.html">SVector</a>&amp; vScale) override; </code>
+				<br>
+				<code class="cpp_function"> virtual void <code class="cpp_func_name"><a class="cpp_link" href="setRotation_func_1.html">setRotation</a></code>(float fRotationInDeg) override; </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="setDrawDebugLayoutFillImage_func_1.html">setDrawDebugLayoutFillImage</a></code>(bool bDraw, const <a class="cpp_link_ref" href="../SVector/index.html">SVector</a>&amp; vFillImageColor); </code>
+				<br>
+				<code class="cpp_function"> bool <code class="cpp_func_name"><a class="cpp_link" href="removeChild_func_1.html">removeChild</a></code>(SGUIObject* pChildObject); </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="removeAllChilds_func_1.html">removeAllChilds</a></code>(); </code>
+				<br>
+				<code class="cpp_function"> virtual <a class="cpp_link_ref" href="../SVector/index.html">SVector</a> <code class="cpp_func_name"><a class="cpp_link" href="getSizeInPixels_func_1.html">getSizeInPixels</a></code>() override; </code>
+				<br>
+				<code class="cpp_function"> std::vector&lt;SLayoutChild&gt;* <code class="cpp_func_name"><a class="cpp_link" href="getChilds_func_1.html">getChilds</a></code>(); </code>
+				<br>
+			</div>
+		</details>
+		
+	</div>
+</body>
+</html>

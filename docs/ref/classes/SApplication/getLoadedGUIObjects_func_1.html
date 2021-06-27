@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../../doc.css">
+    <title>getLoadedGUIObjects - Silent Engine Documentation</title>
+</head>
+<body>
+    <div class="nav_panel">
+        <a class="cpp_link_title" href="../../classes/index.html"> Classes </a>
+		<br>
+		<a class="cpp_link_title" href="../../structs/index.html"> Structs </a>
+		<br>
+    </div>
+    
+	<div class="cpp_doc">
+		<h3 class="cpp_object"> getLoadedGUIObjects </h3>
+		<div class="cpp_codeobject_desc"> returns all loaded GUI objects.    	 </div>
+		<br>
+		<code class="cpp_func_line_code"> std::vector&lt;SGUILayer&gt;* getLoadedGUIObjects(); </code>
+		<br>
+		<br>
+		----------------------------------------------
+		<br>
+		<br>
+		<div class="cpp_func_param"> Return Value </div>
+		<br>
+		<div class="cpp_func_param_desc"> valid pointer if successful, nullptr otherwise.    	 </div>
+		<br>
+		<div class="cpp_func_param"> Remarks </div>
+		<br>
+		<div class="cpp_func_param_desc"> in debug mode, some GUI objects will be created by the SProfiler for the SProfiler::showOnScreen() function,     an attempt to delete such objects will result in an error (unregisterGUIObject() will return 'true'). You can     check if the GUI object was created by the SProfiler using the SGUIObject::isProfilerObject() function.    	 </div>
+		<br>
+		
+	</div>
+</body>
+</html>

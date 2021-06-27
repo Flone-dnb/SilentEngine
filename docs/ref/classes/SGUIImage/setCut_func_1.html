@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../../doc.css">
-    <title>getAudioEngine - Silent Engine Documentation</title>
+    <title>setCut - Silent Engine Documentation</title>
 </head>
 <body>
     <div class="nav_panel">
@@ -15,10 +15,10 @@
     </div>
     
 	<div class="cpp_doc">
-		<h3 class="cpp_object"> getAudioEngine </h3>
-		<div class="cpp_codeobject_desc"> returns the audio engine that can be used to control master volume, listener position and     create sound mixes.    	 </div>
+		<h3 class="cpp_object"> setCut </h3>
+		<div class="cpp_codeobject_desc"> use to specify the rectangle (in order: left, top, right, bottom corner) for drawing just part of a GUI object (in normalized range: [0, 1]). </div>
 		<br>
-		<code class="cpp_func_line_code"> SAudioEngine*   getAudioEngine(); </code>
+		<code class="cpp_func_line_code"> void setCut(const <a class="cpp_link_ref" href="../SVector/index.html">SVector</a>&amp; vSourceRect); </code>
 		<br>
 		<br>
 		----------------------------------------------
@@ -26,7 +26,7 @@
 		<br>
 		<div class="cpp_func_param"> Remarks </div>
 		<br>
-		<div class="cpp_func_param_desc"> listener position is controlled automatically and set to camera's position on every frame, same with emitters.    	 </div>
+		<div class="cpp_func_param_desc"> for example, passing the (x: 0.0f, y: 0.0f, z: 0.5f, w: 0.5f) will cut the GUI object to render only left-top corner of the object    (all relative to top-left corner, not the origin). </div>
 		<br>
 		
 	</div>

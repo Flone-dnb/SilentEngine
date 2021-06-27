@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../../doc.css">
-    <title>setFullscreenWithCurrentResolution - Silent Engine Documentation</title>
+    <title>setFont - Silent Engine Documentation</title>
 </head>
 <body>
     <div class="nav_panel">
@@ -15,15 +15,15 @@
     </div>
     
 	<div class="cpp_doc">
-		<h3 class="cpp_object"> setFullscreenWithCurrentResolution </h3>
-		<div class="cpp_codeobject_desc"> used to switch between fullscreen and windowed modes. </div>
+		<h3 class="cpp_object"> setFont </h3>
+		<div class="cpp_codeobject_desc"> sets up a font for the text. </div>
 		<br>
-		<code class="cpp_func_line_code"> bool  setFullscreenWithCurrentResolution<br>(<br>&nbsp;&nbsp;&nbsp;bool bFullscreen<br>); </code>
+		<code class="cpp_func_line_code"> bool setFont<br>(<br>&nbsp;&nbsp;&nbsp;const std::wstring&amp; sPathToSprintFont<br>); </code>
 		<br>
 		<br>
-		<div class="cpp_func_param">bFullscreen</div>
+		<div class="cpp_func_param">sPathToSprintFont</div>
 		<br>
-		<div class="cpp_func_param_desc">true for fullscreen mode, false for windowed.</div>
+		<div class="cpp_func_param_desc">path to the .spritefont file containing the font for the text.</div>
 		<br>
 	----------------------------------------------
 	<br>
@@ -31,6 +31,10 @@
 	<div class="cpp_func_param"> Return Value </div>
 	<br>
 	<div class="cpp_func_param_desc"> false if successful, true otherwise. </div>
+	<br>
+	<div class="cpp_func_param"> Remarks </div>
+	<br>
+	<div class="cpp_func_param_desc"> you can call this function again after the GUI object was registered to set a new font without needing to register again. </div>
 	<br>
 	
 </div>

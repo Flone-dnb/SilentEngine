@@ -38,7 +38,7 @@
 	<br>
 	<div class="cpp_func_param"> Remarks </div>
 	<br>
-	<div class="cpp_func_param_desc"> note that you will need to unload the loaded textures, it's not gonna happen automatically,     but all loaded textures will be unloaded in the SApplication's destructor function.     You can reuse already loaded textures on any number of materials you want.     This struct (STextureHandle) is just a handle to the actual texture so you can make copies of it.     It's recommended to use this function in loading moments of your application (ex. loading screen)     as this function may drop the framerate a little.    	 </div>
+	<div class="cpp_func_param_desc"> note that you will need to unload the loaded textures (via SApplication::unloadTextureFromGPU), it won't happen automatically,     but all loaded textures will be unloaded in the SApplication's destructor function.     You can reuse already loaded textures on any number of materials you want.     This struct (STextureHandle) is just a handle to the actual texture so you can make copies of it.     It's recommended to use this function in loading moments of your application (ex. loading screen)     as this function may drop the framerate a little.    	 </div>
 	<br>
 	
 </div>
