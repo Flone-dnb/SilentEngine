@@ -480,6 +480,7 @@ public:
 		/*
 		* desc: returns the audio engine that can be used to control master volume, listener position and
 		create sound mixes.
+		* remarks: listener position is controlled automatically and set to camera's position on every frame, same with emitters.
 		*/
 		SAudioEngine*          getAudioEngine                  ();
 
