@@ -160,7 +160,6 @@ public:
 	//@@Function
 	/*
 	* desc: used to determine if the current screen mode is fullscreen.
-	* return: false if successful, true otherwise.
 	*/
 	bool      isFullscreen                         ();
 	//@@Function
