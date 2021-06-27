@@ -52,7 +52,7 @@ public:
 
 	//@@Function
 	/*
-	* desc: sets the outline of the text.
+	* desc: sets the outline (in RGBA format) of the text.
 	*/
 	void setDrawTextOutline(bool bDrawOutline, const SVector& vOutlineColor);
 

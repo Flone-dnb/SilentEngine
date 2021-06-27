@@ -104,7 +104,7 @@ bool SProfiler::initNeededGUIObjects()
 		pItem->bIsSystemObject = true;
 		pItem->setFont(pApp->sPathToDefaultFont);
 		pItem->setZLayer(INT_MAX);
-		pItem->setDrawTextOutline(true, SVector());
+		pItem->setDrawTextOutline(true, SVector(0.0f, 0.0f, 0.0f, 1.0f));
 		pItem->setText(vText[i]);
 		pApp->registerGUIObject(pItem, true);
 
@@ -122,7 +122,7 @@ bool SProfiler::initNeededGUIObjects()
 		pItem->bIsSystemObject = true;
 		pItem->setFont(pApp->sPathToDefaultFont);
 		pItem->setZLayer(INT_MAX);
-		pItem->setDrawTextOutline(true, SVector());
+		pItem->setDrawTextOutline(true, SVector(0.0f, 0.0f, 0.0f, 1.0f));
 		pItem->setText(L"0.0");
 		pApp->registerGUIObject(pItem, true);
 
