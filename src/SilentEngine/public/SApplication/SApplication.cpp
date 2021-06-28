@@ -1674,58 +1674,56 @@ SApplication* SApplication::getApp()
 	return pApp;
 }
 
-bool SApplication::getCursorPos(SVector* vPos)
+bool SApplication::getCursorPos(SVector& vPos)
 {
 	if (bInitCalled)
 	{
-		if (bMouseCursorShown)
-		{
-			POINT pos;
-
-			if (GetCursorPos(&pos) == 0)
-			{
-				SError::showErrorMessageBoxAndLog(std::to_string(GetLastError()));
-				return true;
-			}
-
-			if (ScreenToClient(hMainWindow, &pos) == 0)
-			{
-				SError::showErrorMessageBoxAndLog(std::to_string(GetLastError()));
-				return true;
-			}
-
-			if (bFullscreen)
-			{
-				// maybe running lower resolution
-				// in this case, the window size will have a native resolution and not (iMainWindowWidth, iMainWindowHeight)
-				RECT rect;
-				int iWindowWidth = 0;
-				int iWindowHeight = 0;
-				if (GetWindowRect(hMainWindow, &rect))
-				{
-					iWindowWidth = rect.right - rect.left;
-					iWindowHeight = rect.bottom - rect.top;
-				}
-				else
-				{
-					return true;
-				}
-
-				vPos->setX(static_cast<float>(pos.x) / iWindowWidth);
-				vPos->setY(static_cast<float>(pos.y) / iWindowHeight);
-			}
-			else
-			{
-				vPos->setX(static_cast<float>(pos.x) / iMainWindowWidth);
-				vPos->setY(static_cast<float>(pos.y) / iMainWindowHeight);
-			}
-
-			return false;
-		}
-		else
+		if (bMouseCursorShown == false)
 		{
 			return true;
 		}
+
+		POINT pos;
+
+		if (GetCursorPos(&pos) == 0)
+		{
+			SError::showErrorMessageBoxAndLog(std::to_string(GetLastError()));
+			return true;
+		}
+
+		if (ScreenToClient(hMainWindow, &pos) == 0)
+		{
+			SError::showErrorMessageBoxAndLog(std::to_string(GetLastError()));
+			return true;
+		}
+
+		if (bFullscreen)
+		{
+			// maybe running lower resolution
+			// in this case, the window size will have a native resolution and not (iMainWindowWidth, iMainWindowHeight)
+			RECT rect;
+			int iWindowWidth = 0;
+			int iWindowHeight = 0;
+			if (GetWindowRect(hMainWindow, &rect))
+			{
+				iWindowWidth = rect.right - rect.left;
+				iWindowHeight = rect.bottom - rect.top;
+			}
+			else
+			{
+				return true;
+			}
+
+			vPos.setX(static_cast<float>(pos.x) / iWindowWidth);
+			vPos.setY(static_cast<float>(pos.y) / iWindowHeight);
+		}
+		else
+		{
+			vPos.setX(static_cast<float>(pos.x) / iMainWindowWidth);
+			vPos.setY(static_cast<float>(pos.y) / iMainWindowHeight);
+		}
+
+		return false;
 	}
 	else
 	{
@@ -1734,12 +1732,50 @@ bool SApplication::getCursorPos(SVector* vPos)
 	}
 }
 
-bool SApplication::getWindowSize(SVector* vSize)
+bool SApplication::getCursor3DPosAndDir(SVector& vPos, SVector& vDir)
+{
+	if (bRunCalled == false)
+	{
+		SError::showErrorMessageBoxAndLog("run() shound be called first.");
+		return true;
+	}
+
+	if (bMouseCursorShown == false)
+	{
+		return true;
+	}
+
+	DirectX::XMFLOAT4X4 proj = SMath::getIdentityMatrix4x4();
+	DirectX::XMStoreFloat4x4(&proj, camera.getProjMatrix());
+
+	SVector vCursorPos;
+	getCursorPos(vCursorPos);
+
+	float fXPosViewSpace = (2.0f * vCursorPos.getX()) / proj(0, 0);
+	float fYPosViewSpace = (-2.0f * vCursorPos.getY()) / proj(1, 1);
+
+	DirectX::XMVECTOR vRayDirViewSpace = DirectX::XMVectorSet(fXPosViewSpace, fYPosViewSpace, 1.0f, 0.0f);
+
+	auto det = DirectX::XMMatrixDeterminant(camera.getViewMatrix());
+
+	// Direction to world space.
+	DirectX::XMFLOAT3 vRayDirWorldSpaceFloat3;
+	DirectX::XMVECTOR vRayDirWorldSpace = DirectX::XMVector3TransformCoord(vRayDirViewSpace, DirectX::XMMatrixInverse(&det, camera.getViewMatrix()));
+	vRayDirWorldSpace = DirectX::XMVector3Normalize(vRayDirWorldSpace);
+	DirectX::XMStoreFloat3(&vRayDirWorldSpaceFloat3, vRayDirWorldSpace);
+
+	vPos = camera.getCameraLocationInWorld();
+	vDir = SVector(vRayDirWorldSpaceFloat3.x, vRayDirWorldSpaceFloat3.y, vRayDirWorldSpaceFloat3.z);
+
+	return false;
+}
+
+bool SApplication::getWindowSize(SVector& vSize)
 {
 	if (bInitCalled)
 	{
-		vSize->setX(static_cast<float>(iMainWindowWidth));
-		vSize->setY(static_cast<float>(iMainWindowHeight));
+		vSize.setX(static_cast<float>(iMainWindowWidth));
+		vSize.setY(static_cast<float>(iMainWindowHeight));
 
 		return false;
 	}

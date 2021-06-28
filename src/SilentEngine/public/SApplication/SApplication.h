@@ -496,7 +496,14 @@ public:
 		* return: false if successful, true otherwise.
 		* remarks: this function will return an error if it was called when the cursor is hidden, or if init() was not called before.
 		*/
-		bool                   getCursorPos                    (SVector* vPos);
+		bool                   getCursorPos                    (SVector& vPos);
+		//@@Function
+		/*
+		* desc: used to retrieve the cursor position in 3D space (camera position) and it's direction from the camera (eyes).
+		* return: false if successful, true otherwise.
+		* remarks: this function will return an error if it was called when the cursor is hidden, or if run() was not called before.
+		*/
+		bool                   getCursor3DPosAndDir            (SVector& vPos, SVector& vDir);
 		//@@Function
 		/*
 		* desc: used to retrieve the main window size.
@@ -504,7 +511,7 @@ public:
 		* return: false if successful, true otherwise.
 		* remarks: should be called after SApplication::init().
 		*/
-		bool                   getWindowSize                   (SVector* vSize);
+		bool                   getWindowSize                   (SVector& vSize);
 		//@@Function
 		/*
 		* desc: used to retrieve the main window handle.
