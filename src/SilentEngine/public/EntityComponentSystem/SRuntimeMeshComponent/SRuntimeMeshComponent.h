@@ -33,10 +33,10 @@ public:
 	//@@Function
 	/*
 	* desc: constructor function.
-	* param "bDisableFrustumCulling": set to true if the mesh data of this component will be changing very rapidly (like moving particles for example),
-	and so we won't recalculate the object's bounds on every setMeshData() call for frustum culling (which will disable the frustum culling
-	for this component only, but slightly reduce the CPU load and... well... increase the GPU load - you should probably benchmark
-	this and see what's better for your game). You can change this setting using the setDisableFrustumCulling() function.
+	* param "bDisableFrustumCulling": set to true if the mesh data of this component will be changing very rapidly (like moving particles for example)
+	and this mesh does not need collision (again, particles for example),
+	so we won't recalculate the object's bounds on every setMeshData() call for frustum culling (which will disable the frustum culling
+	for this component only).
 	*/
 	SRuntimeMeshComponent(std::string sComponentName, bool bDisableFrustumCulling);
 
@@ -56,10 +56,10 @@ public:
 
 	//@@Function
 	/*
-	* desc: set to true if the mesh data of this component will be changing very rapidly (like moving particles for example),
-	and so we won't recalculate the object's bounds on every setMeshData() call for frustum culling (which will disable the frustum culling
-	for this component only, but slightly reduce the CPU load and... well... increase the GPU load - you should probably benchmark
-	this and see what's better for your game). Passing the 'false' will recalculate mesh bounds if there are any mesh data.
+	* desc: set to true if the mesh data of this component will be changing very rapidly (like moving particles for example)
+	and this mesh does not need collision (again, particles for example),
+	so we won't recalculate the object's bounds on every setMeshData() call for frustum culling (which will disable the frustum culling
+	for this component only).
 	*/
 	void setDisableFrustumCulling(bool bDisable);
 
@@ -265,8 +265,6 @@ private:
 	This function is used to then later we can call updateVertexBufferIndex() with this max value.
 	*/
 	void updateVertexBufferMaxIndex(size_t& iCurrentIndex);
-
-	void updateObjectCenter();
 
 	// ------------------------------------------
 

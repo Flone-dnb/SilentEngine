@@ -303,9 +303,6 @@ private:
 	SObjectConstants convertInstancePropsToConstants(const SInstanceProps& instanceData);
 
 
-	void updateObjectCenter();
-
-
 	// ------------------------------------------------------------------------------------
 	
 	std::vector<SObjectConstants> vInstanceData; // "local" instance data, does not represent the actual instance data (if changed updating the frame resources)

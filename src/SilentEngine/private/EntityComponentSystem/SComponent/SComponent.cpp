@@ -553,7 +553,7 @@ void SComponent::unbindResourceUpdates(SComputeShader* pShader)
 	mtxResourceUsed.unlock();
 }
 
-void SComponent::updateBoundsForFrustumCulling()
+void SComponent::updateObjectBounds()
 {
 	DirectX::XMFLOAT3 vMinf3(FLT_MAX, FLT_MAX, FLT_MAX);
 	DirectX::XMFLOAT3 vMaxf3(-FLT_MAX, -FLT_MAX, -FLT_MAX);
@@ -574,6 +574,8 @@ void SComponent::updateBoundsForFrustumCulling()
 	using namespace DirectX; // for easy + and - operators
 	XMStoreFloat3(&bounds.Center, 0.5f * (vMin + vMax));
 	XMStoreFloat3(&bounds.Extents, 0.5f * (vMax - vMin));
+
+	vObjectCenter = SVector(bounds.Center.x, bounds.Center.y, bounds.Center.z);
 }
 
 void SComponent::getAllMeshComponents(std::vector<SComponent*>* pvOpaqueComponents, std::vector<SComponent*>* pvTransparentComponents)

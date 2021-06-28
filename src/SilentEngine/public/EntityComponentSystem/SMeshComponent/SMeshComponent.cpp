@@ -157,13 +157,7 @@ void SMeshComponent::setMeshData(const SMeshData& meshData, bool bAddedRemovedIn
 	this->meshData = meshData;
 	this->meshData.pMeshMaterial = pOldMat;
 
-
-	updateBoundsForFrustumCulling();
-
-
-	updateObjectCenter();
-
-
+	updateObjectBounds();
 
 	if (bAddedRemovedIndices)
 	{

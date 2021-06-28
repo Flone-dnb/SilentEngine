@@ -291,7 +291,7 @@ protected:
 	void bindResourceUpdates(SComputeShader* pShader, const std::string& sResourceName);
 	void unbindResourceUpdates(SComputeShader* pShader);
 
-	void updateBoundsForFrustumCulling();
+	void updateObjectBounds();
 
 
 	friend class SApplication;
@@ -338,7 +338,7 @@ protected:
 	float fCullDistance; // will be null for components that doesn't have mesh data
 	SShader*    pCustomShader; // will be null for components that doesn't have mesh data
 	size_t iMeshComponentsCount; // will be null for components that doesn't have mesh data
-	SVector vObjectCenter; // if updateBoundsForFrustumCulling() is enabled then this value is the center of the mesh, else mesh origin point is used.
+	SVector vObjectCenter; // center of DirectX::BoundingBox bounds (i.e. geometry center, may not be equal to origin).
 
 
 	std::string sComponentName;

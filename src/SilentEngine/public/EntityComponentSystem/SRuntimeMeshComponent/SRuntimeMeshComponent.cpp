@@ -56,7 +56,7 @@ void SRuntimeMeshComponent::setDisableFrustumCulling(bool bDisable)
 
 		if (meshData.getVerticesCount() > 0)
 		{
-			updateBoundsForFrustumCulling();
+			updateObjectBounds();
 		}
 
 		mtxDrawComponent.unlock();
@@ -126,9 +126,7 @@ void SRuntimeMeshComponent::setMeshData(const SMeshData& meshData, bool bAddedRe
 
 	if (bDisableFrustumCulling == false)
 	{
-		updateBoundsForFrustumCulling();
-
-		updateObjectCenter();
+		updateObjectBounds();
 	}
 
 	mtxDrawComponent.unlock();
@@ -473,13 +471,5 @@ void SRuntimeMeshComponent::updateVertexBufferMaxIndex(size_t& iCurrentIndex)
 	if (iIndexInFrameResourceVertexBuffer > iCurrentIndex)
 	{
 		iCurrentIndex = iIndexInFrameResourceVertexBuffer;
-	}
-}
-
-void SRuntimeMeshComponent::updateObjectCenter()
-{
-	if (bDisableFrustumCulling == false)
-	{
-		vObjectCenter = SVector(bounds.Center.x, bounds.Center.y, bounds.Center.z);
 	}
 }
