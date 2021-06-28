@@ -570,11 +570,6 @@ SObjectConstants SMeshComponent::convertInstancePropsToConstants(const SInstance
 	return constants;
 }
 
-void SMeshComponent::updateObjectCenter()
-{
-	vObjectCenter = SVector(bounds.Center.x, bounds.Center.y, bounds.Center.z);
-}
-
 void SMeshComponent::updateWorldMatrix()
 {
 	mtxComponentProps.lock();
