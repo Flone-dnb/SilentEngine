@@ -492,7 +492,7 @@ public:
 		//@@Function
 		/*
 		* desc: used to retrieve the cursor position.
-		* param "vPos": position in window pixels.
+		* param "vPos": position in normalized range [0; 1], may contain negative values if the cursor is outside of the window.
 		* return: false if successful, true otherwise.
 		* remarks: this function will return an error if it was called when the cursor is hidden, or if init() was not called before.
 		*/

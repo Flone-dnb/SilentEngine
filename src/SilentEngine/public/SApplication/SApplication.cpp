@@ -1524,21 +1524,24 @@ bool SApplication::setScreenResolution(SScreenResolution screenResolution)
 
 			getScreenParams(true);
 
-			/*DXGI_MODE_DESC desc;
+			DXGI_MODE_DESC desc;
 			desc.Format = BackBufferFormat;
 			desc.Width  = iMainWindowWidth;
 			desc.Height = iMainWindowHeight;
 			desc.RefreshRate.Numerator   = iRefreshRateNumerator;
 			desc.RefreshRate.Denominator = iRefreshRateDenominator;
 			desc.Scaling = iScaling;
-			desc.ScanlineOrdering = iScanlineOrder;*/
+			desc.ScanlineOrdering = iScanlineOrder;
 
 			
 			std::lock_guard<std::mutex> guard(mtxDraw);
 
 			flushCommandQueue();
 
-			//pSwapChain->ResizeTarget(&desc);
+			if (bFullscreen == false)
+			{
+				pSwapChain->ResizeTarget(&desc); // resize window
+			}
 
 			// Resize the buffers.
 			onResize();
@@ -1691,14 +1694,36 @@ bool SApplication::getCursorPos(SVector* vPos)
 				return true;
 			}
 
-			vPos->setX(static_cast<float>(pos.x));
-			vPos->setY(static_cast<float>(pos.y));
+			if (bFullscreen)
+			{
+				// maybe running lower resolution
+				// in this case, the window size will have a native resolution and not (iMainWindowWidth, iMainWindowHeight)
+				RECT rect;
+				int iWindowWidth = 0;
+				int iWindowHeight = 0;
+				if (GetWindowRect(hMainWindow, &rect))
+				{
+					iWindowWidth = rect.right - rect.left;
+					iWindowHeight = rect.bottom - rect.top;
+				}
+				else
+				{
+					return true;
+				}
+
+				vPos->setX(static_cast<float>(pos.x) / iWindowWidth);
+				vPos->setY(static_cast<float>(pos.y) / iWindowHeight);
+			}
+			else
+			{
+				vPos->setX(static_cast<float>(pos.x) / iMainWindowWidth);
+				vPos->setY(static_cast<float>(pos.y) / iMainWindowHeight);
+			}
 
 			return false;
 		}
 		else
 		{
-			SError::showErrorMessageBoxAndLog("the cursor is hidden.");
 			return true;
 		}
 	}
