@@ -54,7 +54,14 @@ public:
 	virtual ~SMeshComponent() override;
 
 
-
+	//@@Function
+	/*
+	* desc: use to set the collision type for this mesh.
+	* remarks: default preset is SCollisionPreset::SCP_BOX (simplified box around the mesh). If the vertex buffer of this mesh is used
+	in the compute shader (via call to SMeshComponent::getMeshDataAsComputeResource()) then any
+	call to this function will cause error.
+	*/
+	void setCollisionPreset    (SCollisionPreset preset);
 	//@@Function
 	/*
 	* desc: determines if the component should be visible (i.e. drawn).
@@ -148,7 +155,7 @@ public:
 	equal or more that this value then the mesh will not be drawn.
 	* remarks: if using instancing then the distance between the camera and the instance location is considered instead,
 	the cull distance test will be executed in the frustum culling, so if the frustum culling is disabled then the
-	cull distance is not gonna work too.
+	cull distance is not going to work too.
 	*/
 	void setCullDistance       (float fCullDistance);
 
@@ -186,6 +193,12 @@ public:
 	* desc: every 2 indices will be considered as a line.
 	*/
 	void      setDrawAsLines(bool bDrawAsLines);
+
+	//@@Function
+	/*
+	* desc: used to retrieve the collision preset that this mesh is using.
+	*/
+	SCollisionPreset getCollisionPreset() const;
 
 	//@@Function
 	/*
@@ -250,7 +263,7 @@ public:
 	/*
 	* desc: used to retrieve the mesh data as a resource for SComputeShader.
 	* param "bGetVertexBuffer": set true to get vertex buffer as a resource for SComputeShader, false for index buffer. 'True' will also
-	disable the frustum culling for this component (even if you are not using compute shader anymore).
+	disable the frustum culling and collision for this component (even if you are not using compute shader anymore).
 	* return: nullptr if the component is not spawned (i.e. no buffer was created), valid pointer otherwise.
 	* remarks: pass this pointer to your compute shader in setAddMeshResource(), do not 'delete' this pointer (compute shader needs
 	this pointer for some time, it will delete it for you in its destructor). You can delete this mesh even if the compute shader is working,

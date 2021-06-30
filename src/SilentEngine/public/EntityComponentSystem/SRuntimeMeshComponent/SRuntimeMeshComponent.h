@@ -49,6 +49,14 @@ public:
 
 	//@@Function
 	/*
+	* desc: use to set the collision type for this mesh.
+	* remarks: default preset is SCollisionPreset::SCP_BOX (simplified box around the mesh). If 'bDisableFrustumCulling' is enabled then any
+	call to this function will cause error.
+	*/
+	void setCollisionPreset(SCollisionPreset preset);
+
+	//@@Function
+	/*
 	* desc: determines if the component should be visible (i.e. drawn).
 	* param "bVisible": true by default.
 	*/
@@ -60,6 +68,7 @@ public:
 	and this mesh does not need collision (again, particles for example),
 	so we won't recalculate the object's bounds on every setMeshData() call for frustum culling (which will disable the frustum culling
 	for this component only).
+	* remarks: this will also disable collision.
 	*/
 	void setDisableFrustumCulling(bool bDisable);
 
@@ -152,6 +161,12 @@ public:
 	* desc: used to set the iCustomProperty member of the object's constant buffer (in HLSL).
 	*/
 	void      setCustomShaderProperty(unsigned int iCustomProperty);
+
+	//@@Function
+	/*
+	* desc: used to retrieve the collision preset that this mesh is using.
+	*/
+	SCollisionPreset getCollisionPreset() const;
 
 	//@@Function
 	/*

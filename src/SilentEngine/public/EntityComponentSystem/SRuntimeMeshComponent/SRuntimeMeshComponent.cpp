@@ -41,6 +41,23 @@ SRuntimeMeshComponent::~SRuntimeMeshComponent()
 	delete renderData.pGeometry;
 }
 
+void SRuntimeMeshComponent::setCollisionPreset(SCollisionPreset preset)
+{
+	if (bDisableFrustumCulling)
+	{
+		SError::showErrorMessageBoxAndLog("can't enable collision for this mesh because it has frustum culling disabled.");
+	}
+
+	collisionPreset = preset;
+
+	if (meshData.getVerticesCount())
+	{
+		std::lock_guard<std::mutex> lock(mtxComponentProps);
+
+		updateObjectBounds();
+	}
+}
+
 void SRuntimeMeshComponent::setVisibility(bool bVisible)
 {
 	this->bVisible = bVisible;
@@ -52,14 +69,16 @@ void SRuntimeMeshComponent::setDisableFrustumCulling(bool bDisable)
 
 	if (bDisableFrustumCulling == false)
 	{
-		mtxDrawComponent.lock();
+		std::lock_guard<std::mutex> guard(mtxDrawComponent);
 
 		if (meshData.getVerticesCount() > 0)
 		{
 			updateObjectBounds();
 		}
-
-		mtxDrawComponent.unlock();
+	}
+	else
+	{
+		collisionPreset = SCollisionPreset::SCP_NO_COLLISION;
 	}
 }
 
@@ -293,6 +312,11 @@ void SRuntimeMeshComponent::setCustomShaderProperty(unsigned int iCustomProperty
 	renderData.iUpdateCBInFrameResourceCount = SFRAME_RES_COUNT;
 
 	mtxComponentProps.unlock();
+}
+
+SCollisionPreset SRuntimeMeshComponent::getCollisionPreset() const
+{
+	return collisionPreset;
 }
 
 SVector SRuntimeMeshComponent::getTextureUVOffset() const

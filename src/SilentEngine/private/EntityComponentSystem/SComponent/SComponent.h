@@ -41,6 +41,15 @@ struct SComputeResourceBind
 	std::string sResource;
 };
 
+enum class SCollisionPreset
+{
+	SCP_NO_COLLISION,
+	SCP_BOX, // simplified box around the mesh
+	SCP_SPHERE, // simplified sphere around the mesh
+	SCP_COMPLEX, // uses triangle mesh as a collision
+	SCP_CUSTOM,
+};
+
 //@@Class
 /*
 The class represents a Component (in Entity Component System).
@@ -292,6 +301,7 @@ protected:
 	void unbindResourceUpdates(SComputeShader* pShader);
 
 	void updateObjectBounds();
+	void updateSphereBounds();
 
 
 	friend class SApplication;
@@ -302,7 +312,6 @@ protected:
 	friend class SComputeShader;
 	friend class SLightComponent;
 	friend class SAudioComponent;
-
 
 	SComponent* pParentComponent;
 	SContainer* pContainer;
@@ -332,13 +341,16 @@ protected:
 	std::vector<SComputeResourceBind> vResourceUsed;
 
 
-	SRenderItem renderData; // will be null for components that doesn't have mesh data
-	SMeshData   meshData; // will be null for components that doesn't have mesh data
-	DirectX::BoundingBox bounds; // will be null for components that doesn't have mesh data
-	float fCullDistance; // will be null for components that doesn't have mesh data
-	SShader*    pCustomShader; // will be null for components that doesn't have mesh data
-	size_t iMeshComponentsCount; // will be null for components that doesn't have mesh data
-	SVector vObjectCenter; // center of DirectX::BoundingBox bounds (i.e. geometry center, may not be equal to origin).
+	// will be null for components that doesn't have mesh data
+	SRenderItem renderData;
+	SMeshData   meshData;
+	DirectX::BoundingBox boxCollision; // always exists if collision enabled
+	DirectX::BoundingSphere sphereCollision;
+	float fCullDistance;
+	SShader*    pCustomShader;
+	size_t iMeshComponentsCount;
+	SVector vObjectCenter; // center of collision bounds (i.e. geometry center, may not be equal to the origin).
+	SCollisionPreset collisionPreset;
 
 
 	std::string sComponentName;

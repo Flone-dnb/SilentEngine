@@ -69,7 +69,8 @@ public:
 	* desc: adds component to container.
 	* param "pComponent": component to add.
 	* return: false if successful, true otherwise.
-	* remarks: don't delete added (addComponentToContainer()) components in destructor, they will be deleted when
+	* remarks: this function will reset component's local location.
+	Don't delete added (addComponentToContainer()) components in destructor, they will be deleted when
 	parent's destructor will be called (after your SContainer's destructor). Moreover, it's recommended to mark your SContainer's destructor
 	as virtual and override.
 	*/

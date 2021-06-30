@@ -36,6 +36,23 @@ SMeshComponent::~SMeshComponent()
 	delete renderData.pGeometry;
 }
 
+void SMeshComponent::setCollisionPreset(SCollisionPreset preset)
+{
+	if (bVertexBufferUsedInComputeShader)
+	{
+		SError::showErrorMessageBoxAndLog("can't enable collision for this mesh because its vertex buffer is used in the compute shader.");
+	}
+
+	collisionPreset = preset;
+
+	if (meshData.getVerticesCount() > 0)
+	{
+		std::lock_guard<std::mutex> lock(mtxComponentProps);
+
+		updateObjectBounds();
+	}
+}
+
 void SMeshComponent::setVisibility(bool bVisible)
 {
 	this->bVisible = bVisible;
@@ -371,6 +388,11 @@ void SMeshComponent::setDrawAsLines(bool bDrawAsLines)
 	}
 }
 
+SCollisionPreset SMeshComponent::getCollisionPreset() const
+{
+	return collisionPreset;
+}
+
 SVector SMeshComponent::getTextureUVOffset() const
 {
 	return renderData.getTextureUVOffset();
@@ -420,6 +442,7 @@ SMeshDataComputeResource* SMeshComponent::getMeshDataAsComputeResource(bool bGet
 	{
 		// compute shader in destructor will set this to 'false'
 		bVertexBufferUsedInComputeShader = true;
+		collisionPreset = SCollisionPreset::SCP_NO_COLLISION;
 	}
 
 	return pMeshDataResource;

@@ -3219,7 +3219,6 @@ void SApplication::drawComponent(SComponent* pComponent, bool bUsingCustomResour
 			bDrawThisComponent = true;
 
 
-
 			bUsingInstancing = pMeshComponent->bUseInstancing;
 
 			if (pMeshComponent->bUseInstancing)
@@ -3236,7 +3235,6 @@ void SApplication::drawComponent(SComponent* pComponent, bool bUsingCustomResour
 					bDrawThisComponent = false;
 				}
 			}
-
 
 
 			if (pMeshComponent->bVertexBufferUsedInComputeShader)
@@ -5843,7 +5841,7 @@ bool SApplication::doFrustumCulling(SComponent* pComponent)
 	cameraBoundingFrustumOnLastMainPassUpdate.Transform(localSpaceFrustum, viewToObjectLocal);
 
 	// Perform the box/frustum intersection test in local space.
-	if (localSpaceFrustum.Contains(pComponent->bounds) != DirectX::DISJOINT)
+	if (localSpaceFrustum.Contains(pComponent->boxCollision) != DirectX::DISJOINT)
 	{
 		// Draw this component.
 		return true;
@@ -5898,7 +5896,7 @@ void SApplication::doFrustumCullingOnInstancedMesh(SMeshComponent* pMeshComponen
 		cameraBoundingFrustumOnLastMainPassUpdate.Transform(localSpaceFrustum, viewToObjectLocal);
 
 		// Perform the box/frustum intersection test in local space.
-		if (localSpaceFrustum.Contains(pMeshComponent->bounds) != DirectX::DISJOINT)
+		if (localSpaceFrustum.Contains(pMeshComponent->boxCollision) != DirectX::DISJOINT)
 		{
 			// Draw this instance.
 			pMeshComponent->vFrameResourcesInstancedData[iCurrentFrameResourceIndex]->

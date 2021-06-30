@@ -31,6 +31,8 @@ public:
 
 private:
 
+	SFormatOBJImporter() = default;
+
 	static SVector readValues(const std::string& sLine, size_t iReadStartIndex, size_t iValueCount);
 	static void    readVertex(const std::string& sLine, size_t& iReadIndex, int& iVertexIndex, int& iUVIndex, int& iNormalIndex);
 	static std::string  readVertexValue(const std::string& sLine, size_t& iReadIndex);

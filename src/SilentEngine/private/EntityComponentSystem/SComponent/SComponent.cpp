@@ -41,6 +41,8 @@ SComponent::SComponent()
 	vLocalXAxisVector     = SVector(1.0f, 0.0f, 0.0f);
 	vLocalYAxisVector     = SVector(0.0f, 1.0f, 0.0f);
 	vLocalZAxisVector     = SVector(0.0f, 0.0f, 1.0f);
+
+	collisionPreset = SCollisionPreset::SCP_BOX;
 }
 
 SComponent::~SComponent()
@@ -572,10 +574,127 @@ void SComponent::updateObjectBounds()
 	}
 
 	using namespace DirectX; // for easy + and - operators
-	XMStoreFloat3(&bounds.Center, 0.5f * (vMin + vMax));
-	XMStoreFloat3(&bounds.Extents, 0.5f * (vMax - vMin));
+	DirectX::XMStoreFloat3(&boxCollision.Center, 0.5f * (vMin + vMax));
+	DirectX::XMStoreFloat3(&boxCollision.Extents, 0.5f * (vMax - vMin));
 
-	vObjectCenter = SVector(bounds.Center.x, bounds.Center.y, bounds.Center.z);
+	vObjectCenter = SVector(boxCollision.Center.x, boxCollision.Center.y, boxCollision.Center.z);
+
+	if (collisionPreset == SCollisionPreset::SCP_SPHERE)
+	{
+		updateSphereBounds();
+	}
+}
+
+void SComponent::updateSphereBounds()
+{
+	// CreateFromPoints() version for SMeshVertex
+
+	// Find the points with minimum and maximum x, y, and z
+	DirectX::XMFLOAT3 Min3X(FLT_MAX, FLT_MAX, FLT_MAX), Max3X(-FLT_MAX, -FLT_MAX, -FLT_MAX);
+	DirectX::XMFLOAT3 Min3Y(FLT_MAX, FLT_MAX, FLT_MAX), Max3Y(-FLT_MAX, -FLT_MAX, -FLT_MAX);
+	DirectX::XMFLOAT3 Min3Z(FLT_MAX, FLT_MAX, FLT_MAX), Max3Z(-FLT_MAX, -FLT_MAX, -FLT_MAX);
+
+	DirectX::XMVECTOR MinX = DirectX::XMLoadFloat3(&Min3X);
+	DirectX::XMVECTOR MaxX = DirectX::XMLoadFloat3(&Max3X);
+
+	DirectX::XMVECTOR MinY = DirectX::XMLoadFloat3(&Min3Y);
+	DirectX::XMVECTOR MaxY = DirectX::XMLoadFloat3(&Max3Y);
+
+	DirectX::XMVECTOR MinZ = DirectX::XMLoadFloat3(&Min3Z);
+	DirectX::XMVECTOR MaxZ = DirectX::XMLoadFloat3(&Max3Z);
+
+	std::vector<SMeshVertex> vVerts = meshData.getVertices();
+
+	for (size_t i = 0; i < vVerts.size(); i++)
+	{
+		DirectX::XMVECTOR Point = DirectX::XMLoadFloat3(&vVerts[i].vPosition);
+
+		float px = DirectX::XMVectorGetX(Point);
+		float py = DirectX::XMVectorGetY(Point);
+		float pz = DirectX::XMVectorGetZ(Point);
+
+		if (px < DirectX::XMVectorGetX(MinX))
+			MinX = Point;
+
+		if (px > DirectX::XMVectorGetX(MaxX))
+			MaxX = Point;
+
+		if (py < DirectX::XMVectorGetY(MinY))
+			MinY = Point;
+
+		if (py > DirectX::XMVectorGetY(MaxY))
+			MaxY = Point;
+
+		if (pz < DirectX::XMVectorGetZ(MinZ))
+			MinZ = Point;
+
+		if (pz > DirectX::XMVectorGetZ(MaxZ))
+			MaxZ = Point;
+	}
+
+	// Use the min/max pair that are farthest apart to form the initial sphere.
+	DirectX::XMVECTOR DeltaX = DirectX::XMVectorSubtract(MaxX, MinX);
+	DirectX::XMVECTOR DistX = DirectX::XMVector3Length(DeltaX);
+
+	DirectX::XMVECTOR DeltaY = DirectX::XMVectorSubtract(MaxY, MinY);
+	DirectX::XMVECTOR DistY = DirectX::XMVector3Length(DeltaY);
+
+	DirectX::XMVECTOR DeltaZ = DirectX::XMVectorSubtract(MaxZ, MinZ);
+	DirectX::XMVECTOR DistZ = DirectX::XMVector3Length(DeltaZ);
+
+	DirectX::XMVECTOR vCenter;
+	DirectX::XMVECTOR vRadius;
+
+	if (DirectX::XMVector3Greater(DistX, DistY))
+	{
+		if (DirectX::XMVector3Greater(DistX, DistZ))
+		{
+			// Use min/max x.
+			vCenter = DirectX::XMVectorLerp(MaxX, MinX, 0.5f);
+			vRadius = DirectX::XMVectorScale(DistX, 0.5f);
+		}
+		else
+		{
+			// Use min/max z.
+			vCenter = DirectX::XMVectorLerp(MaxZ, MinZ, 0.5f);
+			vRadius = DirectX::XMVectorScale(DistZ, 0.5f);
+		}
+	}
+	else // Y >= X
+	{
+		if (DirectX::XMVector3Greater(DistY, DistZ))
+		{
+			// Use min/max y.
+			vCenter = DirectX::XMVectorLerp(MaxY, MinY, 0.5f);
+			vRadius = DirectX::XMVectorScale(DistY, 0.5f);
+		}
+		else
+		{
+			// Use min/max z.
+			vCenter = DirectX::XMVectorLerp(MaxZ, MinZ, 0.5f);
+			vRadius = DirectX::XMVectorScale(DistZ, 0.5f);
+		}
+	}
+
+	// Add any points not inside the sphere.
+	for (size_t i = 0; i < vVerts.size(); i++)
+	{
+		DirectX::XMVECTOR Point = DirectX::XMLoadFloat3(&vVerts[i].vPosition);
+
+		DirectX::XMVECTOR Delta = DirectX::XMVectorSubtract(Point, vCenter);
+
+		DirectX::XMVECTOR Dist = DirectX::XMVector3Length(Delta);
+
+		if (DirectX::XMVector3Greater(Dist, vRadius))
+		{
+			// Adjust sphere to include the new point.
+			vRadius = DirectX::XMVectorScale(DirectX::XMVectorAdd(vRadius, Dist), 0.5f);
+			vCenter = DirectX::XMVectorAdd(vCenter, DirectX::XMVectorMultiply(DirectX::XMVectorSubtract(DirectX::XMVectorReplicate(1.0f), DirectX::XMVectorDivide(vRadius, Dist)), Delta));
+		}
+	}
+
+	DirectX::XMStoreFloat3(&sphereCollision.Center, vCenter);
+	DirectX::XMStoreFloat(&sphereCollision.Radius, vRadius);
 }
 
 void SComponent::getAllMeshComponents(std::vector<SComponent*>* pvOpaqueComponents, std::vector<SComponent*>* pvTransparentComponents)
