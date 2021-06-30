@@ -36,7 +36,7 @@ public:
 	* param "bDisableFrustumCulling": set to true if the mesh data of this component will be changing very rapidly (like moving particles for example)
 	and this mesh does not need collision (again, particles for example),
 	so we won't recalculate the object's bounds on every setMeshData() call for frustum culling (which will disable the frustum culling
-	for this component only).
+	for this component only). This will also disable collision.
 	*/
 	SRuntimeMeshComponent(std::string sComponentName, bool bDisableFrustumCulling);
 

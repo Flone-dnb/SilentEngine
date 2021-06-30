@@ -34,6 +34,11 @@ SRuntimeMeshComponent::SRuntimeMeshComponent(std::string sComponentName, bool bD
 	bNewMeshData = false;
 
 	this->bDisableFrustumCulling = bDisableFrustumCulling;
+
+	if (bDisableFrustumCulling)
+	{
+		collisionPreset = SCollisionPreset::SCP_NO_COLLISION;
+	}
 }
 
 SRuntimeMeshComponent::~SRuntimeMeshComponent()
