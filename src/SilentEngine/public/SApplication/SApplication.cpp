@@ -5861,8 +5861,6 @@ void SApplication::doFrustumCullingOnInstancedMesh(SMeshComponent* pMeshComponen
 
 	UINT64 iVisibleInstanceCount = 0;
 
-	float fCullDistance = pMeshComponent->fCullDistance;
-
 	for (size_t i = 0; i < pMeshComponent->vInstanceData.size(); i++)
 	{
 		DirectX::XMMATRIX instanceWorld =
@@ -5874,7 +5872,7 @@ void SApplication::doFrustumCullingOnInstancedMesh(SMeshComponent* pMeshComponen
 		DirectX::XMStoreFloat4x4(&vInstanceWorldFloat4x4, instanceWorld);
 		SVector vInstanceLocationInWorld(vInstanceWorldFloat4x4._41, vInstanceWorldFloat4x4._42, vInstanceWorldFloat4x4._43);
 
-		if ((vInstanceLocationInWorld - camera.getCameraLocationInWorld()).length() >= fCullDistance)
+		if ((vInstanceLocationInWorld - camera.getCameraLocationInWorld()).length() >= pMeshComponent->fCullDistance)
 		{
 			continue;
 		}
