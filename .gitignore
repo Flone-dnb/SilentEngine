@@ -6,6 +6,7 @@ ide/res/
 tests/.vs/
 tests/x64/
 tests/shaders/*
+tests/res/
 tests/last_error.log
 tests/_temp_shaders_pdb
 ide/*.pdb

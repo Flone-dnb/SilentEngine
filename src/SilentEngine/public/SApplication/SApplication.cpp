@@ -6037,7 +6037,7 @@ void SApplication::initCompileShadersInRelease()
 	bCompileShadersInRelease = true;
 }
 
-bool SApplication::init(const std::wstring& sMainWindowClassName)
+bool SApplication::init(const std::wstring& sMainWindowClassName, bool bDisableProfilerGUI)
 {
 	this->sMainWindowClassName = sMainWindowClassName;
 
@@ -6148,11 +6148,14 @@ bool SApplication::init(const std::wstring& sMainWindowClassName)
 	}
 
 #if defined(DEBUG) || defined(_DEBUG)
-	// Init SProfiler GUI.
-
-	if (pProfiler->initNeededGUIObjects())
+	if (bDisableProfilerGUI == false)
 	{
-		return true;
+		// Init SProfiler GUI.
+
+		if (pProfiler->initNeededGUIObjects())
+		{
+			return true;
+		}
 	}
 #endif
 

@@ -144,7 +144,8 @@ XCOPY "$(SolutionDir)..\shaders" "$(SolutionDir)..\tests\shaders\" /S /Y</Comman
     </Link>
     <PostBuildEvent>
       <Command>copy /Y "$(SolutionDir)..\shaders\" "$(SolutionDir)..\tests\shaders\"
-XCOPY "$(SolutionDir)..\shaders" "$(SolutionDir)..\tests\shaders\" /S /Y</Command>
+XCOPY "$(SolutionDir)..\shaders" "$(SolutionDir)..\tests\shaders\" /S /Y
+XCOPY "$(SolutionDir)..\res" "$(SolutionDir)..\tests\res\" /S /Y</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -167,7 +168,8 @@ XCOPY "$(SolutionDir)..\shaders" "$(SolutionDir)..\tests\shaders\" /S /Y</Comman
     </Link>
     <PostBuildEvent>
       <Command>copy /Y "$(SolutionDir)..\shaders\" "$(SolutionDir)..\tests\shaders\"
-XCOPY "$(SolutionDir)..\shaders" "$(SolutionDir)..\tests\shaders\" /S /Y</Command>
+XCOPY "$(SolutionDir)..\shaders" "$(SolutionDir)..\tests\shaders\" /S /Y
+XCOPY "$(SolutionDir)..\res" "$(SolutionDir)..\tests\res\" /S /Y</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

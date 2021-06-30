@@ -19,7 +19,7 @@ TEST_CASE("Initialize and run the engine with default settings.", "[MainTests::i
 		//app.initCompileShadersInRelease();  // uncomment for more fps in debug build
 		//app.initDisableD3DDebugLayer(); // not recommended, but uncomment for more fps in debug build
 		std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_BETWEEN_TESTS_MS));
-		if (app.init(L"MainWindow_" + std::to_wstring(time(0))))
+		if (app.init(L"MainWindow_" + std::to_wstring(time(0)), true))
 		{
 			promiseReady.set_value(true);
 			promiseFinishRun.set_value(true);
@@ -62,7 +62,7 @@ TEST_CASE("Register/unregister materials.", "[MainTests::registerUnregisterMater
 		//app.initCompileShadersInRelease();  // uncomment for more fps in debug build
 		//app.initDisableD3DDebugLayer(); // not recommended, but uncomment for more fps in debug build
 		std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_BETWEEN_TESTS_MS));
-		if (app.init(L"MainWindow_" + std::to_wstring(time(0))))
+		if (app.init(L"MainWindow_" + std::to_wstring(time(0)), true))
 		{
 			promiseReady.set_value(true);
 			promiseFinishRun.set_value(true);
@@ -152,7 +152,7 @@ TEST_CASE("Load/unload textures.", "[MainTests::loadUnloadTextures]") {
 		//app.initCompileShadersInRelease();  // uncomment for more fps in debug build
 		//app.initDisableD3DDebugLayer(); // not recommended, but uncomment for more fps in debug build
 		std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_BETWEEN_TESTS_MS));
-		if (app.init(L"MainWindow_" + std::to_wstring(time(0))))
+		if (app.init(L"MainWindow_" + std::to_wstring(time(0)), true))
 		{
 			promiseReady.set_value(true);
 			promiseFinishRun.set_value(true);
@@ -221,7 +221,7 @@ TEST_CASE("Compile custom shader.", "[MainTests::compileCustomShader]") {
 		//app.initCompileShadersInRelease();  // uncomment for more fps in debug build
 		//app.initDisableD3DDebugLayer(); // not recommended, but uncomment for more fps in debug build
 		std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_BETWEEN_TESTS_MS));
-		if (app.init(L"MainWindow_" + std::to_wstring(time(0))))
+		if (app.init(L"MainWindow_" + std::to_wstring(time(0)), true))
 		{
 			promiseReady.set_value(true);
 			promiseFinishRun.set_value(true);
@@ -288,7 +288,7 @@ TEST_CASE("Compile custom compute shader.", "[MainTests::compileCustomComputeSha
 		//app.initCompileShadersInRelease();  // uncomment for more fps in debug build
 		//app.initDisableD3DDebugLayer(); // not recommended, but uncomment for more fps in debug build
 		std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_BETWEEN_TESTS_MS));
-		if (app.init(L"MainWindow_" + std::to_wstring(time(0))))
+		if (app.init(L"MainWindow_" + std::to_wstring(time(0)), true))
 		{
 			promiseReady.set_value(true);
 			promiseFinishRun.set_value(true);
@@ -327,7 +327,7 @@ TEST_CASE("Compile custom compute shader.", "[MainTests::compileCustomComputeSha
 	std::vector<float> vMatrix1(iMatrixSize * 3, 1.0f);
 	std::vector<float> vMatrix2(iMatrixSize * 3, 1.0f);
 	pShader->compileShader(L"assets/test_matrix_compute.hlsl", L"matrixCalc");
-	if (pShader->setAdd32BitConstant(iMatrixSize, "fMatrixSize", 0))
+	if (pShader->setAdd32BitConstant(static_cast<float>(iMatrixSize), "fMatrixSize", 0))
 	{
 		REQUIRE(false);
 	}
@@ -359,7 +359,7 @@ TEST_CASE("Compile custom compute shader.", "[MainTests::compileCustomComputeSha
 	std::function<void(std::vector<char*>, std::vector<size_t>)> lambda = [&promiseShaderFinish](std::vector<char*> vData, std::vector<size_t> vSize){
 		std::vector<float> vOutMatrix;
 
-		size_t iCount = vSize[0] / static_cast<float>(sizeof(float));
+		size_t iCount = static_cast<size_t>(vSize[0] / sizeof(float));
 		for (size_t i = 0; i < iCount; i++)
 		{
 			float fValue = 0.0f;

@@ -141,7 +141,7 @@ public:
 		* return: false if successful, true otherwise.
 		* remarks: should be called before SApplication::run().
 		*/
-		bool            init								   (const std::wstring& sMainWindowClassName = L"MainWindow");
+		bool            init								   (const std::wstring& sMainWindowClassName = L"MainWindow", bool bDisableProfilerGUI = false);
 		//@@Function
 		/*
 		* desc: starts all essential engine systems, the main window will now process window messages, render new frames and etc.
