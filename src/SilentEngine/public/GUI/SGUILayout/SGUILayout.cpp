@@ -19,6 +19,7 @@
 SGUILayout::SGUILayout(const std::string& sObjectName, float fWidth, float fHeight, SLayoutType layoutType, bool bExpandItems) : SGUIObject(sObjectName)
 {
 	objectType = SGUIType::SGT_LAYOUT;
+	layoutAlignment = SLayoutAlignment::SLA_LEFT;
 	this->layoutType = layoutType;
 	this->bExpandItems = bExpandItems;
 
@@ -121,6 +122,16 @@ void SGUILayout::setScale(const SVector& vScale)
 #if defined(DEBUG) || defined(_DEBUG)
 	pDebugLayoutFillImage->setScale(vScale);
 #endif
+}
+
+void SGUILayout::setAlignment(SLayoutAlignment alignment)
+{
+	layoutAlignment = alignment;
+
+	if (bIsRegistered)
+	{
+		recalculateSizeToKeepScaling();
+	}
 }
 
 #if defined(DEBUG) || defined(_DEBUG)
@@ -252,6 +263,8 @@ void SGUILayout::recalculateSizeToKeepScaling()
 
 		SVector vChildSize = vChilds[i].pChild->getFullSizeInPixels();
 
+		vChilds[i].pChild->origin = DirectX::SimpleMath::Vector2(0.0f, 0.0f);
+
 		if (layoutType == SLayoutType::SLT_HORIZONTAL)
 		{
 			vScreenScale.y = fFullHeight / vChildSize.getY();
@@ -265,6 +278,17 @@ void SGUILayout::recalculateSizeToKeepScaling()
 			else
 			{
 				vChildPos.x += fPosBefore;
+
+				if (layoutAlignment == SLayoutAlignment::SLA_CENTER)
+				{
+					vChildPos.y += fHeight / 2.0f;
+					vChilds[i].pChild->origin = DirectX::SimpleMath::Vector2(0.5f, 0.0f);
+				}
+				else if (layoutAlignment == SLayoutAlignment::SLA_RIGHT)
+				{
+					vChildPos.y += fHeight;
+					vChilds[i].pChild->origin = DirectX::SimpleMath::Vector2(1.0f, 0.0f);
+				}
 
 				vChilds[i].pChild->vSizeToKeep = SVector(fWidth * (vChilds[i].iRatio / static_cast<float>(iFullRatio)), fHeight);
 				vChilds[i].pChild->recalculateSizeToKeepScaling();
@@ -286,6 +310,17 @@ void SGUILayout::recalculateSizeToKeepScaling()
 			{
 				vChildPos.y += fPosBefore;
 
+				if (layoutAlignment == SLayoutAlignment::SLA_CENTER)
+				{
+					vChildPos.x += fWidth / 2.0f;
+					vChilds[i].pChild->origin = DirectX::SimpleMath::Vector2(0.5f, 0.0f);
+				}
+				else if (layoutAlignment == SLayoutAlignment::SLA_RIGHT)
+				{
+					vChildPos.x += fWidth;
+					vChilds[i].pChild->origin = DirectX::SimpleMath::Vector2(1.0f, 0.0f);
+				}
+
 				vChilds[i].pChild->vSizeToKeep = SVector(fWidth, fHeight * (vChilds[i].iRatio / static_cast<float>(iFullRatio)));
 				vChilds[i].pChild->recalculateSizeToKeepScaling();
 			}
@@ -299,7 +334,6 @@ void SGUILayout::recalculateSizeToKeepScaling()
 		}
 		else
 		{
-			vChilds[i].pChild->origin = DirectX::SimpleMath::Vector2(0.0f, 0.0f);
 			vChilds[i].pChild->layoutScreenScale = DirectX::XMFLOAT2(1.0f, 1.0f);
 		}
 

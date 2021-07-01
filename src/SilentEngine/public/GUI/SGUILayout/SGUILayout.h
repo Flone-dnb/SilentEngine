@@ -30,6 +30,13 @@ enum class SLayoutType
 	SLT_VERTICAL,
 };
 
+enum class SLayoutAlignment
+{
+	SLA_LEFT,
+	SLA_CENTER,
+	SLA_RIGHT,
+};
+
 //@@Class
 /*
 This class represents a layout that can have child GUI object.
@@ -77,6 +84,12 @@ public:
 	* desc: use to set the scaling of the GUI object.
 	*/
 	virtual void setScale(const SVector& vScale) override;
+
+	//@@Function
+	/*
+	* desc: use to set the alignment of layout child objects (only for non expanding layouts (bExpandItems == false)).
+	*/
+	void setAlignment(SLayoutAlignment alignment);
 
 #if defined(DEBUG) || defined(_DEBUG)
 	//@@Function
@@ -133,6 +146,7 @@ protected:
 #endif
 
 	SLayoutType layoutType;
+	SLayoutAlignment layoutAlignment;
 
 	float fWidth;
 	float fHeight;
