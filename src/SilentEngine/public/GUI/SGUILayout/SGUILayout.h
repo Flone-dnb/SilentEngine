@@ -78,13 +78,6 @@ public:
 	*/
 	virtual void setScale(const SVector& vScale) override;
 
-	//@@Function
-	/*
-	* desc: use to set the rotation in degrees.
-	* remarks: note that 'size to keep' ignores rotation!
-	*/
-	virtual void setRotation(float fRotationInDeg) override;
-
 #if defined(DEBUG) || defined(_DEBUG)
 	//@@Function
 	/*

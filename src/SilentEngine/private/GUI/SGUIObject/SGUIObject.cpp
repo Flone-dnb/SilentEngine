@@ -143,11 +143,6 @@ void SGUIObject::setPosition(const SVector& vPos)
 	pos = DirectX::SimpleMath::Vector2(vPos.getX(), vPos.getY());
 }
 
-void SGUIObject::setRotation(float fRotationInDeg)
-{
-	this->fRotationInRad = DirectX::XMConvertToRadians(fRotationInDeg);
-}
-
 void SGUIObject::setScale(const SVector& vScale)
 {
 	scale = DirectX::XMFLOAT2(vScale.getX(), vScale.getY());
@@ -211,11 +206,6 @@ bool SGUIObject::isVisible() const
 SVector SGUIObject::getPosition() const
 {
 	return SVector(pos.x, pos.y);
-}
-
-float SGUIObject::getRotation() const
-{
-	return DirectX::XMConvertToDegrees(fRotationInRad);
 }
 
 SVector SGUIObject::getScaling() const

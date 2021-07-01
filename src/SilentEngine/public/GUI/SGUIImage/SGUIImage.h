@@ -49,6 +49,19 @@ public:
 
 	//@@Function
 	/*
+	* desc: use to set the rotation in degrees.
+	* remarks: it's better to use the rotation only for a square images. Note that 'size to keep' ignores the rotation.
+	*/
+	virtual void setRotation(float fRotationInDeg);
+
+	//@@Function
+	/*
+	* desc: returns the rotation in degrees.
+	*/
+	float getRotation() const;
+
+	//@@Function
+	/*
 	* desc: returns the size of the GUI object without scaling.
 	*/
 	virtual SVector getSizeInPixels();

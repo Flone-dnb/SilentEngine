@@ -81,12 +81,7 @@ public:
 	* desc: use to set the position of the object (in normalized range: [0, 1]) on the screen.
 	*/
 	virtual void setPosition(const SVector& vPos);
-	//@@Function
-	/*
-	* desc: use to set the rotation in degrees.
-	* remarks: note that 'size to keep' ignores rotation!
-	*/
-	virtual void setRotation(float fRotationInDeg);
+	
 	//@@Function
 	/*
 	* desc: use to set the scaling of the GUI object.
@@ -123,11 +118,6 @@ public:
 	* desc: returns the position in normalized range [0, 1].
 	*/
 	SVector getPosition () const;
-	//@@Function
-	/*
-	* desc: returns the rotation in degrees.
-	*/
-	float getRotation () const;
 	//@@Function
 	/*
 	* desc: returns the scaling in degrees.

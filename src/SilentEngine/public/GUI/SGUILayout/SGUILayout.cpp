@@ -123,11 +123,6 @@ void SGUILayout::setScale(const SVector& vScale)
 #endif
 }
 
-void SGUILayout::setRotation(float fRotationInDeg)
-{
-	SError::showErrorMessageBoxAndLog("rotation is not allowed in layouts.");
-}
-
 #if defined(DEBUG) || defined(_DEBUG)
 void SGUILayout::setDrawDebugLayoutFillImage(bool bDraw, const SVector& vFillImageColor)
 {
@@ -206,6 +201,7 @@ void SGUILayout::setViewport(D3D12_VIEWPORT viewport)
 
 void SGUILayout::onMSAAChange()
 {
+	// do nothing
 }
 
 bool SGUILayout::checkRequiredResourcesBeforeRegister()

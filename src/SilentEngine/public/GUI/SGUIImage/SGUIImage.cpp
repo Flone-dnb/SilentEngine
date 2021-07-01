@@ -143,6 +143,16 @@ void SGUIImage::setCut(const SVector& vSourceRect)
 	sourceRect = vSourceRect;
 }
 
+void SGUIImage::setRotation(float fRotationInDeg)
+{
+	this->fRotationInRad = DirectX::XMConvertToRadians(fRotationInDeg);
+}
+
+float SGUIImage::getRotation() const
+{
+	return DirectX::XMConvertToDegrees(fRotationInRad);
+}
+
 SVector SGUIImage::getSizeInPixels()
 {
 	if (pTexture)
