@@ -284,6 +284,7 @@ private:
 	friend class SComponent;
 	friend class SContainer;
 	friend class SComputeShader;
+	friend class SLevel;
 
 	virtual void unbindMaterialsIncludingChilds() override;
 
@@ -323,7 +324,6 @@ private:
 
 	std::mutex  mtxInstancing;
 
-	bool        bVisible;
 	bool        bVertexBufferUsedInComputeShader;
 	bool        bUseInstancing;
 };

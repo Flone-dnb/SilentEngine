@@ -66,7 +66,5 @@ protected:
 	SLightProps lightProps;
 
 	SLightComponentType lightType;
-
-	bool bVisible;
 };
 

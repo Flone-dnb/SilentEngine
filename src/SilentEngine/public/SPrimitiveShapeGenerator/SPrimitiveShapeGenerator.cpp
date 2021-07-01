@@ -439,9 +439,9 @@ void SPrimitiveShapeGenerator::subdivide(SMeshData& meshData)
 
 	for (std::uint32_t i = 0; i < iTrisCount; i++)
 	{
-		SMeshVertex v0 = inputCopy.getVertices()[ inputCopy.getIndices32()[i * 3 + 0] ];
-		SMeshVertex v1 = inputCopy.getVertices()[ inputCopy.getIndices32()[i * 3 + 1] ];
-		SMeshVertex v2 = inputCopy.getVertices()[ inputCopy.getIndices32()[i * 3 + 2] ];
+		SMeshVertex v0 = inputCopy.getVertices()->operator[]( inputCopy.getIndices32()->operator[](i * 3 + 0) );
+		SMeshVertex v1 = inputCopy.getVertices()->operator[]( inputCopy.getIndices32()->operator[](i * 3 + 1) );
+		SMeshVertex v2 = inputCopy.getVertices()->operator[]( inputCopy.getIndices32()->operator[](i * 3 + 2) );
 
 
 		// Generate the midpoints.

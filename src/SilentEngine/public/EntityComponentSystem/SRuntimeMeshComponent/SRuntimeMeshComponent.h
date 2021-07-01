@@ -290,7 +290,6 @@ private:
 	bool        bIndexOfVertexBufferValid;
 	bool        bNoMeshDataOnSpawn;
 	bool        bNewMeshData;
-	bool        bVisible;
 	bool        bDisableFrustumCulling;
 };
 

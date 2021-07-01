@@ -1036,8 +1036,7 @@ bool SApplication::spawnContainerInLevel(SContainer* pContainer)
 	{
 		// No renderable components inside.
 
-		std::vector<SContainer*>* pvNotRenderableContainers = nullptr;
-		pCurrentLevel->getNotRenderableContainers(pvNotRenderableContainers);
+		std::vector<SContainer*>* pvNotRenderableContainers = pCurrentLevel->getNotRenderableContainers();
 
 		pvNotRenderableContainers->push_back(pContainer);
 
@@ -1086,8 +1085,7 @@ bool SApplication::spawnContainerInLevel(SContainer* pContainer)
 		}
 
 
-		std::vector<SContainer*>* pvRenderableContainers = nullptr;
-		pCurrentLevel->getRenderableContainers(pvRenderableContainers);
+		std::vector<SContainer*>* pvRenderableContainers = pCurrentLevel->getRenderableContainers();
 
 		pvRenderableContainers->push_back(pContainer);
 
@@ -1153,8 +1151,7 @@ void SApplication::despawnContainerFromLevel(SContainer* pContainer)
 		// No renderable components inside.
 		// Just remove from vector.
 
-		std::vector<SContainer*>* pvNotRenderableContainers = nullptr;
-		pCurrentLevel->getNotRenderableContainers(pvNotRenderableContainers);
+		std::vector<SContainer*>* pvNotRenderableContainers = pCurrentLevel->getNotRenderableContainers();
 		
 		for (size_t i = 0; i < pvNotRenderableContainers->size(); i++)
 		{
@@ -1195,8 +1192,7 @@ void SApplication::despawnContainerFromLevel(SContainer* pContainer)
 		pContainer->removeInstancingDataForFrameResources(&vFrameResources);
 
 		
-		std::vector<SContainer*>* pvRenderableContainers = nullptr;
-		pCurrentLevel->getRenderableContainers(pvRenderableContainers);
+		std::vector<SContainer*>* pvRenderableContainers = pCurrentLevel->getRenderableContainers();
 
 		if (iRemovedCount != 0)
 		{
@@ -1750,9 +1746,8 @@ bool SApplication::getCursor3DPosAndDir(SVector& vPos, SVector& vDir)
 
 	SVector vCursorPos;
 	getCursorPos(vCursorPos);
-
-	float fXPosViewSpace = (2.0f * vCursorPos.getX()) / proj(0, 0);
-	float fYPosViewSpace = (-2.0f * vCursorPos.getY()) / proj(1, 1);
+	float fXPosViewSpace = (2.0f * vCursorPos.getX() - 1.0f) / proj(0, 0);
+	float fYPosViewSpace = (-2.0f * vCursorPos.getY() + 1.0f) / proj(1, 1);
 
 	DirectX::XMVECTOR vRayDirViewSpace = DirectX::XMVectorSet(fXPosViewSpace, fYPosViewSpace, 1.0f, 0.0f);
 
@@ -1760,7 +1755,7 @@ bool SApplication::getCursor3DPosAndDir(SVector& vPos, SVector& vDir)
 
 	// Direction to world space.
 	DirectX::XMFLOAT3 vRayDirWorldSpaceFloat3;
-	DirectX::XMVECTOR vRayDirWorldSpace = DirectX::XMVector3TransformCoord(vRayDirViewSpace, DirectX::XMMatrixInverse(&det, camera.getViewMatrix()));
+	DirectX::XMVECTOR vRayDirWorldSpace = DirectX::XMVector3TransformNormal(vRayDirViewSpace, DirectX::XMMatrixInverse(&det, camera.getViewMatrix()));
 	vRayDirWorldSpace = DirectX::XMVector3Normalize(vRayDirWorldSpace);
 	DirectX::XMStoreFloat3(&vRayDirWorldSpaceFloat3, vRayDirWorldSpace);
 
@@ -2530,8 +2525,7 @@ void SApplication::updateObjectCBs()
 
 	SUploadBuffer<SObjectConstants>* pCurrentObjectCB = pCurrentFrameResource->pObjectsCB.get();
 
-	std::vector<SContainer*>* pvRenderableContainers = nullptr;
-	pCurrentLevel->getRenderableContainers(pvRenderableContainers);
+	std::vector<SContainer*>* pvRenderableContainers = pCurrentLevel->getRenderableContainers();
 
 	for (size_t i = 0; i < pvRenderableContainers->size(); i++)
 	{
@@ -2701,28 +2695,25 @@ void SApplication::updateMainPassCB()
 		{
 			for (size_t i = 0; i < pLevel->vSpawnedLightComponents.size(); i++)
 			{
-				if (pLevel->vSpawnedLightComponents[i]->isVisible())
+				if (pLevel->vSpawnedLightComponents[i]->isVisible() && pLevel->vSpawnedLightComponents[i]->lightType == vTypes[iTypeIndex])
 				{
-					if (pLevel->vSpawnedLightComponents[i]->lightType == vTypes[iTypeIndex])
+					SVector vWorldPos = pLevel->vSpawnedLightComponents[i]->getLocationInWorld();
+					pLevel->vSpawnedLightComponents[i]->lightProps.vPosition = { vWorldPos.getX(), vWorldPos.getY(), vWorldPos.getZ() };
+
+					mainRenderPassCB.lights[iCurrentIndex] = pLevel->vSpawnedLightComponents[i]->lightProps;
+					iCurrentIndex++;
+
+					if (vTypes[iTypeIndex] == SLightComponentType::SLCT_DIRECTIONAL)
 					{
-						SVector vWorldPos = pLevel->vSpawnedLightComponents[i]->getLocationInWorld();
-						pLevel->vSpawnedLightComponents[i]->lightProps.vPosition = { vWorldPos.getX(), vWorldPos.getY(), vWorldPos.getZ() };
-
-						mainRenderPassCB.lights[iCurrentIndex] = pLevel->vSpawnedLightComponents[i]->lightProps;
-						iCurrentIndex++;
-
-						if (vTypes[iTypeIndex] == SLightComponentType::SLCT_DIRECTIONAL)
-						{
-							mainRenderPassCB.iDirectionalLightCount++;
-						}
-						else if (vTypes[iTypeIndex] == SLightComponentType::SLCT_POINT)
-						{
-							mainRenderPassCB.iPointLightCount++;
-						}
-						else
-						{
-							mainRenderPassCB.iSpotLightCount++;
-						}
+						mainRenderPassCB.iDirectionalLightCount++;
+					}
+					else if (vTypes[iTypeIndex] == SLightComponentType::SLCT_POINT)
+					{
+						mainRenderPassCB.iPointLightCount++;
+					}
+					else
+					{
+						mainRenderPassCB.iSpotLightCount++;
 					}
 				}
 			}
@@ -3019,7 +3010,15 @@ void SApplication::drawOpaqueComponents()
 		{
 			if (vOpaqueMeshesByCustomShader[i].vMeshComponentsWithThisShader[j]->getContainer()->isVisible())
 			{
-				drawComponent(vOpaqueMeshesByCustomShader[i].vMeshComponentsWithThisShader[j], bUsingCustomResources);
+				bool bParentVisible = true;
+
+				if (vOpaqueMeshesByCustomShader[i].vMeshComponentsWithThisShader[j]->pParentComponent)
+				{
+					bParentVisible = vOpaqueMeshesByCustomShader[i].vMeshComponentsWithThisShader[j]->pParentComponent->bVisible;
+				}
+
+				if (bParentVisible)
+					drawComponent(vOpaqueMeshesByCustomShader[i].vMeshComponentsWithThisShader[j], bUsingCustomResources);
 			}
 		}
 
@@ -3074,7 +3073,15 @@ void SApplication::drawTransparentComponents()
 		{
 			if (vTransparentMeshesByCustomShader[i].vMeshComponentsWithThisShader[j]->getContainer()->isVisible())
 			{
-				drawComponent(vTransparentMeshesByCustomShader[i].vMeshComponentsWithThisShader[j], bUsingCustomResources);
+				bool bParentVisible = true;
+
+				if (vTransparentMeshesByCustomShader[i].vMeshComponentsWithThisShader[j]->pParentComponent)
+				{
+					bParentVisible = vTransparentMeshesByCustomShader[i].vMeshComponentsWithThisShader[j]->pParentComponent->bVisible;
+				}
+
+				if (bParentVisible)
+					drawComponent(vTransparentMeshesByCustomShader[i].vMeshComponentsWithThisShader[j], bUsingCustomResources);
 			}
 		}
 

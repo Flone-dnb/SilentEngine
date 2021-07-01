@@ -22,8 +22,8 @@
 enum class SComponentType
 {
 	SCT_NONE = 0,
-	SCT_MESH = 1,
-	SCT_RUNTIME_MESH = 2,
+	SCT_MESH = 1, // SMeshComponent
+	SCT_RUNTIME_MESH = 2, // SRuntimeMeshComponent
 	SCT_LIGHT = 3,
 	SCT_CAMERA = 4,
 	SCT_AUDIO = 5
@@ -122,6 +122,12 @@ public:
 	* remarks: this function called when this component's location/rotation/scale (in world) is already updated according to the parent's new location.
 	*/
 	void setBindOnParentLocationRotationScaleChangedCallback(std::function<void(SComponent* pComponent)> function);
+
+	//@@Function
+	/*
+	* desc: returns the type of the component (ex. SMeshComponent, SRuntimeMeshComponent and etc.)
+	*/
+	SComponentType getComponentType() const;
 
 	//@@Function
 	/*
@@ -312,6 +318,7 @@ protected:
 	friend class SComputeShader;
 	friend class SLightComponent;
 	friend class SAudioComponent;
+	friend class SLevel;
 
 	SComponent* pParentComponent;
 	SContainer* pContainer;
@@ -358,5 +365,6 @@ protected:
 
 	bool bSpawnedInLevel;
 	bool bEnableTransparency;
+	bool bVisible;
 };
 

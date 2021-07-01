@@ -16,6 +16,15 @@
 class SApplication;
 class SContainer;
 class SMeshComponent;
+class SComponent;
+
+class SRayCastHit
+{
+public:
+	SComponent* pHitComponent;
+	float fHitDistanceFromRayOrigin; // distance between ray origin and collision bound (not mesh origin)
+	SVector vHitNormal; // normal vector of hit point
+};
 
 //@@Class
 /*
@@ -30,6 +39,18 @@ public:
 	SLevel(const SLevel&) = delete;
 	SLevel& operator= (const SLevel&) = delete;
 	virtual ~SLevel();
+
+
+		//@@Function
+		/*
+		* desc: used to emit a ray that hits the components with collision.
+		* param "vRayStartPos": start position of the ray.
+		* param "vRayStopPos": stop (end) position of the ray.
+		* param "vHitResult": objects that were hit by the ray, use SComponent::getComponentType() to cast to correct type.
+		* param "vIgnoreList": (optional) list of component that will be ignored in this ray cast.
+		* remarks: instanced mesh components are currently ignored (TODO).
+		*/
+		void rayCast(SVector& vRayStartPos, SVector& vRayStopPos, std::vector<SRayCastHit>& vHitResult, const std::vector<SComponent*>& vIgnoreList = std::vector<SComponent*>());
 
 
 	// Set functions
@@ -62,21 +83,19 @@ public:
 		/*
 		* desc: returns all renderable containers (containers that have components with
 		geometry in it, for example, SMeshComponent) in level.
-		* param "pvRenderableContainers": the pointer to your std::vector that will be filled with
-		pointers to the renderable containers in level. You should not spawn/despawn containers while working with
+		* remarks: you should not spawn/despawn containers while working with
 		the returned vector as the vector length will change. Use synchronization techniques.
 		*/
-		void getRenderableContainers    (std::vector<SContainer*>*& pvRenderableContainers);
+		std::vector<SContainer*>* getRenderableContainers    ();
 
 		//@@Function
 		/*
 		* desc: returns all non-renderable containers (containers that don't have components with
 		geometry in it, for example, STargetComponent) in level.
-		* param "pvNotRenderableContainers": the pointer to your std::vector that will be filled with
-		pointers to the non-renderable containers in level. You should not spawn/despawn containers while working with
+		* remarks: you should not spawn/despawn containers while working with
 		the returned vector as the vector length will change. Use synchronization techniques.
 		*/
-		void getNotRenderableContainers (std::vector<SContainer*>*& pvNotRenderableContainers);
+		std::vector<SContainer*>* getNotRenderableContainers ();
 
 
 private:

@@ -158,6 +158,7 @@ private:
 	friend class SMeshData;
 	friend class SPrimitiveShapeGenerator;
 	friend class SComponent;
+	friend class SLevel;
 
 	DirectX::XMFLOAT3 vPosition;
 	DirectX::XMFLOAT3 vNormal;
@@ -283,9 +284,9 @@ public:
 	/*
 	* desc: returns the vertices of the mesh data.
 	*/
-	std::vector<SMeshVertex>& getVertices()
+	std::vector<SMeshVertex>* getVertices()
 	{
-		return vVertices;
+		return &vVertices;
 	}
 
 	//@@Function
@@ -312,7 +313,7 @@ public:
 	Use SMeshData::hasIndicesMoreThan16Bits() to determine if the mesh data has indices with value more than the uint16_t max value,
 	and use getIndices32() if it does.
 	*/
-	std::vector<std::uint16_t>& getIndices16()
+	std::vector<std::uint16_t>* getIndices16()
 	{
 		if(vIndices16.empty())
 		{
@@ -324,16 +325,16 @@ public:
 			}
 		}
 
-		return vIndices16;
+		return &vIndices16;
 	}
 
 	//@@Function
 	/*
 	* desc: returns the indices in the format of std::uint32_t.
 	*/
-	std::vector<std::uint32_t>& getIndices32()
+	std::vector<std::uint32_t>* getIndices32()
 	{
-		return vIndices32;
+		return &vIndices32;
 	}
 
 	//@@Function
