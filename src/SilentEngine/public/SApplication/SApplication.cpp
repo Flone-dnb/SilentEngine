@@ -2424,7 +2424,7 @@ bool SApplication::onResize()
 
 void SApplication::onMouseMoveInternal(int iMouseXMove, int iMouseYMove)
 {
-	if (bDrawGUI && iInteractableImagesCount != 0)
+	if (bDrawGUI && iInteractableImagesCount != 0 && bMouseCursorShown)
 	{
 		bInMouseInternalEvent = true;
 		mtxDraw.lock();
