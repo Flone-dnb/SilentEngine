@@ -115,6 +115,22 @@ void SGUILayout::setPosition(const SVector& vPos)
 #endif
 }
 
+void SGUILayout::setIndent(SLayoutIndent layoutIndent)
+{
+	if (layoutIndent.fLeftIndent < 0.0f || layoutIndent.fLeftIndent > 1.0f || layoutIndent.fBottomIndent < 0.0f || layoutIndent.fBottomIndent > 1.0f
+		|| layoutIndent.fRightIndent < 0.0f || layoutIndent.fRightIndent > 1.0f || layoutIndent.fTopIndent < 0.0f || layoutIndent.fTopIndent > 1.0f)
+	{
+		SError::showErrorMessageBoxAndLog("layout indent values should be normalized (in range: [0, 1], where 1 is the width/height of the layout).");
+	}
+
+	this->layoutIndent = layoutIndent;
+
+	if (bIsRegistered)
+	{
+		recalculateSizeToKeepScaling();
+	}
+}
+
 void SGUILayout::setScale(const SVector& vScale)
 {
 	SGUIObject::setScale(vScale);
@@ -288,7 +304,15 @@ void SGUILayout::recalculateSizeToKeepScaling()
 				{
 					vChildPos.y += fHeight;
 					vChilds[i].pChild->origin = DirectX::SimpleMath::Vector2(1.0f, 0.0f);
+
+					vChildPos.x -= fWidth * layoutIndent.fRightIndent;
 				}
+				else // SLA_LEFT
+				{
+					vChildPos.x += fWidth * layoutIndent.fLeftIndent;
+				}
+
+				vChildPos.y += fHeight * layoutIndent.fTopIndent - fHeight * layoutIndent.fBottomIndent;
 
 				vChilds[i].pChild->vSizeToKeep = SVector(fWidth * (vChilds[i].iRatio / static_cast<float>(iFullRatio)), fHeight);
 				vChilds[i].pChild->recalculateSizeToKeepScaling();
@@ -319,7 +343,17 @@ void SGUILayout::recalculateSizeToKeepScaling()
 				{
 					vChildPos.x += fWidth;
 					vChilds[i].pChild->origin = DirectX::SimpleMath::Vector2(1.0f, 0.0f);
+
+					vChildPos.x -= fWidth * layoutIndent.fRightIndent;
 				}
+				else // SLA_LEFT
+				{
+					vChildPos.x += fWidth * layoutIndent.fLeftIndent;
+				}
+
+
+				vChildPos.y += fHeight * layoutIndent.fTopIndent - fHeight * layoutIndent.fBottomIndent;
+
 
 				vChilds[i].pChild->vSizeToKeep = SVector(fWidth, fHeight * (vChilds[i].iRatio / static_cast<float>(iFullRatio)));
 				vChilds[i].pChild->recalculateSizeToKeepScaling();

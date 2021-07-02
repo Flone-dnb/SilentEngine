@@ -37,6 +37,14 @@ enum class SLayoutAlignment
 	SLA_RIGHT,
 };
 
+struct SLayoutIndent
+{
+	float fLeftIndent = 0.0f;
+	float fRightIndent = 0.0f;
+	float fTopIndent = 0.0f;
+	float fBottomIndent = 0.0f;
+};
+
 //@@Class
 /*
 This class represents a layout that can have child GUI object.
@@ -81,15 +89,22 @@ public:
 
 	//@@Function
 	/*
-	* desc: use to set the scaling of the GUI object.
+	* desc: use to set the indent for items from the bounds of the layout (in normalized range: [0, 1], where 1 is the width/height of the layout).
+	* remarks: only for non expanding layouts (bExpandItems == false).
 	*/
-	virtual void setScale(const SVector& vScale) override;
+	void setIndent(SLayoutIndent layoutIndent);
 
 	//@@Function
 	/*
 	* desc: use to set the alignment of layout child objects (only for non expanding layouts (bExpandItems == false)).
 	*/
 	void setAlignment(SLayoutAlignment alignment);
+
+	//@@Function
+	/*
+	* desc: use to set the scaling of the GUI object.
+	*/
+	virtual void setScale(const SVector& vScale) override;
 
 #if defined(DEBUG) || defined(_DEBUG)
 	//@@Function
@@ -147,6 +162,7 @@ protected:
 
 	SLayoutType layoutType;
 	SLayoutAlignment layoutAlignment;
+	SLayoutIndent layoutIndent;
 
 	float fWidth;
 	float fHeight;
