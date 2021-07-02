@@ -272,6 +272,11 @@ bool SApplication::unregisterMaterial(const std::string& sMaterialName)
 
 bool SApplication::unregisterGUIObject(SGUIObject* pGUIObject)
 {
+	if (bInMouseInternalEvent)
+	{
+		SError::showErrorMessageBoxAndLog("you can't register/unregister GUI objects while being in the GUI event (onHover, onPressed).");
+	}
+
 	if (pGUIObject == nullptr)
 	{
 		return true;
@@ -356,6 +361,15 @@ bool SApplication::unregisterGUIObject(SGUIObject* pGUIObject)
 		{
 			if (vGUILayers[i].vGUIObjects[j] == pGUIObject)
 			{
+				if (vGUILayers[i].vGUIObjects[j]->objectType == SGUIType::SGT_IMAGE && dynamic_cast<SGUIImage*>(vGUILayers[i].vGUIObjects[j])->bIsInteractable)
+				{
+					if (iInteractableImagesCount == 0)
+					{
+						SError::showErrorMessageBoxAndLog("iInteractableImagesCount is 0, while there is at least 1 interactable image.");
+					}
+					iInteractableImagesCount--;
+				}
+
 				delete vGUILayers[i].vGUIObjects[j];
 				vGUILayers[i].vGUIObjects.erase(vGUILayers[i].vGUIObjects.begin() + i);
 				bFound = true;
@@ -393,6 +407,11 @@ bool SApplication::unregisterGUIObject(SGUIObject* pGUIObject)
 
 void SApplication::registerGUIObject(SGUIObject* pGUIObject, bool bWillBeUsedInLayout)
 {
+	if (bInMouseInternalEvent)
+	{
+		SError::showErrorMessageBoxAndLog("you can't register/unregister GUI objects while being in the GUI event (onHover, onPressed).");
+	}
+
 	if (pGUIObject->bIsRegistered)
 	{
 		return;
@@ -418,6 +437,12 @@ void SApplication::registerGUIObject(SGUIObject* pGUIObject, bool bWillBeUsedInL
 
 		// First entry with layer index 0 always exists.
 		vGUILayers[0].vGUIObjects.push_back(pGUIObject);
+
+
+		if (pGUIObject->objectType == SGUIType::SGT_IMAGE && dynamic_cast<SGUIImage*>(pGUIObject)->bIsInteractable)
+		{
+			iInteractableImagesCount++;
+		}
 
 
 		// Add the SRVs to this object.
@@ -2397,6 +2422,50 @@ bool SApplication::onResize()
 	}
 }
 
+void SApplication::onMouseMoveInternal(int iMouseXMove, int iMouseYMove)
+{
+	if (bDrawGUI && iInteractableImagesCount != 0)
+	{
+		bInMouseInternalEvent = true;
+		mtxDraw.lock();
+
+		SVector vCursorPos;
+		getCursorPos(vCursorPos);
+
+		SScreenResolution res;
+		getCurrentScreenResolution(&res);
+
+		vCursorPos.setX(vCursorPos.getX() * res.iWidth);
+		vCursorPos.setY(vCursorPos.getY() * res.iHeight);
+
+		for (size_t i = 0; i < vGUILayers.size(); i++)
+		{
+			for (size_t j = 0; j < vGUILayers[i].vGUIObjects.size(); j++)
+			{
+				if (vGUILayers[i].vGUIObjects[j]->isVisible() && vGUILayers[i].vGUIObjects[j]->objectType == SGUIType::SGT_IMAGE && dynamic_cast<SGUIImage*>(vGUILayers[i].vGUIObjects[j])->bIsInteractable)
+				{
+					SGUIImage* pImage = dynamic_cast<SGUIImage*>(vGUILayers[i].vGUIObjects[j]);
+
+					if (vCursorPos.getX() >= pImage->lastDrawBounds.left && vCursorPos.getX() <= pImage->lastDrawBounds.right
+						&& vCursorPos.getY() >= pImage->lastDrawBounds.top && vCursorPos.getY() <= pImage->lastDrawBounds.bottom)
+					{
+						pImage->onHover(pImage);
+					}
+					else
+					{
+						pImage->noFocus(pImage);
+					}
+				}
+			}
+		}
+
+		mtxDraw.unlock();
+		bInMouseInternalEvent = false;
+	}
+
+	onMouseMove(iMouseXMove, iMouseYMove);
+}
+
 void SApplication::update()
 {
 	if (iCurrentFrameResourceIndex + 1 == iFrameResourcesCount)
@@ -3140,6 +3209,13 @@ void SApplication::drawGUIObjects()
 					SVector screenScaling = pImage->getFullScreenScaling();
 					scaling.x *= screenScaling.getX();
 					scaling.y *= screenScaling.getY();
+
+					RECT bounds;
+					bounds.left = pos.x - (texSize.x * scaling.x / 2);
+					bounds.right = pos.x + (texSize.x * scaling.x / 2);
+					bounds.top = pos.y - (texSize.y * scaling.y / 2);
+					bounds.bottom = pos.y + (texSize.y * scaling.y / 2);
+					pImage->lastDrawBounds = bounds;
 
 					pImage->pSpriteBatch->Draw(heapHandle,
 						texSize, pos, &sourceRect, DirectX::XMLoadFloat4(&pImage->color), pImage->fRotationInRad, origin,
@@ -4302,7 +4378,7 @@ bool SApplication::createCBVSRVUAVHeap()
 
 	iDescriptorCount += static_cast<UINT>(vLoadedTextures.size()); // one SRV per texture
 	// get gui item count
-	size_t iGUIItemCount = 0;
+	size_t iGUIItemCount = 0; // also including SRVs to layouts that don't need an SRV (those SRVs are not going to be used at all (TODO))
 	for (size_t i = 0; i < vGUILayers.size(); i++)
 	{
 		iGUIItemCount += vGUILayers[i].vGUIObjects.size();
@@ -6369,7 +6445,7 @@ LRESULT SApplication::msgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			
 			if (raw->header.dwType == RIM_TYPEMOUSE) 
 			{
-				onMouseMove(raw->data.mouse.lLastX, raw->data.mouse.lLastY);
+				onMouseMoveInternal(raw->data.mouse.lLastX, raw->data.mouse.lLastY);
 			} 
 
 

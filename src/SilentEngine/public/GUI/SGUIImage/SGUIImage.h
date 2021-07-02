@@ -12,6 +12,7 @@
 #include <vector>
 #include <string_view>
 #include <mutex>
+#include <functional>
 
 // Custom
 #include "SilentEngine/Private/GUI/SGUIObject/SGUIObject.h"
@@ -25,7 +26,13 @@ class SGUIImage : public SGUIObject
 public:
 
 	//@@Function
-	SGUIImage(const std::string& sObjectName);
+	/*
+	* desc: constructor.
+	* param "sObjectName": name of this GUI object.
+	* param "bInteractable": use to specify if the user can click on this image.
+	Interactable images allow binding to such events as onHover and onPressed.
+	*/
+	SGUIImage(const std::string& sObjectName, bool bInteractable);
 	SGUIImage() = delete;
 	SGUIImage(const SGUIImage&) = delete;
 	SGUIImage& operator= (const SGUIImage&) = delete;
@@ -38,6 +45,23 @@ public:
 	* remarks: you can call this function again after the GUI object was registered to set a new image without needing to register again.
 	*/
 	bool loadImage(std::wstring_view sPathToImage);
+
+	//@@Function
+	/*
+	* desc: use to set the custom origin of the GUI object (in normalized range: [0, 1]),
+	by default the origin point of every GUI object is in the center.
+	* remarks: the origin point is used in such operations as translation, rotation and scaling, just like with usual object in 3D.
+	*/
+	virtual void setCustomOrigin(const SVector& vOrigin) override;
+
+	//@@Function
+	/*
+	* desc: use to specify if the user can click on this image. Interactable images allow binding to such events as onHover and onPressed.
+	* param "noFocus": called on cursor move event when it's (cursor) outside of the image bounds.
+	* param "onHover": called on cursor move event when it's (cursor) in the bounds of this image.
+	* param "onPressed": called when the cursor is in the bounds of this image and the user pressed left mouse button.
+	*/
+	void setInteractableEvents(std::function<void(SGUIImage*)> noFocus, std::function<void(SGUIImage*)> onHover, std::function<void(SGUIImage*)> onPressed);
 
 	//@@Function
 	/*
@@ -82,12 +106,19 @@ private:
 	std::unique_ptr<DirectX::SpriteBatch>  pSpriteBatch = nullptr;
 	Microsoft::WRL::ComPtr<ID3D12Resource> pTexture;
 
+	std::function<void(SGUIImage*)> noFocus;
+	std::function<void(SGUIImage*)> onHover;
+	std::function<void(SGUIImage*)> onPressed;
+
 	SVector sourceRect;
+	RECT lastDrawBounds; // used to determine mouse interactions
 
 	std::mutex   mtxSprite;
 
 	std::wstring sPathToTexture;
 
 	int          iIndexInHeap;
+
+	bool         bIsInteractable;
 };
 

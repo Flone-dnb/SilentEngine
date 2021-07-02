@@ -98,7 +98,7 @@ public:
 	by default the origin point of every GUI object is in the center.
 	* remarks: the origin point is used in such operations as translation, rotation and scaling, just like with usual object in 3D.
 	*/
-	void setCustomOrigin(const SVector& vOrigin);
+	virtual void setCustomOrigin(const SVector& vOrigin);
 	//@@Function
 	/*
 	* desc: use to set the Z-layer, GUI objects with bigger layer value will be rendered on top of the objects with lower layer value.

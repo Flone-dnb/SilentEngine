@@ -36,7 +36,7 @@ SGUILayout::SGUILayout(const std::string& sObjectName, float fWidth, float fHeig
 	vSizeToKeep = SVector(fWidth, fHeight);
 
 #if defined(DEBUG) || defined(_DEBUG)
-	pDebugLayoutFillImage = new SGUIImage("layout debug image");
+	pDebugLayoutFillImage = new SGUIImage("layout debug image", false);
 
 	const std::wstring sSampleTexPath = L"res/square_tex.png";
 

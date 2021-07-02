@@ -131,6 +131,30 @@ bool SGUIImage::loadImage(std::wstring_view sPathToImage)
 	return false;
 }
 
+void SGUIImage::setCustomOrigin(const SVector& vOrigin)
+{
+	if (bIsInteractable)
+	{
+		SError::showErrorMessageBoxAndLog("custom origin is disabled for interactable images.");
+	}
+	else
+	{
+		SGUIObject::setCustomOrigin(vOrigin);
+	}
+}
+
+void SGUIImage::setInteractableEvents(std::function<void(SGUIImage*)> noFocus, std::function<void(SGUIImage*)> onHover, std::function<void(SGUIImage*)> onPressed)
+{
+	if (bIsInteractable == false)
+	{
+		SError::showErrorMessageBoxAndLog("setInteractableEvents() called for a non interactable image (see SGUIImage constructor).");
+	}
+
+	this->noFocus = noFocus;
+	this->onHover = onHover;
+	this->onPressed = onPressed;
+}
+
 void SGUIImage::setCut(const SVector& vSourceRect)
 {
 	if (vSourceRect.getX() < 0.0f || vSourceRect.getX() > 1.0f || vSourceRect.getY() < 0.0f || vSourceRect.getY() > 1.0f ||
@@ -242,10 +266,12 @@ SGUIImage::~SGUIImage()
 {
 }
 
-SGUIImage::SGUIImage(const std::string& sObjectName) : SGUIObject(sObjectName)
+SGUIImage::SGUIImage(const std::string& sObjectName, bool bInteractable) : SGUIObject(sObjectName)
 {
 	objectType = SGUIType::SGT_IMAGE;
 
 	iIndexInHeap = -1;
 	sourceRect = { 0.0f, 0.0f, 1.0f, 1.0f };
+
+	bIsInteractable = bInteractable;
 }

@@ -817,6 +817,8 @@ private:
 		*/
 		bool onResize                        ();
 
+		void onMouseMoveInternal             (int iMouseXMove, int iMouseYMove);
+
 
 	// Game
 
@@ -1220,6 +1222,7 @@ private:
 	std::vector<SGUILayer>                   vGUILayers;
 	std::unique_ptr<DirectX::GraphicsMemory> pDXTKGraphicsMemory;
 	bool                                     bDrawGUI = true;
+	size_t                                   iInteractableImagesCount = 0;
 	std::wstring                             sPathToDefaultFont = L"res/default_font.spritefont";
 
 
@@ -1406,6 +1409,8 @@ private:
 	std::wstring   sMainWindowTitle         = L"Silent Application";
 	std::wstring   sPreferredDisplayAdapter = L"";
 	std::wstring   sPreferredOutputAdapter  = L"";
+
+	bool           bInMouseInternalEvent    = false;
 
 	bool           bUsingWARPAdapter        = false;
 
