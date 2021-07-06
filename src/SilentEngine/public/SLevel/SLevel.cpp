@@ -147,6 +147,7 @@ void SLevel::rayCast(SVector& vRayStartPos, SVector& vRayStopPos, std::vector<SR
 		// Iterate over all trianges.
 		std::vector<uint32_t>* vIndices = pMeshData->getIndices32();
 		size_t iTrisCount = vIndices->size() / 3;
+		size_t vHitTriangle[3] = { 0 };
 		for (size_t i = 0; i < iTrisCount; i++)
 		{
 			// Indices for this triangle.
@@ -167,6 +168,10 @@ void SLevel::rayCast(SVector& vRayStartPos, SVector& vRayStopPos, std::vector<SR
 				if (fTriangleHitDistance < fHitDistance)
 				{
 					fHitDistance = fTriangleHitDistance;
+
+					vHitTriangle[0] = i0;
+					vHitTriangle[1] = i1;
+					vHitTriangle[2] = i2;
 
 					vHitNormal.setX(
 						(pMeshData->getVertices()->operator[](i0).getNormal().getX()
@@ -190,6 +195,10 @@ void SLevel::rayCast(SVector& vRayStartPos, SVector& vRayStopPos, std::vector<SR
 			hitResult.pHitComponent = vRenderableAllComponents[i];
 			hitResult.fHitDistanceFromRayOrigin = fHitDistance;
 			hitResult.vHitNormal = vHitNormal;
+
+			hitResult.vHitTriangleIndices[0] = vHitTriangle[0];
+			hitResult.vHitTriangleIndices[1] = vHitTriangle[1];
+			hitResult.vHitTriangleIndices[2] = vHitTriangle[2];
 
 			vHitResult.push_back(hitResult);
 		}

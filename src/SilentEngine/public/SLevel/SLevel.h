@@ -24,6 +24,7 @@ public:
 	SComponent* pHitComponent;
 	float fHitDistanceFromRayOrigin; // distance between ray origin and collision bound (not mesh origin)
 	SVector vHitNormal; // normal vector of hit point
+	size_t vHitTriangleIndices[3]; // indices of hit triangle, use pMeshData->getVertices() with those indices to get triangle
 };
 
 //@@Class
