@@ -68,6 +68,8 @@ public:
 	Microsoft::WRL::ComPtr<ID3D12Resource> pUploadHeap = nullptr;
 
 	int iTexSRVHeapIndex = -1;
+
+	bool bIsCubeMap = false;
 };
 
 //@@Class

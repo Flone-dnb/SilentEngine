@@ -184,7 +184,7 @@ TEST_CASE("Load/unload textures.", "[MainTests::loadUnloadTextures]") {
 	const std::wstring sTex = L"assets/tex.dds";
 
 	bError = false;
-	STextureHandle tex = app.loadTextureFromDiskToGPU("tex", sTex, bError);
+	STextureHandle tex = app.loadTextureFromDiskToGPU("tex", sTex, false, bError);
 	if (bError)
 	{
 		REQUIRE(false);

@@ -43,7 +43,6 @@ public:
 	/*
 	* desc: mesh constructor function.
 	* param "bUseInstancing": set to 'true' if you will use mesh instancing (requires to use a custom shader, see setUseCustomShader()).
-	* param "bVisible": true by default.
 	*/
 	SMeshComponent(std::string sComponentName, bool bUseInstancing = false);
 

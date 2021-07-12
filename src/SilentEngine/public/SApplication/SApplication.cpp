@@ -493,7 +493,7 @@ std::vector<SGUILayer>* SApplication::getLoadedGUIObjects()
 	return &vGUILayers;
 }
 
-STextureHandle SApplication::loadTextureFromDiskToGPU(std::string sTextureName, std::wstring sPathToTexture, bool& bErrorOccurred)
+STextureHandle SApplication::loadTextureFromDiskToGPU(std::string sTextureName, std::wstring sPathToTexture, bool bIsCubeMap, bool& bErrorOccurred)
 {
 	bErrorOccurred = false;
 
@@ -559,13 +559,16 @@ STextureHandle SApplication::loadTextureFromDiskToGPU(std::string sTextureName, 
 	STextureInternal* pTexture = new STextureInternal();
 	pTexture->sTextureName = sTextureName;
 	pTexture->sPathToTexture = sPathToTexture;
+	pTexture->bIsCubeMap = bIsCubeMap;
 
 	/*flushCommandQueue();
 	resetCommandList();*/
 	
 	DirectX::ResourceUploadBatch resourceUpload(pDevice.Get());
 	resourceUpload.Begin();
-	HRESULT hresult = DirectX::CreateDDSTextureFromFile(pDevice.Get(), resourceUpload, sPathToTexture.c_str(), pTexture->pResource.ReleaseAndGetAddressOf());
+	HRESULT hresult = 
+		DirectX::CreateDDSTextureFromFile(pDevice.Get(), resourceUpload, sPathToTexture.c_str(), pTexture->pResource.ReleaseAndGetAddressOf(),
+			false, 0Ui64, nullptr, &bIsCubeMap);
 	//HRESULT hresult = DirectX::CreateDDSTextureFromFile12(pDevice.Get(), pCommandList.Get(), sPathToTexture.c_str(),
 	//	pTexture->pResource, pTexture->pUploadHeap);
 
@@ -871,6 +874,12 @@ SShader* SApplication::compileCustomShader(const std::wstring& sPathToShaderFile
 		{
 			*pOutCustomResources = pNewShader->pCustomShaderResources;
 		}
+	}
+	else if (customProps.skyboxTexture.bRegistered)
+	{
+		pNewShader->pCustomShaderResources = new SCustomShaderResources();
+		pNewShader->pCustomShaderResources->skyboxTexture = customProps.skyboxTexture;
+		pNewShader->pCustomShaderResources->pCustomRootSignature = pRootSignature;
 	}
 
 	pNewShader->pVS = SMiscHelpers::compileShader(sPathToShaderFile, nullptr, L"VS", SE_VS_SM, bCompileShadersInRelease);
@@ -3402,6 +3411,13 @@ void SApplication::drawComponent(SComponent* pComponent, bool bUsingCustomResour
 			bHasTexture = true;
 		}
 	}
+	else if (pComponent->pCustomShader && pComponent->pCustomShader->pCustomShaderResources && pComponent->pCustomShader
+		&& pComponent->pCustomShader->pCustomShaderResources->skyboxTexture.bRegistered)
+	{
+		// skybox cube map
+		tex = pComponent->pCustomShader->pCustomShaderResources->skyboxTexture;
+		bHasTexture = true;
+	}
 
 	if (pComponent->componentType == SComponentType::SCT_MESH)
 	{
@@ -4343,8 +4359,6 @@ bool SApplication::createRTVAndDSVDescriptorHeaps()
 	}
 
 
-
-
 	// DSV
 
 	D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc;
@@ -4467,7 +4481,16 @@ void SApplication::createViews()
 		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 		srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 		srvDesc.Format = vLoadedTextures[i]->pResource->GetDesc().Format;
-		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+
+		if (vLoadedTextures[i]->bIsCubeMap)
+		{
+			srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
+		}
+		else
+		{
+			srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+		}
+		
 		srvDesc.Texture2D.MostDetailedMip = 0;
 		srvDesc.Texture2D.MipLevels = vLoadedTextures[i]->pResource->GetDesc().MipLevels;
 		srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
@@ -4758,7 +4781,7 @@ bool SApplication::createPSO(SShader* pPSOsForCustomShader)
 	psoDesc.InputLayout = { vInputLayout.data(), static_cast<UINT>(vInputLayout.size()) };
 	if (pPSOsForCustomShader)
 	{
-		if (pPSOsForCustomShader->pCustomShaderResources)
+		if (pPSOsForCustomShader->pCustomShaderResources && pPSOsForCustomShader->pCustomShaderResources->skyboxTexture.bRegistered == false)
 		{
 			psoDesc.pRootSignature = pPSOsForCustomShader->pCustomShaderResources->pCustomRootSignature.Get();
 		}
@@ -4826,6 +4849,18 @@ bool SApplication::createPSO(SShader* pPSOsForCustomShader)
 	psoDesc.SampleDesc.Count  = MSAA_Enabled ? MSAA_SampleCount : 1;
 	psoDesc.SampleDesc.Quality = MSAA_Enabled ? (MSAA_Quality - 1) : 0;
 	psoDesc.DSVFormat         = DepthStencilFormat;
+
+	if (pPSOsForCustomShader && pPSOsForCustomShader->pCustomShaderResources && pPSOsForCustomShader->pCustomShaderResources->skyboxTexture.bRegistered)
+	{
+		// Make sure the depth function is LESS_EQUAL and not just LESS.
+		// Otherwise, the normalized depth values at z = 1 (NDC) will
+		// fail the depth test if the depth buffer was cleared to 1.
+		// (see skybox.hlsl for more info)
+		psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+
+		// The camera is inside the sky sphere, so just turn off culling.
+		psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+	}
 
 
 	HRESULT hresult;
@@ -5367,21 +5402,24 @@ void SApplication::releaseShader(SShader* pShader)
 
 	if (pShader->pCustomShaderResources)
 	{
-		iLeft = pShader->pCustomShaderResources->pCustomRootSignature.Reset();
-
-		if (iLeft != 0)
+		if (!pShader->pCustomShaderResources->skyboxTexture.bRegistered)
 		{
-			showMessageBox(L"Error", L"SApplication::releaseShader() error: custom shader resources root signature ref count is not 0.");
-		}
+			iLeft = pShader->pCustomShaderResources->pCustomRootSignature.Reset();
 
-		for (size_t i = 0; i < vFrameResources.size(); i++)
-		{
-			vFrameResources[i]->removeMaterialBundle(pShader);
-		}
+			if (iLeft != 0)
+			{
+				showMessageBox(L"Error", L"SApplication::releaseShader() error: custom shader resources root signature ref count is not 0.");
+			}
 
-		for (size_t i = 0; i < pShader->pCustomShaderResources->vMaterials.size(); i++)
-		{
-			delete pShader->pCustomShaderResources->vMaterials[i];
+			for (size_t i = 0; i < vFrameResources.size(); i++)
+			{
+				vFrameResources[i]->removeMaterialBundle(pShader);
+			}
+
+			for (size_t i = 0; i < pShader->pCustomShaderResources->vMaterials.size(); i++)
+			{
+				delete pShader->pCustomShaderResources->vMaterials[i];
+			}
 		}
 
 		delete pShader->pCustomShaderResources;

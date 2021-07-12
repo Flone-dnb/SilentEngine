@@ -87,6 +87,7 @@ struct SCustomShaderProperties
 {
 	SCustomShaderMaterials customMaterials;
 	bool bWillUseInstancing = false;
+	STextureHandle skyboxTexture; // if using skybox texture, don't touch other members of this struct.
 };
 
 
@@ -297,6 +298,7 @@ public:
 		* desc: loads the given texture from the disk to the GPU memory so it can be used in the materials.
 		* param "sTextureName": unique name of the texture, cannot be empty.
 		* param "sPathToTexture": path to the texture file (only .dds texture format).
+		* param "bIsCubeMap": set to 'true' if the texture is a cube map.
 		* param "bErrorOccurred": will be true if an error occurred and the returned handle is invalid, false otherwise.
 		* remarks: note that you will need to unload the loaded textures (via SApplication::unloadTextureFromGPU), it won't happen automatically,
 		but all loaded textures will be unloaded in the SApplication's destructor function.
@@ -305,7 +307,7 @@ public:
 		It's recommended to use this function in loading moments of your application (ex. loading screen)
 		as this function may drop the framerate a little.
 		*/
-		STextureHandle  loadTextureFromDiskToGPU               (std::string sTextureName, std::wstring sPathToTextureFile, bool& bErrorOccurred);
+		STextureHandle  loadTextureFromDiskToGPU               (std::string sTextureName, std::wstring sPathToTextureFile, bool bIsCubeMap, bool& bErrorOccurred);
 		//@@Function
 		/*
 		* desc: returns a loaded texture.

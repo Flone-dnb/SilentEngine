@@ -40,6 +40,8 @@ private:
 
 	Microsoft::WRL::ComPtr<ID3D12RootSignature> pCustomRootSignature;
 
+	STextureHandle skyboxTexture;
+
 	bool bUsingInstancing = false;
 };
 
