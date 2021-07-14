@@ -1,6 +1,16 @@
 # Silent Engine
 
-TODO
+Still in very early development stage, right now we got:
+- entity component system,
+- custom audio engine with FX and 3D positioning (using XAudio2),
+- frustum culling,
+- instancing,
+- easy interface for working with compute shaders,
+- easy interface for adding custom shaders (vertex/pixel),
+- simple GUI (made with SpriteBatch/SpriteFont from DirectXTK),
+- OBJ file import,
+- simple profiler,
+- shadow mapping.
 
 # Dependencies
 
