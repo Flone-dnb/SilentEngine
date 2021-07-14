@@ -2,7 +2,7 @@
 
 Still in very early development stage, right now we got:
 - entity component system,
-- custom audio engine with FX and 3D positioning (using XAudio2),
+- custom audio engine written using XAudio2 with FX and 3D positioning,
 - frustum culling,
 - instancing,
 - easy interface for working with compute shaders,
