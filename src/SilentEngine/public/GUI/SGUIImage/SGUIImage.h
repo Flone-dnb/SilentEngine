@@ -93,7 +93,6 @@ public:
 protected:
 
 	virtual void setViewport(D3D12_VIEWPORT viewport) override;
-	virtual void onMSAAChange() override;
 	virtual bool checkRequiredResourcesBeforeRegister() override;
 	// call under mtxSprite
 	virtual void recalculateSizeToKeepScaling() override;

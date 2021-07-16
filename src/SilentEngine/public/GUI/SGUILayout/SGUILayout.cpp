@@ -226,11 +226,6 @@ void SGUILayout::setViewport(D3D12_VIEWPORT viewport)
 	recalculateSizeToKeepScaling();
 }
 
-void SGUILayout::onMSAAChange()
-{
-	// do nothing
-}
-
 bool SGUILayout::checkRequiredResourcesBeforeRegister()
 {
 	return false;

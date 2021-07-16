@@ -1474,7 +1474,7 @@ void SApplication::setEnableWireframeMode(bool bEnable)
 	bUseFillModeWireframe = bEnable;
 }
 
-void SApplication::setMSAAEnabled(bool bEnable)
+void SApplication::setInitMSAAEnabled(bool bEnable)
 {
 	if (MSAA_Enabled != bEnable)
 	{
@@ -1482,23 +1482,12 @@ void SApplication::setMSAAEnabled(bool bEnable)
 
 		if (bInitCalled)
 		{
-			std::lock_guard<std::mutex> guard(mtxDraw);
-
-			createPSO();
-			onResize();
-
-			for (size_t i = 0; i < vGUILayers.size(); i++)
-			{
-				for (size_t j = 0; j < vGUILayers[i].vGUIObjects.size(); j++)
-				{
-					vGUILayers[i].vGUIObjects[j]->onMSAAChange();
-				}
-			}
+			SError::showErrorMessageBoxAndLog("setInitMSAAEnabled() should be called before init().");
 		}
 	}
 }
 
-bool SApplication::setMSAASampleCount(MSAASampleCount eSampleCount)
+bool SApplication::setInitMSAASampleCount(MSAASampleCount eSampleCount)
 {
 	if (pDevice)
 	{
@@ -1513,18 +1502,7 @@ bool SApplication::setMSAASampleCount(MSAASampleCount eSampleCount)
 
 			if (MSAA_Enabled && bInitCalled)
 			{
-				std::lock_guard<std::mutex> guard(mtxDraw);
-
-				createPSO();
-				onResize();
-
-				for (size_t i = 0; i < vGUILayers.size(); i++)
-				{
-					for (size_t j = 0; j < vGUILayers[i].vGUIObjects.size(); j++)
-					{
-						vGUILayers[i].vGUIObjects[j]->onMSAAChange();
-					}
-				}
+				SError::showErrorMessageBoxAndLog("setInitMSAASampleCount() should be called before init().");
 			}
 		}
 

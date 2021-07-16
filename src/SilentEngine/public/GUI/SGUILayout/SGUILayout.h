@@ -148,7 +148,6 @@ protected:
 	friend class SApplication;
 
 	virtual void setViewport(D3D12_VIEWPORT viewport) override;
-	virtual void onMSAAChange() override;
 	virtual bool checkRequiredResourcesBeforeRegister() override;
 	// call under mtxChilds
 	virtual void recalculateSizeToKeepScaling() override;

@@ -203,14 +203,6 @@ void SGUIImage::setViewport(D3D12_VIEWPORT viewport)
 	}
 }
 
-void SGUIImage::onMSAAChange()
-{
-	if (pSpriteBatch)
-	{
-		loadImage(sPathToTexture);
-	}
-}
-
 bool SGUIImage::checkRequiredResourcesBeforeRegister()
 {
 	std::lock_guard<std::mutex> guard(mtxSprite);

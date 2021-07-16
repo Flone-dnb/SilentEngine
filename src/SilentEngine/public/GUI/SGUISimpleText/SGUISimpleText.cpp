@@ -163,17 +163,6 @@ void SGUISimpleText::setViewport(D3D12_VIEWPORT viewport)
 	}
 }
 
-void SGUISimpleText::onMSAAChange()
-{
-	std::lock_guard<std::mutex> guard(mtxSprite);
-
-	if (pSpriteBatch)
-	{
-		SApplication::getApp()->refreshHeap();
-		initFontResource();
-	}
-}
-
 bool SGUISimpleText::checkRequiredResourcesBeforeRegister()
 {
 	if (sPathToSpriteFont == L"")

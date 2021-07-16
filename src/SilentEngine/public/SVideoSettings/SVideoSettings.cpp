@@ -24,14 +24,14 @@ void SVideoSettings::setDrawGUI(bool bDrawGUI)
 	pApp->setDrawGUI(bDrawGUI);
 }
 
-void SVideoSettings::setMSAAEnabled(bool bEnable)
+void SVideoSettings::setInitMSAAEnabled(bool bEnable)
 {
-	pApp->setMSAAEnabled(bEnable);
+	pApp->setInitMSAAEnabled(bEnable);
 }
 
-bool SVideoSettings::setMSAASampleCount(MSAASampleCount sampleCount)
+bool SVideoSettings::setInitMSAASampleCount(MSAASampleCount sampleCount)
 {
-	return pApp->setMSAASampleCount(sampleCount);
+	return pApp->setInitMSAASampleCount(sampleCount);
 }
 
 bool SVideoSettings::isMSAAEnabled()

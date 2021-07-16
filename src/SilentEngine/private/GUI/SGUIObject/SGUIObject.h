@@ -172,7 +172,6 @@ protected:
 	SGUIObject(const std::string& sObjectName);
 
 	virtual void setViewport(D3D12_VIEWPORT viewport) = 0;
-	virtual void onMSAAChange() = 0;
 	virtual bool checkRequiredResourcesBeforeRegister() = 0;
 	virtual void recalculateSizeToKeepScaling() = 0;
 	// including scale (but not screenScale), used in layout's recalculateSizeToKeepScaling() to calculate screenScale for this object

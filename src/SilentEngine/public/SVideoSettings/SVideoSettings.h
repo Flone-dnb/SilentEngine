@@ -88,6 +88,20 @@ public:
 		* remarks: should be called before calling the SApplication::init().
 		*/
 		bool      setInitEnableVSync                   (bool bEnable);
+		//@@Function
+		/*
+		* desc: used to enable/disable the MSAA - anti-aliasing technique.
+		* param "bEnable": true to enable MSAA, false otherwise.
+		* remarks: should be called before init(). MSAA is enabled by default. Enabling MSAA might cause a slight decrease in performance.
+		*/
+		void      setInitMSAAEnabled(bool bEnable);
+		//@@Function
+		/*
+		* desc: used to set the sample count (i.e. quality) of the MSAA.
+		* param "sampleCount": sample count (i.e. quality).
+		* remarks: should be called before init(). The default sample count is 4.
+		*/
+		bool      setInitMSAASampleCount(MSAASampleCount sampleCount);
 
 
 	// Game
@@ -107,21 +121,7 @@ public:
 
 
 	// MSAA
-
-	//@@Function
-	/*
-	* desc: used to enable/disable the MSAA - anti-aliasing technique.
-	* param "bEnable": true to enable MSAA, false otherwise.
-	* remarks: MSAA is enabled by default. Enabling MSAA might cause a slight decrease in performance.
-	*/
-	void      setMSAAEnabled                       (bool bEnable);
-	//@@Function
-	/*
-	* desc: used to set the sample count (i.e. quality) of the MSAA.
-	* param "sampleCount": sample count (i.e. quality).
-	* remarks: the default sample count is 4. The higher the number of samples the lower the performance might get.
-	*/
-	bool      setMSAASampleCount                   (MSAASampleCount sampleCount);
+	
 	//@@Function
 	/*
 	* desc: used to determine if the MSAA is enabled.
