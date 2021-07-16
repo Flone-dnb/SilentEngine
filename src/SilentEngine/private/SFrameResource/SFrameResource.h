@@ -89,8 +89,9 @@ struct SShadowMapConstants
 	float               pad2 = 0.0f;
 };
 
-struct SRenderPassConstants
+class SRenderPassConstants
 {
+public:
 	DirectX::XMFLOAT4X4 vView               = SMath::getIdentityMatrix4x4();
 	DirectX::XMFLOAT4X4 vInvView            = SMath::getIdentityMatrix4x4();
 	DirectX::XMFLOAT4X4 vProj               = SMath::getIdentityMatrix4x4();
