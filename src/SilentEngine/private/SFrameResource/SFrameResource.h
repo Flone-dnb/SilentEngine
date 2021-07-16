@@ -24,9 +24,13 @@
 #include "SilentEngine/Private/EntityComponentSystem/SLightComponent/SLightComponent.h"
 #include "SilentEngine/Public/SVector/SVector.h"
 
-/*
-* remarks: per-object constant buffer data. Every mesh component has this.
-*/
+enum class TEX_FILTER_MODE
+{
+	TFM_POINT = 0,
+	TFM_LINEAR = 1,
+	TFM_ANISOTROPIC = 2
+};
+
 struct SObjectConstants
 {
 	DirectX::XMFLOAT4X4 vWorld = SMath::getIdentityMatrix4x4();
@@ -61,11 +65,28 @@ struct SMaterialConstants
 	int pad1 = 0;
 };
 
-enum class TEX_FILTER_MODE
+struct SShadowMapConstants
 {
-	TFM_POINT = 0,
-	TFM_LINEAR = 1,
-	TFM_ANISOTROPIC = 2
+	DirectX::XMFLOAT4X4 vWorld = SMath::getIdentityMatrix4x4();
+	DirectX::XMFLOAT4X4 vView = SMath::getIdentityMatrix4x4();
+	DirectX::XMFLOAT4X4 vInvView = SMath::getIdentityMatrix4x4();
+	DirectX::XMFLOAT4X4 vProj = SMath::getIdentityMatrix4x4();
+	DirectX::XMFLOAT4X4 vInvProj = SMath::getIdentityMatrix4x4();
+	DirectX::XMFLOAT4X4 vViewProj = SMath::getIdentityMatrix4x4();
+	DirectX::XMFLOAT4X4 vInvViewProj = SMath::getIdentityMatrix4x4();
+	DirectX::XMFLOAT4X4 vViewProjTexSpace = SMath::getIdentityMatrix4x4();
+
+	DirectX::XMFLOAT2   vRenderTargetSize = { 512.0f, 512.0f };
+	DirectX::XMFLOAT2   vInvRenderTargetSize = { 1.0f / 512.0f, 1.0f / 512.0f };
+
+	float               fNearZ = 0.0f;
+	float               fFarZ = 0.0f;
+
+	DirectX::XMFLOAT2   pad1 = DirectX::XMFLOAT2(0.0f, 0.0f);
+
+	DirectX::XMFLOAT3   vLightPos = { 0.0f, 0.0f, 0.0f };
+
+	float               pad2 = 0.0f;
 };
 
 struct SRenderPassConstants
@@ -170,6 +191,11 @@ public:
 
 
 	// returns new cb start index
+	UINT64 addNewShadowMapCB    (UINT64 iNewCBCount, bool* pbCBWasExpanded);
+	void   removeShadowMapCB    (UINT64 iCBStartIndex, UINT64 iCBCount, bool* pbCBWasResized);
+
+
+	// returns new cb start index
 	size_t addNewMaterialCB     (bool* pbCBWasExpanded);
 	void   removeMaterialCB     (UINT64 iCBIndex, bool* pbCBWasResized);
 
@@ -198,9 +224,10 @@ public:
 	Microsoft::WRL::ComPtr<ID3D12CommandAllocator>   pCommandListAllocator;
 
 	// We cannot update a buffer until the GPU is done processing the commands that reference it. So each frame needs their own buffers.
-	std::unique_ptr<SUploadBuffer<SRenderPassConstants>> pRenderPassCB = nullptr;
-	std::unique_ptr<SUploadBuffer<SObjectConstants>>     pObjectsCB    = nullptr;
+	std::unique_ptr<SUploadBuffer<SRenderPassConstants>> pShadowMapsCB = nullptr;
 	std::unique_ptr<SUploadBuffer<SMaterialConstants>>   pMaterialCB   = nullptr;
+	std::unique_ptr<SUploadBuffer<SRenderPassConstants>> pRenderPassCB = nullptr;
+	std::unique_ptr<SUploadBuffer<SObjectConstants>>     pObjectsCB = nullptr;
 	std::vector<std::unique_ptr<SMaterialBundle>>        vMaterialBundles;
 	std::vector<std::unique_ptr<SUploadBuffer<SObjectConstants>>> vInstancedMeshes;
 	std::vector<std::unique_ptr<SUploadBuffer<SVertex>>> vRuntimeMeshVertexBuffers;
@@ -211,14 +238,18 @@ public:
 
 private:
 
+	friend class SApplication;
+
 	size_t roundUp                 (size_t iNum, size_t iMultiple);
 	void createRenderObjectBuffers (UINT64 iObjectCBCount);
+	void createShadowMapBuffers    (UINT64 iShadowMapCBCount);
 	void createMaterialBuffer      (UINT64 iMaterialCBCount);
 
 
 	UINT64 iObjectsCBActualElementCount = 0;
+	UINT64 iShadowMapCBActualElementCount = 0;
 	UINT64 iMaterialCBActualElementCount = 0;
 	UINT64 iRenderPassCBCount = 1;
-	UINT64  iCBResizeMultiple = OBJECT_CB_RESIZE_MULTIPLE;
+	UINT64 iCBResizeMultiple = OBJECT_CB_RESIZE_MULTIPLE;
 };
 

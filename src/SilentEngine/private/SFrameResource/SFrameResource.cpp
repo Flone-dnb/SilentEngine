@@ -26,6 +26,7 @@ SFrameResource::SFrameResource(ID3D12Device* pDevice, UINT iObjectCBCount)
 	{
 		createRenderObjectBuffers(iObjectCBCount);
 		createMaterialBuffer(iCBResizeMultiple);
+		createShadowMapBuffers(iCBResizeMultiple);
 	}
 }
 
@@ -35,6 +36,13 @@ void SFrameResource::createRenderObjectBuffers(UINT64 iObjectCBCount)
 
 	pRenderPassCB = std::make_unique<SUploadBuffer<SRenderPassConstants>>  (pDevice, iRenderPassCBCount, true);
 	pObjectsCB    = std::make_unique<SUploadBuffer<SObjectConstants>>      (pDevice, iObjectCBCount, true);
+}
+
+void SFrameResource::createShadowMapBuffers(UINT64 iShadowMapCBCount)
+{
+	iShadowMapCBCount = roundUp(iShadowMapCBCount, iCBResizeMultiple);
+
+	pShadowMapsCB = std::make_unique<SUploadBuffer<SRenderPassConstants>>(pDevice, iShadowMapCBCount, true);
 }
 
 void SFrameResource::createMaterialBuffer(UINT64 iMaterialCBCount)
@@ -92,6 +100,56 @@ void SFrameResource::removeObjectCB(UINT64 iCBStartIndex, UINT64 iCBCount, bool*
 	}
 
 	iObjectsCBActualElementCount -= iCBCount;
+}
+
+UINT64 SFrameResource::addNewShadowMapCB(UINT64 iNewCBCount, bool* pbCBWasExpanded)
+{
+	UINT64 iCeiling = roundUp(iShadowMapCBActualElementCount, iCBResizeMultiple);
+
+	if (iShadowMapCBActualElementCount + iNewCBCount > iCeiling)
+	{
+		// Need to expand.
+
+		createShadowMapBuffers(iShadowMapCBActualElementCount + iNewCBCount); // recreating new buffers.
+
+		*pbCBWasExpanded = true; // all objects will again copy their data to frame resources.
+	}
+	else
+	{
+		*pbCBWasExpanded = false;
+	}
+
+	iShadowMapCBActualElementCount += iNewCBCount;
+
+	return iShadowMapCBActualElementCount - iNewCBCount;
+}
+
+void SFrameResource::removeShadowMapCB(UINT64 iCBStartIndex, UINT64 iCBCount, bool* pbCBWasResized)
+{
+	UINT64 iCeiling = roundUp(iShadowMapCBActualElementCount, iCBResizeMultiple);
+
+	iCeiling -= iCBResizeMultiple;
+
+	if (iShadowMapCBActualElementCount > iCBResizeMultiple)
+	{
+		if (iShadowMapCBActualElementCount - iCBCount <= iCeiling)
+		{
+			// Resize.
+			*pbCBWasResized = true; // all objects will again copy their data to frame resources.
+
+			createShadowMapBuffers(iShadowMapCBActualElementCount - iCBCount); // recreating new buffers.
+		}
+		else
+		{
+			*pbCBWasResized = false;
+		}
+	}
+	else
+	{
+		*pbCBWasResized = false;
+	}
+
+	iShadowMapCBActualElementCount -= iCBCount;
 }
 
 size_t SFrameResource::addNewMaterialCB(bool* pbCBWasExpanded)

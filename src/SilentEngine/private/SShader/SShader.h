@@ -54,6 +54,8 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> pTransparentPSO;
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> pTransparentAlphaToCoveragePSO;
 
+	Microsoft::WRL::ComPtr<ID3D12PipelineState> pShadowMapPSO;
+
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> pOpaqueWireframePSO;
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> pTransparentWireframePSO;
 };

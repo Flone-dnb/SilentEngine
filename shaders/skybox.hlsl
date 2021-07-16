@@ -3,6 +3,7 @@
 SamplerState samplerPointWrap       : register(s0);
 SamplerState samplerLinearWrap      : register(s1);
 SamplerState samplerAnisotropicWrap : register(s2);
+SamplerComparisonState samplerShadowMap : register(s3);
 
 cbuffer cbPass : register(b0)
 {

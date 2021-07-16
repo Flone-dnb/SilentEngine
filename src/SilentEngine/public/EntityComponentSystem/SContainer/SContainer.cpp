@@ -318,6 +318,26 @@ void SContainer::createVertexBufferForRuntimeMeshComponents(SFrameResource* pFra
 	}
 }
 
+size_t SContainer::getLightComponentsCount()
+{
+	size_t iCount = 0;
+
+	for (size_t i = 0; i < vComponents.size(); i++)
+	{
+		iCount += vComponents[i]->getLightComponentsCount();
+	}
+
+	return iCount;
+}
+
+void SContainer::getRequiredShadowMapCount(size_t& iDSVCount)
+{
+	for (size_t i = 0; i < vComponents.size(); i++)
+	{
+		vComponents[i]->getRequiredShadowMapCount(iDSVCount);
+	}
+}
+
 void SContainer::createInstancingDataForFrameResource(std::vector<std::unique_ptr<SFrameResource>>* vFrameResources)
 {
 	for (size_t i = 0; i < vComponents.size(); i++)
@@ -339,6 +359,14 @@ void SContainer::removeInstancingDataForFrameResources(std::vector<std::unique_p
 	for (size_t i = 0; i < vComponents.size(); i++)
 	{
 		vComponents[i]->removeInstancingDataForFrameResources(vFrameResources);
+	}
+}
+
+void SContainer::deallocateShadowMapCBsForLightComponents(std::vector<std::unique_ptr<SFrameResource>>* vFrameResources)
+{
+	for (size_t i = 0; i < vComponents.size(); i++)
+	{
+		vComponents[i]->deallocateShadowMapCBsForLightComponents(vFrameResources);
 	}
 }
 

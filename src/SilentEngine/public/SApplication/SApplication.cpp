@@ -1039,31 +1039,57 @@ bool SApplication::spawnContainerInLevel(SContainer* pContainer)
 		return true;
 	}
 
-
+	flushCommandQueue();
 
 	// Check light count.
-	size_t iLightComponents = 0;
-
-	for (size_t i = 0; i < pContainer->vComponents.size(); i++)
-	{
-		iLightComponents += pContainer->vComponents[i]->getLightComponentsCount();
-	}
+	size_t iLightComponents = pContainer->getLightComponentsCount();
 
 	if (getCurrentLevel()->vSpawnedLightComponents.size() + iLightComponents > MAX_LIGHTS)
 	{
-		SError::showErrorMessageBoxAndLog("exceeded MAX_LIGHTS (this container was not spawned).");
+		SError::showErrorMessageBoxAndLog("exceeded MAX_LIGHTS.");
 		return true;
 	}
 
-	// Add lights.
-	for (size_t i = 0; i < pContainer->vComponents.size(); i++)
+	// Allocate shadow maps (if any light components in this container)
+	if (iLightComponents > 0)
 	{
-		pContainer->vComponents[i]->addLightComponentsToVector(getCurrentLevel()->vSpawnedLightComponents);
+		// Add lights.
+		for (size_t i = 0; i < pContainer->vComponents.size(); i++)
+		{
+			pContainer->vComponents[i]->addLightComponentsToVector(getCurrentLevel()->vSpawnedLightComponents);
+		}
+
+		// ask how much DSVs need for shadow maps
+		size_t iDSVCount = 0;
+		pContainer->getRequiredShadowMapCount(iDSVCount);
+
+		// create/remove RTV/DSV to shadow maps.
+		createRTVAndDSVDescriptorHeaps(iDSVCount);
+		onResize();
+
+		// allocate new SRV(s) for shadow maps to used in shaders
+		createCBVSRVUAVHeap();
+		createViews();
+		
+		CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHeapHandle = getDepthStencilViewHandle();
+		dsvHeapHandle.Offset(static_cast<UINT>(iDSVStartForShadowMapsIndex), iDSVDescriptorSize);
+
+		CD3DX12_CPU_DESCRIPTOR_HANDLE srvCpuHeapHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(pCBVSRVUAVHeap->GetCPUDescriptorHandleForHeapStart());
+		srvCpuHeapHandle.Offset(static_cast<UINT>(iShadowMapSRVStartOffset), iCBVSRVUAVDescriptorSize);
+
+		CD3DX12_GPU_DESCRIPTOR_HANDLE srvGpuHeapHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(pCBVSRVUAVHeap->GetGPUDescriptorHandleForHeapStart());
+		srvGpuHeapHandle.Offset(static_cast<UINT>(iShadowMapSRVStartOffset), iCBVSRVUAVDescriptorSize);
+
+		for (size_t i = 0; i < getCurrentLevel()->vSpawnedLightComponents.size(); i++)
+		{
+			// update old views to new ones
+			// and assign new views to new shadow maps (because we already added below addLightComponentsToVector()).
+			getCurrentLevel()->vSpawnedLightComponents[i]->allocateShadowMapCBsForLightComponents(&vFrameResources, pDevice.Get(),
+				dsvHeapHandle, iDSVDescriptorSize, srvCpuHeapHandle, srvGpuHeapHandle, iCBVSRVUAVDescriptorSize);
+		}
 	}
 
-
-
-	// We need 1 CB for each SCT_MESH, SCT_RUNTIME_MESH component.
+	// We need 1 CB for each SCT_MESH / SCT_RUNTIME_MESH component.
 	size_t iCBCount = pContainer->getMeshComponentsCount();
 
 	if (iCBCount == 0)
@@ -1078,15 +1104,14 @@ bool SApplication::spawnContainerInLevel(SContainer* pContainer)
 	}
 	else
 	{
-		flushCommandQueue();
-
-		iActualObjectCBCount += iCBCount;
-
 		bool bExpanded = false;
 		size_t iNewObjectsCBIndex = 0;
 
 		for (size_t i = 0; i < vFrameResources.size(); i++)
 		{
+			// TODO: pass frame resource vector (like createInstancingDataForFrameResource() below), don't use cycle - waste of time.
+			// TODO: same in despawn
+
 			iNewObjectsCBIndex = vFrameResources[i]->addNewObjectCB(iCBCount, &bExpanded);
 
 			pContainer->createVertexBufferForRuntimeMeshComponents(vFrameResources[i].get());
@@ -1095,10 +1120,8 @@ bool SApplication::spawnContainerInLevel(SContainer* pContainer)
 		pContainer->setStartIndexInCB(iNewObjectsCBIndex);
 
 
-
 		// Allocate instanced data (if using instancing)
 		pContainer->createInstancingDataForFrameResource(&vFrameResources);
-
 
 
 		resetCommandList();
@@ -1169,16 +1192,42 @@ void SApplication::despawnContainerFromLevel(SContainer* pContainer)
 	
 	std::lock_guard<std::mutex> guard(mtxDraw);
 
-	// Remove lights.
-	for (size_t i = 0; i < pContainer->vComponents.size(); i++)
+	flushCommandQueue();
+
+	size_t iLightComponents = pContainer->getLightComponentsCount();
+
+	if (iLightComponents > 0)
 	{
-		pContainer->vComponents[i]->removeLightComponentsFromVector(getCurrentLevel()->vSpawnedLightComponents);
+		// Remove lights.
+		for (size_t i = 0; i < pContainer->vComponents.size(); i++)
+		{
+			pContainer->vComponents[i]->removeLightComponentsFromVector(getCurrentLevel()->vSpawnedLightComponents);
+		}
+
+		pContainer->deallocateShadowMapCBsForLightComponents(&vFrameResources);
+
+		if (bExitCalled == false)
+		{
+			// SwapChain::ResizeBuffers() in onResize() throws Access denied after msgProc finished
+			// (cause? maybe because the swap chain is bound to the window and it's (window) being destroyed after msgProc?)
+			// create/remove RTV/DSV to shadow maps.
+			createRTVAndDSVDescriptorHeaps();
+			onResize();
+		}
+
+		CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHeapHandle = getDepthStencilViewHandle();
+		dsvHeapHandle.Offset(static_cast<UINT>(iDSVStartForShadowMapsIndex), iDSVDescriptorSize);
+
+		for (size_t i = 0; i < getCurrentLevel()->vSpawnedLightComponents.size(); i++)
+		{
+			// update old views to new ones
+			getCurrentLevel()->vSpawnedLightComponents[i]->deallocateShadowMapCBsForLightComponents(&vFrameResources);
+		}
 	}
+
 
 	// We need 1 for each SCT_MESH, SCT_RUNTIME_MESH component.
 	size_t iCBCount = pContainer->getMeshComponentsCount();
-
-	flushCommandQueue();
 
 	if (iCBCount == 0)
 	{
@@ -1207,12 +1256,12 @@ void SApplication::despawnContainerFromLevel(SContainer* pContainer)
 	}
 	else
 	{
-		iActualObjectCBCount -= iCBCount;
-
 		bool bResized = false;
 
 		for (size_t i = 0; i < vFrameResources.size(); i++)
 		{
+			// TODO: pass frame resource vector (like removeInstancingDataForFrameResources() below), don't use cycle - waste of time.
+			// TODO: same in spawn
 			vFrameResources[i]->removeObjectCB(pContainer->getStartIndexInCB(), iCBCount, &bResized);
 		}
 
@@ -1399,6 +1448,23 @@ void SApplication::setBackBufferFillColor(const SVector& vColor)
 	backBufferFillColor[0] = vColor.getX();
 	backBufferFillColor[1] = vColor.getY();
 	backBufferFillColor[2] = vColor.getZ();
+}
+
+void SApplication::setShadowMappingBias(int iShadowMappingBias)
+{
+	this->iShadowMappingBias = iShadowMappingBias;
+
+	if (bRunCalled)
+	{
+		std::lock_guard<std::mutex> guard(mtxDraw);
+
+		createPSO();
+	}
+}
+
+int SApplication::getShadowMappingBias() const
+{
+	return iShadowMappingBias;
 }
 
 void SApplication::setEnableWireframeMode(bool bEnable)
@@ -2319,8 +2385,6 @@ bool SApplication::onResize()
 		depthStencilDesc.Layout             = D3D12_TEXTURE_LAYOUT_UNKNOWN;
 		depthStencilDesc.Flags              = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
 
-
-
 		D3D12_CLEAR_VALUE optClear;
 		optClear.Format               = DepthStencilFormat;
 		optClear.DepthStencil.Depth   = 1.0f;
@@ -2542,6 +2606,7 @@ void SApplication::update()
 
 	updateMaterials();
 	updateObjectCBs();
+	updateShadowMapsCB(); // do before main pass
 	updateMainPassCB();
 
 #if defined(DEBUG) || defined(_DEBUG)
@@ -2805,6 +2870,50 @@ void SApplication::updateMainPassCB()
 	pCurrentPassCB->copyDataToElement(0, mainRenderPassCB);
 }
 
+void SApplication::updateShadowMapsCB()
+{
+	SLevel* pLevel = getCurrentLevel();
+
+	if (pLevel)
+	{
+		std::lock_guard<std::mutex> guard(mtxDraw);
+		std::lock_guard<std::mutex> guard2(pLevel->mtxLevelBounds); // used in directional lights
+
+		for (size_t i = 0; i < pLevel->vSpawnedLightComponents.size(); i++)
+		{
+			if (pLevel->vSpawnedLightComponents[i]->isVisible())
+			{
+				pLevel->vSpawnedLightComponents[i]->updateCBData(pCurrentFrameResource);
+			}
+		}
+	}
+}
+
+void SApplication::drawToShadowMaps()
+{
+	SLevel* pLevel = getCurrentLevel();
+	if (pLevel == nullptr)
+	{
+		return;
+	}
+
+	pCommandList->SetPipelineState(pShadowMapPSO.Get());
+
+	SRenderPassConstants renderPassCBCopy = mainRenderPassCB;
+
+	for (size_t i = 0; i < pLevel->vSpawnedLightComponents.size(); i++)
+	{
+		if (pLevel->vSpawnedLightComponents[i]->isVisible())
+		{
+			pLevel->vSpawnedLightComponents[i]->renderToShadowMaps(pCommandList.Get(), pCurrentFrameResource, &renderPassCBCopy);
+
+			drawOpaqueComponents(true); // drawing to shadow map
+
+			pLevel->vSpawnedLightComponents[i]->finishRenderToShadowMaps(pCommandList.Get());
+		}
+	}
+}
+
 void SApplication::draw()
 {
 	std::lock_guard<std::mutex> guard(mtxDraw);
@@ -2846,6 +2955,17 @@ void SApplication::draw()
 
 	// Record new commands in the command list:
 
+	// CBV/SRV heap & root signature.
+
+	ID3D12DescriptorHeap* descriptorHeaps[] = { pCBVSRVUAVHeap.Get() };
+	pCommandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
+
+	pCommandList->SetGraphicsRootSignature(pRootSignature.Get());
+
+
+	drawToShadowMaps();
+
+
 	// Set the viewport and scissor rect. This needs to be reset whenever the command list is reset.
 
 	pCommandList->RSSetViewports(1, &ScreenViewport);
@@ -2876,15 +2996,6 @@ void SApplication::draw()
 	pCommandList->OMSetRenderTargets(1, &backBufferCpuHandle, true, &depthBufferCpuHandle);
 
 
-
-	// CBV/SRV heap.
-
-	ID3D12DescriptorHeap* descriptorHeaps[] = { pCBVSRVUAVHeap.Get() };
-	pCommandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
-
-	pCommandList->SetGraphicsRootSignature(pRootSignature.Get());
-
-
 	// Render pass cb.
 
 	pCommandList->SetGraphicsRootConstantBufferView(0, pCurrentFrameResource->pRenderPassCB.get()->getResource()->GetGPUVirtualAddress());
@@ -2894,6 +3005,15 @@ void SApplication::draw()
 	// Draw.
 
 	iLastFrameDrawCallCount = 0;
+
+	if (bUseFillModeWireframe)
+	{
+		pCommandList->SetPipelineState(pOpaqueWireframePSO.Get());
+	}
+	else
+	{
+		pCommandList->SetPipelineState(pOpaquePSO.Get());
+	}
 
 	drawOpaqueComponents();
 
@@ -3057,7 +3177,7 @@ void SApplication::draw()
 	mtxFenceUpdate.unlock();
 }
 
-void SApplication::drawOpaqueComponents()
+void SApplication::drawOpaqueComponents(bool bDrawingToShadowMap)
 {
 	bool bUsingCustomResources = false;
 
@@ -3069,18 +3189,27 @@ void SApplication::drawOpaqueComponents()
 			{
 				pCommandList->SetGraphicsRootSignature(vOpaqueMeshesByCustomShader[i].pShader->pCustomShaderResources->pCustomRootSignature.Get());
 
-				pCommandList->SetGraphicsRootConstantBufferView(0, pCurrentFrameResource->pRenderPassCB.get()->getResource()->GetGPUVirtualAddress());
+				// do we need this?
+				// (also uncomment below)
+				//pCommandList->SetGraphicsRootConstantBufferView(0, pCurrentFrameResource->pRenderPassCB.get()->getResource()->GetGPUVirtualAddress());
 
 				bUsingCustomResources = true;
 			}
 
-			if (bUseFillModeWireframe)
+			if (bDrawingToShadowMap)
 			{
-				pCommandList->SetPipelineState(vOpaqueMeshesByCustomShader[i].pShader->pOpaqueWireframePSO.Get());
+				pCommandList->SetPipelineState(vOpaqueMeshesByCustomShader[i].pShader->pShadowMapPSO.Get());
 			}
 			else
 			{
-				pCommandList->SetPipelineState(vOpaqueMeshesByCustomShader[i].pShader->pOpaquePSO.Get());
+				if (bUseFillModeWireframe)
+				{
+					pCommandList->SetPipelineState(vOpaqueMeshesByCustomShader[i].pShader->pOpaqueWireframePSO.Get());
+				}
+				else
+				{
+					pCommandList->SetPipelineState(vOpaqueMeshesByCustomShader[i].pShader->pOpaquePSO.Get());
+				}
 			}
 		}
 
@@ -3096,7 +3225,12 @@ void SApplication::drawOpaqueComponents()
 				}
 
 				if (bParentVisible)
-					drawComponent(vOpaqueMeshesByCustomShader[i].vMeshComponentsWithThisShader[j], bUsingCustomResources);
+				{
+					if (!(bDrawingToShadowMap && vOpaqueMeshesByCustomShader[i].vMeshComponentsWithThisShader[j]->getRenderData()->primitiveTopologyType == D3D_PRIMITIVE_TOPOLOGY_LINELIST))
+					{
+						drawComponent(vOpaqueMeshesByCustomShader[i].vMeshComponentsWithThisShader[j], bUsingCustomResources, bDrawingToShadowMap);
+					}
+				}
 			}
 		}
 
@@ -3105,7 +3239,7 @@ void SApplication::drawOpaqueComponents()
 			if (vOpaqueMeshesByCustomShader[i].pShader->pCustomShaderResources)
 			{
 				pCommandList->SetGraphicsRootSignature(pRootSignature.Get());
-				pCommandList->SetGraphicsRootConstantBufferView(0, pCurrentFrameResource->pRenderPassCB.get()->getResource()->GetGPUVirtualAddress());
+				//pCommandList->SetGraphicsRootConstantBufferView(0, pCurrentFrameResource->pRenderPassCB.get()->getResource()->GetGPUVirtualAddress());
 
 				bUsingCustomResources = false;
 			}
@@ -3220,10 +3354,10 @@ void SApplication::drawGUIObjects()
 					scaling.y *= screenScaling.getY();
 
 					RECT bounds;
-					bounds.left = pos.x - (texSize.x * scaling.x / 2);
-					bounds.right = pos.x + (texSize.x * scaling.x / 2);
-					bounds.top = pos.y - (texSize.y * scaling.y / 2);
-					bounds.bottom = pos.y + (texSize.y * scaling.y / 2);
+					bounds.left = static_cast<LONG>(pos.x - (texSize.x * scaling.x / 2));
+					bounds.right = static_cast<LONG>(pos.x + (texSize.x * scaling.x / 2));
+					bounds.top = static_cast<LONG>(pos.y - (texSize.y * scaling.y / 2));
+					bounds.bottom = static_cast<LONG>(pos.y + (texSize.y * scaling.y / 2));
 					pImage->lastDrawBounds = bounds;
 
 					pImage->pSpriteBatch->Draw(heapHandle,
@@ -3294,7 +3428,7 @@ void SApplication::drawGUIObjects()
 	}
 }
 
-void SApplication::drawComponent(SComponent* pComponent, bool bUsingCustomResources)
+void SApplication::drawComponent(SComponent* pComponent, bool bUsingCustomResources, bool bDrawingToShadowMap)
 {
 	bool bDrawThisComponent = false;
 	bool bUseFrustumCulling = true;
@@ -3452,13 +3586,14 @@ void SApplication::drawComponent(SComponent* pComponent, bool bUsingCustomResour
 
 
 
-	// Object descriptor table.
+	// Object data.
 
 	// (uncomment 'recreate cbv heap' in spawn/despawnContainer if
 	// will use views)
 	pCommandList->SetGraphicsRootConstantBufferView(1,
 		pCurrentFrameResource->pObjectsCB.get()->getResource()->GetGPUVirtualAddress() +
 		pComponent->getRenderData()->iObjCBIndex * pCurrentFrameResource->pObjectsCB->getElementSize());
+	// (same in shadow maps)
 	// (uncomment 'recreate cbv heap' in spawn/despawnContainer if
 	// will use views)
 
@@ -3484,7 +3619,7 @@ void SApplication::drawComponent(SComponent* pComponent, bool bUsingCustomResour
 
 		iDrawInstanceCount = static_cast<UINT>(drawCount);
 
-		pCommandList->SetGraphicsRootShaderResourceView(4,
+		pCommandList->SetGraphicsRootShaderResourceView(5,
 			dynamic_cast<SMeshComponent*>(pComponent)->vFrameResourcesInstancedData[iCurrentFrameResourceIndex]->getResource()->GetGPUVirtualAddress());
 	}
 
@@ -3526,6 +3661,14 @@ void SApplication::drawComponent(SComponent* pComponent, bool bUsingCustomResour
 			+ iMatCBIndex * pCurrentFrameResource->pMaterialCB->getElementSize());
 	}
 
+
+	// Bind shadow maps.
+	if (!bDrawingToShadowMap && getCurrentLevel() && getCurrentLevel()->vSpawnedLightComponents.size() > 0)
+	{
+		auto gpuHandleToShadowMaps = CD3DX12_GPU_DESCRIPTOR_HANDLE(pCBVSRVUAVHeap->GetGPUDescriptorHandleForHeapStart());
+		gpuHandleToShadowMaps.Offset(iShadowMapSRVStartOffset, iCBVSRVUAVDescriptorSize);
+		pCommandList->SetGraphicsRootDescriptorTable(4, gpuHandleToShadowMaps);
+	}
 
 
 	// Draw.
@@ -3647,33 +3790,45 @@ size_t SApplication::roundUp(size_t iNum, size_t iMultiple)
 	return iNum + iMultiple - iRemainder;
 }
 
-std::array<const CD3DX12_STATIC_SAMPLER_DESC, 3> SApplication::getStaticSamples()
+std::array<const CD3DX12_STATIC_SAMPLER_DESC, 4> SApplication::getStaticSamples()
 {
 	const CD3DX12_STATIC_SAMPLER_DESC pointWrap(
-		0,
-		D3D12_FILTER_MIN_MAG_MIP_POINT,
+		0, // shader register
+		D3D12_FILTER_MIN_MAG_MIP_POINT, // filter
 		D3D12_TEXTURE_ADDRESS_MODE_WRAP,
 		D3D12_TEXTURE_ADDRESS_MODE_WRAP,
 		D3D12_TEXTURE_ADDRESS_MODE_WRAP
 	);
 
 	const CD3DX12_STATIC_SAMPLER_DESC linearWrap(
-		1,
-		D3D12_FILTER_MIN_MAG_MIP_LINEAR,
+		1, // shader register
+		D3D12_FILTER_MIN_MAG_MIP_LINEAR, // filter
 		D3D12_TEXTURE_ADDRESS_MODE_WRAP,
 		D3D12_TEXTURE_ADDRESS_MODE_WRAP,
 		D3D12_TEXTURE_ADDRESS_MODE_WRAP
 	);
 
 	const CD3DX12_STATIC_SAMPLER_DESC anisotropicWrap(
-		2,
-		D3D12_FILTER_ANISOTROPIC,
-		D3D12_TEXTURE_ADDRESS_MODE_WRAP,
-		D3D12_TEXTURE_ADDRESS_MODE_WRAP,
-		D3D12_TEXTURE_ADDRESS_MODE_WRAP
+		2, // shader register
+		D3D12_FILTER_ANISOTROPIC, // filter
+		D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressU
+		D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressV
+		D3D12_TEXTURE_ADDRESS_MODE_WRAP   // addressW
 	);
 
-	return { pointWrap, linearWrap, anisotropicWrap };
+	const CD3DX12_STATIC_SAMPLER_DESC shadow(
+		3, // shader register
+		D3D12_FILTER_COMPARISON_MIN_MAG_LINEAR_MIP_POINT, // filter
+		D3D12_TEXTURE_ADDRESS_MODE_BORDER,  // addressU
+		D3D12_TEXTURE_ADDRESS_MODE_BORDER,  // addressV
+		D3D12_TEXTURE_ADDRESS_MODE_BORDER,   // addressW
+		0.0f,                               // mipLODBias
+		16,                                 // maxAnisotropy
+		D3D12_COMPARISON_FUNC_LESS_EQUAL,
+		D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK
+	);
+
+	return { pointWrap, linearWrap, anisotropicWrap, shadow };
 }
 
 void SApplication::internalPhysicsTickThread()
@@ -4341,8 +4496,11 @@ bool SApplication::getScreenParams(bool bApplyResolution)
 	return false;
 }
 
-bool SApplication::createRTVAndDSVDescriptorHeaps()
+bool SApplication::createRTVAndDSVDescriptorHeaps(size_t iAddDSVCount)
 {
+	pRTVHeap.Reset();
+	pDSVHeap.Reset();
+
 	// RTV
 
 	D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc;
@@ -4362,7 +4520,18 @@ bool SApplication::createRTVAndDSVDescriptorHeaps()
 	// DSV
 
 	D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc;
-	dsvHeapDesc.NumDescriptors = 1;
+	iDSVStartForShadowMapsIndex = 1;
+	dsvHeapDesc.NumDescriptors = static_cast<UINT>(iDSVStartForShadowMapsIndex);
+
+	if (pCurrentFrameResource)
+	{
+		// for old shadow maps (already created)
+		dsvHeapDesc.NumDescriptors += static_cast<UINT>(pCurrentFrameResource->iShadowMapCBActualElementCount);
+	}
+
+	// for new shadow maps (currently in spawn())
+	dsvHeapDesc.NumDescriptors += static_cast<UINT>(iAddDSVCount);
+
 	dsvHeapDesc.Type           = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
 	dsvHeapDesc.Flags          = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	dsvHeapDesc.NodeMask       = 0;
@@ -4391,6 +4560,7 @@ bool SApplication::createCBVSRVUAVHeap()
 	iPerFrameResEndOffset = iDescriptorCount;
 
 	iDescriptorCount += static_cast<UINT>(vLoadedTextures.size()); // one SRV per texture
+
 	// get gui item count
 	size_t iGUIItemCount = 0; // also including SRVs to layouts that don't need an SRV (those SRVs are not going to be used at all (TODO))
 	for (size_t i = 0; i < vGUILayers.size(); i++)
@@ -4398,11 +4568,22 @@ bool SApplication::createCBVSRVUAVHeap()
 		iGUIItemCount += vGUILayers[i].vGUIObjects.size();
 	}
 	iDescriptorCount += static_cast<UINT>(iGUIItemCount); // one SRV per gui item
+
 	iDescriptorCount += BLUR_VIEW_COUNT; // for blur effect
 
+	if (getCurrentLevel())
+	{
+		iShadowMapSRVStartOffset = iDescriptorCount;
 
+		for (size_t i = 0; i < getCurrentLevel()->vSpawnedLightComponents.size(); i++)
+		{
+			iDescriptorCount += getCurrentLevel()->vSpawnedLightComponents[i]->iRequiredSRVs;
+		}
+	}
+
+	// --------------------------------------
 	// new global stuff goes here
-
+	// --------------------------------------
 
 	D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc;
 	cbvHeapDesc.NumDescriptors = iDescriptorCount;
@@ -4592,7 +4773,7 @@ bool SApplication::createRootSignature(SCustomShaderResources* pCustomShaderReso
 	}
 
 	// Root parameter can be a table, root descriptor or root constants.
-	std::vector<CD3DX12_ROOT_PARAMETER> vRootParameters(bUseInstancing ? 5 : 4);
+	std::vector<CD3DX12_ROOT_PARAMETER> vRootParameters(bUseInstancing ? 6 : 5); // DONT FORGET TO CHANGE ROOT SIG SLOT IN DRAW()
 
 	// Perfomance TIP: Order from most frequent to least frequent.
 	vRootParameters[0].InitAsConstantBufferView(0); // cbRenderPass
@@ -4608,6 +4789,9 @@ bool SApplication::createRootSignature(SCustomShaderResources* pCustomShaderReso
 		}
 	}
 
+
+	// Materials.
+
 	if (bCustomMaterials)
 	{
 		vRootParameters[2].InitAsShaderResourceView(0, 1); // materials
@@ -4618,18 +4802,58 @@ bool SApplication::createRootSignature(SCustomShaderResources* pCustomShaderReso
 	}
 
 
-	vRootParameters[3].InitAsDescriptorTable(1, &texTable, D3D12_SHADER_VISIBILITY_PIXEL); // textures
+	// Textures.
+
+	vRootParameters[3].InitAsDescriptorTable(1, &texTable, D3D12_SHADER_VISIBILITY_PIXEL);
+
+
+	// Shadow maps.
+
+	UINT iShadowMapDescriptorCount = 0;
+
+	if (getCurrentLevel())
+	{
+		for (size_t i = 0; i < getCurrentLevel()->vSpawnedLightComponents.size(); i++)
+		{
+			iShadowMapDescriptorCount += getCurrentLevel()->vSpawnedLightComponents[i]->iRequiredSRVs;
+		}
+	}
+
+	if (iShadowMapDescriptorCount == 0)
+	{
+		iShadowMapDescriptorCount = MAX_LIGHTS * 6; // this yet to be changed in the future
+		// worst case all point lights (so each needs 6 shadow maps)
+	}
+	else
+	{
+		iShadowMapDescriptorCount = (MAX_LIGHTS * 6) - iShadowMapDescriptorCount;
+	}
+
+	CD3DX12_DESCRIPTOR_RANGE shadowMapTable;
+	shadowMapTable.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, iShadowMapDescriptorCount, 0, 2);
+	vRootParameters[4].InitAsDescriptorTable(1, &shadowMapTable, D3D12_SHADER_VISIBILITY_PIXEL);
+
+
+	// Instance data.
 
 	if (bUseInstancing)
 	{
-		vRootParameters[4].InitAsShaderResourceView(1, 1);
+		vRootParameters[5].InitAsShaderResourceView(1, 1);
 	}
+
+
+
+	// ------------------------
+	// new stuff goes here			// DONT FORGET TO CHANGE TO CORRECT ROOT SIG SLOT IN DRAW()
+	// -----------------------
+
+
 
 	// Static samples don't need a heap.
 	auto staticSamples = getStaticSamples();
 
 	// A root signature is an array of root parameters.
-	CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc(bUseInstancing ? 5 : 4, &vRootParameters[0], static_cast<UINT>(staticSamples.size()), staticSamples.data(),
+	CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc(vRootParameters.size(), &vRootParameters[0], static_cast<UINT>(staticSamples.size()), staticSamples.data(),
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
 
@@ -4862,11 +5086,39 @@ bool SApplication::createPSO(SShader* pPSOsForCustomShader)
 		psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
 	}
 
+	// PSO for shadow maps.
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC smapPsoDesc = psoDesc;
+	smapPsoDesc.RasterizerState.DepthBias = iShadowMappingBias;
+	smapPsoDesc.RasterizerState.DepthBiasClamp = 0.0f;
+	smapPsoDesc.RasterizerState.SlopeScaledDepthBias = 1.0f;
+	// Shadow map pass does not have a render target (no back buffer, only depth writes).
+	smapPsoDesc.SampleDesc.Count = 1;
+	smapPsoDesc.SampleDesc.Quality = 0;
+	smapPsoDesc.RTVFormats[0] = DXGI_FORMAT_UNKNOWN;
+	smapPsoDesc.NumRenderTargets = 0;
+
+	// only run vertex shader
+	smapPsoDesc.PS =
+	{   // no alpha tests for shadow maps for now
+		// also drawing only opaque objects in drawToShadowMaps()
+		// also custom shaders will only run vertex shader for now
+		nullptr,
+		0
+	};
 
 	HRESULT hresult;
 	if (pPSOsForCustomShader)
 	{
 		hresult = pDevice->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pPSOsForCustomShader->pOpaquePSO));
+		if (FAILED(hresult))
+		{
+			SError::showErrorMessageBoxAndLog(hresult);
+			return true;
+		}
+
+		// Shadow map PSO.
+
+		hresult = pDevice->CreateGraphicsPipelineState(&smapPsoDesc, IID_PPV_ARGS(&pPSOsForCustomShader->pShadowMapPSO));
 		if (FAILED(hresult))
 		{
 			SError::showErrorMessageBoxAndLog(hresult);
@@ -4882,6 +5134,15 @@ bool SApplication::createPSO(SShader* pPSOsForCustomShader)
 			return true;
 		}
 
+		hresult = pDevice->CreateGraphicsPipelineState(&smapPsoDesc, IID_PPV_ARGS(&pShadowMapPSO));
+		if (FAILED(hresult))
+		{
+			SError::showErrorMessageBoxAndLog(hresult);
+			return true;
+		}
+
+
+		// PSO for line topology.
 		D3D12_GRAPHICS_PIPELINE_STATE_DESC psoLineDesc = psoDesc;
 		psoLineDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE;
 		hresult = pDevice->CreateGraphicsPipelineState(&psoLineDesc, IID_PPV_ARGS(&pOpaqueLineTopologyPSO));
@@ -5073,9 +5334,8 @@ bool SApplication::createDefaultMaterial()
 	else
 	{
 		SMaterialProperties matProps;
-		matProps.setDiffuseColor(SVector(1.0f, 0.0f, 0.0f, 1.0f));
-		matProps.setSpecularColor(SVector(1.0f, 1.0f, 1.0f));
-		matProps.setRoughness(0.0f);
+		matProps.setDiffuseColor(SVector(0.5f, 0.5f, 0.5f, 1.0f));
+		matProps.setRoughness(0.9f);
 
 		pDefaultMat->setMaterialProperties(matProps);
 
@@ -5166,9 +5426,9 @@ D3D12_CPU_DESCRIPTOR_HANDLE SApplication::getCurrentBackBufferViewHandle() const
 	}
 }
 
-D3D12_CPU_DESCRIPTOR_HANDLE SApplication::getDepthStencilViewHandle() const
+CD3DX12_CPU_DESCRIPTOR_HANDLE SApplication::getDepthStencilViewHandle() const
 {
-	return pDSVHeap->GetCPUDescriptorHandleForHeapStart();
+	return CD3DX12_CPU_DESCRIPTOR_HANDLE(pDSVHeap->GetCPUDescriptorHandleForHeapStart());
 }
 
 void SApplication::showDeviceRemovedReason()

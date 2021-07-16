@@ -21,6 +21,7 @@ struct SLightProps
 	float fFalloffEnd = 30.0f; // point/spot light only
 	DirectX::XMFLOAT3 vPosition = { 0.0f, 0.0f, 0.0f }; // point/spot light only
 	float fSpotLightRange = 128.0f; // spot light only
+	DirectX::XMFLOAT4X4 mLightViewProjTex = SMath::getIdentityMatrix4x4();
 };
 
 enum class SLightComponentType
@@ -62,9 +63,22 @@ protected:
 	friend class SComponent;
 
 	virtual void updateMyAndChildsLocationRotationScale(bool bCalledOnSelf) override;
+	virtual void allocateShadowMaps(std::vector<std::unique_ptr<SFrameResource>>* vFrameResources, ID3D12Device* pDevice,
+		CD3DX12_CPU_DESCRIPTOR_HANDLE& dsvHeapHandle, UINT iDSVDescriptorSize,
+		CD3DX12_CPU_DESCRIPTOR_HANDLE& srvCpuHeapHandle, CD3DX12_GPU_DESCRIPTOR_HANDLE& srvGpuHeapHandle,
+		UINT iSRVDescriptorSize) = 0;
+	virtual void deallocateShadowMaps(std::vector<std::unique_ptr<SFrameResource>>* vFrameResources) = 0;
+	virtual void updateCBData(SFrameResource* pCurrentFrameResource) = 0;
+	virtual void getRequiredShadowMapCount(size_t& iDSVCount) = 0;
+	virtual void renderToShadowMaps(ID3D12GraphicsCommandList* pCommandList, class SFrameResource* pCurrentFrameResource, class SRenderPassConstants* renderPassCB) = 0;
+	virtual void finishRenderToShadowMaps(ID3D12GraphicsCommandList* pCommandList) = 0;
 
 	SLightProps lightProps;
 
 	SLightComponentType lightType;
+
+	// for shadow maps (childs will override this)
+	size_t iRequiredDSVs = 0;
+	size_t iRequiredSRVs = 0;
 };
 

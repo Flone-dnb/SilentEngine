@@ -172,6 +172,9 @@
     <Filter Include="SilentEngine\Public\GUI\SGUILayout">
       <UniqueIdentifier>{d44ea915-eb11-44d4-a4be-f9280b3f96b0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="SilentEngine\Private\SShadowMap">
+      <UniqueIdentifier>{d9290c86-6ffb-4796-8e97-45850bb96f7f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\SilentEngine\public\SApplication\SApplication.cpp">
@@ -296,6 +299,9 @@
     </ClCompile>
     <ClCompile Include="..\src\SilentEngine\Public\GUI\SGUILayout\SGUILayout.cpp">
       <Filter>SilentEngine\Public\GUI\SGUILayout</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SilentEngine\Private\SShadowMap\SShadowMap.cpp">
+      <Filter>SilentEngine\Private\SShadowMap</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -427,6 +433,9 @@
     </ClInclude>
     <ClInclude Include="..\src\SilentEngine\Public\GUI\SGUILayout\SGUILayout.h">
       <Filter>SilentEngine\Public\GUI\SGUILayout</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SilentEngine\Private\SShadowMap\SShadowMap.h">
+      <Filter>SilentEngine\Private\SShadowMap</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -284,6 +284,52 @@ void SComponent::createInstancingDataForFrameResource(std::vector<std::unique_pt
 	}
 }
 
+void SComponent::getRequiredShadowMapCount(size_t& iDSVCount)
+{
+	if (componentType == SComponentType::SCT_LIGHT)
+	{
+		SLightComponent* pLight = dynamic_cast<SLightComponent*>(this);
+		pLight->getRequiredShadowMapCount(iDSVCount);
+	}
+
+	for (size_t i = 0; i < vChildComponents.size(); i++)
+	{
+		vChildComponents[i]->getRequiredShadowMapCount(iDSVCount);
+	}
+}
+
+void SComponent::allocateShadowMapCBsForLightComponents(std::vector<std::unique_ptr<SFrameResource>>* vFrameResources, ID3D12Device* pDevice,
+	CD3DX12_CPU_DESCRIPTOR_HANDLE& dsvHeapHandle, UINT iDSVDescriptorSize,
+	CD3DX12_CPU_DESCRIPTOR_HANDLE& srvCpuHeapHandle, CD3DX12_GPU_DESCRIPTOR_HANDLE& srvGpuHeapHandle,
+	UINT iSRVDescriptorSize)
+{
+	if (componentType == SComponentType::SCT_LIGHT)
+	{
+		SLightComponent* pLight = dynamic_cast<SLightComponent*>(this);
+		pLight->allocateShadowMaps(vFrameResources, pDevice, dsvHeapHandle, iDSVDescriptorSize, srvCpuHeapHandle, srvGpuHeapHandle, iSRVDescriptorSize);
+	}
+
+	for (size_t i = 0; i < vChildComponents.size(); i++)
+	{
+		vChildComponents[i]->allocateShadowMapCBsForLightComponents(
+			vFrameResources, pDevice, dsvHeapHandle, iDSVDescriptorSize, srvCpuHeapHandle, srvGpuHeapHandle, iSRVDescriptorSize);
+	}
+}
+
+void SComponent::deallocateShadowMapCBsForLightComponents(std::vector<std::unique_ptr<SFrameResource>>* vFrameResources)
+{
+	if (componentType == SComponentType::SCT_LIGHT)
+	{
+		SLightComponent* pLight = dynamic_cast<SLightComponent*>(this);
+		pLight->deallocateShadowMaps(vFrameResources);
+	}
+
+	for (size_t i = 0; i < vChildComponents.size(); i++)
+	{
+		vChildComponents[i]->deallocateShadowMapCBsForLightComponents(vFrameResources);
+	}
+}
+
 void SComponent::removeVertexBufferForRuntimeMeshComponents(std::vector<std::unique_ptr<SFrameResource>>* vFrameResources, size_t& iRemovedCount)
 {
 	if (componentType == SComponentType::SCT_RUNTIME_MESH)

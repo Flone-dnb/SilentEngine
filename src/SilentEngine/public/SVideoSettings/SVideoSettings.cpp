@@ -74,6 +74,16 @@ void SVideoSettings::setTextureFilterMode(TEX_FILTER_MODE textureFilterMode)
 	pApp->textureFilterIndex = textureFilterMode;
 }
 
+void SVideoSettings::setShadowMappingBias(int iShadowMappingBias)
+{
+	pApp->setShadowMappingBias(iShadowMappingBias);
+}
+
+int SVideoSettings::getShadowMappingBias() const
+{
+	return pApp->getShadowMappingBias();
+}
+
 TEX_FILTER_MODE SVideoSettings::getTextureFilterMode()
 {
 	return pApp->textureFilterIndex;

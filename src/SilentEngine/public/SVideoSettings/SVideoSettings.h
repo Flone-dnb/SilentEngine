@@ -182,6 +182,20 @@ public:
 	void      setTextureFilterMode                 (TEX_FILTER_MODE textureFilterMode);
 	//@@Function
 	/*
+	* desc: used to change the depth bias for shadow mapping.
+	* remarks: the depth bias is a scene dependent value, for some scenes it may be necessary to
+	change this value to reduce the so called 'shadow acne' effect. Note that this effect is
+	caused by the limited resolution of the shadow map, if you are using small resolution for your shadow maps,
+	it may be better to increase the resolution, because big depth bias values cause the so called 'peter-panning' artifact.
+	*/
+	void      setShadowMappingBias                 (int iShadowMappingBias);
+	//@@Function
+	/*
+	* desc: returns the current depth bias value.
+	*/
+	int       getShadowMappingBias                 () const;
+	//@@Function
+	/*
 	* desc: returns the texture filter mode.
 	* remarks: default texture filter is anisotropic filter.
 	*/

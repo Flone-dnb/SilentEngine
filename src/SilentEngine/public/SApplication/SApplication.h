@@ -74,6 +74,7 @@ class SComputeShader;
 class SCameraComponent;
 class SGUIObject;
 class SGUILayer;
+
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
 
@@ -748,7 +749,7 @@ private:
 		* desc: creates RTV and DSV descriptor heaps.
 		* return: false if successful, true otherwise.
 		*/
-		bool createRTVAndDSVDescriptorHeaps  ();
+		bool createRTVAndDSVDescriptorHeaps  (size_t iAddDSVCount = 0);
 		//@@Function
 		/*
 		* desc: creates CBV/SRV/UAV descriptor heap.
@@ -845,15 +846,17 @@ private:
 		* desc: updates the main pass constant buffer.
 		*/
 		void updateMainPassCB                ();
+		void updateShadowMapsCB              ();
 		//@@Function
 		/*
 		* desc: draws the frame.
 		*/
 		void draw                            ();
-		void drawOpaqueComponents            ();
+		void drawOpaqueComponents            (bool bDrawingToShadowMap = false);
 		void drawTransparentComponents       ();
 		void drawGUIObjects                  ();
-		void drawComponent                   (SComponent* pComponent, bool bUsingCustomResources = false);
+		void drawComponent                   (SComponent* pComponent, bool bUsingCustomResources = false, bool bDrawingToShadowMap = false);
+		void drawToShadowMaps                ();
 		//@@Function
 		/*
 		* desc: used to set the FPS limit (FPS cap).
@@ -968,6 +971,20 @@ private:
 		void setBackBufferFillColor               (const SVector& vColor);
 		//@@Function
 		/*
+		* desc: used to change the depth bias for shadow mapping.
+		* remarks: the depth bias is a scene dependent value, for some scenes it may be necessary to
+		change this value to reduce the so called 'shadow acne' effect. Note that this effect is
+		caused by the limited resolution of the shadow map, if you are using small resolution for your shadow maps,
+		it may be better to increase the resolution, because big depth bias values cause the so called 'peter-panning' artifact.
+		*/
+		void setShadowMappingBias                 (int iShadowMappingBias);
+		//@@Function
+		/*
+		* desc: returns the current depth bias value.
+		*/
+		int  getShadowMappingBias                 () const;
+		//@@Function
+		/*
 		* desc: used to enable/disable wireframe display mode.
 		* param "bEnable": true to enable, false to disable.
 		*/
@@ -1049,6 +1066,7 @@ private:
 
 
 	// Init
+	
 		//@@Function
 		/*
 		* desc: used to set the preferred display adapter (i.e. "video card" on your PC). The list of all supported display
@@ -1131,7 +1149,7 @@ private:
 		*/
 		size_t roundUp                        (size_t iNum, size_t iMultiple);
 
-		std::array<const CD3DX12_STATIC_SAMPLER_DESC, 3> getStaticSamples();
+		std::array<const CD3DX12_STATIC_SAMPLER_DESC, 4> getStaticSamples();
 
 		void internalPhysicsTickThread();
 
@@ -1155,7 +1173,7 @@ private:
 		/*
 		* desc: used to retrieve the depth stencil buffer view handle.
 		*/
-		D3D12_CPU_DESCRIPTOR_HANDLE getDepthStencilViewHandle      () const;
+		CD3DX12_CPU_DESCRIPTOR_HANDLE getDepthStencilViewHandle    () const;
 
 
 	// only call this under mtxDraw
@@ -1207,6 +1225,7 @@ private:
 	friend class SGUIObject;
 	friend class SGUIImage;
 	friend class SGUISimpleText;
+	friend class SShadowMap;
 
 
 	static SApplication* pApp;
@@ -1233,6 +1252,8 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> pOpaqueLineTopologyPSO;
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> pTransparentPSO;
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> pTransparentAlphaToCoveragePSO;
+
+	Microsoft::WRL::ComPtr<ID3D12PipelineState> pShadowMapPSO;
 
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> pOpaqueWireframePSO;
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> pTransparentWireframePSO;
@@ -1283,7 +1304,8 @@ private:
 	// CB constants.
 	SRenderPassConstants mainRenderPassCB;
 	int iPerFrameResEndOffset = 0;
-	size_t iActualObjectCBCount = 0;
+	int iShadowMapSRVStartOffset = 0;
+	size_t iDSVStartForShadowMapsIndex = 0;
 
 
 	// Materials / Textures / Shaders
@@ -1305,6 +1327,7 @@ private:
 	// Video settings.
 	friend class SVideoSettings;
 	SVideoSettings* pVideoSettings;
+	int iShadowMappingBias = 100000;
 
 
 	// Profiler.

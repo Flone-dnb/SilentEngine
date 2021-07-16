@@ -252,6 +252,24 @@ protected:
 	void createInstancingDataForFrameResource(std::vector<std::unique_ptr<SFrameResource>>* vFrameResources);
 	//@@Function
 	/*
+	* desc: asks every light component on how much shadows maps they need.
+	*/
+	void getRequiredShadowMapCount(size_t& iDSVCount);
+	//@@Function
+	/*
+	* desc: creates the shadow map buffer for only light components for given frame resource.
+	*/
+	void allocateShadowMapCBsForLightComponents(std::vector<std::unique_ptr<SFrameResource>>* vFrameResources, ID3D12Device* pDevice,
+		CD3DX12_CPU_DESCRIPTOR_HANDLE& dsvHeapHandle, UINT iDSVDescriptorSize,
+		CD3DX12_CPU_DESCRIPTOR_HANDLE& srvCpuHeapHandle, CD3DX12_GPU_DESCRIPTOR_HANDLE& srvGpuHeapHandle,
+		UINT iSRVDescriptorSize);
+	//@@Function
+	/*
+	* desc: removes the shadow map buffer for only light components for given frame resource.
+	*/
+	void deallocateShadowMapCBsForLightComponents(std::vector<std::unique_ptr<SFrameResource>>* vFrameResources);
+	//@@Function
+	/*
 	* desc: removes the vertex buffer for only runtime mesh components for given frame resources.
 	*/
 	void removeVertexBufferForRuntimeMeshComponents(std::vector<std::unique_ptr<SFrameResource>>* vFrameResources, size_t& iRemovedCount);

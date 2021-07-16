@@ -219,6 +219,57 @@ void SLevel::despawnContainerFromLevel(SContainer* pContainer)
 	pApp->despawnContainerFromLevel(pContainer);
 }
 
+DirectX::BoundingSphere* SLevel::getLevelBounds(bool bRecalculateLevelBounds)
+{
+	std::lock_guard<std::mutex> guard(pApp->mtxDraw);
+
+	if (bRecalculateLevelBounds == false)
+	{
+		return &levelBounds;
+	}
+
+	std::vector<SComponent*> vRenderableAllComponents = pApp->vAllRenderableSpawnedOpaqueComponents;
+	vRenderableAllComponents.insert(vRenderableAllComponents.end(), pApp->vAllRenderableSpawnedTransparentComponents.begin(), pApp->vAllRenderableSpawnedTransparentComponents.end());
+
+	DirectX::BoundingSphere levelBoundingSphere;
+
+	if (vRenderableAllComponents.size() > 0)
+	{
+		bool bSphereValid = false;
+
+		for (size_t i = 0; i < vRenderableAllComponents.size(); i++)
+		{
+			if (vRenderableAllComponents[i]->componentType == SComponentType::SCT_MESH)
+			{
+				SMeshComponent* pMesh = dynamic_cast<SMeshComponent*>(vRenderableAllComponents[i]);
+				if (pMesh->getCollisionPreset() == SCollisionPreset::SCP_NO_COLLISION)
+				{
+					continue;
+				}
+
+				if (pMesh->getCollisionPreset() != SCollisionPreset::SCP_SPHERE)
+				{
+					pMesh->updateSphereBounds();
+				}
+
+				if (bSphereValid == false)
+				{
+					levelBoundingSphere = pMesh->sphereCollision;
+					bSphereValid = true;
+				}
+				else
+				{
+					DirectX::BoundingSphere::CreateMerged(levelBoundingSphere, levelBoundingSphere, pMesh->sphereCollision);
+				}
+			}
+		}
+	}
+
+	levelBounds = levelBoundingSphere;
+
+    return &levelBounds;
+}
+
 std::vector<SContainer*>* SLevel::getRenderableContainers()
 {
 	return &vRenderableContainers;

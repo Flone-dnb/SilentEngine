@@ -22,10 +22,18 @@ void EditorApplication::onRun()
 
 	// If you will use camera roll (roll axis), use setDontFlipCamera() to false.
 
+	// ... prepare stuff here ...
+
+	bEnableInput = true;
 }
 
 void EditorApplication::onMouseMove(int iMouseXMove, int iMouseYMove)
 {
+	if (bEnableInput == false)
+	{
+		return;
+	}
+
 	if (bRMBPressed)
 	{
 		getCamera()->rotateCamera(iMouseYMove * fMouseSensitivity, iMouseXMove * fMouseSensitivity, 0.0f);
@@ -34,6 +42,11 @@ void EditorApplication::onMouseMove(int iMouseXMove, int iMouseYMove)
 
 void EditorApplication::onMouseDown(SMouseKey mouseKey, int iMouseXPos, int iMouseYPos)
 {
+	if (bEnableInput == false)
+	{
+		return;
+	}
+
 	if (mouseKey.getButton() == SMouseButton::SMB_LEFT)
 	{
 		bLMBPressed = true;
@@ -54,6 +67,11 @@ void EditorApplication::onMouseDown(SMouseKey mouseKey, int iMouseXPos, int iMou
 
 void EditorApplication::onMouseUp(SMouseKey mouseKey, int iMouseXPos, int iMouseYPos)
 {
+	if (bEnableInput == false)
+	{
+		return;
+	}
+
 	if (mouseKey.getButton() == SMouseButton::SMB_LEFT)
 	{
 		bLMBPressed = false;
@@ -69,8 +87,21 @@ void EditorApplication::onMouseUp(SMouseKey mouseKey, int iMouseXPos, int iMouse
 	}
 }
 
+void EditorApplication::onMouseWheelMove(bool bUp, int iMouseXPos, int iMouseYPos)
+{
+	if (bEnableInput == false)
+	{
+		return;
+	}
+}
+
 void EditorApplication::onKeyboardButtonDown(SKeyboardKey keyboardKey)
 {
+	if (bEnableInput == false)
+	{
+		return;
+	}
+
 	if (keyboardKey.getButton() == SKeyboardButton::SKB_W)
 	{
 		bWPressed = true;
@@ -115,6 +146,11 @@ void EditorApplication::onKeyboardButtonDown(SKeyboardKey keyboardKey)
 
 void EditorApplication::onKeyboardButtonUp(SKeyboardKey keyboardKey)
 {
+	if (bEnableInput == false)
+	{
+		return;
+	}
+
 	if (keyboardKey.getButton() == SKeyboardButton::SKB_W)
 	{
 		bWPressed = false;
@@ -155,6 +191,12 @@ void EditorApplication::onKeyboardButtonUp(SKeyboardKey keyboardKey)
 
 void EditorApplication::onPhysicsTick(float fDeltaTime)
 {
+	if (getCurrentLevel()->getNotRenderableContainers()->size() > 0)
+	{
+		dynamic_cast<MyContainer*>(getCurrentLevel()->getNotRenderableContainers()->operator[](0))->onTick(fDeltaTime);
+	}
+
+
 	if (bRMBPressed && (bWPressed || bSPressed || bDPressed || bAPressed || bQPressed || bEPressed))
 	{
 		float fSpeedMult = 1.0f;

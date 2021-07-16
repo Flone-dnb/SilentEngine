@@ -8,6 +8,7 @@ struct Light
     float  fFalloffEnd;   // point/spot light only
     float3 vPosition;     // point light only
     float  fSpotlightRange; // spot light only
+	float4x4 mLightViewProjTex;
 };
 
 struct Material
@@ -127,8 +128,8 @@ float3 computeSpotLightReflectedToEye(Light light, Material mat, float3 vObjectP
     return calcReflectedDiffuseAndSpecularLightToEye(vLightColorStrength, vToLightSourceVec, vSurfaceNormal, vToEyeVec, mat);
 }
 
-float4 computeLightingToEye(Light vLights[MAX_LIGHTS], int iDirectionalLightCount, int iPointLightCount, int iSpotLightCount,
-Material mat, float3 vObjectPosition, float3 vSurfaceNormal, float3 vToEyeVec, float3 vShadowFactor)
+float4 computeLightingToEye(Light vLights[MAX_LIGHTS], float vLightShadowFactors[MAX_LIGHTS], int iDirectionalLightCount, int iPointLightCount, int iSpotLightCount,
+Material mat, float3 vObjectPosition, float3 vSurfaceNormal, float3 vToEyeVec)
 {
     float3 vResult = 0.0f;
 	
@@ -136,17 +137,17 @@ Material mat, float3 vObjectPosition, float3 vSurfaceNormal, float3 vToEyeVec, f
 	
 	for (; i < iDirectionalLightCount; i++)
 	{
-		vResult += computeDirectionalLightReflectedToEye(vLights[i], mat, vSurfaceNormal, vToEyeVec);
+		vResult += vLightShadowFactors[i] * computeDirectionalLightReflectedToEye(vLights[i], mat, vSurfaceNormal, vToEyeVec);
 	}
 	
-	for (; i < iPointLightCount; i++)
+	for (; i < iDirectionalLightCount + iPointLightCount; i++)
 	{
-		vResult += computePointLightReflectedToEye(vLights[i], mat, vObjectPosition, vSurfaceNormal, vToEyeVec);
+		vResult += vLightShadowFactors[i] * computePointLightReflectedToEye(vLights[i], mat, vObjectPosition, vSurfaceNormal, vToEyeVec);
 	}
 	
-	for (; i < iSpotLightCount; i++)
+	for (; i < iDirectionalLightCount + iPointLightCount + iSpotLightCount; i++)
 	{
-		vResult += computeSpotLightReflectedToEye(vLights[i], mat, vObjectPosition, vSurfaceNormal, vToEyeVec);
+		vResult += vLightShadowFactors[i] * computeSpotLightReflectedToEye(vLights[i], mat, vObjectPosition, vSurfaceNormal, vToEyeVec);
 	}
 
     return float4(vResult, 0.0f);

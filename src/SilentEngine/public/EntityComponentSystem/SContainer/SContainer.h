@@ -12,6 +12,10 @@
 #include <vector>
 #include <memory>
 
+// DirectX
+#include <d3d12.h>
+#include "SilentEngine/Private/d3dx12.h"
+
 // Custom
 #include "SilentEngine/Public/SMouseKey/SMouseKey.h"
 #include "SilentEngine/Public/SKeyboardKey/SKeyboardKey.h"
@@ -182,6 +186,12 @@ private:
 	* desc: creates the vertex buffer for only runtime mesh components for given frame resource.
 	*/
 	void createVertexBufferForRuntimeMeshComponents (SFrameResource* pFrameResource);
+	size_t getLightComponentsCount();
+	//@@Function
+	/*
+	* desc: asks every light component on how much shadows maps they need.
+	*/
+	void getRequiredShadowMapCount(size_t& iDSVCount);
 	//@@Function
 	/*
 	* desc: creates the instancing data.
@@ -197,6 +207,11 @@ private:
 	* desc: removes the instancing data.
 	*/
 	void removeInstancingDataForFrameResources(std::vector<std::unique_ptr<SFrameResource>>* vFrameResources);
+	//@@Function
+	/*
+	* desc: removes the shadow map buffer for only light components for given frame resource.
+	*/
+	void deallocateShadowMapCBsForLightComponents(std::vector<std::unique_ptr<SFrameResource>>* vFrameResources);
 	//@@Function
 	/*
 	* desc: cycles through all runtime mesh components and updates the iMaxIndex to be the maximum runtime mesh component CB index in this container.

@@ -233,6 +233,7 @@ XCOPY "$(SolutionDir)..\res" "$(TargetDir)res\" /S /Y</Command>
     <ClCompile Include="..\src\SilentEngine\Private\SMiscHelpers\SMiscHelpers.cpp" />
     <ClCompile Include="..\src\SilentEngine\Private\SRenderItem\SRenderItem.cpp" />
     <ClCompile Include="..\src\SilentEngine\Private\SShader\SShader.cpp" />
+    <ClCompile Include="..\src\SilentEngine\Private\SShadowMap\SShadowMap.cpp" />
     <ClCompile Include="..\src\SilentEngine\Public\EntityComponentSystem\SAudioComponent\SAudioComponent.cpp" />
     <ClCompile Include="..\src\SilentEngine\Public\EntityComponentSystem\SContainer\SContainer.cpp" />
     <ClCompile Include="..\src\SilentEngine\Public\EntityComponentSystem\SDirectionalLightComponent\SDirectionalLightComponent.cpp" />
@@ -275,6 +276,7 @@ XCOPY "$(SolutionDir)..\res" "$(TargetDir)res\" /S /Y</Command>
     <ClInclude Include="..\src\SilentEngine\Private\SMiscHelpers\SMiscHelpers.h" />
     <ClInclude Include="..\src\SilentEngine\Private\SRenderItem\SRenderItem.h" />
     <ClInclude Include="..\src\SilentEngine\Private\SShader\SShader.h" />
+    <ClInclude Include="..\src\SilentEngine\Private\SShadowMap\SShadowMap.h" />
     <ClInclude Include="..\src\SilentEngine\private\SUploadBuffer\SUploadBuffer.h" />
     <ClInclude Include="..\src\SilentEngine\Public\EntityComponentSystem\SAudioComponent\SAudioComponent.h" />
     <ClInclude Include="..\src\SilentEngine\Public\EntityComponentSystem\SContainer\SContainer.h" />

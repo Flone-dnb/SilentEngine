@@ -23,6 +23,7 @@ public:
 	virtual void onMouseMove (int iMouseXMove, int iMouseYMove) override;
 	virtual void onMouseDown (SMouseKey mouseKey, int iMouseXPos, int iMouseYPos) override;
 	virtual void onMouseUp   (SMouseKey mouseKey, int iMouseXPos, int iMouseYPos) override;
+	virtual void onMouseWheelMove(bool bUp, int iMouseXPos, int iMouseYPos) override;
 
 	virtual void onKeyboardButtonDown (SKeyboardKey keyboardKey) override;
 	virtual void onKeyboardButtonUp   (SKeyboardKey keyboardKey) override;
@@ -37,6 +38,8 @@ private:
 	float fShiftSpeedMult = 5.0f;
 	float fCtrlSpeedMult = 0.25f;
 	float fMouseSensitivity = 0.1f;
+
+	bool bEnableInput = false;
 
 	bool bWPressed = false, bSPressed = false, bDPressed = false, bAPressed = false, bEPressed = false, bQPressed = false;
 

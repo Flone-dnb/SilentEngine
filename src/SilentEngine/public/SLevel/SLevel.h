@@ -9,6 +9,10 @@
 
 // STL
 #include <vector>
+#include <mutex>
+
+// DirectX
+#include <DirectXCollision.h>
 
 // Custom
 #include "SilentEngine/Public/SVector/SVector.h"
@@ -82,10 +86,18 @@ public:
 
 		//@@Function
 		/*
+		* desc: returns bounding sphere of the level, level bounds are used in directional lights
+		(there will be no shadow calculations outside of this bounding sphere).
+		* param "bRecalculateLevelBounds": 'true' will recalculate the level bounds iterating over every object in the scene
+		(that may take a while if there are many objects in this level so be careful, it's recommended to call this function once per level
+		after the level was fully constructed). 'False' will just return the last bouding sphere calculated (no calculations will be performed).
+		*/
+		DirectX::BoundingSphere* getLevelBounds(bool bRecalculateLevelBounds);
+
+		//@@Function
+		/*
 		* desc: returns all renderable containers (containers that have components with
 		geometry in it, for example, SMeshComponent) in level.
-		* remarks: you should not spawn/despawn containers while working with
-		the returned vector as the vector length will change. Use synchronization techniques.
 		*/
 		std::vector<SContainer*>* getRenderableContainers    ();
 
@@ -93,8 +105,6 @@ public:
 		/*
 		* desc: returns all non-renderable containers (containers that don't have components with
 		geometry in it, for example, STargetComponent) in level.
-		* remarks: you should not spawn/despawn containers while working with
-		the returned vector as the vector length will change. Use synchronization techniques.
 		*/
 		std::vector<SContainer*>* getNotRenderableContainers ();
 
@@ -118,5 +128,9 @@ private:
 	std::vector<SContainer*> vNotRenderableContainers;
 
 	std::vector<class SLightComponent*> vSpawnedLightComponents;
+
+
+	std::mutex mtxLevelBounds;
+	DirectX::BoundingSphere levelBounds;
 };
 

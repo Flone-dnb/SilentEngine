@@ -2,9 +2,12 @@
 
 Texture2D diffuseTexture : register(t0);
 
+Texture2D shadowMaps[MAX_LIGHTS * 6] : register(t0, space2);
+
 SamplerState samplerPointWrap       : register(s0);
 SamplerState samplerLinearWrap      : register(s1);
 SamplerState samplerAnisotropicWrap : register(s2);
+SamplerComparisonState samplerShadowMap : register(s3);
 
 cbuffer cbPass : register(b0)
 {
@@ -88,7 +91,7 @@ struct VertexIn
 struct VertexOut
 {
     float4 vPosViewSpace  : SV_POSITION;
-	float3 vPosWorldSpace : POSITION;
+	float4 vPosWorldSpace : POSITION;
     float3 vNormal : NORMAL;
     float2 vUV     : UV;
 	float4 vCustomVec4 : CUSTOM;
@@ -106,7 +109,7 @@ VertexOut VS(VertexIn vin)
     vout.vNormal = mul(vin.vNormal, (float3x3)vWorld);
 
 
-	vout.vPosWorldSpace = vPos.xyz;
+	vout.vPosWorldSpace = vPos;
 	
     // Transform to homogeneous clip space.
     vout.vPosViewSpace  = mul(vPos, vViewProj);
@@ -115,6 +118,42 @@ VertexOut VS(VertexIn vin)
     vout.vUV = mul(vTexUV, vMatTransform).xy;
     
     return vout;
+}
+
+
+float calcShadowFactor(float4 vPosWorldSpace, int iLightIndex, int iShadowMapIndex)
+{
+    float4 vPosShadowMapTexSpace = mul(vPosWorldSpace, vLights[iLightIndex].mLightViewProjTex);
+
+    // Complete projection by doing division by w.
+    vPosShadowMapTexSpace.xyz /= vPosShadowMapTexSpace.w;
+
+    // Depth in NDC space.
+    float fCurrentPixelDepth = vPosShadowMapTexSpace.z;
+
+    uint iShadowMapWidth, iShadowMapHeight, numMips;
+    shadowMaps[iShadowMapIndex].GetDimensions(0, iShadowMapWidth, iShadowMapHeight, numMips);
+
+    // Texel size.
+    float dx = 1.0f / (float)iShadowMapWidth;
+
+    float fPercentLit = 0.0f;
+    const float2 offsets[9] =
+    {
+        float2(-dx,  -dx), float2(0.0f,  -dx), float2(dx,  -dx),
+        float2(-dx, 0.0f), float2(0.0f, 0.0f), float2(dx, 0.0f),
+        float2(-dx,  +dx), float2(0.0f,  +dx), float2(dx,  +dx)
+    };
+
+    // compare depth with value in shadow map
+    [unroll]
+    for(int i = 0; i < 9; i++)
+    {
+        fPercentLit += shadowMaps[iShadowMapIndex].SampleCmpLevelZero(samplerShadowMap,
+        vPosShadowMapTexSpace.xy + offsets[i], fCurrentPixelDepth).r;
+    }
+    
+    return fPercentLit / 9.0f;
 }
 
 
@@ -158,16 +197,40 @@ float4 PS(VertexOut pin) : SV_Target
     // Normals may be unnormalized after the rasterization (when they are interpolated).
     pin.vNormal = normalize(pin.vNormal);
 
-    float3 vToCamera = vCameraPos - pin.vPosWorldSpace;
+    float3 vToCamera = vCameraPos - pin.vPosWorldSpace.xyz;
     float3 vDistToCamera = length(vToCamera);
     vToCamera = normalize(vToCamera);
 
     float4 vAmbientDiffuseLight = vAmbientLight * vDiffuse;
     
     Material mat = {vDiffuse, vSpecularColor, fRoughness};
-    float3 vShadowFactor = 1.0f;
 	
-    float4 vDirectLight = computeLightingToEye(vLights, iDirectionalLightCount, iPointLightCount, iSpotLightCount, mat, pin.vPosWorldSpace, pin.vNormal, vToCamera, vShadowFactor);
+
+    // Calc shadow factor for all lights.
+    float vLightShadowFactors[MAX_LIGHTS];
+    int iLightIndex = 0;
+    int iShadowMapIndex = 0;
+    for (; iLightIndex < iDirectionalLightCount; iLightIndex++)
+    {
+        vLightShadowFactors[iLightIndex] = calcShadowFactor(pin.vPosWorldSpace, iLightIndex, iShadowMapIndex);
+        iShadowMapIndex++;
+    }
+	
+    for (; iLightIndex < iDirectionalLightCount + iPointLightCount; iLightIndex++)
+    {
+        // TODO
+    }
+	
+    for (; iLightIndex < iDirectionalLightCount + iPointLightCount + iSpotLightCount; iLightIndex++)
+    {
+        // TODO
+    }
+
+
+    float4 vDirectLight = computeLightingToEye(vLights, vLightShadowFactors, iDirectionalLightCount,
+    iPointLightCount, iSpotLightCount,
+    mat, pin.vPosWorldSpace.xyz,
+    pin.vNormal, vToCamera);
 
     float4 vLitColor = vDirectLight + vAmbientDiffuseLight;
 
@@ -212,4 +275,3 @@ float4 PS(VertexOut pin) : SV_Target
     
     return vLitColor;
 }
-
