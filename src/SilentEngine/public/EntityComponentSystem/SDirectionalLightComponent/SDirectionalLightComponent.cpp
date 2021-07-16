@@ -42,6 +42,11 @@ void SDirectionalLightComponent::setLightDirection(const SVector & vLightDirecti
 	lightProps.vDirection = { vLightDirection.getX(), vLightDirection.getY(), vLightDirection.getZ() };
 }
 
+SRenderPassConstants* SDirectionalLightComponent::getShadowMapConstants()
+{
+	return &pShadowMap->shadowMapCB;
+}
+
 void SDirectionalLightComponent::allocateShadowMaps(std::vector<std::unique_ptr<SFrameResource>>* vFrameResources, ID3D12Device* pDevice,
 	CD3DX12_CPU_DESCRIPTOR_HANDLE& dsvHeapHandle, UINT iDSVDescriptorSize,
 	CD3DX12_CPU_DESCRIPTOR_HANDLE& srvCpuHeapHandle, CD3DX12_GPU_DESCRIPTOR_HANDLE& srvGpuHeapHandle,
@@ -154,7 +159,7 @@ void SDirectionalLightComponent::updateCBData(SFrameResource* pCurrentFrameResou
 	pCurrentFrameResource->pShadowMapsCB->copyDataToElement(iIndexInFrameResourceShadowMapBuffer, shadowMapCB);
 }
 
-void SDirectionalLightComponent::getRequiredShadowMapCount(size_t& iDSVCount)
+void SDirectionalLightComponent::getRequiredDSVCountForShadowMaps(size_t& iDSVCount)
 {
 	iDSVCount += iRequiredDSVs;
 }

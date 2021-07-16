@@ -330,11 +330,11 @@ size_t SContainer::getLightComponentsCount()
 	return iCount;
 }
 
-void SContainer::getRequiredShadowMapCount(size_t& iDSVCount)
+void SContainer::getRequiredDSVCountForShadowMaps(size_t& iDSVCount)
 {
 	for (size_t i = 0; i < vComponents.size(); i++)
 	{
-		vComponents[i]->getRequiredShadowMapCount(iDSVCount);
+		vComponents[i]->getRequiredDSVCountForShadowMaps(iDSVCount);
 	}
 }
 

@@ -284,17 +284,17 @@ void SComponent::createInstancingDataForFrameResource(std::vector<std::unique_pt
 	}
 }
 
-void SComponent::getRequiredShadowMapCount(size_t& iDSVCount)
+void SComponent::getRequiredDSVCountForShadowMaps(size_t& iDSVCount)
 {
 	if (componentType == SComponentType::SCT_LIGHT)
 	{
 		SLightComponent* pLight = dynamic_cast<SLightComponent*>(this);
-		pLight->getRequiredShadowMapCount(iDSVCount);
+		pLight->getRequiredDSVCountForShadowMaps(iDSVCount);
 	}
 
 	for (size_t i = 0; i < vChildComponents.size(); i++)
 	{
-		vChildComponents[i]->getRequiredShadowMapCount(iDSVCount);
+		vChildComponents[i]->getRequiredDSVCountForShadowMaps(iDSVCount);
 	}
 }
 

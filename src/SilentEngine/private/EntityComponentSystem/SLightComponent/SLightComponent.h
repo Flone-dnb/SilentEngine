@@ -62,6 +62,8 @@ protected:
 	friend class SApplication;
 	friend class SComponent;
 
+	virtual class SRenderPassConstants* getShadowMapConstants() = 0;
+
 	virtual void updateMyAndChildsLocationRotationScale(bool bCalledOnSelf) override;
 	virtual void allocateShadowMaps(std::vector<std::unique_ptr<SFrameResource>>* vFrameResources, ID3D12Device* pDevice,
 		CD3DX12_CPU_DESCRIPTOR_HANDLE& dsvHeapHandle, UINT iDSVDescriptorSize,
@@ -69,7 +71,7 @@ protected:
 		UINT iSRVDescriptorSize) = 0;
 	virtual void deallocateShadowMaps(std::vector<std::unique_ptr<SFrameResource>>* vFrameResources) = 0;
 	virtual void updateCBData(SFrameResource* pCurrentFrameResource) = 0;
-	virtual void getRequiredShadowMapCount(size_t& iDSVCount) = 0;
+	virtual void getRequiredDSVCountForShadowMaps(size_t& iDSVCount) = 0;
 	virtual void renderToShadowMaps(ID3D12GraphicsCommandList* pCommandList, class SFrameResource* pCurrentFrameResource, class SRenderPassConstants* renderPassCB) = 0;
 	virtual void finishRenderToShadowMaps(ID3D12GraphicsCommandList* pCommandList) = 0;
 

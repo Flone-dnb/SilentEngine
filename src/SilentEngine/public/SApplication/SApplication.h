@@ -852,10 +852,10 @@ private:
 		* desc: draws the frame.
 		*/
 		void draw                            ();
-		void drawOpaqueComponents            (bool bDrawingToShadowMap = false);
+		void drawOpaqueComponents            (bool bDrawingToShadowMap = false, SRenderPassConstants* pShadowMapConstants = nullptr);
 		void drawTransparentComponents       ();
 		void drawGUIObjects                  ();
-		void drawComponent                   (SComponent* pComponent, bool bUsingCustomResources = false, bool bDrawingToShadowMap = false);
+		void drawComponent                   (SComponent* pComponent, bool bUsingCustomResources = false, bool bDrawingToShadowMap = false, SRenderPassConstants* pShadowMapConstants = nullptr);
 		void drawToShadowMaps                ();
 		//@@Function
 		/*
@@ -1199,8 +1199,8 @@ private:
 	SMaterial* registerMaterialBundleElement(const std::string& sMaterialName, bool& bErrorOccurred);
 
 	// Frustum culling.
-	bool doFrustumCulling(SComponent* pComponent);
-	void doFrustumCullingOnInstancedMesh(SMeshComponent* pMeshComponent, UINT64& iOutVisibleInstanceCount);
+	bool doFrustumCulling(SComponent* pComponent, SRenderPassConstants* pShadowMapConstants = nullptr);
+	void doFrustumCullingOnInstancedMesh(SMeshComponent* pMeshComponent, UINT64& iOutVisibleInstanceCount, SRenderPassConstants* pShadowMapConstants = nullptr);
 
 	// Other.
 	void showDeviceRemovedReason();

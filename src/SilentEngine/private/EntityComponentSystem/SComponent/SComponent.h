@@ -254,7 +254,7 @@ protected:
 	/*
 	* desc: asks every light component on how much shadows maps they need.
 	*/
-	void getRequiredShadowMapCount(size_t& iDSVCount);
+	void getRequiredDSVCountForShadowMaps(size_t& iDSVCount);
 	//@@Function
 	/*
 	* desc: creates the shadow map buffer for only light components for given frame resource.

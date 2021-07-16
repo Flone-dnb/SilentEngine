@@ -191,7 +191,7 @@ private:
 	/*
 	* desc: asks every light component on how much shadows maps they need.
 	*/
-	void getRequiredShadowMapCount(size_t& iDSVCount);
+	void getRequiredDSVCountForShadowMaps(size_t& iDSVCount);
 	//@@Function
 	/*
 	* desc: creates the instancing data.

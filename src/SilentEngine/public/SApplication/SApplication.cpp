@@ -1061,7 +1061,7 @@ bool SApplication::spawnContainerInLevel(SContainer* pContainer)
 
 		// ask how much DSVs need for shadow maps
 		size_t iDSVCount = 0;
-		pContainer->getRequiredShadowMapCount(iDSVCount);
+		pContainer->getRequiredDSVCountForShadowMaps(iDSVCount);
 
 		// create/remove RTV/DSV to shadow maps.
 		createRTVAndDSVDescriptorHeaps(iDSVCount);
@@ -2885,7 +2885,7 @@ void SApplication::drawToShadowMaps()
 		{
 			pLevel->vSpawnedLightComponents[i]->renderToShadowMaps(pCommandList.Get(), pCurrentFrameResource, &renderPassCBCopy);
 
-			drawOpaqueComponents(true); // drawing to shadow map
+			drawOpaqueComponents(true, pLevel->vSpawnedLightComponents[i]->getShadowMapConstants()); // drawing to shadow map
 
 			pLevel->vSpawnedLightComponents[i]->finishRenderToShadowMaps(pCommandList.Get());
 		}
@@ -3155,7 +3155,7 @@ void SApplication::draw()
 	mtxFenceUpdate.unlock();
 }
 
-void SApplication::drawOpaqueComponents(bool bDrawingToShadowMap)
+void SApplication::drawOpaqueComponents(bool bDrawingToShadowMap, SRenderPassConstants* pShadowMapConstants)
 {
 	bool bUsingCustomResources = false;
 
@@ -3206,7 +3206,7 @@ void SApplication::drawOpaqueComponents(bool bDrawingToShadowMap)
 				{
 					if (!(bDrawingToShadowMap && vOpaqueMeshesByCustomShader[i].vMeshComponentsWithThisShader[j]->getRenderData()->primitiveTopologyType == D3D_PRIMITIVE_TOPOLOGY_LINELIST))
 					{
-						drawComponent(vOpaqueMeshesByCustomShader[i].vMeshComponentsWithThisShader[j], bUsingCustomResources, bDrawingToShadowMap);
+						drawComponent(vOpaqueMeshesByCustomShader[i].vMeshComponentsWithThisShader[j], bUsingCustomResources, bDrawingToShadowMap, pShadowMapConstants);
 					}
 				}
 			}
@@ -3406,7 +3406,7 @@ void SApplication::drawGUIObjects()
 	}
 }
 
-void SApplication::drawComponent(SComponent* pComponent, bool bUsingCustomResources, bool bDrawingToShadowMap)
+void SApplication::drawComponent(SComponent* pComponent, bool bUsingCustomResources, bool bDrawingToShadowMap, SRenderPassConstants* pShadowMapConstants)
 {
 	bool bDrawThisComponent = false;
 	bool bUseFrustumCulling = true;
@@ -3481,7 +3481,7 @@ void SApplication::drawComponent(SComponent* pComponent, bool bUsingCustomResour
 
 	if (bUseFrustumCulling && bUsingInstancing == false)
 	{
-		if (doFrustumCulling(pComponent) == false)
+		if (doFrustumCulling(pComponent, pShadowMapConstants) == false)
 		{
 			return; // mesh is outside of the view frustum
 		}
@@ -3585,7 +3585,7 @@ void SApplication::drawComponent(SComponent* pComponent, bool bUsingCustomResour
 		// Do frustum culling anyway.
 
 		UINT64 drawCount = 0;
-		doFrustumCullingOnInstancedMesh(dynamic_cast<SMeshComponent*>(pComponent), drawCount);
+		doFrustumCullingOnInstancedMesh(dynamic_cast<SMeshComponent*>(pComponent), drawCount, pShadowMapConstants);
 
 #if defined(DEBUG) || defined(_DEBUG)
 		if (drawCount > UINT_MAX)
@@ -6178,7 +6178,7 @@ void SApplication::setTransparentPSO()
 	}
 }
 
-bool SApplication::doFrustumCulling(SComponent* pComponent)
+bool SApplication::doFrustumCulling(SComponent* pComponent, SRenderPassConstants* pShadowMapConstants)
 {
 	pComponent->mtxWorldMatrixUpdate.lock();
 	DirectX::XMMATRIX world    = DirectX::XMLoadFloat4x4(&pComponent->renderData.vWorld);
@@ -6188,7 +6188,17 @@ bool SApplication::doFrustumCulling(SComponent* pComponent)
 
 	DirectX::XMMATRIX invWorld = DirectX::XMMatrixInverse(&worldDet, world);
 
-	DirectX::XMMATRIX view = DirectX::XMMatrixTranspose(DirectX::XMLoadFloat4x4(&mainRenderPassCB.vView)); // transpose back (see updateMainPassCB()).
+	DirectX::XMMATRIX view;
+	if (pShadowMapConstants)
+	{
+		// drawing for shadow maps
+		// cull from light source perspective
+		view = DirectX::XMMatrixTranspose(DirectX::XMLoadFloat4x4(&pShadowMapConstants->vView)); // transpose back (see updateMainPassCB()).
+	}
+	else
+	{
+		view = DirectX::XMMatrixTranspose(DirectX::XMLoadFloat4x4(&mainRenderPassCB.vView)); // transpose back (see updateMainPassCB()).
+	}
 	DirectX::XMVECTOR viewDet = XMMatrixDeterminant(view);
 	DirectX::XMMATRIX invView = DirectX::XMMatrixInverse(&viewDet, view);
 
@@ -6209,7 +6219,7 @@ bool SApplication::doFrustumCulling(SComponent* pComponent)
 	return false;
 }
 
-void SApplication::doFrustumCullingOnInstancedMesh(SMeshComponent* pMeshComponent, UINT64& iOutVisibleInstanceCount)
+void SApplication::doFrustumCullingOnInstancedMesh(SMeshComponent* pMeshComponent, UINT64& iOutVisibleInstanceCount, SRenderPassConstants* pShadowMapConstants)
 {
 	std::lock_guard<std::mutex> lock(pMeshComponent->mtxInstancing);
 
@@ -6235,13 +6245,24 @@ void SApplication::doFrustumCullingOnInstancedMesh(SMeshComponent* pMeshComponen
 		{
 			continue;
 		}
+		
 
 
 		DirectX::XMVECTOR instWorldDet = XMMatrixDeterminant(instanceWorld);
 
 		DirectX::XMMATRIX invWorld = DirectX::XMMatrixInverse(&instWorldDet, instanceWorld);
 
-		DirectX::XMMATRIX view = DirectX::XMMatrixTranspose(DirectX::XMLoadFloat4x4(&mainRenderPassCB.vView)); // transpose back (see updateMainPassCB()).
+		DirectX::XMMATRIX view;
+		if (pShadowMapConstants)
+		{
+			// drawing for shadow maps
+			// cull from light source perspective
+			view = DirectX::XMMatrixTranspose(DirectX::XMLoadFloat4x4(&pShadowMapConstants->vView)); // transpose back (see updateMainPassCB()).
+		}
+		else
+		{
+			view = DirectX::XMMatrixTranspose(DirectX::XMLoadFloat4x4(&mainRenderPassCB.vView)); // transpose back (see updateMainPassCB()).
+		}
 		DirectX::XMVECTOR viewDet = XMMatrixDeterminant(view);
 		DirectX::XMMATRIX invView = DirectX::XMMatrixInverse(&viewDet, view);
 

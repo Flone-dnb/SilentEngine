@@ -223,7 +223,8 @@ float4 PS(VertexOut pin) : SV_Target
 	
     for (; iLightIndex < iDirectionalLightCount + iPointLightCount + iSpotLightCount; iLightIndex++)
     {
-        // TODO
+        vLightShadowFactors[iLightIndex] = calcShadowFactor(pin.vPosWorldSpace, iLightIndex, iShadowMapIndex);
+        iShadowMapIndex++;
     }
 
 
