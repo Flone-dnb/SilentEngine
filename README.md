@@ -1,6 +1,6 @@
 # Silent Engine
 
-Still in very early development stage, right now we got:
+What is currently implemented:
 - entity component system,
 - custom audio engine written using XAudio2 with FX and 3D positioning,
 - frustum culling,
