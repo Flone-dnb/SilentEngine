@@ -44,6 +44,7 @@ namespace fs = std::filesystem;
 #include "SilentEngine/Public/GUI/SGUISimpleText/SGUISimpleText.h"
 #include "SilentEngine/Public/GUI/SGUIImage/SGUIImage.h"
 #include "SilentEngine/Public/GUI/SGUILayout/SGUILayout.h"
+#include "SilentEngine/Public/EntityComponentSystem/SPointLightComponent/SPointLightComponent.h"
 
 
 SApplication* SApplication::pApp = nullptr;
@@ -1080,12 +1081,41 @@ bool SApplication::spawnContainerInLevel(SContainer* pContainer)
 		CD3DX12_GPU_DESCRIPTOR_HANDLE srvGpuHeapHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(pCBVSRVUAVHeap->GetGPUDescriptorHandleForHeapStart());
 		srvGpuHeapHandle.Offset(static_cast<UINT>(iShadowMapSRVStartOffset), iCBVSRVUAVDescriptorSize);
 
-		for (size_t i = 0; i < getCurrentLevel()->vSpawnedLightComponents.size(); i++)
+		SLevel* pLevel = getCurrentLevel();
+
+		// Do: directional, point and only then spot lights. Our shaders and everything expects this order.
+		
+		for (size_t i = 0; i < pLevel->vSpawnedLightComponents.size(); i++)
 		{
-			// update old views to new ones
-			// and assign new views to new shadow maps (because we already added below addLightComponentsToVector()).
-			getCurrentLevel()->vSpawnedLightComponents[i]->allocateShadowMapCBsForLightComponents(&vFrameResources, pDevice.Get(),
-				dsvHeapHandle, iDSVDescriptorSize, srvCpuHeapHandle, srvGpuHeapHandle, iCBVSRVUAVDescriptorSize);
+			if (pLevel->vSpawnedLightComponents[i]->lightType == SLightComponentType::SLCT_DIRECTIONAL)
+			{
+				// update old views to new ones
+				// and assign new views to new shadow maps (because we already added below addLightComponentsToVector()).
+				pLevel->vSpawnedLightComponents[i]->allocateShadowMapCBsForLightComponents(&vFrameResources, pDevice.Get(),
+					dsvHeapHandle, iDSVDescriptorSize, srvCpuHeapHandle, srvGpuHeapHandle, iCBVSRVUAVDescriptorSize);
+			}
+		}
+
+		for (size_t i = 0; i < pLevel->vSpawnedLightComponents.size(); i++)
+		{
+			if (pLevel->vSpawnedLightComponents[i]->lightType == SLightComponentType::SLCT_POINT)
+			{
+				// update old views to new ones
+				// and assign new views to new shadow maps (because we already added below addLightComponentsToVector()).
+				pLevel->vSpawnedLightComponents[i]->allocateShadowMapCBsForLightComponents(&vFrameResources, pDevice.Get(),
+					dsvHeapHandle, iDSVDescriptorSize, srvCpuHeapHandle, srvGpuHeapHandle, iCBVSRVUAVDescriptorSize);
+			}
+		}
+
+		for (size_t i = 0; i < pLevel->vSpawnedLightComponents.size(); i++)
+		{
+			if (pLevel->vSpawnedLightComponents[i]->lightType == SLightComponentType::SLCT_SPOT)
+			{
+				// update old views to new ones
+				// and assign new views to new shadow maps (because we already added below addLightComponentsToVector()).
+				pLevel->vSpawnedLightComponents[i]->allocateShadowMapCBsForLightComponents(&vFrameResources, pDevice.Get(),
+					dsvHeapHandle, iDSVDescriptorSize, srvCpuHeapHandle, srvGpuHeapHandle, iCBVSRVUAVDescriptorSize);
+			}
 		}
 	}
 
@@ -1215,13 +1245,54 @@ void SApplication::despawnContainerFromLevel(SContainer* pContainer)
 			onResize();
 		}
 
+		// allocate new SRV(s) for shadow maps to used in shaders
+		createCBVSRVUAVHeap();
+		createViews();
+
 		CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHeapHandle = getDepthStencilViewHandle();
 		dsvHeapHandle.Offset(static_cast<UINT>(iDSVStartForShadowMapsIndex), iDSVDescriptorSize);
 
-		for (size_t i = 0; i < getCurrentLevel()->vSpawnedLightComponents.size(); i++)
+		CD3DX12_CPU_DESCRIPTOR_HANDLE srvCpuHeapHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(pCBVSRVUAVHeap->GetCPUDescriptorHandleForHeapStart());
+		srvCpuHeapHandle.Offset(static_cast<UINT>(iShadowMapSRVStartOffset), iCBVSRVUAVDescriptorSize);
+
+		CD3DX12_GPU_DESCRIPTOR_HANDLE srvGpuHeapHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(pCBVSRVUAVHeap->GetGPUDescriptorHandleForHeapStart());
+		srvGpuHeapHandle.Offset(static_cast<UINT>(iShadowMapSRVStartOffset), iCBVSRVUAVDescriptorSize);
+
+		SLevel* pLevel = getCurrentLevel();
+
+		// Do: directional, point and only then spot lights. Our shaders and everything expects this order.
+
+		for (size_t i = 0; i < pLevel->vSpawnedLightComponents.size(); i++)
 		{
-			// update old views to new ones
-			getCurrentLevel()->vSpawnedLightComponents[i]->deallocateShadowMapCBsForLightComponents(&vFrameResources);
+			if (pLevel->vSpawnedLightComponents[i]->lightType == SLightComponentType::SLCT_DIRECTIONAL)
+			{
+				// update old views to new ones
+				// and assign new views to new shadow maps (because we already added below addLightComponentsToVector()).
+				pLevel->vSpawnedLightComponents[i]->allocateShadowMapCBsForLightComponents(&vFrameResources, pDevice.Get(),
+					dsvHeapHandle, iDSVDescriptorSize, srvCpuHeapHandle, srvGpuHeapHandle, iCBVSRVUAVDescriptorSize);
+			}
+		}
+
+		for (size_t i = 0; i < pLevel->vSpawnedLightComponents.size(); i++)
+		{
+			if (pLevel->vSpawnedLightComponents[i]->lightType == SLightComponentType::SLCT_POINT)
+			{
+				// update old views to new ones
+				// and assign new views to new shadow maps (because we already added below addLightComponentsToVector()).
+				pLevel->vSpawnedLightComponents[i]->allocateShadowMapCBsForLightComponents(&vFrameResources, pDevice.Get(),
+					dsvHeapHandle, iDSVDescriptorSize, srvCpuHeapHandle, srvGpuHeapHandle, iCBVSRVUAVDescriptorSize);
+			}
+		}
+
+		for (size_t i = 0; i < pLevel->vSpawnedLightComponents.size(); i++)
+		{
+			if (pLevel->vSpawnedLightComponents[i]->lightType == SLightComponentType::SLCT_SPOT)
+			{
+				// update old views to new ones
+				// and assign new views to new shadow maps (because we already added below addLightComponentsToVector()).
+				pLevel->vSpawnedLightComponents[i]->allocateShadowMapCBsForLightComponents(&vFrameResources, pDevice.Get(),
+					dsvHeapHandle, iDSVDescriptorSize, srvCpuHeapHandle, srvGpuHeapHandle, iCBVSRVUAVDescriptorSize);
+			}
 		}
 	}
 
@@ -2883,11 +2954,27 @@ void SApplication::drawToShadowMaps()
 	{
 		if (pLevel->vSpawnedLightComponents[i]->isVisible())
 		{
-			pLevel->vSpawnedLightComponents[i]->renderToShadowMaps(pCommandList.Get(), pCurrentFrameResource, &renderPassCBCopy);
+			if (pLevel->vSpawnedLightComponents[i]->lightType == SLightComponentType::SLCT_POINT)
+			{
+				SPointLightComponent* pPointLight = dynamic_cast<SPointLightComponent*>(pLevel->vSpawnedLightComponents[i]);
 
-			drawOpaqueComponents(true, pLevel->vSpawnedLightComponents[i]->getShadowMapConstants()); // drawing to shadow map
+				for (size_t i = 0; i < 6; i++)
+				{
+					pPointLight->renderToShadowMaps(pCommandList.Get(), pCurrentFrameResource, &renderPassCBCopy, i);
 
-			pLevel->vSpawnedLightComponents[i]->finishRenderToShadowMaps(pCommandList.Get());
+					drawOpaqueComponents(pPointLight->getShadowMapConstants(i)); // drawing to shadow map
+
+					pPointLight->finishRenderToShadowMaps(pCommandList.Get(), i);
+				}
+			}
+			else
+			{
+				pLevel->vSpawnedLightComponents[i]->renderToShadowMaps(pCommandList.Get(), pCurrentFrameResource, &renderPassCBCopy);
+
+				drawOpaqueComponents(pLevel->vSpawnedLightComponents[i]->getShadowMapConstants()); // drawing to shadow map
+
+				pLevel->vSpawnedLightComponents[i]->finishRenderToShadowMaps(pCommandList.Get());
+			}
 		}
 	}
 }
@@ -3155,7 +3242,7 @@ void SApplication::draw()
 	mtxFenceUpdate.unlock();
 }
 
-void SApplication::drawOpaqueComponents(bool bDrawingToShadowMap, SRenderPassConstants* pShadowMapConstants)
+void SApplication::drawOpaqueComponents(SRenderPassConstants* pShadowMapConstants)
 {
 	bool bUsingCustomResources = false;
 
@@ -3174,7 +3261,7 @@ void SApplication::drawOpaqueComponents(bool bDrawingToShadowMap, SRenderPassCon
 				bUsingCustomResources = true;
 			}
 
-			if (bDrawingToShadowMap)
+			if (pShadowMapConstants)
 			{
 				pCommandList->SetPipelineState(vOpaqueMeshesByCustomShader[i].pShader->pShadowMapPSO.Get());
 			}
@@ -3204,9 +3291,9 @@ void SApplication::drawOpaqueComponents(bool bDrawingToShadowMap, SRenderPassCon
 
 				if (bParentVisible)
 				{
-					if (!(bDrawingToShadowMap && vOpaqueMeshesByCustomShader[i].vMeshComponentsWithThisShader[j]->getRenderData()->primitiveTopologyType == D3D_PRIMITIVE_TOPOLOGY_LINELIST))
+					if (!(pShadowMapConstants && vOpaqueMeshesByCustomShader[i].vMeshComponentsWithThisShader[j]->getRenderData()->primitiveTopologyType == D3D_PRIMITIVE_TOPOLOGY_LINELIST))
 					{
-						drawComponent(vOpaqueMeshesByCustomShader[i].vMeshComponentsWithThisShader[j], bUsingCustomResources, bDrawingToShadowMap, pShadowMapConstants);
+						drawComponent(vOpaqueMeshesByCustomShader[i].vMeshComponentsWithThisShader[j], bUsingCustomResources, pShadowMapConstants);
 					}
 				}
 			}
@@ -3406,7 +3493,7 @@ void SApplication::drawGUIObjects()
 	}
 }
 
-void SApplication::drawComponent(SComponent* pComponent, bool bUsingCustomResources, bool bDrawingToShadowMap, SRenderPassConstants* pShadowMapConstants)
+void SApplication::drawComponent(SComponent* pComponent, bool bUsingCustomResources, SRenderPassConstants* pShadowMapConstants)
 {
 	bool bDrawThisComponent = false;
 	bool bUseFrustumCulling = true;
@@ -3641,7 +3728,7 @@ void SApplication::drawComponent(SComponent* pComponent, bool bUsingCustomResour
 
 
 	// Bind shadow maps.
-	if (!bDrawingToShadowMap && getCurrentLevel() && getCurrentLevel()->vSpawnedLightComponents.size() > 0)
+	if (!pShadowMapConstants && getCurrentLevel() && getCurrentLevel()->vSpawnedLightComponents.size() > 0)
 	{
 		auto gpuHandleToShadowMaps = CD3DX12_GPU_DESCRIPTOR_HANDLE(pCBVSRVUAVHeap->GetGPUDescriptorHandleForHeapStart());
 		gpuHandleToShadowMaps.Offset(iShadowMapSRVStartOffset, iCBVSRVUAVDescriptorSize);
@@ -3803,7 +3890,7 @@ std::array<const CD3DX12_STATIC_SAMPLER_DESC, 4> SApplication::getStaticSamples(
 		0.0f,                               // mipLODBias
 		16,                                 // maxAnisotropy
 		D3D12_COMPARISON_FUNC_LESS_EQUAL,
-		D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK
+		D3D12_STATIC_BORDER_COLOR_OPAQUE_WHITE
 	);
 
 	return { pointWrap, linearWrap, anisotropicWrap, shadow };
@@ -4510,6 +4597,12 @@ bool SApplication::createRTVAndDSVDescriptorHeaps(size_t iAddDSVCount)
 	// for new shadow maps (currently in spawn())
 	dsvHeapDesc.NumDescriptors += static_cast<UINT>(iAddDSVCount);
 
+	// -----------
+	// if need to add more DSVs update light sources DSVs (see updateDSV() in light source)
+	// right now they are only updated on light spawn/despawn.
+	// -----------
+
+
 	dsvHeapDesc.Type           = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
 	dsvHeapDesc.Flags          = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	dsvHeapDesc.NodeMask       = 0;
@@ -4551,11 +4644,12 @@ bool SApplication::createCBVSRVUAVHeap()
 
 	if (getCurrentLevel())
 	{
+		SLevel* pLevel = getCurrentLevel();
 		iShadowMapSRVStartOffset = iDescriptorCount;
 
-		for (size_t i = 0; i < getCurrentLevel()->vSpawnedLightComponents.size(); i++)
+		for (size_t i = 0; i < pLevel->vSpawnedLightComponents.size(); i++)
 		{
-			iDescriptorCount += getCurrentLevel()->vSpawnedLightComponents[i]->iRequiredSRVs;
+			iDescriptorCount += pLevel->vSpawnedLightComponents[i]->iRequiredSRVs;
 		}
 	}
 
@@ -5074,6 +5168,7 @@ bool SApplication::createPSO(SShader* pPSOsForCustomShader)
 	smapPsoDesc.SampleDesc.Quality = 0;
 	smapPsoDesc.RTVFormats[0] = DXGI_FORMAT_UNKNOWN;
 	smapPsoDesc.NumRenderTargets = 0;
+	smapPsoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
 
 	// only run vertex shader
 	smapPsoDesc.PS =

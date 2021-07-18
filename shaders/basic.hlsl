@@ -121,9 +121,9 @@ VertexOut VS(VertexIn vin)
 }
 
 
-float calcShadowFactor(float4 vPosWorldSpace, int iLightIndex, int iShadowMapIndex)
+float calcShadowFactor(float4 vPosWorldSpace, int iShadowMapIndex, float4x4 vLightViewProjTex)
 {
-    float4 vPosShadowMapTexSpace = mul(vPosWorldSpace, vLights[iLightIndex].mLightViewProjTex);
+    float4 vPosShadowMapTexSpace = mul(vPosWorldSpace, vLightViewProjTex);
 
     // Complete projection by doing division by w.
     vPosShadowMapTexSpace.xyz /= vPosShadowMapTexSpace.w;
@@ -212,18 +212,52 @@ float4 PS(VertexOut pin) : SV_Target
     int iShadowMapIndex = 0;
     for (; iLightIndex < iDirectionalLightCount; iLightIndex++)
     {
-        vLightShadowFactors[iLightIndex] = calcShadowFactor(pin.vPosWorldSpace, iLightIndex, iShadowMapIndex);
+        vLightShadowFactors[iLightIndex] = calcShadowFactor(pin.vPosWorldSpace, iShadowMapIndex, vLights[iLightIndex].mLightViewProjTex[0]);
         iShadowMapIndex++;
     }
 	
     for (; iLightIndex < iDirectionalLightCount + iPointLightCount; iLightIndex++)
     {
-        // TODO
+        float vShadowFactors[6];
+
+        [unroll]
+        for (int m = 0; m < 6; m++)
+        {
+            float4 vPosShadowMapTexSpace = mul(pin.vPosWorldSpace, vLights[iLightIndex].mLightViewProjTex[m]);
+
+            // Complete projection by doing division by w.
+            vPosShadowMapTexSpace.xyz /= vPosShadowMapTexSpace.w;
+
+            if (vPosShadowMapTexSpace.x < FLOAT_DELTA || vPosShadowMapTexSpace.x > (1.0f - FLOAT_DELTA)
+            || vPosShadowMapTexSpace.y < FLOAT_DELTA || vPosShadowMapTexSpace.y > (1.0f - FLOAT_DELTA)
+            || vPosShadowMapTexSpace.z < FLOAT_DELTA || vPosShadowMapTexSpace.z > (1.0f - FLOAT_DELTA))
+            {
+                vShadowFactors[m] = 1.0f;
+                continue;
+            }
+
+            vShadowFactors[m] = calcShadowFactor(pin.vPosWorldSpace, iShadowMapIndex + m, vLights[iLightIndex].mLightViewProjTex[m]);
+        }
+
+        float fMinValue = vShadowFactors[0];
+
+        [unroll]
+        for (int i = 1; i < 6; i++)
+        {
+            if (vShadowFactors[i] < fMinValue)
+            {
+                fMinValue = vShadowFactors[i];
+            }
+        }
+
+        vLightShadowFactors[iLightIndex] = fMinValue;
+
+        iShadowMapIndex += 6;
     }
 	
     for (; iLightIndex < iDirectionalLightCount + iPointLightCount + iSpotLightCount; iLightIndex++)
     {
-        vLightShadowFactors[iLightIndex] = calcShadowFactor(pin.vPosWorldSpace, iLightIndex, iShadowMapIndex);
+        vLightShadowFactors[iLightIndex] = calcShadowFactor(pin.vPosWorldSpace, iShadowMapIndex, vLights[iLightIndex].mLightViewProjTex[0]);
         iShadowMapIndex++;
     }
 

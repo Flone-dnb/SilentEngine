@@ -852,10 +852,10 @@ private:
 		* desc: draws the frame.
 		*/
 		void draw                            ();
-		void drawOpaqueComponents            (bool bDrawingToShadowMap = false, SRenderPassConstants* pShadowMapConstants = nullptr);
+		void drawOpaqueComponents            (SRenderPassConstants* pShadowMapConstants = nullptr);
 		void drawTransparentComponents       ();
 		void drawGUIObjects                  ();
-		void drawComponent                   (SComponent* pComponent, bool bUsingCustomResources = false, bool bDrawingToShadowMap = false, SRenderPassConstants* pShadowMapConstants = nullptr);
+		void drawComponent                   (SComponent* pComponent, bool bUsingCustomResources = false, SRenderPassConstants* pShadowMapConstants = nullptr);
 		void drawToShadowMaps                ();
 		//@@Function
 		/*

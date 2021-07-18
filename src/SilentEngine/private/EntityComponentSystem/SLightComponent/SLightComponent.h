@@ -21,7 +21,13 @@ struct SLightProps
 	float fFalloffEnd = 30.0f; // point/spot light only
 	DirectX::XMFLOAT3 vPosition = { 0.0f, 0.0f, 0.0f }; // point/spot light only
 	float fSpotLightRange = 128.0f; // spot light only
-	DirectX::XMFLOAT4X4 mLightViewProjTex = SMath::getIdentityMatrix4x4();
+	DirectX::XMFLOAT4X4 mLightViewProjTex[6] = { // contains 6 items only for point lights
+		SMath::getIdentityMatrix4x4(),
+		SMath::getIdentityMatrix4x4(),
+		SMath::getIdentityMatrix4x4(),
+		SMath::getIdentityMatrix4x4(),
+		SMath::getIdentityMatrix4x4(),
+		SMath::getIdentityMatrix4x4() };
 };
 
 enum class SLightComponentType

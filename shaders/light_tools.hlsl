@@ -1,4 +1,5 @@
 #define MAX_LIGHTS 16
+#define FLOAT_DELTA 0.0000001f
 
 struct Light
 {
@@ -8,7 +9,7 @@ struct Light
     float  fFalloffEnd;   // point/spot light only
     float3 vPosition;     // point light only
     float  fSpotlightRange; // spot light only
-	float4x4 mLightViewProjTex;
+	float4x4 mLightViewProjTex[6];
 };
 
 struct Material

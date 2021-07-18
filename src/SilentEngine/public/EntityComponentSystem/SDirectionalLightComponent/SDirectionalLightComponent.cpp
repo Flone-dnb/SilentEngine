@@ -60,16 +60,14 @@ void SDirectionalLightComponent::allocateShadowMaps(std::vector<std::unique_ptr<
 	}
 	else
 	{
-		UINT iIndex = 0;
 		for (size_t i = 0; i < vFrameResources->size(); i++)
 		{
 			bool bExpanded; // don't care, we anyway update CB on every frame
-			iIndex = iIndexInFrameResourceShadowMapBuffer = vFrameResources->operator[](i)->addNewShadowMapCB(iRequiredDSVs, &bExpanded);
+			iIndexInFrameResourceShadowMapBuffer = vFrameResources->operator[](i)->addNewShadowMapCB(iRequiredDSVs, &bExpanded);
 			// index will be the same because we only use 1 map here
 		}
-
 		pShadowMap = new SShadowMap(pDevice, dsvHeapHandle, srvCpuHeapHandle, srvGpuHeapHandle, iShadowMapOneDimensionSize);
-		pShadowMap->iShadowMapCBIndex = iIndex;
+		pShadowMap->iShadowMapCBIndex = iIndexInFrameResourceShadowMapBuffer;
 	}
 
 	dsvHeapHandle.Offset(static_cast<UINT>(iRequiredDSVs), iDSVDescriptorSize);
@@ -145,7 +143,7 @@ void SDirectionalLightComponent::updateCBData(SFrameResource* pCurrentFrameResou
 	XMStoreFloat4x4(&shadowMapCB.vViewProj, XMMatrixTranspose(viewProj));
 	XMStoreFloat4x4(&shadowMapCB.vInvViewProj, XMMatrixTranspose(invViewProj));
 	
-	XMStoreFloat4x4(&lightProps.mLightViewProjTex, XMMatrixTranspose(shadowTransform));
+	XMStoreFloat4x4(&lightProps.mLightViewProjTex[0], XMMatrixTranspose(shadowTransform));
 
 	XMStoreFloat3(&shadowMapCB.vCameraPos, lightPos);
 

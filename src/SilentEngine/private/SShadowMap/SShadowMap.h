@@ -41,7 +41,8 @@ public:
 private:
 
 	void createResourceAndDescriptors();
-	void createDescriptors();
+	void registerDSV();
+	void registerSRV();
 
 	ID3D12Device* pDevice = nullptr;
 	D3D12_VIEWPORT viewport;

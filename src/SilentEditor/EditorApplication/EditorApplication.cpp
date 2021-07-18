@@ -191,12 +191,6 @@ void EditorApplication::onKeyboardButtonUp(SKeyboardKey keyboardKey)
 
 void EditorApplication::onPhysicsTick(float fDeltaTime)
 {
-	if (getCurrentLevel()->getNotRenderableContainers()->size() > 0)
-	{
-		dynamic_cast<MyContainer*>(getCurrentLevel()->getNotRenderableContainers()->operator[](0))->onTick(fDeltaTime);
-	}
-
-
 	if (bRMBPressed && (bWPressed || bSPressed || bDPressed || bAPressed || bQPressed || bEPressed))
 	{
 		float fSpeedMult = 1.0f;
