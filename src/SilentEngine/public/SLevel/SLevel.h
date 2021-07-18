@@ -132,5 +132,7 @@ private:
 
 	std::mutex mtxLevelBounds;
 	DirectX::BoundingSphere levelBounds;
+
+	bool bLevelBoundsCalculated;
 };
 

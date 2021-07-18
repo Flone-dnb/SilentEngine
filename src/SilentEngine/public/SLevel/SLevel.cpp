@@ -17,6 +17,8 @@
 SLevel::SLevel(SApplication* pApp)
 {
 	this->pApp = pApp;
+
+	bLevelBoundsCalculated = false;
 }
 
 SLevel::~SLevel()
@@ -225,6 +227,11 @@ DirectX::BoundingSphere* SLevel::getLevelBounds(bool bRecalculateLevelBounds)
 
 	if (bRecalculateLevelBounds == false)
 	{
+		if (bLevelBoundsCalculated == false)
+		{
+			SError::showErrorMessageBoxAndLog("level boundaries have not been calculated before.");
+		}
+		
 		return &levelBounds;
 	}
 
@@ -263,6 +270,8 @@ DirectX::BoundingSphere* SLevel::getLevelBounds(bool bRecalculateLevelBounds)
 				}
 			}
 		}
+
+		bLevelBoundsCalculated = true;
 	}
 
 	levelBounds = levelBoundingSphere;
