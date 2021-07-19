@@ -1006,7 +1006,7 @@ bool SApplication::spawnContainerInLevel(SContainer* pContainer)
 {
 	if (pContainer->bSpawnedInLevel)
 	{
-		return true;
+		return false;
 	}
 
 	std::lock_guard<std::mutex> guard(mtxDraw);
@@ -1037,6 +1037,7 @@ bool SApplication::spawnContainerInLevel(SContainer* pContainer)
 
 	if (bHasUniqueName == false)
 	{
+		SError::showErrorMessageBoxAndLog("the name of the container is not unique.");
 		return true;
 	}
 
