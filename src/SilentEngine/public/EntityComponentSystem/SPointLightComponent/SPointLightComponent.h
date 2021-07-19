@@ -20,6 +20,12 @@ class SPointLightComponent : public SLightComponent
 {
 public:
 	//@@Function
+	/*
+	* desc: constructor.
+	* param "sComponentName": name of this component.
+	* param "iShadowMapOneDimensionSize": the bigger this value, the better the quality of the shadows from this light source
+	(use might need to change the depth bias using SVideoSettings::setShadowMappingBias() to avoid some shadow artifacts).
+	*/
 	SPointLightComponent(std::string sComponentName, UINT iShadowMapOneDimensionSize = 512);
 
 	SPointLightComponent() = delete;

@@ -83,7 +83,7 @@ void SVector::normalizeVector()
 	DirectX::XMStoreFloat3(&vVector, res);
 }
 
-float SVector::length()
+float SVector::length() const
 {
 	DirectX::XMVECTOR vec = DirectX::XMVector3Length(DirectX::XMLoadFloat3(&vVector));
 	DirectX::XMFLOAT3 res;
@@ -92,7 +92,7 @@ float SVector::length()
 	return res.x;
 }
 
-float SVector::dotProduct(const SVector& b)
+float SVector::dotProduct(const SVector& b) const
 {
 	DirectX::XMFLOAT3 vB = {b.getX(), b.getY(), b.getZ()};
 
@@ -111,6 +111,13 @@ void SVector::crossProduct(const SVector& b)
 	DirectX::XMVECTOR result = DirectX::XMVector3Cross(DirectX::XMLoadFloat3(&vVector), DirectX::XMLoadFloat3(&vB));
 
 	DirectX::XMStoreFloat3(&vVector, result);
+}
+
+SVector SVector::project(const SVector& b)
+{
+	float fBLength = b.length();
+
+	return b * (this->dotProduct(b) / (fBLength * fBLength));
 }
 
 float SVector::angleBetweenVectorsInRad(const SVector& b, bool bVectorsNormalized)
@@ -176,22 +183,22 @@ SVector SVector::operator/(const SVector& b)
 	return SVector(vVector.x / b.getX(), vVector.y / b.getY(), vVector.z / b.getZ());
 }
 
-SVector SVector::operator+(const float& b)
+SVector SVector::operator+(const float& b) const
 {
 	return SVector(vVector.x + b, vVector.y + b, vVector.z + b);
 }
 
-SVector SVector::operator-(const float& b)
+SVector SVector::operator-(const float& b) const
 {
 	return SVector(vVector.x - b, vVector.y - b, vVector.z - b);
 }
 
-SVector SVector::operator*(const float& b)
+SVector SVector::operator*(const float& b) const
 {
 	return SVector(vVector.x * b, vVector.y * b, vVector.z * b);
 }
 
-SVector SVector::operator/(const float& b)
+SVector SVector::operator/(const float& b) const
 {
 	return SVector(vVector.x / b, vVector.y / b, vVector.z / b);
 }

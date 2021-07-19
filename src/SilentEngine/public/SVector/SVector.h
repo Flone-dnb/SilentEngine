@@ -88,18 +88,23 @@ public:
 	/*
 	* desc: returns the length of the vector.
 	*/
-	float length              ();
+	float length              () const;
 
 	//@@Function
 	/*
 	* desc: returns the result of a dot product between this vector and another one.
 	*/
-	float dotProduct                (const SVector& b);
+	float dotProduct                (const SVector& b) const;
 	//@@Function
 	/*
 	* desc: saves the result of a cross product between this vector and another one in this vector.
 	*/
 	void  crossProduct              (const SVector& b);
+	//@@Function
+	/*
+	* desc: calculates the projection of this vector on 'b'.
+	*/
+	SVector project                 (const SVector& b);
 	//@@Function
 	/*
 	* desc: returns the angle between this vector and the given vector in radians.
@@ -133,10 +138,10 @@ public:
 	SVector operator*(const SVector& b);
 	SVector operator/(const SVector& b);
 
-	SVector operator+(const float& b);
-	SVector operator-(const float& b);
-	SVector operator*(const float& b);
-	SVector operator/(const float& b);
+	SVector operator+(const float& b) const;
+	SVector operator-(const float& b) const;
+	SVector operator*(const float& b) const;
+	SVector operator/(const float& b) const;
 
 	bool   operator==(const SVector& b);
 
