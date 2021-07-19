@@ -3924,6 +3924,13 @@ void SApplication::internalPhysicsTickThread()
 
 		onPhysicsTick(gamePhysicsTimer.getDeltaTimeBetweenTicksInSec());
 
+		if (getCurrentLevel() && getCurrentLevel()->bEnableIntersectionTests)
+		{
+			SLevel* pLevel = getCurrentLevel();
+
+			pLevel->doCollisionIntersectionTests();
+		}
+
 		float fTimeSpentOnPhysicsTickInMS
 			= static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now() - timeUserOnPhysicsTick).count()
 				/ dNSInMS);

@@ -19,6 +19,8 @@ SLevel::SLevel(SApplication* pApp)
 	this->pApp = pApp;
 
 	bLevelBoundsCalculated = false;
+	bEnableIntersectionTests = false;
+	bInCollisionIntersectionTests = false;
 }
 
 SLevel::~SLevel()
@@ -34,7 +36,7 @@ SLevel::~SLevel()
 
 void SLevel::rayCast(SVector& vRayStartPos, SVector& vRayStopPos, std::vector<SRayCastHit>& vHitResult, const std::vector<SComponent*>& vIgnoreList)
 {
-	std::lock_guard<std::mutex> guard(pApp->mtxDraw);
+	if (bInCollisionIntersectionTests == false) std::lock_guard<std::mutex> guard(pApp->mtxDraw);
 
 	std::vector<SComponent*> vRenderableAllComponents = pApp->vAllRenderableSpawnedOpaqueComponents;
 	vRenderableAllComponents.insert(vRenderableAllComponents.end(), pApp->vAllRenderableSpawnedTransparentComponents.begin(), pApp->vAllRenderableSpawnedTransparentComponents.end());
@@ -211,6 +213,46 @@ void SLevel::rayCast(SVector& vRayStartPos, SVector& vRayStopPos, std::vector<SR
 	std::sort(vHitResult.begin(), vHitResult.end(), [](SRayCastHit a, SRayCastHit b) {return a.fHitDistanceFromRayOrigin < b.fHitDistanceFromRayOrigin; });
 }
 
+void SLevel::setEnableCollisionIntersectionTests(bool bEnable, SMeshComponent* pDynamicObject)
+{
+	if (bEnable == false)
+	{
+		bEnableIntersectionTests = bEnable;
+
+		if (dynamicObject.pDynamicObject)
+		{
+			pDynamicObject->getContainer()->bIsDynamicObjectUsedInIntersectionTests = false;
+		}
+	}
+	else
+	{
+		if (pDynamicObject->bSpawnedInLevel == false)
+		{
+			SError::showErrorMessageBoxAndLog("dynamic object should be spawned in the level.");
+		}
+
+		if (pDynamicObject->getParentComponent())
+		{
+			SError::showErrorMessageBoxAndLog("dynamic object should be top level component of a container, it should not be a child of some other component.");
+		}
+
+		pDynamicObject->getContainer()->bIsDynamicObjectUsedInIntersectionTests = true;
+
+		bEnableIntersectionTests = bEnable;
+
+		dynamicObject.pDynamicObject = pDynamicObject;
+
+		dynamicObject.vLocalLocationLastPhysicsTick = pDynamicObject->vLocation;
+		dynamicObject.vLocalRotationLastPhysicsTick = pDynamicObject->vRotation;
+		dynamicObject.vLocalScaleLastPhysicsTick = pDynamicObject->vScale;
+
+		if (doCollisionIntersectionTests())
+		{
+			SError::showErrorMessageBoxAndLog("initial position of the dynamic object is colliding with something.");
+		}
+	}
+}
+
 bool SLevel::spawnContainerInLevel(SContainer* pContainer)
 {
 	return pApp->spawnContainerInLevel(pContainer);
@@ -287,4 +329,81 @@ std::vector<SContainer*>* SLevel::getRenderableContainers()
 std::vector<SContainer*>* SLevel::getNotRenderableContainers()
 {
 	return &vNotRenderableContainers;
+}
+
+bool SLevel::doCollisionIntersectionTests()
+{
+	std::lock_guard<std::mutex> guard(pApp->mtxDraw);
+
+	std::vector<SComponent*> vRenderableAllComponents = pApp->vAllRenderableSpawnedOpaqueComponents;
+	vRenderableAllComponents.insert(vRenderableAllComponents.end(), pApp->vAllRenderableSpawnedTransparentComponents.begin(), pApp->vAllRenderableSpawnedTransparentComponents.end());
+
+	for (size_t i = 0; i < vRenderableAllComponents.size(); i++)
+	{
+		if (vRenderableAllComponents[i] == dynamicObject.pDynamicObject)
+		{
+			continue;
+		}
+
+
+		// Check if no collision, not visible or something else...
+
+		if (vRenderableAllComponents[i]->getComponentType() != SComponentType::SCT_MESH)
+		{
+			continue;
+		}
+
+		SMeshComponent* pMesh = dynamic_cast<SMeshComponent*>(vRenderableAllComponents[i]);
+		bool bVisible = pMesh->isVisible() && pMesh->getContainer()->isVisible();
+
+		if (bVisible == false || (pMesh->pParentComponent && pMesh->pParentComponent->bVisible == false))
+		{
+			continue;
+		}
+
+		if (pMesh->renderData.primitiveTopologyType == D3D_PRIMITIVE_TOPOLOGY_LINELIST)
+		{
+			continue; // lines have no collision
+		}
+
+		if (pMesh->getCollisionPreset() == SCollisionPreset::SCP_NO_COLLISION || pMesh->bUseInstancing)
+		{
+			continue;
+		}
+
+
+
+		vRenderableAllComponents[i]->mtxWorldMatrixUpdate.lock();
+		DirectX::XMMATRIX world = DirectX::XMLoadFloat4x4(&vRenderableAllComponents[i]->renderData.vWorld);
+		vRenderableAllComponents[i]->mtxWorldMatrixUpdate.unlock();
+
+		DirectX::XMVECTOR worldDet = XMMatrixDeterminant(world);
+		DirectX::XMMATRIX invWorld = DirectX::XMMatrixInverse(&worldDet, world);
+
+
+		DirectX::XMMATRIX toObjectLocal = XMMatrixMultiply(DirectX::XMLoadFloat4x4(&dynamicObject.pDynamicObject->renderData.vWorld), invWorld);
+
+
+		DirectX::BoundingBox localSpaceBox;
+		dynamicObject.pDynamicObject->boxCollision.Transform(localSpaceBox, toObjectLocal);
+
+		// Perform the box/box intersection test in local space.
+		if (localSpaceBox.Contains(vRenderableAllComponents[i]->boxCollision) != DirectX::DISJOINT)
+		{
+			// return dynamic object back to previous place.
+			dynamicObject.pDynamicObject->setLocalLocation(dynamicObject.vLocalLocationLastPhysicsTick);
+			dynamicObject.pDynamicObject->setLocalRotation(dynamicObject.vLocalRotationLastPhysicsTick);
+			dynamicObject.pDynamicObject->setLocalScale(dynamicObject.vLocalScaleLastPhysicsTick);
+
+			return true;
+		}
+	}
+
+	dynamicObject.pDynamicObject->mtxWorldMatrixUpdate.lock();
+	dynamicObject.vLocalLocationLastPhysicsTick = dynamicObject.pDynamicObject->vLocation;
+	dynamicObject.vLocalRotationLastPhysicsTick = dynamicObject.pDynamicObject->vRotation;
+	dynamicObject.vLocalScaleLastPhysicsTick = dynamicObject.pDynamicObject->vScale;
+	dynamicObject.pDynamicObject->mtxWorldMatrixUpdate.unlock();
+
+	return false;
 }

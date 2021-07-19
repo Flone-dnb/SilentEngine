@@ -154,17 +154,12 @@ public:
 	*/
 	std::vector<SComponent*> getComponents() const;
 
-	//@@Function
-	/*
-	* desc: returns true if this container was created using Silent Editor.
-	*/
-	bool        isEditorObject   () const;
-
 private:
 
 	friend class SApplication;
 	friend class SComponent;
 	friend class SRuntimeMeshComponent;
+	friend class SLevel;
 
 	//@@Function
 	/*
@@ -279,5 +274,5 @@ private:
 
 	bool bVisible;
 	bool bSpawnedInLevel;
-	bool bIsEditorObject;
+	bool bIsDynamicObjectUsedInIntersectionTests;
 };

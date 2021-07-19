@@ -16,7 +16,7 @@ SContainer::SContainer(const std::string& sContainerName)
 {
 	bVisible              = true;
 	bSpawnedInLevel       = false;
-	bIsEditorObject       = false;
+	bIsDynamicObjectUsedInIntersectionTests = false;
 
 	this->sContainerName  = sContainerName;
 
@@ -53,6 +53,11 @@ SContainer::~SContainer()
 
 void SContainer::setLocation(const SVector& vNewLocation, bool bLocationInWorldCoordinateSystem)
 {
+	if (bIsDynamicObjectUsedInIntersectionTests)
+	{
+		SError::showErrorMessageBoxAndLog("containers of the dynamic objects should not be moved/rotated/scaled.");
+	}
+
 	if (bLocationInWorldCoordinateSystem)
 	{
 		vLocation = vNewLocation;
@@ -70,6 +75,11 @@ void SContainer::setLocation(const SVector& vNewLocation, bool bLocationInWorldC
 
 void SContainer::setRotation(const SVector& vNewRotation)
 {
+	if (bIsDynamicObjectUsedInIntersectionTests)
+	{
+		SError::showErrorMessageBoxAndLog("containers of the dynamic objects should not be moved/rotated/scaled.");
+	}
+
 	if (vNewRotation.getX() >= 360.0f)
 	{
 		vRotation.setX( 360.0f - vNewRotation.getX() );
@@ -121,6 +131,11 @@ void SContainer::setRotation(const SVector& vNewRotation)
 
 void SContainer::setScale(const SVector& vNewScale)
 {
+	if (bIsDynamicObjectUsedInIntersectionTests)
+	{
+		SError::showErrorMessageBoxAndLog("containers of the dynamic objects should not be moved/rotated/scaled.");
+	}
+
 	vScale = vNewScale;
 
 	for (size_t i = 0; i < vComponents.size(); i++)
@@ -280,11 +295,6 @@ SComponent* SContainer::getComponentByName(const std::string& sComponentName) co
 std::vector<SComponent*> SContainer::getComponents() const
 {
     return vComponents;
-}
-
-bool SContainer::isEditorObject() const
-{
-	return bIsEditorObject;
 }
 
 void SContainer::setSpawnedInLevel(bool bSpawned)

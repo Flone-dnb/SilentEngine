@@ -31,6 +31,15 @@ public:
 	size_t vHitTriangleIndices[3]; // indices of hit triangle, use pMeshData->getVertices() with those indices to get triangle
 };
 
+class SCollisionTestsDynamicObject
+{
+public:
+	SMeshComponent* pDynamicObject = nullptr;
+	SVector vLocalLocationLastPhysicsTick;
+	SVector vLocalRotationLastPhysicsTick;
+	SVector vLocalScaleLastPhysicsTick;
+};
+
 //@@Class
 /*
 The class represents a level that can have containers in it.
@@ -59,6 +68,15 @@ public:
 
 
 	// Set functions
+
+		//@@Function
+		/*
+		* desc: very simple collision detection tests executed after each onPhysicsTick() call.
+		* param "bEnable": enable tests or disable.
+		* param "pDynamicObject": mesh component that is going to move using local location/rotation/scale.
+		* remarks: only mesh components are included in the collision intersection tests.
+		*/
+		void setEnableCollisionIntersectionTests(bool bEnable, SMeshComponent* pDynamicObject);
 
 		//@@Function
 		/*
@@ -111,6 +129,10 @@ public:
 
 private:
 
+	// returns 'true' if dynamic object is intersecting with something
+	// return value can be ignored
+	bool doCollisionIntersectionTests();
+
 	friend class SApplication;
 
 	//@@Variable
@@ -133,6 +155,12 @@ private:
 	std::mutex mtxLevelBounds;
 	DirectX::BoundingSphere levelBounds;
 
+
+	SCollisionTestsDynamicObject dynamicObject;
+
+	
 	bool bLevelBoundsCalculated;
+	bool bEnableIntersectionTests;
+	bool bInCollisionIntersectionTests;
 };
 
