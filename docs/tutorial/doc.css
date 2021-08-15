@@ -1,0 +1,247 @@
+body
+{
+    background-color: #1b1b1b;
+    margin-top: 5%;
+    margin-left: 10%;
+    margin-right: 10%;
+    font-family: "Segoe UI";
+}
+
+.nav_panel
+{
+    float: left;
+
+    width: 10%;
+    padding: 1%;
+
+    border: 1px solid #ff2020;
+    border-radius: 10px;
+    color: white;
+
+    font-size: 14px;
+}
+
+.cpp_main_page_container
+{
+    width: 80%;
+    float: right;
+    margin: 1%;
+    padding: 1%;
+
+    border: 1px solid #363636;
+    border-radius: 10px;
+    color: white;
+}
+
+.cpp_doc
+{
+    width: 85%;
+
+    float: right;
+
+    color: white;
+}
+
+.cpp_object
+{
+    padding-top: 0%;
+    margin-top: 0%;
+
+    font-family: "Segoe UI";
+    color: #ff1515;
+    font-size: 24px;
+}
+
+.cpp_type_title
+{
+    width: 85%;
+    float: right;
+
+    padding-top: 0%;
+    margin-top: 0%;
+
+    font-family: "Segoe UI";
+    color: #ff1515;
+    font-size: 26px;
+}
+
+.cpp_type_container
+{
+    width: 85%;
+
+    float: right;
+
+    color: white;
+}
+
+.cpp_codeobject
+{
+    font-size: 15px;
+}
+
+.cpp_codeobject_desc
+{
+    font-family: "Segoe UI";
+    font-size: 16px;
+}
+
+.cpp_func_line_code
+{
+    display: block;
+    padding: 1%;
+
+    border: 1px solid #363636;
+    border-radius: 5px;
+    background-color: #202020;
+}
+
+.cpp_summary
+{
+    font-size: 18px;
+}
+
+.cpp_function
+{
+    font-family: "Consolas";
+    font-size: 13px;
+    color: #e7e7e7;
+}
+
+.cpp_codeobject_path
+{
+    font-family: "Consolas";
+    font-size: 13px;
+    color: #d0d0d0;
+}
+
+.cpp_func_container
+{
+    padding: 1%;
+
+    border: 1px solid #363636;
+    border-radius: 5px;
+    background-color: #202020;
+}
+
+.cpp_func_name
+{
+    color: #e41818;
+}
+
+.cpp_func_param
+{
+    font-size: 16px;
+    font-weight: bold;
+    color: #e41818;
+}
+
+.cpp_func_param_desc
+{
+    font-size: 14px;
+}
+
+.cpp_codeobject_link
+{
+    color: white;
+    font-size: 16px;
+}
+
+.cpp_codeobject_link:link 
+{
+    text-decoration: none;
+}
+
+.cpp_codeobject_link:visited 
+{
+    text-decoration: none;
+}
+
+.cpp_codeobject_link:hover 
+{
+    text-decoration: underline;
+    color: #ff1515;
+}
+
+.cpp_codeobject_link:active 
+{
+    text-decoration: none;
+}
+
+.cpp_link_title
+{
+    color: white;
+    font-size: 18px;
+}
+
+.cpp_link_title:link 
+{
+    text-decoration: none;
+}
+
+.cpp_link_title:visited 
+{
+    text-decoration: none;
+}
+
+.cpp_link_title:hover 
+{
+    text-decoration: underline;
+    color: #ff1515;
+}
+
+.cpp_link_title:active 
+{
+    text-decoration: none;
+}
+
+.cpp_link
+{
+    color: #e41818;
+}
+
+.cpp_link:link 
+{
+    text-decoration: none;
+}
+
+.cpp_link:visited 
+{
+    text-decoration: none;
+}
+
+.cpp_link:hover 
+{
+    text-decoration: underline;
+    color: #ff1515;
+}
+
+.cpp_link:active 
+{
+    text-decoration: none;
+}
+
+.cpp_link_ref
+{
+    color: #e48c18;
+}
+
+.cpp_link_ref:link 
+{
+    text-decoration: none;
+}
+
+.cpp_link_ref:visited 
+{
+    text-decoration: none;
+}
+
+.cpp_link_ref:hover 
+{
+    text-decoration: underline;
+    color: #ff9101;
+}
+
+.cpp_link_ref:active 
+{
+    text-decoration: none;
+}

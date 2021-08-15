@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="../doc.css">
+
+    <title>Silent Engine Documentation</title>
+
+</head>
+
+<body>
+
+    <div class="cpp_type_title" style="float: left;"> Visual Effects </div>
+
+    <br>
+
+    <br>
+
+    <div class="cpp_codeobject_desc" style="color: white">
+        <p>
+            Use SApplication::getGlobalVisualSettings to control things like ambient light, distant fog and etc.
+        </p>
+        <p>
+            Use SCamera::setCameraEffects() to control things like gamma, saturation, blur and etc.
+        </p>
+        <p>
+            The SMeshComponent::setDrawAsLines() only works if the mesh is using default shader and if the mesh material
+            is not using transparency.
+        </p>
+        <p>
+            In order to have a skybox you need:
+        <ol>
+            <li>Create a sphere with a radius of far clip plane (get from SCamera).</li>
+            <li>Load the cubemap texture (a texture that contains 6 textures in it) for skybox using
+                SApplication::loadTextureFromDiskToGPU() (set 'bIsCubeMap' to
+                true).</li>
+            <li>Register the shader /shaders/skybox.hlsl using SApplication::compileCustomShader() and in 'customProps'
+                pass the cubemap texture handle as 'skyboxTexture'.
+            </li>
+            <li>Set the sphere to use this custom shader (using SComponent::setUseCustomShader()).</li>
+            <li>The skybox shader will automatically move the sphere to camera position on each frame.</li>
+        </ol>
+        </p>
+        <p>
+            For Instancing use SMeshComponent's constructor with 'bUseInstancing' to 'true'. You can then use functions
+            like: SMeshComponent::addInstance(), SMeshComponent::updateInstanceData(),
+            SMeshComponent::clearAllInstances(). Note than
+            you need to have a custom shader for instanced mesh, you can find an example shader that you can use in
+            /shaders/optional/. Mainly, instancing code is applied in the vertex shader (the VS() function in the .HLSL
+            file), other parts of the shader is equal to the basic.hlsl.
+        </p>
+    </div>
+
+</body>
+
+</html>

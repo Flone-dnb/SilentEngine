@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="../doc.css">
+
+    <title>Silent Engine Documentation</title>
+
+</head>
+
+<body>
+
+    <div class="cpp_type_title" style="float: left;"> General </div>
+
+    <br>
+
+    <br>
+
+    <div class="cpp_codeobject_desc" style="color: white">
+        <p>
+            This engine is intended only for educational purposes, not for actual games (although you can make games
+            with
+            it).
+            Because the engine is pretty small, but already a complex system, this documentation shows how to use the
+            engine
+            correctly (in case I forgot how to use it).
+        </p>
+        <p>
+            When using this engine always remember 2 main rules:
+        <ol>
+            <li>Carefully read the function documentation (Visual Studio will show it when using the function, otherwise
+                just go to the
+                file with function). Even if you know how to use this function, read the function documentation again.
+            </li>
+            <li>All loaded, registered, compiler and etc. stuff needs to be manually unloaded, unregistered and etc.
+                (use function like
+                SContainer::unbindMaterials(), SApplication::unregisterMaterial(),
+                SApplication::unloadCompiledShaderFromGPU(),
+                SApplication::unloadTextureFromGPU() and etc.)</li>
+        </ol>
+        </p>
+        <p>
+            For example, to unload a texture, first, despawn an object that uses the material with this texture, then
+            unregister the
+            material and unload the texture.
+        </p>
+        <p>
+            In order to work with the engine, you need to have a Visual Studio with C++20 support.
+        </p>
+        <p>
+            This "tutorial" will only cover some tricky parts of the engine, for everything else read the documentation in the "ref"
+            folder.
+        </p>
+    </div>
+
+</body>
+
+</html>

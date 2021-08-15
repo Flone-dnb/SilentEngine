@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="../doc.css">
+
+    <title>Silent Engine Documentation</title>
+
+</head>
+
+<body>
+
+    <div class="cpp_type_title" style="float: left;"> Import </div>
+
+    <br>
+
+    <br>
+
+    <div class="cpp_codeobject_desc" style="color: white">
+        <p>
+            In order to import an object use .OBJ format.
+        </p>
+        <p>
+            When exporting from Blender pick these options:
+        <ul>
+            <li>[Include - Limit to] Selection only (to export only selected object)</li>
+            <li>[Include - Objects as] OBJ Objects</li>
+            <li>[Transform - Forward] Y Forward</li>
+            <li>[Transform - Up] Z Up</li>
+            <li>[Geometry] Apply Modifiers</li>
+            <li>[Geometry] Write normals</li>
+            <li>[Geometry] Include UVs</li>
+            <li>[Geometry] Triangulate faces</li>
+        </ul>
+        </p>
+        <p>
+            Use SFormatOBJImporter::importMeshDataFromFile() to import the file in the engine.
+        </p>
+    </div>
+
+</body>
+
+</html>

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="../../doc.css">
+
+    <title>Silent Engine Documentation</title>
+
+</head>
+
+<body>
+
+    <div class="cpp_type_title" style="float: left;"> Spawn a cube </div>
+
+    <br>
+
+    <br>
+
+    <div class="cpp_codeobject_desc" style="color: white">
+        <p>
+            In order to start, here is an example of how you can spawn a cube.
+        </p>
+        <p>
+            Use already created class MyContainer in "SilentEditor" folder. This is supposed to be an actual editor
+            application to create a level and stuff, but I never had time to actually
+            implement it. So, because of this, we use "Silent Editor" as a created application template.
+        </p>
+        <p>
+            First, include the mesh component (in MyContainer.cpp) because we will use it.
+        </p>
+        <code class="cpp_func_line_code">#include "SilentEngine/Public/EntityComponentSystem/SMeshComponent/SMeshComponent.h"
+        </code>
+        <p>
+            Everything in the "SilentEngine/Public" folder is for your use. Stuff at "SilentEngine/Private" is used by
+            the engine
+            internals.
+        </p>
+        <p>
+            In the MyContainer.h (in the private section) declare a pointer to SMeshComponent.
+        </p>
+        <code class="cpp_func_line_code">class SMeshComponent* pCube;
+        </code>
+        <p>
+            In the MyContainer's constructor create a new instance of the SMeshComponent.
+        </p>
+        <code class="cpp_func_line_code">pCube = new SMeshComponent("Cube");
+        </code>
+        <p>
+            Now create the cube geometry and assign it to the mesh.
+        </p>
+        <code class="cpp_func_line_code">pCube->setMeshData(SPrimitiveShapeGenerator::createBox(1.0f, 1.0f, 1.0f), true);
+        </code>
+        <p>
+            Add this component to the container.
+        </p>
+        <code class="cpp_func_line_code">addComponentToContainer(pCube);
+        </code>
+        <p>
+            Now in the EditorApplication.cpp include MyContainer.
+        </p>
+        <code class="cpp_func_line_code">#include "SilentEditor/MyContainer/MyContainer.h"
+        </code>
+        <p>
+            And declare a pointer to it in the EditorApplication.h.
+        </p>
+        <code class="cpp_func_line_code">class MyContainer* pMyContainer;
+        </code>
+        <p>
+            In the EditorApplication::onRun(), where it says "// ... prepare stuff here ..." create an instance of the
+            MyContainer.
+        </p>
+        <code class="cpp_func_line_code">pMyContainer = new MyContainer("Cube Container");
+        </code>
+        <p>
+            Then spawn it in the level.
+        </p>
+        <code class="cpp_func_line_code">bool bError = getCurrentLevel()->spawnContainerInLevel(pMyContainer);
+        </code>
+        <p>
+            Because there are no light sources, you won't see anything. Let's add an ambient light. Add the following
+            code before or after "getCurrentLevel()->spawnContainerInLevel(pMyContainer);"
+        </p>
+        <code class="cpp_func_line_code">
+            SGlobalVisualSettings s = getGlobalVisualSettings();<br>
+            s.vAmbientLightRGB = SVector(1.0f, 1.0f, 1.0f);<br>
+            setGlobalVisualSettings(s);<br>
+        </code>
+        <p>
+            You still won't be able to see anything because the camera is spawned in the (0.0f, 0.0f, 0.0f) coordinates
+            by default and so is our cube. Move the camera a little bit so we will see our cube.
+        </p>
+        <code class="cpp_func_line_code">getCamera()->setCameraLocationInWorld(SVector(0.0f, -3.0f, 0.0f));
+        </code>
+        <p>
+            Build the application and run it, you should see a cube in the center of the window.
+        </p>
+        <p>
+            The EditorApplication already has a free camera controls setup. Hold right mouse button and use mouse
+            movement to look around, WASDQE to move (while holding RMB), Ctrl to move slowly and Shift to move fast. You
+            can also press middle mouse button to turn render mode to wireframe.
+        </p>
+        <p>
+            Because we are using ambient light, there are no shadows. You should use light components, like
+            SDirectionaLightComponent in order to have shadows.
+        </p>
+    </div>
+
+</body>
+
+</html>

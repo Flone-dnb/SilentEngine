@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="../../doc.css">
+
+    <title>Silent Engine Documentation</title>
+
+</head>
+
+<body>
+
+    <div class="cpp_type_title" style="float: left;"> Mesh components </div>
+
+    <br>
+
+    <br>
+
+    <div class="cpp_codeobject_desc" style="color: white">
+        <p>
+            Silent engine has 2 mesh components:
+        <ul>
+            <li>SMeshComponent</li>
+            <li>SRuntimeMeshComponent</li>
+        </ul>
+        </p>
+        <p>
+            SMeshComponent is used for the geometry, that will be rarely changed via SMeshComponent::setMeshData().
+        </p>
+        <p>
+            SRuntimeMeshComponent is used for the geometry, that will be often changed via
+            SMeshComponent::setMeshData().
+        </p>
+        <p>
+            The SRuntimeMeshComponent has some optimizations so that changing the mesh data from the CPU side won't
+            affect the performance that bad.
+        </p>
+        <p>
+            If you want to have a mesh, that will change its geometry very often (once
+            per frame, for example), then choose
+            SRuntimeMeshComponent for your mesh.
+        </p>
+        <p>
+            On the other hand, if you want to change mesh geometry (often) from the GPU side (via compute shaders), then
+            you
+            need to pick
+            SMeshComponent, because it's optimized to have more performance via updates from GPU.
+        </p>
+        <p>
+            If the geometry of a mesh won't be changed, pick SMeshComponent.
+        </p>
+    </div>
+
+</body>
+
+</html>

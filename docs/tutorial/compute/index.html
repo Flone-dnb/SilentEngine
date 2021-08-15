@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="../doc.css">
+
+    <title>Silent Engine Documentation</title>
+
+</head>
+
+<body>
+
+    <div class="cpp_type_title" style="float: left;"> Compute Shaders </div>
+
+    <br>
+
+    <br>
+
+    <div class="cpp_codeobject_desc" style="color: white">
+        <p>
+            In order to stop a compute shader, you need to use the onTick() function.
+        </p>
+        <p>
+            First, call SComputeShader::stopShaderExecution(), then on the next tick use
+            SApplication::unregisterCustomComputeShader()
+            and nullptr your compute shader pointer. No logic is needed on the next
+            tick.
+        </p>
+        <p>
+            Frustum culling will be disabled for mesh if the SMeshComponent's mesh data is used in the compute shader
+            (via SMeshComponent::getMeshDataAsComputeResource()).
+        </p>
+    </div>
+
+</body>
+
+</html>

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="../doc.css">
+
+    <title>Silent Engine Documentation</title>
+
+</head>
+
+<body>
+
+    <div class="cpp_type_title" style="float: left;"> GUI </div>
+
+    <br>
+
+    <br>
+
+    <div class="cpp_codeobject_desc" style="color: white">
+        <p>
+            To convert a .ttf to .spritefont use /ext/ttf2bmp.exe and then /ext/MakeSpriteFont.exe to convert .bmp to
+            .spritefont.
+        </p>
+        <p>
+            It's better to have a .spritefont per language and keep only one .spritefont in the memory. Keep them small
+            (less or equal to 256 chars). For example,
+            300
+            SGUISimpleText instances (when .spritefont has 256 chars) will use ~0.5 GB.
+        </p>
+        <p>
+            For non-ascii characters in .spritefont you can, for example, use FontForge to insert needed characters
+            after 127
+            characters in .ttf. Then in ttf2bmp use 0x20 as a start point and in the makeSpriteFont set the default
+            character (so
+            the app won't throw exceptions on unknown characters), after that, before calling setText() look if the
+            character code
+            is bigger than 127, then subtract needed characters count.
+        </p>
+        <p>
+            SizeToKeep ignores rotation.
+        </p>
+        <p>
+            To make a button, you can use SGUIImage (with setInteractableEvents() function) and SGUISimpleText.
+        </p>
+        <p>
+            You can make a progress bar using SGUIImage and SGUIImage::setCut() function.
+        </p>
+    </div>
+
+</body>
+
+</html>

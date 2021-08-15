@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="../../doc.css">
+
+    <title>Silent Engine Documentation</title>
+
+</head>
+
+<body>
+
+    <div class="cpp_type_title" style="float: left;"> Camera attachment </div>
+
+    <br>
+
+    <br>
+
+    <div class="cpp_codeobject_desc" style="color: white">
+        <p>
+            In order to attach a camera to something, like a head of your character, and have it in the component
+            hierarchy, you
+            need to use STargetComponent.
+        </p>
+        <p>
+            Add STargetComponent to the component hierarchy. It will be used as a placeholder for camera location.
+        </p>
+        <p>
+            Use SComponent::setBindOnParentLocationRotationScaleChangedCallback() on this STargetComponent and set
+            camera location in this
+            function based on
+            the STargetComponent location in world.
+        </p>
+        <p>
+            This way you can have a first person camera, for example.
+        </p>
+        <p>
+            In order to have a third person camera, you can use SCamera::setCameraMode() with CM_FIXED.
+        </p>
+    </div>
+
+</body>
+
+</html>
