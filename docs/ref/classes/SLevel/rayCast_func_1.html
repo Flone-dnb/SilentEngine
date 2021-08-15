@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../../doc.css">
+    <title>rayCast - Silent Engine Documentation</title>
+</head>
+<body>
+    <div class="nav_panel">
+        <a class="cpp_link_title" href="../../classes/index.html"> Classes </a>
+		<br>
+		<a class="cpp_link_title" href="../../structs/index.html"> Structs </a>
+		<br>
+    </div>
+    
+	<div class="cpp_doc">
+		<h3 class="cpp_object"> rayCast </h3>
+		<div class="cpp_codeobject_desc"> used to emit a ray that hits the components with collision.    	 </div>
+		<br>
+		<code class="cpp_func_line_code"> void rayCast<br>(<br>&nbsp;&nbsp;&nbsp;<a class="cpp_link_ref" href="../SVector/index.html">SVector</a>&amp; vRayStartPos,<br>&nbsp;&nbsp;&nbsp;<a class="cpp_link_ref" href="../SVector/index.html">SVector</a>&amp; vRayStopPos,<br>&nbsp;&nbsp;&nbsp;std::vector&lt;SRayCastHit&gt;&amp; vHitResult,<br>&nbsp;&nbsp;&nbsp;const std::vector&lt;SComponent*&gt;&amp; vIgnoreList = std::vector&lt;SComponent*&gt;()<br>); </code>
+		<br>
+		<br>
+		<div class="cpp_func_param">vRayStartPos</div>
+		<br>
+		<div class="cpp_func_param_desc">start position of the ray.    	</div>
+		<br>
+		<div class="cpp_func_param">vRayStopPos</div>
+		<br>
+		<div class="cpp_func_param_desc">stop (end) position of the ray.    	</div>
+		<br>
+		<div class="cpp_func_param">vHitResult</div>
+		<br>
+		<div class="cpp_func_param_desc">objects that were hit by the ray, use SComponent::getComponentType() to cast to correct type.    	</div>
+		<br>
+		<div class="cpp_func_param">vIgnoreList</div>
+		<br>
+		<div class="cpp_func_param_desc">(optional) list of component that will be ignored in this ray cast.    	</div>
+		<br>
+	----------------------------------------------
+	<br>
+	<br>
+	<div class="cpp_func_param"> Remarks </div>
+	<br>
+	<div class="cpp_func_param_desc"> instanced mesh components are currently ignored (TODO).    	 </div>
+	<br>
+	
+</div>
+</body>
+</html>

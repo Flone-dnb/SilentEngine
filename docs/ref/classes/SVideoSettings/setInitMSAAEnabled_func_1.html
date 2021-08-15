@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../../doc.css">
-    <title>setMSAASampleCount - Silent Engine Documentation</title>
+    <title>setInitMSAAEnabled - Silent Engine Documentation</title>
 </head>
 <body>
     <div class="nav_panel">
@@ -15,22 +15,22 @@
     </div>
     
 	<div class="cpp_doc">
-		<h3 class="cpp_object"> setMSAASampleCount </h3>
-		<div class="cpp_codeobject_desc"> used to set the sample count (i.e. quality) of the MSAA.    	 </div>
+		<h3 class="cpp_object"> setInitMSAAEnabled </h3>
+		<div class="cpp_codeobject_desc"> used to enable/disable the MSAA - anti-aliasing technique.    	 </div>
 		<br>
-		<code class="cpp_func_line_code"> bool setMSAASampleCount<br>(<br>&nbsp;&nbsp;&nbsp;MSAASampleCount eSampleCount<br>); </code>
+		<code class="cpp_func_line_code"> void  setInitMSAAEnabled<br>(<br>&nbsp;&nbsp;&nbsp;bool bEnable<br>); </code>
 		<br>
 		<br>
-		<div class="cpp_func_param">sampleCount</div>
+		<div class="cpp_func_param">bEnable</div>
 		<br>
-		<div class="cpp_func_param_desc">sample count (i.e. quality).    	</div>
+		<div class="cpp_func_param_desc">true to enable MSAA, false otherwise.    	</div>
 		<br>
 	----------------------------------------------
 	<br>
 	<br>
 	<div class="cpp_func_param"> Remarks </div>
 	<br>
-	<div class="cpp_func_param_desc"> the default sample count is 4. The higher the number of samples the lower the performance might get.    	 </div>
+	<div class="cpp_func_param_desc"> should be called before init(). MSAA is enabled by default. Enabling MSAA might cause a slight decrease in performance.    	 </div>
 	<br>
 	
 </div>

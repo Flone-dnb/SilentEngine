@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../../doc.css">
+    <title>getLevelBounds - Silent Engine Documentation</title>
+</head>
+<body>
+    <div class="nav_panel">
+        <a class="cpp_link_title" href="../../classes/index.html"> Classes </a>
+		<br>
+		<a class="cpp_link_title" href="../../structs/index.html"> Structs </a>
+		<br>
+    </div>
+    
+	<div class="cpp_doc">
+		<h3 class="cpp_object"> getLevelBounds </h3>
+		<div class="cpp_codeobject_desc"> returns bounding sphere of the level, level bounds are used in directional lights     (there will be no shadow calculations outside of this bounding sphere).    	 </div>
+		<br>
+		<code class="cpp_func_line_code"> DirectX::BoundingSphere* getLevelBounds<br>(<br>&nbsp;&nbsp;&nbsp;bool bRecalculateLevelBounds<br>); </code>
+		<br>
+		<br>
+		<div class="cpp_func_param">bRecalculateLevelBounds</div>
+		<br>
+		<div class="cpp_func_param_desc">'true' will recalculate the level bounds iterating over every object in the scene     (that may take a while if there are many objects in this level so be careful, it's recommended to call this function once per level     after the level was fully constructed). 'False' will just return the last bouding sphere calculated (no calculations will be performed).    	</div>
+		<br>
+	
+</div>
+</body>
+</html>

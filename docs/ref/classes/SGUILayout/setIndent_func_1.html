@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../../doc.css">
-    <title>createRTVAndDSVDescriptorHeaps - Silent Engine Documentation</title>
+    <title>setIndent - Silent Engine Documentation</title>
 </head>
 <body>
     <div class="nav_panel">
@@ -15,18 +15,18 @@
     </div>
     
 	<div class="cpp_doc">
-		<h3 class="cpp_object"> createRTVAndDSVDescriptorHeaps </h3>
-		<div class="cpp_codeobject_desc"> creates RTV and DSV descriptor heaps.    	 </div>
+		<h3 class="cpp_object"> setIndent </h3>
+		<div class="cpp_codeobject_desc"> use to set the indent for items from the bounds of the layout (in normalized range: [0, 1], where 1 is the width/height of the layout). </div>
 		<br>
-		<code class="cpp_func_line_code"> bool createRTVAndDSVDescriptorHeaps(size_t iAddDSVCount = 0); </code>
+		<code class="cpp_func_line_code"> void setIndent(SLayoutIndent layoutIndent); </code>
 		<br>
 		<br>
 		----------------------------------------------
 		<br>
 		<br>
-		<div class="cpp_func_param"> Return Value </div>
+		<div class="cpp_func_param"> Remarks </div>
 		<br>
-		<div class="cpp_func_param_desc"> false if successful, true otherwise.    	 </div>
+		<div class="cpp_func_param_desc"> only for non expanding layouts (bExpandItems == false). </div>
 		<br>
 		
 	</div>

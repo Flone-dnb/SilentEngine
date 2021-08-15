@@ -16,12 +16,24 @@
     
 	<div class="cpp_doc">
 		<h3 class="cpp_object"> SDirectionalLightComponent </h3>
-		<div class="cpp_codeobject_desc">  </div>
+		<div class="cpp_codeobject_desc"> constructor. </div>
 		<br>
-		<code class="cpp_func_line_code"> SDirectionalLightComponent(std::string sComponentName); </code>
+		<code class="cpp_func_line_code"> SDirectionalLightComponent<br>(<br>&nbsp;&nbsp;&nbsp;std::string sComponentName,<br>&nbsp;&nbsp;&nbsp;DirectX::BoundingSphere* pLevelBounds,<br>&nbsp;&nbsp;&nbsp;UINT iShadowMapOneDimensionSize = 512<br>); </code>
 		<br>
 		<br>
-		
-	</div>
+		<div class="cpp_func_param">sComponentName</div>
+		<br>
+		<div class="cpp_func_param_desc">name of this component.</div>
+		<br>
+		<div class="cpp_func_param">pLevelBounds</div>
+		<br>
+		<div class="cpp_func_param_desc">use SLevel::getLevelBounds() for level bounds.</div>
+		<br>
+		<div class="cpp_func_param">iShadowMapOneDimensionSize</div>
+		<br>
+		<div class="cpp_func_param_desc">the bigger this value, the better the quality of the shadows from this light source    (use might need to change the depth bias using SVideoSettings::setShadowMappingBias() to avoid some shadow artifacts).</div>
+		<br>
+	
+</div>
 </body>
 </html>

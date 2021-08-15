@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../../doc.css">
-    <title>init - Silent Engine Documentation</title>
+    <title>getCursor3DPosAndDir - Silent Engine Documentation</title>
 </head>
 <body>
     <div class="nav_panel">
@@ -15,10 +15,10 @@
     </div>
     
 	<div class="cpp_doc">
-		<h3 class="cpp_object"> init </h3>
-		<div class="cpp_codeobject_desc"> initializes all essential engine systems, creates the main window, starts Direct 3D rendering.     Some functions (that contain &quot;init&quot; in their names like &quot;...Init...()&quot;) can only be called before this function.    	 </div>
+		<h3 class="cpp_object"> getCursor3DPosAndDir </h3>
+		<div class="cpp_codeobject_desc"> used to retrieve the cursor position in 3D space (camera position) and it's direction from the camera (eyes).    	 </div>
 		<br>
-		<code class="cpp_func_line_code"> bool   init(const std::wstring&amp; sMainWindowClassName = L&quot;MainWindow&quot;, bool bDisableProfilerGUI = false); </code>
+		<code class="cpp_func_line_code"> bool     getCursor3DPosAndDir(<a class="cpp_link_ref" href="../SVector/index.html">SVector</a>&amp; vPos, <a class="cpp_link_ref" href="../SVector/index.html">SVector</a>&amp; vDir); </code>
 		<br>
 		<br>
 		----------------------------------------------
@@ -30,7 +30,7 @@
 		<br>
 		<div class="cpp_func_param"> Remarks </div>
 		<br>
-		<div class="cpp_func_param_desc"> should be called before SApplication::run().    	 </div>
+		<div class="cpp_func_param_desc"> this function will return an error if it was called when the cursor is hidden, or if run() was not called before.    	 </div>
 		<br>
 		
 	</div>

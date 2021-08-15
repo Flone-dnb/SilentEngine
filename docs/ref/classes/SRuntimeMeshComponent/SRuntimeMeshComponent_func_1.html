@@ -23,7 +23,7 @@
 		<br>
 		<div class="cpp_func_param">bDisableFrustumCulling</div>
 		<br>
-		<div class="cpp_func_param_desc">set to true if the mesh data of this component will be changing very rapidly (like moving particles for example),    and so we won't recalculate the object's bounds on every setMeshData() call for frustum culling (which will disable the frustum culling    for this component only, but slightly reduce the CPU load and... well... increase the GPU load - you should probably benchmark    this and see what's better for your game). You can change this setting using the setDisableFrustumCulling() function.</div>
+		<div class="cpp_func_param_desc">set to true if the mesh data of this component will be changing very rapidly (like moving particles for example)    and this mesh does not need collision (again, particles for example),    so we won't recalculate the object's bounds on every setMeshData() call for frustum culling (which will disable the frustum culling    for this component only). This will also disable collision.</div>
 		<br>
 	
 </div>

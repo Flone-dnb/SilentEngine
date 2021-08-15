@@ -64,8 +64,6 @@
 				<br>
 				<code class="cpp_function"> std::vector&lt;SComponent*&gt; <code class="cpp_func_name"><a class="cpp_link" href="getComponents_func_1.html">getComponents</a></code>() const; </code>
 				<br>
-				<code class="cpp_function"> bool  <code class="cpp_func_name"><a class="cpp_link" href="isEditorObject_func_1.html">isEditorObject</a></code>() const; </code>
-				<br>
 			</div>
 		</details>
 		<br>
@@ -81,11 +79,15 @@
 				<br>
 				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="createVertexBufferForRuntimeMeshComponents_func_1.html">createVertexBufferForRuntimeMeshComponents</a></code>(SFrameResource* pFrameResource); </code>
 				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="getRequiredDSVCountForShadowMaps_func_1.html">getRequiredDSVCountForShadowMaps</a></code>(size_t&amp; iDSVCount); </code>
+				<br>
 				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="createInstancingDataForFrameResource_func_1.html">createInstancingDataForFrameResource</a></code>(std::vector&lt;std::unique_ptr&lt;SFrameResource&gt;&gt;* vFrameResources); </code>
 				<br>
 				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="removeVertexBufferForRuntimeMeshComponents_func_1.html">removeVertexBufferForRuntimeMeshComponents</a></code>(std::vector&lt;std::unique_ptr&lt;SFrameResource&gt;&gt;* vFrameResources, size_t&amp; iRemovedCount); </code>
 				<br>
 				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="removeInstancingDataForFrameResources_func_1.html">removeInstancingDataForFrameResources</a></code>(std::vector&lt;std::unique_ptr&lt;SFrameResource&gt;&gt;* vFrameResources); </code>
+				<br>
+				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="deallocateShadowMapCBsForLightComponents_func_1.html">deallocateShadowMapCBsForLightComponents</a></code>(std::vector&lt;std::unique_ptr&lt;SFrameResource&gt;&gt;* vFrameResources); </code>
 				<br>
 				<code class="cpp_function"> void <code class="cpp_func_name"><a class="cpp_link" href="getMaxVertexBufferIndexForRuntimeMeshComponents_func_1.html">getMaxVertexBufferIndexForRuntimeMeshComponents</a></code>(size_t&amp; iMaxIndex); </code>
 				<br>

@@ -18,7 +18,7 @@
 		<h3 class="cpp_object"> loadTextureFromDiskToGPU </h3>
 		<div class="cpp_codeobject_desc"> loads the given texture from the disk to the GPU memory so it can be used in the materials.    	 </div>
 		<br>
-		<code class="cpp_func_line_code"> STextureHandle loadTextureFromDiskToGPU<br>(<br>&nbsp;&nbsp;&nbsp;std::string sTextureName,<br>&nbsp;&nbsp;&nbsp;std::wstring sPathToTextureFile,<br>&nbsp;&nbsp;&nbsp;bool&amp; bErrorOccurred<br>); </code>
+		<code class="cpp_func_line_code"> STextureHandle loadTextureFromDiskToGPU<br>(<br>&nbsp;&nbsp;&nbsp;std::string sTextureName,<br>&nbsp;&nbsp;&nbsp;std::wstring sPathToTextureFile,<br>&nbsp;&nbsp;&nbsp;bool bIsCubeMap,<br>&nbsp;&nbsp;&nbsp;bool&amp; bErrorOccurred<br>); </code>
 		<br>
 		<br>
 		<div class="cpp_func_param">sTextureName</div>
@@ -28,6 +28,10 @@
 		<div class="cpp_func_param">sPathToTexture</div>
 		<br>
 		<div class="cpp_func_param_desc">path to the texture file (only .dds texture format).    	</div>
+		<br>
+		<div class="cpp_func_param">bIsCubeMap</div>
+		<br>
+		<div class="cpp_func_param_desc">set to 'true' if the texture is a cube map.    	</div>
 		<br>
 		<div class="cpp_func_param">bErrorOccurred</div>
 		<br>
