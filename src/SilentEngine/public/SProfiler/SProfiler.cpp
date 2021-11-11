@@ -7,6 +7,9 @@
 
 #include "SProfiler.h"
 
+// STL
+#include <iomanip>
+
 // Custom
 #include "SilentEngine/Public/SApplication/SApplication.h"
 
