@@ -1,6 +1,6 @@
 # Silent Engine
 
-Not maintained anymore: I've spent around 2 years making my first steps into graphics programming and writing this small engine as a practice. I've learned a lot and made a lot of mistaked that I want to fix in [my next game engine](https://github.com/Flone-dnb/nameless-engine).
+Not maintained anymore: I've spent around 2 years making my first steps into graphics programming and writing this small engine as a practice. I've learned a lot and made a lot of mistakes that I want to fix in [my next game engine](https://github.com/Flone-dnb/nameless-engine).
 
 Example screenshot of something:
 ![](screenshot.png?raw=true)
