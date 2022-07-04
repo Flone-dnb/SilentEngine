@@ -30,7 +30,7 @@ bool SGUIImage::loadImage(std::wstring_view sPathToImage)
 
 	// See if the file exists.
 
-	std::ifstream textureFile(sPathToImage);
+	std::ifstream textureFile(sPathToImage.data());
 
 	if (textureFile.is_open() == false)
 	{
