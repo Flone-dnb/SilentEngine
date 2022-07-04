@@ -7,6 +7,8 @@
 
 #include "EditorApplication.h"
 
+#include "SilentEditor/MyContainer/MyContainer.h"
+
 EditorApplication::EditorApplication(HINSTANCE hInstance) : SApplication(hInstance)
 {
 	// Use onRun().
@@ -21,6 +23,19 @@ void EditorApplication::onRun()
 	// In the case of a space game also do not forget about float precision in terms of position (as it's stored in floats).
 
 	// If you will use camera roll (roll axis), use setDontFlipCamera() to false.
+
+	// ... prepare stuff here ...
+
+	// Add ambient light.
+	auto settings = getGlobalVisualSettings();
+	settings.vAmbientLightRGB = SVector(0.1f, 0.1f, 0.2f);
+	setGlobalVisualSettings(settings);
+	
+	// Spawn my container;
+	pMyContainer = new MyContainer("My Container");
+	getCurrentLevel()->spawnContainerInLevel(pMyContainer);
+	pMyContainer->setLocation(SVector(0.0f, 0.0f, -1.0f));
+	getCamera()->setCameraLocationInWorld(SVector(0.0f, -10.0f, 0.0f));
 
 	// ... prepare stuff here ...
 
@@ -212,6 +227,8 @@ void EditorApplication::onPhysicsTick(float fDeltaTime)
 		getCamera()->moveCameraRight((bDPressed - bAPressed) * fSpeed);
 		getCamera()->moveCameraUp((bEPressed - bQPressed) * fSpeed);
 	}
+
+	if (pMyContainer) pMyContainer->onTick(fDeltaTime);
 }
 
 EditorApplication::~EditorApplication()

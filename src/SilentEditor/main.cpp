@@ -22,7 +22,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 
 	app.setWindowTitleText(L"Silent Editor");
 
-	app.getVideoSettings()->setInitFullscreen(false); // only for windowed apps, don't use this in your games
+	app.getVideoSettings()->setInitFullscreen(true);
 
 	if (app.init())
 	{

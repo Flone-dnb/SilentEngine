@@ -13,6 +13,8 @@
 // Custom
 #include "SilentEngine/public/SApplication/SApplication.h"
 
+class MyContainer;
+
 class EditorApplication : public SApplication
 {
 public:
@@ -33,6 +35,8 @@ public:
 	~EditorApplication() override;
 
 private:
+
+	MyContainer* pMyContainer = nullptr;
 
 	float fMoveStepSize = 2.0f;
 	float fShiftSpeedMult = 5.0f;
